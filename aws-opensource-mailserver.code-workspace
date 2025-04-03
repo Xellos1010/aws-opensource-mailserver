@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "aws-opensource-mailserver",
+			"path": "."
+		},
+		{
+			"name": "mailinabox",
+			"path": "../mailinabox"
+		}
+	],
+	"settings": {}
+}
