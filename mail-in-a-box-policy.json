@@ -1,0 +1,114 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ssm:*",
+                "lambda:*",
+                "ec2:*",
+                "logs:*",
+                "ses:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:CreateBucket",
+                "s3:PutBucketPolicy",
+                "s3:PutObject",
+                "s3:GetBucketLocation",
+                "s3:ListBucket",
+                "s3:GetObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateRole",
+                "iam:CreateInstanceProfile",
+                "iam:PutRolePolicy",
+                "iam:PassRole",
+                "iam:AttachRolePolicy",
+                "iam:AddRoleToInstanceProfile",
+                "iam:DeleteGroup",
+                "iam:GetRole",
+                "iam:DeleteRolePolicy",
+                "iam:GetGroup",
+                "iam:CreateGroup",
+                "iam:DeleteRole",
+                "iam:RemoveRoleFromInstanceProfile",
+                "iam:DeleteInstanceProfile",
+                "iam:GetInstanceProfile",
+                "iam:DeleteGroupPolicy",
+                "iam:RemoveUserFromGroup",
+                "iam:PutGroupPolicy",
+                "iam:GetUser",
+                "iam:CreateUser",
+                "iam:DeleteUser",
+                "iam:AddUserToGroup",
+                "iam:ListAccessKeys",
+                "iam:CreateAccessKey",
+                "iam:DeleteAccessKey",
+                "iam:TagRole",
+                "iam:TagUser",
+                "iam:TagPolicy",
+                "iam:TagInstanceProfile",
+                "iam:UntagUser",
+                "iam:UntagRole",
+                "iam:UntagPolicy",
+                "iam:UntagInstanceProfile",
+                "iam:GetRolePolicy",
+                "iam:ListAttachedRolePolicies",
+                "iam:DetachRolePolicy",
+                "iam:ListGroupPolicies",
+                "iam:ListRolePolicies",
+                "iam:ListGroupsForUser",
+                "iam:GetGroupPolicy"
+            ],
+            "Resource": [
+                "arn:aws:iam::413988044972:role/MailInABoxInstanceRole*",
+                "arn:aws:iam::413988044972:instance-profile/MailInABoxInstanceProfile*",
+                "arn:aws:iam::413988044972:policy/*MailInABox*",
+                "arn:aws:iam::413988044972:policy/*SMTP*",
+                "arn:aws:iam::413988044972:group/SMTPUserGroup-*",
+                "arn:aws:iam::413988044972:role/SMTPLambdaExecutionRole-*",
+                "arn:aws:iam::413988044972:user/SMTPUser-*",
+                "arn:aws:iam::413988044972:role/*",
+                "arn:aws:iam::413988044972:group/*",
+                "arn:aws:iam::413988044972:user/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": "sts:AssumeRole",
+            "Resource": "arn:aws:iam::413988044972:role/*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "iam:CreateServiceLinkedRole",
+            "Resource": "arn:aws:iam::413988044972:role/aws-service-role/*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cloudformation:CreateStack",
+                "cloudformation:UpdateStack",
+                "cloudformation:DeleteStack",
+                "cloudformation:DescribeStacks",
+                "cloudformation:GetTemplate",
+                "cloudformation:TagResource",
+                "cloudformation:UntagResource"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": ["tag:*"],
+            "Resource": "*"
+        }
+    ]
+} 
