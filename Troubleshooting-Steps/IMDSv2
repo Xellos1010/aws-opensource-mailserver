@@ -1,0 +1,25 @@
+IMDSv2
+Optional
+EC2 recommends setting IMDSv2 to required
+|
+Learn more 
+
+aws ec2 modify-instance-metadata-options \
+--instance-id i-0d2bc0741d2389ef3 \
+--http-tokens required \
+--http-endpoint enabled
+
+(base) Evans-MacBook-Pro:aws-opensource-mailserver evanmccall$ aws ec2 modify-instance-metadata-options --instance-id i-0d2bc0741d2389ef3 --http-tokens required --http-endpoint enabled
+{
+    "InstanceId": "i-0d2bc0741d2389ef3",
+    "InstanceMetadataOptions": {
+        "State": "pending",
+        "HttpTokens": "required",
+        "HttpPutResponseHopLimit": 1,
+        "HttpEndpoint": "enabled",
+        "HttpProtocolIpv6": "disabled",
+        "InstanceMetadataTags": "disabled"
+    }
+}
+
+Ran Feb-9-2025 4:33pm
