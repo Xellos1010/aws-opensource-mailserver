@@ -1,0 +1,5 @@
+Log into aws
+go to ec2
+Select the instance
+go to actions -< monitor and troubleshooting
+Look at the logs and a screenshot of the instance

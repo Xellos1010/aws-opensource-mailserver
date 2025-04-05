@@ -289,24 +289,15 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
-          LOGFILE="/var/log/mailinabox_setup.log"
-          echo "Starting Mail-in-a-Box setup..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          exec > >(tee -a $LOGFILE | logger -t mailinabox_setup) 2>&1
-          logger "Starting Mail-in-a-Box setup."
 
           # Configure needrestart to auto-handle restarts
-          echo "Updating package lists..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          apt-get update
-          echo "Upgrading installed packages..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          apt-get upgrade -o DPkg::Lock::Timeout=120 -y  
+          sudo sed -i "/#$nrconf{restart} = 'i';/s/.*/$nrconf{restart} = 'a';/" /etc/needrestart/needrestart.conf
+          sudo apt-get update
+          sudo apt-get upgrade -o DPkg::Lock::Timeout=120 -y  
 
-          # Install missing package (dialog) first
-          echo "Installing missing package: dialog..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          apt-get install -y dialog
-
-          # Pre-Install
-          echo "Installing dependencies..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          apt-get install -o DPkg::Lock::Timeout=120 -y \
+          # Pre-Install. Arm64 is not supported by the duplicity ppa used by MIAB, so to get the correct version
+          # (1.0.1 at the time of creation) we use pip install (and install the required dependencies)
+          sudo apt-get install -o DPkg::Lock::Timeout=120 -y \
             librsync-dev \
             python3-setuptools \
             python3-pip \
@@ -314,43 +305,43 @@ Resources:
             unzip \
             intltool \
             python-is-python3
-
-          # pip3 install duplicity==1.0.1
+          sudo pip3 install duplicity==1.0.1
+          # snap install duplicity --classic
+          # ln -s /snap/bin/duplicity /usr/bin/duplicity
 
           # Install awscli and CloudFormation helper scripts
-          echo "Installing AWS CLI..." | tee -a $LOGFILE | logger -t mailinabox_setup
           cd /tmp
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          ./aws/install
-          pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+          sudo curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "awscliv2.zip"
+          sudo unzip awscliv2.zip
+          sudo ./aws/install
+          sudo pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
 
-          # Configure variables
-          echo "Configuring environment variables..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          # export NONINTERACTIVE=true
-          export NONINTERACTIVE=1
-          # added to remove tty-output error.
-          export DEBIAN_FRONTEND=noninteractive
-          export TERM=xterm  # Ensures dialog has a terminal interface
-
+          # ---------------- CONFIG
+          # Installer behaviour
+          export NONINTERACTIVE=true
           export SKIP_NETWORK_CHECKS=true
+          # Storage
           export STORAGE_ROOT=/home/user-data
           export STORAGE_USER=user-data
+          # Network and DNS
           export PRIVATE_IP=$(ec2metadata --local-ipv4)
-          export PUBLIC_IP=$(ec2metadata --public-ipv4)
+          export PUBLIC_IPV6=""
+          export PRIVATE_IPV6=""
+          export MTA_STS_MODE=enforce
+          export PRIMARY_HOSTNAME="${InstanceDns}.${MailInABoxDomain}"
+          if [[ -z "${InstanceEIP}" ]]; then
+            export PUBLIC_IP=$(ec2metadata --public-ipv4)
+          else
+            export PUBLIC_IP="${InstanceEIP}"
+          fi
 
-          export PRIMARY_HOSTNAME=${InstanceDns}.${MailInABoxDomain}
-
-          export DEFAULT_PRIMARY_HOSTNAME=${InstanceDns}.${MailInABoxDomain}
-          export DEFAULT_PUBLIC_IP=$(ec2metadata --public-ipv4)
-
-          # Setup Admin Account
-          echo "Setting up admin account..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          export EMAIL_ADDR=admin@${MailInABoxDomain}
+          # Setup Admin Account.
+          export EMAIL_ADDR="admin@${MailInABoxDomain}"
+          # If no admin password is specified generate a random one. In that case, we upload this randomly genereated PW to SSM if it's a fresh install
           if [[ -z "${MailInABoxAdminPassword}" ]]; then
             export EMAIL_PW=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 16 ; echo '')
             if [[ -z "${RestorePrefix}" ]]; then
-              aws ssm put-parameter \
+              sudo aws ssm put-parameter \
                   --overwrite \
                   --name "/MailInABoxAdminPassword" \
                   --type SecureString \
@@ -360,32 +351,49 @@ Resources:
             export EMAIL_PW=${MailInABoxAdminPassword}
           fi
 
-          # Pre-installation steps
-          echo "Creating user and setting up directories..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          useradd -m $STORAGE_USER
-          mkdir -p $STORAGE_ROOT
-          git clone ${MailInABoxCloneUrl} /opt/mailinabox
-          export TAG=${MailInABoxVersion}
-          cd /opt/mailinabox && git checkout $TAG
+          # Nextcloud config variables are picked up by the Mail-in-a-Box Setup script
+          export NEXTCLOUD_S3_BUCKET=${NextCloudS3Bucket}
+          export NEXTCLOUD_S3_REGION=$(aws s3api get-bucket-location --bucket $NEXTCLOUD_S3_BUCKET --query 'LocationConstraint' --output 'text')
+          [[ $NEXTCLOUD_S3_REGION == "None" ]]  && NEXTCLOUD_S3_REGION=us-east-1 
 
-          # Restore if applicable
-          if [[ -n "${RestorePrefix}" ]]; then
-            echo "Restoring from S3 backup..." | tee -a $LOGFILE | logger -t mailinabox_setup
-            duplicity restore --force "s3://${BackupS3Bucket}/${RestorePrefix}" $STORAGE_ROOT
-            mkdir -p $STORAGE_ROOT/backup
+          # Setup SMTP Relay if configured. Variables are picked up by the Mail-in-a-Box Setup script 
+          if [[ "${SesRelay}" == "true" ]]; then
+            export SMTP_RELAY_ENDPOINT="email-smtp.${AWS::Region}.amazonaws.com"
+            export SMTP_RELAY_PORT=587
+            export SMTP_RELAY_USER=$(aws ssm get-parameter --name "/smtp-username-${AWS::StackName}" --with-decryption --query Parameter.Value --output text)
+            export SMTP_RELAY_PASSWORD=$(aws ssm get-parameter --name "/smtp-password-${AWS::StackName}" --with-decryption --query Parameter.Value --output text)
           fi
 
-          # Install Mail-in-a-Box
-          echo "Running Mail-in-a-Box setup script..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          cd /opt/mailinabox/ 
-          ## && setup/start.sh && 
-          # Run the setup script with debug logging
-          bash -x setup/start.sh 2>&1 | tee /tmp/mailinabox_debug.log
+          # ---------------- PRE INSTALL
+          sudo useradd -m $STORAGE_USER
+          sudo mkdir -p $STORAGE_ROOT
+          sudo git clone ${MailInABoxCloneUrl} /opt/mailinabox
+          export TAG=${MailInABoxVersion}
+          cd /opt/mailinabox && sudo git checkout $TAG
 
-          # Post-installation steps
-          echo "Configuring DNS settings..." | tee -a $LOGFILE | logger -t mailinabox_setup
+          # ---------------- RESTORE
+          if [[ -n "${RestorePrefix}" ]]; then
+            export S3_URL="s3://${BackupS3Bucket}/${RestorePrefix}"
+            if [[ -n "${RestoreKey}" ]]; then
+              export PASSPHRASE_FULL="${RestoreKey}"
+            elif [[ -n "${RestoreKeySsmParameterName}" ]]; then
+              PASSPHRASE_FULL=$(aws ssm get-parameter --name "/${RestoreKeySsmParameterName}" --with-decryption --query Parameter.Value --output text)
+            else
+              echo "Either 'RestoreKey' or 'RestoreKeySsmParameterName' need to be passed if you want to restore from a Prefix!"
+              exit -1
+            fi
+            export PASSPHRASE=$(echo $PASSPHRASE_FULL | awk '{print $1}')
+            sudo duplicity restore --force $S3_URL $STORAGE_ROOT
+            sudo mkdir -p $STORAGE_ROOT/backup
+            echo $PASSPHRASE_FULL | tr ' ' '\n'  | sudo tee $STORAGE_ROOT/backup/secret_key.txt
+          fi
+
+          # ---------------- INSTALL
+          cd /opt/mailinabox/ && sudo setup/start.sh
+
+          # ---------------- POST INSTALL
           INTERFACE=$(ip route list | grep default | grep -E  'dev (\w+)' -o | awk '{print $2}')
-          cat <<EOT > /etc/netplan/99-custom-dns.yaml
+          sudo bash -c 'cat <<EOT > /etc/netplan/99-custom-dns.yaml
           network:
             version: 2
             ethernets:
@@ -394,60 +402,32 @@ Resources:
                     addresses: [127.0.0.1]
                   dhcp4-overrides:
                     use-dns: false
-          EOT
-          netplan apply
+          EOT'
+          sudo netplan apply
 
-          # Remove existing duplicity installation if any
-          echo "Removing existing duplicity installation..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          apt-get remove -y duplicity || true
-          rm -rf /etc/apt/sources.list.d/duplicity-team-ubuntu-duplicity-release-git-jammy.list || true
-          apt-get update
-
-          # Install duplicity via Snap
-          echo "Installing duplicity via Snap..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          snap install duplicity --classic
-          which duplicity
-          # Create a symlink to /usr/bin/duplicity
-          echo "Creating symlink for duplicity..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          ln -sf /snap/bin/duplicity /usr/bin/duplicity
-          which duplicity
-          # Block duplicity from being installed via apt
-          echo "Blocking duplicity from being installed via apt..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          echo -e "# Duplicity is installed via snap\nPackage: duplicity\nPin: release *\Pin-Priority: -1" > /etc/apt/preferences.d/duplicity
-
-          # Verify duplicity installation
-          echo "Verifying duplicity installation..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          duplicity --version
+          # Configure Backups
+          sudo mkdir -p $STORAGE_ROOT/backup
+          sudo bash -c 'cat <<EOT > $STORAGE_ROOT/backup/custom.yaml
+          min_age_in_days: 7
+          target: s3://s3.$RESTORE_S3_REGION.amazonaws.com/${BackupS3Bucket}/$INSTANCE_ID
+          target_user: ""
+          target_pass: ""
+          EOT'
 
           # Create Initial Backup
-          echo "Creating initial backup..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          /opt/mailinabox/management/backup.py
+          sudo /opt/mailinabox/management/backup.py
 
-          # Fetch the EC2 Instance ID
-          INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
-          echo "Instance ID: $INSTANCE_ID"
+          # Clear logs for key contents
+          sudo rm /var/lib/cloud/instances/$INSTANCE_ID/scripts/part-00* \
+            /var/lib/cloud/instances/$INSTANCE_ID/user-data.txt* \
+            /var/lib/cloud/instances/$INSTANCE_ID/obj.pkl
 
-          # Clear logs for security
-          echo "Clearing logs of sensitive data..." | tee -a $LOGFILE | logger -t mailinabox_setup
-
-          for file in /var/lib/cloud/instances/$INSTANCE_ID/scripts/part-00* \
-                      /var/lib/cloud/instances/$INSTANCE_ID/user-data.txt* \
-                      /var/lib/cloud/instances/$INSTANCE_ID/obj.pkl; do
-              if [ -e "$file" ]; then
-                  rm -f "$file"
-                  echo "Deleted: $file"
-              else
-                  echo "File not found: $file"
-              fi
-          done
-
-          # Signal success to CloudFormation
-          echo "Signaling CloudFormation completion..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          /usr/local/bin/cfn-signal --success true --stack ${AWS::StackId} --resource EC2Instance --region ${AWS::Region}
+          # Signal Success to CloudFormation
+          sudo /usr/local/bin/cfn-signal --success true --stack ${AWS::StackId} --resource EC2Instance --region ${AWS::Region}
 
           # Reboot
-          echo "Rebooting system..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          reboot
+          sudo reboot
+
 
   SmtpCredentialsWaitHandleUnconditional: 
     Type: "AWS::CloudFormation::WaitConditionHandle"
