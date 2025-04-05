@@ -416,7 +416,7 @@ Resources:
           which duplicity
           # Block duplicity from being installed via apt
           echo "Blocking duplicity from being installed via apt..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          echo -e "# Duplicity is installed via snap\nPackage: duplicity\nPin: release *\Pin-Priority: -1" > /etc/apt/preferences.d/duplicity
+          echo -e "Package: duplicity\nPin: release *\nPin-Priority: -1" > /etc/apt/preferences.d/duplicity
 
           # Verify duplicity installation
           echo "Verifying duplicity installation..." | tee -a $LOGFILE | logger -t mailinabox_setup
