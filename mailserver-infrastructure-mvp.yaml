@@ -373,8 +373,9 @@ Resources:
                 - Effect: Allow
                   Action:
                     - ssm:PutParameter
+                    - ssm:GetParameter
                   Resource:
-                    - !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/MailInABoxAdminPassword"
+                    - !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/MailInABoxAdminPassword-${AWS::StackName}"
           - !Ref AWS::NoValue  
 
   InstanceProfile:
