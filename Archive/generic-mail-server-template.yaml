@@ -65,7 +65,7 @@ Parameters:
   SmtpIamAccessKeyVersion:
     Type: Number
     Default: 1
-    Description: Version number of the AWS access keys used to generate SMTP Credentials. Increment this number to rotate the keys. New keys are not automatically provisioned on the Mail-in-a-Box instance.
+    Description: Version number of the AWS access keys used to generate SMTP Credentials. Increment this number to rotate the keys. New keys are not automatically provisioned on the Mail-in-a-box instance.
     MinValue: 1
 
 Metadata: 
@@ -85,8 +85,10 @@ Metadata:
           - RestoreKeySsmParameterName
 
 Conditions:
-  InstaceEIPProvided:
-    !Not [!Equals [!Ref 'InstanceEIP', '']]
+  CreateNextCloudBucket: 
+    !Not [!Equals [!Ref 'NextCloudS3Bucket', '']]
+  GenerateBackupBucketName: 
+    !Equals [!Ref 'BackupS3Bucket', '']
   NextCloudS3:
     !Not [!Equals [!Ref 'NextCloudS3Bucket', '']]
   UseSesRelay:
@@ -98,9 +100,79 @@ Conditions:
 
     
 Resources:
+
+  MailServerElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub 'MailServer-EIP-${MailInABoxDomain}'
+        - Key: MAILSERVER
+          Value: !Ref MailInABoxDomain
+
+  # Create the Key Pair
+  MailServerKeyPair:
+    Type: AWS::EC2::KeyPair
+    Properties:
+      KeyName: !Ref KeyPairName
+      Tags:
+        - Key: MAILSERVERS
+          Value: !Ref MailInABoxDomain
+
+  # Create S3 Bucket for Backups
+  MailServerBackupBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !If 
+        - GenerateBackupBucketName
+        - !Sub 'mailserver-backup-${AWS::AccountId}-${AWS::Region}'
+        - !Ref BackupBucketName
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Name
+          Value: !Sub 'MailServer-Backup-${MailInABoxDomain}'
+        - Key: MAILSERVER
+          Value: !Ref MailInABoxDomain
+
+  # Create S3 Bucket for NextCloud (conditional)
+  MailServerNextCloudBucket:
+    Type: AWS::S3::Bucket
+    Condition: CreateNextCloudBucket
+    Properties:
+      BucketName: !Ref NextCloudBucketName
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Name
+          Value: !Sub 'MailServer-NextCloud-${MailInABoxDomain}'
+        - Key: MAILSERVER
+          Value: !Ref MailInABoxDomain
+
   InstanceEIPAssociation:
     Type: AWS::EC2::EIPAssociation
-    Condition: InstaceEIPProvided
+    DependsOn: 
+      - MailServerElasticIP
+      - EC2Instance
     Properties: 
       EIP: !Ref InstanceEIP
       InstanceId: !Ref EC2Instance
@@ -169,6 +241,12 @@ Resources:
   
   InstanceRole:
     Type: AWS::IAM::Role
+    DependsOn:
+      - MailServerBackupBucket
+      - !If 
+        - CreateNextCloudBucket
+        - MailServerNextCloudBucket
+        - !Ref AWS::NoValue
     Properties:
       RoleName: !Sub MailInABoxInstanceRole-${AWS::StackName}
       AssumeRolePolicyDocument:
@@ -287,8 +365,8 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub MailInABoxInstance-${AWS::StackName}
-        - Key: ASKDAOKAPRA
-          Value: MAILSERVERS
+        - Key: MAILSERVER
+          Value: !Ref MailInABoxDomain
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -xe

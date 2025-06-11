@@ -1,0 +1,130 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Infrastructure resources for Mail-in-a-Box deployment: Elastic IP, KeyPair, and S3 buckets'
+
+Parameters:
+  MailInABoxDomain:
+    Description: DNS Domain to host emails for
+    Type: String
+  
+  KeyPairName:
+    Description: Name of the EC2 key pair to be created
+    Type: String
+    Default: askdaokapra_opensource_mailservers
+  
+  BackupBucketName:
+    Description: Name for the S3 bucket to use for backups (must be globally unique)
+    Type: String
+    Default: ''
+  
+  NextCloudBucketName:
+    Description: Name for the S3 bucket to use for NextCloud data (must be globally unique)
+    Type: String
+    Default: ''
+
+Conditions:
+  CreateNextCloudBucket: !Not [!Equals [!Ref 'NextCloudBucketName', '']]
+  GenerateBackupBucketName: !Equals [!Ref 'BackupBucketName', '']
+
+Resources:
+  MailServerElasticIP:
+    Type: AWS::EC2::EIP
+    DeletionPolicy: Retain
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub 'MailServer-EIP-${MailInABoxDomain}'
+        - Key: MAILSERVERS
+          Value: !Ref MailInABoxDomain
+
+  # Create the Key Pair
+  MailServerKeyPair:
+    Type: AWS::EC2::KeyPair
+    DeletionPolicy: Retain
+    Properties:
+      KeyName: !Ref KeyPairName
+      Tags:
+        - Key: MAILSERVERS
+          Value: !Ref MailInABoxDomain
+
+  # Create S3 Bucket for Backups
+  MailServerBackupBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !If 
+        - GenerateBackupBucketName
+        - !Sub 'mailserver-backup-${AWS::AccountId}-${AWS::Region}'
+        - !Ref BackupBucketName
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Name
+          Value: !Sub 'MailServer-Backup-${MailInABoxDomain}'
+        - Key: MAILSERVERS
+          Value: !Ref MailInABoxDomain
+
+  # Create S3 Bucket for NextCloud (conditional)
+  MailServerNextCloudBucket:
+    Type: AWS::S3::Bucket
+    Condition: CreateNextCloudBucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Ref NextCloudBucketName
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Name
+          Value: !Sub 'MailServer-NextCloud-${MailInABoxDomain}'
+        - Key: MAILSERVERS
+          Value: !Ref MailInABoxDomain
+
+Outputs:
+  ElasticIPAddress:
+    Description: The Elastic IP address for the Mail-in-a-Box server
+    Value: !Ref MailServerElasticIP
+    Export:
+      Name: !Sub '${AWS::StackName}-ElasticIP'
+
+  KeyPairName:
+    Description: Name of the generated EC2 key pair
+    Value: !Ref MailServerKeyPair
+    Export:
+      Name: !Sub '${AWS::StackName}-KeyPairName'
+  
+  KeyPairId:
+    Description: ID of the generated EC2 key pair
+    Value: !GetAtt MailServerKeyPair.KeyPairId
+    Export:
+      Name: !Sub '${AWS::StackName}-KeyPairId'
+
+  BackupBucketName:
+    Description: Name of the S3 bucket for backups
+    Value: !Ref MailServerBackupBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-BackupBucket'
+  
+  NextCloudBucketName:
+    Description: Name of the S3 bucket for NextCloud data
+    Condition: CreateNextCloudBucket
+    Value: !Ref MailServerNextCloudBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-NextCloudBucket' 
