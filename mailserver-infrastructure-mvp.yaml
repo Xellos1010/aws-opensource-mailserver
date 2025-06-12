@@ -50,7 +50,7 @@ Parameters:
   SmtpIamAccessKeyVersion:
     Type: Number
     Default: 1
-    Description: Version number of the AWS access keys used to generate SMTP Credentials. Increment this number to rotate the keys. New keys are not automatically provisioned on the Mail-in-a-Box instance.
+    Description: Version number of the AWS access keys used to generate SMTP Credentials. Increment this number to rotate the keys. New keys are not automatically provisioned on the Mail-in-a-box instance.
     MinValue: 1
 
 Conditions:
@@ -113,7 +113,7 @@ Resources:
       - InstanceSecurityGroup
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT30M
+        Timeout: PT55M
         Count: 1
     Properties:
       InstanceType: !Ref InstanceType
@@ -141,6 +141,9 @@ Resources:
           echo "Starting Mail-in-a-Box setup..." | tee -a $LOGFILE | logger -t mailinabox_setup
           exec > >(tee -a $LOGFILE | logger -t mailinabox_setup) 2>&1
           logger "Starting Mail-in-a-Box setup."
+
+          # Get the Elastic IP address
+          ElasticIPAddress=${ElasticIP}
 
           # Configure needrestart to auto-handle restarts
           echo "Updating package lists..." | tee -a $LOGFILE | logger -t mailinabox_setup
@@ -185,12 +188,14 @@ Resources:
           export STORAGE_ROOT=/home/user-data
           export STORAGE_USER=user-data
           export PRIVATE_IP=$(ec2metadata --local-ipv4)
-          export PUBLIC_IP=$(ec2metadata --public-ipv4)
+          # export PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+          export PUBLIC_IP=${ElasticIP}
 
           export PRIMARY_HOSTNAME=${InstanceDns}.${DomainName}
 
           export DEFAULT_PRIMARY_HOSTNAME=${InstanceDns}.${DomainName}
-          export DEFAULT_PUBLIC_IP=$(ec2metadata --public-ipv4)
+          # export DEFAULT_PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+          export DEFAULT_PUBLIC_IP=${ElasticIP}
 
           # Setup Admin Account
           echo "Setting up admin account..." | tee -a $LOGFILE | logger -t mailinabox_setup
