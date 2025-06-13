@@ -30,6 +30,12 @@ if ! command -v aws &> /dev/null; then
     exit 1
 fi
 
+# Check if curl is installed
+if ! command -v curl &> /dev/null; then
+    echo "Error: curl is not installed"
+    exit 1
+fi
+
 # Get stack outputs
 echo "Retrieving stack outputs..."
 STACK_OUTPUTS=$(aws cloudformation describe-stacks \
@@ -117,7 +123,7 @@ echo "Key Pair: ${INSTANCE_KEY_NAME}"
 
 # Get KeyPairId from stack outputs
 KEY_PAIR_ID=$(echo "$STACK_OUTPUTS" | jq -r '.[] | select(.OutputKey=="KeyPairId") | .OutputValue')
-echo "KeyPairId: ${KEY_PAIR_ID}"
+
 if [ -z "$KEY_PAIR_ID" ]; then
     echo "Error: Could not retrieve KeyPairId from stack outputs"
     exit 1
@@ -125,45 +131,21 @@ fi
 
 # Check if key file exists and create directory if needed
 KEY_FILE="${HOME}/.ssh/${INSTANCE_KEY_NAME}.pem"
-
-# Function to verify key file format
-verify_key_file() {
-    local key_file=$1
-    if ! ssh-keygen -l -f "$key_file" > /dev/null 2>&1; then
-        return 1
-    fi
-    return 0
-}
-
-# Check if key file exists and is valid
-if [ -f "$KEY_FILE" ]; then
-    echo "Key file found at ${KEY_FILE}"
-    if verify_key_file "$KEY_FILE"; then
-        echo "Key file is in valid format"
-    else
-        echo "Key file exists but is not in valid format"
-        echo "Removing invalid key file..."
-        rm -f "$KEY_FILE"
-    fi
-fi
-
-# If key file doesn't exist or was invalid, retrieve it
 if [ ! -f "$KEY_FILE" ]; then
     echo "Key file not found at ${KEY_FILE}"
     mkdir -p "${HOME}/.ssh"
     
     echo "Retrieving private key from SSM Parameter Store..."
-    # Extract the key ID from the KeyPairId (remove 'key-' prefix if present)
-    KEY_ID=${KEY_PAIR_ID#key-}
-    if ! aws ssm get-parameter \
+    aws ssm get-parameter \
         --profile hepe-admin-mfa \
         --region "${REGION}" \
-        --name "/ec2/keypair/key-${KEY_ID}" \
+        --name "/ec2/keypair/${KEY_PAIR_ID}" \
         --with-decryption \
         --query 'Parameter.Value' \
-        --output text > "${KEY_FILE}"; then
+        --output text > "${KEY_FILE}"
+    
+    if [ $? -ne 0 ]; then
         echo "Error: Failed to retrieve private key from SSM Parameter Store."
-        echo "Please ensure you have the correct key file at ${KEY_FILE}"
         exit 1
     fi
     
@@ -173,10 +155,11 @@ fi
 # Set correct permissions for the key file
 chmod 400 "$KEY_FILE"
 
-# Final verification of key file
-if ! verify_key_file "$KEY_FILE"; then
-    echo "Error: Key file is not in a valid format after retrieval"
-    echo "Please ensure you have the correct key file at ${KEY_FILE}"
+# Verify the key file format
+if ! ssh-keygen -l -f "$KEY_FILE" > /dev/null 2>&1; then
+    echo "Error: Key file is not in a valid format"
+    echo "Please delete the key file and try again:"
+    echo "rm ${KEY_FILE}"
     exit 1
 fi
 
@@ -207,19 +190,46 @@ MIAB_HOST="https://box.${DOMAIN_NAME}"
 ADMIN_EMAIL="admin@${DOMAIN_NAME}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD}"
 
+# Function to URL-encode a string
+urlencode() {
+    local string="\$1"
+    local encoded=""
+    local pos c o
+    for (( pos=0; pos<\${#string}; pos++ )); do
+        c=\${string:\$pos:1}
+        case "\$c" in
+            [-_.~a-zA-Z0-9] ) o="\$c" ;;
+            * ) printf -v o '%%%02x' "'\$c" ;;
+        esac
+        encoded+="\$o"
+    done
+    echo "\$encoded"
+}
+
 # Function to make API call
 set_dns_record() {
     local type=\$1
     local name=\$2
     local value=\$3
+    local encoded_value=\$(urlencode "\$value")
+    # Normalize qname for CNAME records by removing trailing domain
+    local normalized_name=\${name%.$DOMAIN_NAME}
     echo "Setting \$type record: \$name -> \$value"
-    curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" \
-         -X POST \
-         -d "type=\$type&name=\$name&value=\$value" \
-         "\${MIAB_HOST}/admin/dns/custom" || {
-        echo "Error: Failed to set \$type record for \$name"
+    echo "Executing: curl -u <credentials> -X PUT -d \"value=\$value\" \${MIAB_HOST}/admin/dns/custom/\${normalized_name}/\${type}"
+    response=\$(curl -s -w "%{http_code}" -o /tmp/curl_response \
+         -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" \
+         -X PUT \
+         -d "value=\$value" \
+         -H "Content-Type: application/x-www-form-urlencoded" \
+         "\${MIAB_HOST}/admin/dns/custom/\${normalized_name}/\${type}")
+    http_code=\${response##* }
+    response_body=\$(cat /tmp/curl_response)
+    rm -f /tmp/curl_response
+    if [ "\$http_code" != "200" ]; then
+        echo "Error: Failed to set \$type record for \$name (HTTP \$http_code)"
+        echo "Response: \$response_body"
         exit 1
-    }
+    fi
 }
 
 # Set DKIM CNAME records
@@ -227,8 +237,8 @@ set_dns_record "CNAME" "${DKIM_TOKEN_NAME_1}" "${DKIM_TOKEN_VALUE_1}"
 set_dns_record "CNAME" "${DKIM_TOKEN_NAME_2}" "${DKIM_TOKEN_VALUE_2}"
 set_dns_record "CNAME" "${DKIM_TOKEN_NAME_3}" "${DKIM_TOKEN_VALUE_3}"
 
-# Set MAIL FROM MX record
-set_dns_record "MX" "${MAIL_FROM_DOMAIN}" "${MAIL_FROM_MX}"
+# Set MAIL FROM MX record (strip priority for Mail-in-a-Box API)
+set_dns_record "MX" "${MAIL_FROM_DOMAIN}" "${MAIL_FROM_MX##* }"
 
 # Set MAIL FROM TXT record
 set_dns_record "TXT" "${MAIL_FROM_DOMAIN}" "${MAIL_FROM_TXT}"
