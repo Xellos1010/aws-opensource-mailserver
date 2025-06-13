@@ -7,13 +7,13 @@ Parameters:
     AllowedPattern: ^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$
     ConstraintDescription: Must be a valid domain name (e.g., emcnotary.com)
   InstanceType:
-      Description: EC2 instance type
-      Type: String
-      Default: t2.micro
-      ConstraintDescription: must be a valid EC2 instance type.
+    Description: EC2 instance type
+    Type: String
+    Default: t2.micro
+    ConstraintDescription: must be a valid EC2 instance type.
   InstanceAMI:
     Description: Managed AMI ID for EC2 Instance
-    Type : AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Default: '/aws/service/canonical/ubuntu/server/jammy/stable/current/amd64/hvm/ebs-gp2/ami-id'
   InstanceDns:
     Description: DNS name of Instance (within the 'DomainName') 
@@ -62,7 +62,22 @@ Conditions:
     !And [ !Equals [!Ref 'MailInABoxAdminPassword', ''], !Equals [!Ref 'RestorePrefix', ''] ]
 
 Resources:
-  
+  # SES Email Identity for domain verification, aligned with AWS::SES::EmailIdentity properties
+  SESEmailIdentity:
+    Condition: UseSesRelay
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: !Ref DomainName
+      DkimAttributes:
+        SigningEnabled: true
+      DkimSigningAttributes:
+        NextSigningKeyLength: RSA_2048_BIT
+      MailFromAttributes:
+        MailFromDomain: !Sub mail.${DomainName}
+        BehaviorOnMxFailure: USE_DEFAULT_VALUE
+      FeedbackAttributes:
+        EmailForwardingEnabled: true
+
   ElasticIP:
     Type: AWS::EC2::EIP
     Properties:
@@ -111,6 +126,7 @@ Resources:
       - NewKeyPair
       - InstanceProfile
       - InstanceSecurityGroup
+      - SESEmailIdentity
     CreationPolicy:
       ResourceSignal:
         Timeout: PT55M
@@ -166,8 +182,6 @@ Resources:
             intltool \
             python-is-python3
 
-          # pip3 install duplicity==1.0.1
-
           # Install awscli and CloudFormation helper scripts
           echo "Installing AWS CLI..." | tee -a $LOGFILE | logger -t mailinabox_setup
           cd /tmp
@@ -178,23 +192,18 @@ Resources:
 
           # Configure variables
           echo "Configuring environment variables..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          # export NONINTERACTIVE=true
           export NONINTERACTIVE=1
-          # added to remove tty-output error.
           export DEBIAN_FRONTEND=noninteractive
-          export TERM=xterm  # Ensures dialog has a terminal interface
+          export TERM=xterm
 
           export SKIP_NETWORK_CHECKS=true
           export STORAGE_ROOT=/home/user-data
           export STORAGE_USER=user-data
           export PRIVATE_IP=$(ec2metadata --local-ipv4)
-          # export PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
           export PUBLIC_IP=${ElasticIP}
 
           export PRIMARY_HOSTNAME=${InstanceDns}.${DomainName}
-
           export DEFAULT_PRIMARY_HOSTNAME=${InstanceDns}.${DomainName}
-          # export DEFAULT_PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
           export DEFAULT_PUBLIC_IP=${ElasticIP}
 
           # Setup Admin Account
@@ -230,15 +239,29 @@ Resources:
 
           # Install Mail-in-a-Box
           echo "Running Mail-in-a-Box setup script..." | tee -a $LOGFILE | logger -t mailinabox_setup
-          cd /opt/mailinabox/ 
-          ## && setup/start.sh && 
-          # Run the setup script with debug logging
+          cd /opt/mailinabox/
           bash -x setup/start.sh 2>&1 | tee /tmp/mailinabox_debug.log
+
+          # Configure SES SMTP credentials if SesRelay is true
+          if [[ "${SesRelay}" == "true" ]]; then
+            echo "Configuring SES SMTP credentials..." | tee -a $LOGFILE | logger -t mailinabox_setup
+            SMTP_USERNAME=$(aws ssm get-parameter --name "/smtp-username-${AWS::StackName}" --with-decryption --query Parameter.Value --output text)
+            SMTP_PASSWORD=$(aws ssm get-parameter --name "/smtp-password-${AWS::StackName}" --with-decryption --query Parameter.Value --output text)
+            cat > /home/user-data/mail/config << 'EOF'
+            [mail]
+            smtp_relay_enable = true
+            smtp_relay_host = email-smtp.${AWS::Region}.amazonaws.com
+            smtp_relay_port = 587
+            smtp_relay_username = $SMTP_USERNAME
+            smtp_relay_password = $SMTP_PASSWORD
+            EOF
+            /opt/mailinabox/management/mailinabox-daemon restart
+          fi
 
           # Post-installation steps
           echo "Configuring DNS settings..." | tee -a $LOGFILE | logger -t mailinabox_setup
           INTERFACE=$(ip route list | grep default | grep -E  'dev (\w+)' -o | awk '{print $2}')
-          cat <<EOT > /etc/netplan/99-custom-dns.yaml
+          cat > /etc/netplan/99-custom-dns.yaml << 'EOF'
           network:
             version: 2
             ethernets:
@@ -247,7 +270,7 @@ Resources:
                     addresses: [127.0.0.1]
                   dhcp4-overrides:
                     use-dns: false
-          EOT
+          EOF
           netplan apply
 
           # Remove existing duplicity installation if any
@@ -259,13 +282,7 @@ Resources:
           # Install duplicity via Snap
           echo "Installing duplicity via Snap..." | tee -a $LOGFILE | logger -t mailinabox_setup
           snap install duplicity --classic
-          which duplicity
-          # Create a symlink to /usr/bin/duplicity
-          echo "Creating symlink for duplicity..." | tee -a $LOGFILE | logger -t mailinabox_setup
           ln -sf /snap/bin/duplicity /usr/bin/duplicity
-          which duplicity
-          # Block duplicity from being installed via apt
-          echo "Blocking duplicity from being installed via apt..." | tee -a $LOGFILE | logger -t mailinabox_setup
           echo -e "Package: duplicity\nPin: release *\nPin-Priority: -1" > /etc/apt/preferences.d/duplicity
 
           # Verify duplicity installation
@@ -282,7 +299,6 @@ Resources:
 
           # Clear logs for security
           echo "Clearing logs of sensitive data..." | tee -a $LOGFILE | logger -t mailinabox_setup
-
           for file in /var/lib/cloud/instances/$INSTANCE_ID/scripts/part-00* \
                       /var/lib/cloud/instances/$INSTANCE_ID/user-data.txt* \
                       /var/lib/cloud/instances/$INSTANCE_ID/obj.pkl; do
@@ -582,12 +598,10 @@ Resources:
           import hmac
           import hashlib
           import base64
-          import argparse
           import boto3
           from botocore.exceptions import ClientError
           import json
           import cfnresponse
-          import urllib3
           import logging
           import os
 
@@ -613,7 +627,6 @@ Resources:
               'us-gov-west-1',   # AWS GovCloud (US)
           ]
 
-          # These values are required to calculate the signature. Do not change them.
           DATE = "11111111"
           SERVICE = "ses"
           MESSAGE = "SendRawEmail"
@@ -626,7 +639,6 @@ Resources:
           def calculate_key(secret_access_key, region):
               if region not in SMTP_REGIONS:
                   raise ValueError(f"The {region} Region doesn't have an SMTP endpoint.")
-
               signature = sign(("AWS4" + secret_access_key).encode('utf-8'), DATE)
               signature = sign(signature, region)
               signature = sign(signature, SERVICE)
@@ -658,7 +670,6 @@ Resources:
             except Exception as e:
               print("Error deleting parameter smtp-"+type+"-${AWS::StackName}: "+str(e))
               return False
-
 
           def lambda_handler(event, context):
             log.debug('%s', event)
@@ -699,7 +710,7 @@ Outputs:
     Value: !Ref ElasticIP
   KeyPairId:
     Description: The ID of the EC2 Key Pair
-    Value: !Ref NewKeyPair
+    Value: !GetAtt NewKeyPair.KeyPairId
   InstancePublicIp:
     Description: The Public IP of the Mail-in-a-box instance
     Value: !GetAtt EC2Instance.PublicIp
@@ -709,4 +720,40 @@ Outputs:
     Value: !Ref MailInABoxAdminPasswordSsmParameter
   RestorePrefix:
     Description: The S3 prefix where backups are stored is set to the ID of the EC2 instance of your current deployment
-    Value: !Ref EC2Instance 
+    Value: !Ref EC2Instance
+  DkimDNSTokenName1:
+    Condition: UseSesRelay
+    Description: First DKIM DNS token name for SES domain verification
+    Value: !GetAtt SESEmailIdentity.DkimDNSTokenName1
+  DkimDNSTokenValue1:
+    Condition: UseSesRelay
+    Description: First DKIM DNS token value for SES domain verification
+    Value: !GetAtt SESEmailIdentity.DkimDNSTokenValue1
+  DkimDNSTokenName2:
+    Condition: UseSesRelay
+    Description: Second DKIM DNS token name for SES domain verification
+    Value: !GetAtt SESEmailIdentity.DkimDNSTokenName2
+  DkimDNSTokenValue2:
+    Condition: UseSesRelay
+    Description: Second DKIM DNS token value for SES domain verification
+    Value: !GetAtt SESEmailIdentity.DkimDNSTokenValue2
+  DkimDNSTokenName3:
+    Condition: UseSesRelay
+    Description: Third DKIM DNS token name for SES domain verification
+    Value: !GetAtt SESEmailIdentity.DkimDNSTokenName3
+  DkimDNSTokenValue3:
+    Condition: UseSesRelay
+    Description: Third DKIM DNS token value for SES domain verification
+    Value: !GetAtt SESEmailIdentity.DkimDNSTokenValue3
+  MailFromMXRecord:
+    Condition: UseSesRelay
+    Description: MX record for custom MAIL FROM domain
+    Value: !Sub "10 feedback-smtp.${AWS::Region}.amazonses.com"
+  MailFromTXTRecord:
+    Condition: UseSesRelay
+    Description: TXT record for custom MAIL FROM domain
+    Value: "v=spf1 include:amazonses.com ~all"
+  MailFromDomain:
+    Condition: UseSesRelay
+    Description: Custom MAIL FROM domain name
+    Value: !Sub mail.${DomainName}
