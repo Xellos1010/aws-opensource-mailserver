@@ -190,58 +190,57 @@ MIAB_HOST="https://box.${DOMAIN_NAME}"
 ADMIN_EMAIL="admin@${DOMAIN_NAME}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD}"
 
-# Function to URL-encode a string
-urlencode() {
-    local string="\$1"
-    local encoded=""
-    local pos c o
-    for (( pos=0; pos<\${#string}; pos++ )); do
-        c=\${string:\$pos:1}
-        case "\$c" in
-            [-_.~a-zA-Z0-9] ) o="\$c" ;;
-            * ) printf -v o '%%%02x' "'\$c" ;;
-        esac
-        encoded+="\$o"
-    done
-    echo "\$encoded"
-}
-
 # Function to make API call
 set_dns_record() {
     local type=\$1
     local name=\$2
     local value=\$3
-    local encoded_value=\$(urlencode "\$value")
-    # Normalize qname for CNAME records by removing trailing domain
+    local method=\$4  # PUT or POST
+    
+    # Normalize qname by removing trailing domain if present
     local normalized_name=\${name%.$DOMAIN_NAME}
+    
     echo "Setting \$type record: \$name -> \$value"
-    echo "Executing: curl -u <credentials> -X PUT -d \"value=\$value\" \${MIAB_HOST}/admin/dns/custom/\${normalized_name}/\${type}"
+    
+    # Make the API call
     response=\$(curl -s -w "%{http_code}" -o /tmp/curl_response \
          -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" \
-         -X PUT \
+         -X "\${method}" \
          -d "value=\$value" \
          -H "Content-Type: application/x-www-form-urlencoded" \
          "\${MIAB_HOST}/admin/dns/custom/\${normalized_name}/\${type}")
+    
     http_code=\${response##* }
     response_body=\$(cat /tmp/curl_response)
     rm -f /tmp/curl_response
+    
     if [ "\$http_code" != "200" ]; then
         echo "Error: Failed to set \$type record for \$name (HTTP \$http_code)"
         echo "Response: \$response_body"
         exit 1
     fi
+    
+    echo "Successfully set \$type record for \$name"
 }
 
-# Set DKIM CNAME records
-set_dns_record "CNAME" "${DKIM_TOKEN_NAME_1}" "${DKIM_TOKEN_VALUE_1}"
-set_dns_record "CNAME" "${DKIM_TOKEN_NAME_2}" "${DKIM_TOKEN_VALUE_2}"
-set_dns_record "CNAME" "${DKIM_TOKEN_NAME_3}" "${DKIM_TOKEN_VALUE_3}"
+# First, delete any existing records for these domains
+echo "Cleaning up existing records..."
+curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${DKIM_TOKEN_NAME_1%.$DOMAIN_NAME}/CNAME"
+curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${DKIM_TOKEN_NAME_2%.$DOMAIN_NAME}/CNAME"
+curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${DKIM_TOKEN_NAME_3%.$DOMAIN_NAME}/CNAME"
+curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${MAIL_FROM_DOMAIN%.$DOMAIN_NAME}/MX"
+curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${MAIL_FROM_DOMAIN%.$DOMAIN_NAME}/TXT"
+
+# Set DKIM CNAME records using PUT (single value)
+set_dns_record "CNAME" "${DKIM_TOKEN_NAME_1}" "${DKIM_TOKEN_VALUE_1}" "PUT"
+set_dns_record "CNAME" "${DKIM_TOKEN_NAME_2}" "${DKIM_TOKEN_VALUE_2}" "PUT"
+set_dns_record "CNAME" "${DKIM_TOKEN_NAME_3}" "${DKIM_TOKEN_VALUE_3}" "PUT"
 
 # Set MAIL FROM MX record (strip priority for Mail-in-a-Box API)
-set_dns_record "MX" "${MAIL_FROM_DOMAIN}" "${MAIL_FROM_MX##* }"
+set_dns_record "MX" "${MAIL_FROM_DOMAIN}" "${MAIL_FROM_MX##* }" "PUT"
 
-# Set MAIL FROM TXT record
-set_dns_record "TXT" "${MAIL_FROM_DOMAIN}" "${MAIL_FROM_TXT}"
+# Set MAIL FROM TXT record using POST to preserve any existing SPF records
+set_dns_record "TXT" "${MAIL_FROM_DOMAIN}" "${MAIL_FROM_TXT}" "POST"
 
 echo "DNS records set successfully!"
 EOF

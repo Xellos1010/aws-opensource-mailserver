@@ -129,7 +129,7 @@ Resources:
       - SESEmailIdentity
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT55M
+        Timeout: PT1H5M
         Count: 1
     Properties:
       InstanceType: !Ref InstanceType
@@ -247,15 +247,21 @@ Resources:
             echo "Configuring SES SMTP credentials..." | tee -a $LOGFILE | logger -t mailinabox_setup
             SMTP_USERNAME=$(aws ssm get-parameter --name "/smtp-username-${AWS::StackName}" --with-decryption --query Parameter.Value --output text)
             SMTP_PASSWORD=$(aws ssm get-parameter --name "/smtp-password-${AWS::StackName}" --with-decryption --query Parameter.Value --output text)
-            cat > /home/user-data/mail/config << 'EOF'
-            [mail]
-            smtp_relay_enable = true
-            smtp_relay_host = email-smtp.${AWS::Region}.amazonaws.com
-            smtp_relay_port = 587
-            smtp_relay_username = $SMTP_USERNAME
-            smtp_relay_password = $SMTP_PASSWORD
-            EOF
-            /opt/mailinabox/management/mailinabox-daemon restart
+            
+            # Create mail config directory if it doesn't exist
+            mkdir -p /home/user-data/mail
+            
+            # Write SMTP configuration
+            echo -e "[mail]\nsmtp_relay_enable = true\nsmtp_relay_host = email-smtp.${AWS::Region}.amazonaws.com\nsmtp_relay_port = 587\nsmtp_relay_username = $SMTP_USERNAME\nsmtp_relay_password = $SMTP_PASSWORD" > /home/user-data/mail/config
+            
+            # Restart mail services using systemctl instead of mailinabox-daemon
+            echo "Restarting mail services..." | tee -a $LOGFILE | logger -t mailinabox_setup
+            systemctl restart postfix || true
+            systemctl restart dovecot || true
+            
+            # Add hostname to /etc/hosts to fix DNS resolution
+            echo "Adding hostname to /etc/hosts..." | tee -a $LOGFILE | logger -t mailinabox_setup
+            echo "127.0.0.1 ${InstanceDns}.${DomainName}" >> /etc/hosts
           fi
 
           # Post-installation steps
