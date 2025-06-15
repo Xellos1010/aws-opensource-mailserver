@@ -251,13 +251,61 @@ Resources:
             # Create mail config directory if it doesn't exist
             mkdir -p /home/user-data/mail
             
-            # Write SMTP configuration
+            # Write SMTP configuration with proper permissions
             echo -e "[mail]\nsmtp_relay_enable = true\nsmtp_relay_host = email-smtp.${AWS::Region}.amazonaws.com\nsmtp_relay_port = 587\nsmtp_relay_username = $SMTP_USERNAME\nsmtp_relay_password = $SMTP_PASSWORD" > /home/user-data/mail/config
+            chown user-data:user-data /home/user-data/mail/config
+            chmod 640 /home/user-data/mail/config
+
+            # Configure Postfix for SES
+            echo "Configuring Postfix for SES..." | tee -a $LOGFILE | logger -t mailinabox_setup
+            
+            # Configure Postfix main settings
+            postconf -e "relayhost = [email-smtp.${AWS::Region}.amazonaws.com]:587" \
+                    "smtp_sasl_auth_enable = yes" \
+                    "smtp_sasl_security_options = noanonymous" \
+                    "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd" \
+                    "smtp_use_tls = yes" \
+                    "smtp_tls_security_level = encrypt" \
+                    "smtp_tls_note_starttls_offer = yes" \
+                    "smtp_tls_loglevel = 2"
+
+            # Comment out smtp_fallback_relay in master.cf if it exists
+            sed -i 's/^[^#].*smtp_fallback_relay=/#&/' /etc/postfix/master.cf
+
+            # Create sasl_passwd file with SMTP credentials and proper permissions
+            echo "[email-smtp.${AWS::Region}.amazonaws.com]:587 $SMTP_USERNAME:$SMTP_PASSWORD" > /etc/postfix/sasl_passwd
+            chown root:root /etc/postfix/sasl_passwd
+            chmod 600 /etc/postfix/sasl_passwd
+
+            # Create hashmap database with proper permissions
+            postmap hash:/etc/postfix/sasl_passwd
+            chown root:root /etc/postfix/sasl_passwd.db
+            chmod 600 /etc/postfix/sasl_passwd.db
+
+            # Set CA certificate path for Ubuntu
+            postconf -e 'smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt'
+            
+            # Configure OpenDKIM permissions
+            echo "Configuring OpenDKIM permissions..." | tee -a $LOGFILE | logger -t mailinabox_setup
+            
+            # Create dkim directory if it doesn't exist
+            mkdir -p /home/user-data/mail/dkim
+            
+            # Set proper ownership and permissions for OpenDKIM
+            chown -R opendkim:opendkim /home/user-data/mail/dkim
+            chmod -R 750 /home/user-data/mail/dkim
+            find /home/user-data/mail/dkim -type f -exec chmod 640 {} \;
+            
+            # Set proper ownership and permissions for mail directories
+            chown user-data:user-data /home/user-data /home/user-data/mail
+            chmod 755 /home/user-data /home/user-data/mail
             
             # Restart mail services using systemctl instead of mailinabox-daemon
             echo "Restarting mail services..." | tee -a $LOGFILE | logger -t mailinabox_setup
             systemctl restart postfix || true
+            systemctl reload postfix || true
             systemctl restart dovecot || true
+            systemctl restart opendkim || true
             
             # Add hostname to /etc/hosts to fix DNS resolution
             echo "Adding hostname to /etc/hosts..." | tee -a $LOGFILE | logger -t mailinabox_setup
