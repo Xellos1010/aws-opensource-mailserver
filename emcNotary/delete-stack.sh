@@ -48,38 +48,53 @@ if [ ! -z "$EIP_ALLOCATION_ID" ] && [ "$EIP_ALLOCATION_ID" != "None" ]; then
     
     # Remove PTR record if it exists
     echo "Removing PTR record for Elastic IP..."
-    aws ec2 modify-address-attribute \
+    aws ec2 reset-address-attribute \
         --profile hepe-admin-mfa \
         --allocation-id "${EIP_ALLOCATION_ID}" \
-        --domain-name "" || {
-        echo "Failed to remove PTR record. Please check permissions or AWS console."
-        exit 1
-    }
-    
-    # Wait for PTR record removal to complete
-    echo "Waiting for PTR record removal to complete..."
-    MAX_RETRIES=30
-    RETRY_COUNT=0
-    while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-        PTR_STATUS=$(aws ec2 describe-addresses \
+        --attribute domain-name 2>/dev/null || {
+        # Check if the error is specifically about no PTR record
+        if aws ec2 describe-addresses \
             --profile hepe-admin-mfa \
             --allocation-ids "${EIP_ALLOCATION_ID}" \
-            --query "Addresses[0].DomainName" \
-            --output text)
-        
-        if [ -z "$PTR_STATUS" ] || [ "$PTR_STATUS" = "None" ]; then
-            echo "PTR record successfully removed"
-            break
+            --query "Addresses[0].PtrRecord" \
+            --output text | grep -q "None"; then
+            echo "No PTR record found, continuing..."
+        else
+            echo "Failed to remove PTR record. Please check permissions or AWS console."
+            exit 1
         fi
-        
-        echo "PTR record removal still pending... (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)"
-        sleep 10
-        RETRY_COUNT=$((RETRY_COUNT + 1))
-    done
+    }
     
-    if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-        echo "Error: PTR record removal timed out after $MAX_RETRIES attempts"
-        exit 1
+    # Wait for PTR record removal to complete only if we attempted to remove one
+    if aws ec2 describe-addresses \
+        --profile hepe-admin-mfa \
+        --allocation-ids "${EIP_ALLOCATION_ID}" \
+        --query "Addresses[0].PtrRecordUpdate.Status" \
+        --output text | grep -q "PENDING"; then
+        echo "Waiting for PTR record removal to complete..."
+        MAX_RETRIES=30
+        RETRY_COUNT=0
+        while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            PTR_STATUS=$(aws ec2 describe-addresses \
+                --profile hepe-admin-mfa \
+                --allocation-ids "${EIP_ALLOCATION_ID}" \
+                --query "Addresses[0].PtrRecordUpdate.Status" \
+                --output text)
+            
+            if [ "$PTR_STATUS" != "PENDING" ]; then
+                echo "PTR record update completed with status: ${PTR_STATUS}"
+                break
+            fi
+            
+            echo "PTR record update still pending... (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)"
+            sleep 10
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+        done
+        
+        if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+            echo "Error: PTR record update timed out after $MAX_RETRIES attempts"
+            exit 1
+        fi
     fi
     
     # Release the Elastic IP
