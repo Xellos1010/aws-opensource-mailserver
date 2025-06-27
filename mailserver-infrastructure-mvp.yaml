@@ -52,6 +52,15 @@ Parameters:
     Default: 1
     Description: Version number of the AWS access keys used to generate SMTP Credentials. Increment this number to rotate the keys. New keys are not automatically provisioned on the Mail-in-a-box instance.
     MinValue: 1
+  EnableNightlyReboot:
+    Type: String
+    Default: 'true'
+    AllowedValues: ['true', 'false']
+    Description: Enable automatic nightly reboot at 3am UTC. Set to 'false' to disable automatic reboots.
+  NightlyRebootSchedule:
+    Type: String
+    Default: 'cron(0 3 * * ? *)'
+    Description: Cron expression for nightly reboot schedule. Default is 3:00 AM UTC daily. Format: cron(minute hour day month dayOfWeek year)
 
 Conditions:
   UseSesRelay:
@@ -60,6 +69,8 @@ Conditions:
     !Not [!Equals [!Ref 'RestoreKeySsmParameterName', '']]
   NewAdminPasswordToSsm:
     !And [ !Equals [!Ref 'MailInABoxAdminPassword', ''], !Equals [!Ref 'RestorePrefix', ''] ]
+  EnableNightlyRebootCondition:
+    !Equals [!Ref 'EnableNightlyReboot', 'true']
 
 Resources:
   # SES Email Identity for domain verification, aligned with AWS::SES::EmailIdentity properties
@@ -758,6 +769,134 @@ Resources:
             else:
               cfnresponse.send(event, context, cfnresponse.FAILED, {'Reason': reason}, parameter_arn)
 
+  # Nightly Reboot Lambda Function
+  NightlyRebootLambdaRole:
+    Type: AWS::IAM::Role
+    Condition: EnableNightlyRebootCondition
+    Properties:
+      RoleName: !Sub NightlyRebootLambdaRole-${AWS::StackName}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: EC2RebootPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeInstances
+                  - ec2:RebootInstances
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    'ec2:ResourceTag/MAILSERVER': !Ref DomainName
+
+  NightlyRebootLambdaFunction:
+    Type: AWS::Lambda::Function
+    Condition: EnableNightlyRebootCondition
+    Properties:
+      FunctionName: !Sub NightlyRebootMailServer-${AWS::StackName}
+      Runtime: python3.9
+      Handler: index.lambda_handler
+      Role: !GetAtt NightlyRebootLambdaRole.Arn
+      Timeout: 60
+      Environment:
+        Variables:
+          STACK_NAME: !Ref AWS::StackName
+          DOMAIN_NAME: !Ref DomainName
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import logging
+          import os
+
+          # Configure logging
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+
+          def lambda_handler(event, context):
+              """
+              Lambda function to reboot EC2 instances belonging to mail server stack
+              """
+              try:
+                  ec2_client = boto3.client('ec2')
+                  stack_name = os.environ['STACK_NAME']
+                  domain_name = os.environ['DOMAIN_NAME']
+                  
+                  logger.info(f"Starting nightly reboot for stack: {stack_name}, domain: {domain_name}")
+                  
+                  # Find instances with the mail server tag
+                  response = ec2_client.describe_instances(
+                      Filters=[
+                          {
+                              'Name': 'tag:MAILSERVER',
+                              'Values': [domain_name]
+                          },
+                          {
+                              'Name': 'instance-state-name',
+                              'Values': ['running']
+                          }
+                      ]
+                  )
+                  
+                  instance_ids = []
+                  for reservation in response['Reservations']:
+                      for instance in reservation['Instances']:
+                          instance_ids.append(instance['InstanceId'])
+                          logger.info(f"Found mail server instance: {instance['InstanceId']}")
+                  
+                  if not instance_ids:
+                      logger.info("No running mail server instances found to reboot")
+                      return {
+                          'statusCode': 200,
+                          'body': json.dumps('No running instances found to reboot')
+                      }
+                  
+                  # Reboot the instances
+                  logger.info(f"Rebooting instances: {instance_ids}")
+                  ec2_client.reboot_instances(InstanceIds=instance_ids)
+                  
+                  return {
+                      'statusCode': 200,
+                      'body': json.dumps(f'Successfully initiated reboot for {len(instance_ids)} instances: {instance_ids}')
+                  }
+                  
+              except Exception as e:
+                  logger.error(f"Error during nightly reboot: {str(e)}")
+                  return {
+                      'statusCode': 500,
+                      'body': json.dumps(f'Error: {str(e)}')
+                  }
+
+  NightlyRebootEventRule:
+    Type: AWS::Events::Rule
+    Condition: EnableNightlyRebootCondition
+    Properties:
+      Name: !Sub NightlyRebootRule-${AWS::StackName}
+      Description: !Sub "Triggers mail server reboot based on schedule: ${NightlyRebootSchedule}"
+      ScheduleExpression: !Ref NightlyRebootSchedule
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt NightlyRebootLambdaFunction.Arn
+          Id: "NightlyRebootTarget"
+
+  NightlyRebootLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Condition: EnableNightlyRebootCondition
+    Properties:
+      FunctionName: !Ref NightlyRebootLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt NightlyRebootEventRule.Arn
+
 Outputs:
   ElasticIPAddress:
     Description: The allocated Elastic IP address
@@ -811,3 +950,11 @@ Outputs:
     Condition: UseSesRelay
     Description: Custom MAIL FROM domain name
     Value: !Sub mail.${DomainName}
+  NightlyRebootSchedule:
+    Condition: EnableNightlyRebootCondition
+    Description: Nightly reboot schedule for mail server instances
+    Value: !Sub "Configured schedule: ${NightlyRebootSchedule}"
+  NightlyRebootLambdaFunction:
+    Condition: EnableNightlyRebootCondition
+    Description: Lambda function ARN that handles nightly reboots
+    Value: !GetAtt NightlyRebootLambdaFunction.Arn
