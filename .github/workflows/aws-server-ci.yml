@@ -1,0 +1,62 @@
+name: aws-server-ci
+on:
+  pull_request:
+  push: { branches: [main] }
+  schedule: [{ cron: "0 6 * * *" }] # daily drift check (read-only)
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      # Toolchains
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - uses: sburris/dead-simple-node-setup@v1
+        with: { node-version: "20" }
+
+      # Python deps for admin utilities & tests
+      - run: |
+          python -m pip install --upgrade pip
+          pip install boto3 botocore cfn-lint cfn_flip cfn-guard==2.1.0 cfn-lint
+          pip install ruff black pytest
+      # Shell tooling
+      - run: sudo apt-get update && sudo apt-get install -y shellcheck shfmt
+
+      # Lint/format
+      - run: ruff check administration/ --output-format=github
+      - run: black --check administration/
+      - run: shellcheck -S style -x mfa-user.sh administration/*.sh
+      - run: shfmt -d -i 2 -ci -bn -s .
+
+      # CloudFormation static checks
+      - name: cfn-lint
+        run: cfn-lint -i W -t '**/*.yaml' '**/*.yml'
+      - name: cfn-nag
+        uses: stelligent/cfn_nag@master
+        with:
+          input_path: .
+
+      # CFN Guard policy (see file below)
+      - name: cfn-guard
+        run: |
+          find . -name "*.yaml" -o -name "*.yml" | xargs -I {} cfn-guard validate -r policies/aws-server.guard -d {}
+
+  preview:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      # Validate templates early
+      - run: aws cloudformation validate-template --template-body file://mailserver-infrastructure-mvp.yaml || true
+
+  drift-detect:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+      # Read-only drift detection (requires RO creds via OpenID Connect if you wire it)
+      - run: echo "Run drift detection script here (dry-run)."

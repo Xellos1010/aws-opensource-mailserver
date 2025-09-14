@@ -6,18 +6,18 @@ This directory contains deployment and management scripts for the [HEPE Foundati
 
 Based on [hepefoundation.org](https://hepefoundation.org/), HEPE is a nonprofit charity organization with a 501c3 status, founded by Karina Rodriguez (Dao Kapra) to expand charitable work that has been conducted for nearly two decades. HEPE is a worldwide movement that seeks to recover lost hope, both in ourselves and in humanity.
 
-## 📁 Existing S3 Buckets
+## 📁 S3 Buckets
 
-This deployment is configured to work with **existing S3 buckets**:
-- **Backup Bucket**: `hepefoundation-aws-opensource-mailserver-backup`
-- **NextCloud Bucket**: `hepefoundation-aws-opensource-mailserver-nextcloud`
+This deployment will automatically create S3 buckets with the following naming pattern:
+- **Backup Bucket**: `hepefoundation.org-backup`
+- **NextCloud Bucket**: `hepefoundation.org-nextcloud`
 
-⚠️ **Important**: The current CloudFormation template expects bucket names following the pattern `${DomainName}-backup` and `${DomainName}-nextcloud`. Since your existing buckets use different names, the deploy script will warn you about this and require manual post-deployment configuration.
+The CloudFormation template will handle all S3 bucket creation and configuration automatically.
 
 ## 📋 Available Scripts
 
 ### Core Deployment
-- **`deploy-stack.sh`** - ⭐ **CUSTOM DEPLOY SCRIPT** - Deploy the CloudFormation stack for hepefoundation.org with existing S3 bucket handling
+- **`deploy-stack.sh`** - Deploy the CloudFormation stack for hepefoundation.org
 - **`describe-stack.sh`** - Show current stack status and outputs
 - **`delete-stack.sh`** - Delete the CloudFormation stack
 
@@ -43,7 +43,7 @@ This deployment is configured to work with **existing S3 buckets**:
 All scripts are executable and can be run directly:
 
 ```bash
-# Deploy the infrastructure (handles existing S3 buckets)
+# Deploy the infrastructure
 ./deploy-stack.sh
 
 # Check deployment status
@@ -61,43 +61,6 @@ All scripts are executable and can be run directly:
 - AWS CLI configured with the `hepe-admin-mfa` profile
 - CloudFormation template `mailserver-infrastructure-mvp.yaml` in the project root
 - Python 3 for the SES credentials script
-- Access to existing S3 buckets:
-  - `hepefoundation-aws-opensource-mailserver-backup`
-  - `hepefoundation-aws-opensource-mailserver-nextcloud`
-
-## 🔧 Special Deployment Notes
-
-### S3 Bucket Configuration
-
-The `deploy-stack.sh` script includes special handling for your existing S3 buckets:
-
-1. **Pre-deployment verification** - Checks that both existing buckets are accessible
-2. **Warning system** - Alerts about bucket name mismatch with CloudFormation template
-3. **Post-deployment steps** - Provides instructions for manual configuration
-
-### Post-Deployment Configuration Required
-
-After successful CloudFormation deployment, you'll need to:
-
-1. **SSH into the EC2 instance**:
-   ```bash
-   ./setup-ssh-access.sh
-   ssh -i ~/.ssh/hepefoundation.org-keypair.pem ubuntu@<INSTANCE_IP>
-   ```
-
-2. **Update backup configuration** to use your existing bucket:
-   ```bash
-   # Edit the backup configuration
-   sudo nano /home/user-data/backup/backup.conf
-   # Change S3 bucket reference to: hepefoundation-aws-opensource-mailserver-backup
-   ```
-
-3. **Update NextCloud configuration** to use your existing bucket:
-   ```bash
-   # Edit NextCloud S3 configuration
-   sudo nano /home/user-data/owncloud/config.php
-   # Update S3 bucket to: hepefoundation-aws-opensource-mailserver-nextcloud
-   ```
 
 ## 📝 Notes
 
