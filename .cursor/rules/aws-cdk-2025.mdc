@@ -1,0 +1,40 @@
+---
+alwaysApply: true
+---
+# AWS Server — 2025 Elevated Standards
+
+## Environments & Identities
+- Use **MFA-backed** CLI sessions for all admin ops; disallow long-lived keys in local env or CI; fail if `AWS_SECRET_ACCESS_KEY` present in CI logs.
+- Profiles must be explicit in scripts; default to read-only where possible; write only within deploy steps.
+
+## CloudFormation (IaC)
+- All templates must pass **cfn-lint** and **cfn-nag** with no High/Critical.
+- Sensitive `Parameters` (passwords, keys) must be **NoEcho: true** and **no Default** (retrieve via SSM or input at deploy).
+- S3 buckets (backups, logs) require: **BucketEncryption (KMS)**, **BlockPublicAccess ON**, **Versioning ON**, and Lifecycle (IA/Glacier) with min 30d retention.
+- EC2:
+  - Prefer **SSM Session Manager**; if SSH kept, restrict to **allowlisted CIDRs**, **no 0.0.0.0/0**, and rotate key pairs.
+  - EBS: **encrypted=true**; add CW alarms for disk space & status checks.
+- Logging & Metrics:
+  - All LogGroups must set **retentionDays ≥ 30** and **encryption**.
+  - Create alarms for EC2 CPU, status checks, disk, and for **SES bounce/complaint rates**.
+- Tagging (mandatory): `app`, `env`, `owner`, `cost-center`, `data-class`.
+
+## SES / Mail Posture
+- Domain Identity validated via **Route53** in same account; **DKIM ON**; **SPF + DMARC (p=quarantine or reject)** records created by stack or scripts.
+- Dedicated **Configuration Set** with event destinations (Kinesis/S3) for delivery/bounce/complaints; alarms on bounce ≥ 5% or complaint ≥ 0.2%.
+- Reverse DNS on Elastic IP must be set to `box.<domain>` and checked in post-deploy smoke.
+
+## Bash (admin scripts)
+- Start with: `set -Eeuo pipefail` and `IFS=$'\n\t'`; trap ERR to print line numbers; strictly quote all variables.
+- Use `getopts` for flags; **no `rm -rf`** without explicit directory guards; prefer `mktemp` for temp files.
+- All scripts must pass **shellcheck** and **shfmt** (CI enforced).
+
+## Python (admin utilities)
+- Python ≥ 3.11; **type hints**, **ruff** + **black**; `boto3` with paginators & retries (`botocore.config.Config`).
+- Never print secrets; read/write sensitive values only via **SSM Parameter Store**.
+- Unit tests for SES helpers (password derivation, domain validation) and SSM reads; integration smoke guarded behind env flags.
+
+## Releases & Operations
+- **Stack names**: `{domain}-mailserver` (lowercase, dots→dashes); **one hosted zone per domain**.
+- **Diff gate**: Require manual approval for destructive changes; run **drift detection** nightly.
+- **Backups**: S3 lifecycle + scheduled **restore test** (monthly) to a sandbox stack; alert on failures.

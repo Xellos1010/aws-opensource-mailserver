@@ -1,0 +1,16 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks: [{ id: black, files: ^administration/.*\.py$ }]
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks: [{ id: ruff, args: ["--fix"], files: ^administration/.*\.py$ }]
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks: [{ id: shellcheck, files: ^(mfa-user\.sh|administration/.*\.sh)$ }]
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.7.0-4
+    hooks: [{ id: shfmt, files: \.sh$ }]
+  - repo: https://github.com/aws-cloudformation/cfn-lint
+    rev: v1.30.0
+    hooks: [{ id: cfn-lint, files: \.(yaml|yml)$ }]

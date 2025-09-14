@@ -17,18 +17,18 @@ The app is inspired by the book **"Té Azul El Poder del Darte"** (The Power of 
 
 **Founded by Dao Kapra**, who has been writing since age 7, this platform focuses on **Subconsciousness Emotional Intelligence** and community empowerment.
 
-## 📁 Existing S3 Buckets
+## 📁 S3 Buckets
 
-This deployment is configured to work with **existing S3 buckets**:
-- **Backup Bucket**: `askdaokapra-opensource-mailserver-backup`
-- **NextCloud Bucket**: `askdaokapra-opensource-mailserver-nextcloud`
+This deployment will automatically create S3 buckets with the following naming pattern:
+- **Backup Bucket**: `askdaokapra.com-backup`
+- **NextCloud Bucket**: `askdaokapra.com-nextcloud`
 
-⚠️ **Important**: The current CloudFormation template expects bucket names following the pattern `${DomainName}-backup` and `${DomainName}-nextcloud`. Since your existing buckets use different names, the deploy script will warn you about this and require manual post-deployment configuration.
+The CloudFormation template will handle all S3 bucket creation and configuration automatically.
 
 ## 📋 Available Scripts
 
 ### Core Deployment
-- **`deploy-stack.sh`** - ⭐ **CUSTOM DEPLOY SCRIPT** - Deploy the CloudFormation stack for askdaokapra.com with existing S3 bucket handling
+- **`deploy-stack.sh`** - Deploy the CloudFormation stack for askdaokapra.com
 - **`describe-stack.sh`** - Show current stack status and outputs
 - **`delete-stack.sh`** - Delete the CloudFormation stack
 
@@ -54,7 +54,7 @@ This deployment is configured to work with **existing S3 buckets**:
 All scripts are executable and can be run directly:
 
 ```bash
-# Deploy the infrastructure (handles existing S3 buckets)
+# Deploy the infrastructure
 ./deploy-stack.sh
 
 # Check deployment status
@@ -72,43 +72,6 @@ All scripts are executable and can be run directly:
 - AWS CLI configured with the `hepe-admin-mfa` profile
 - CloudFormation template `mailserver-infrastructure-mvp.yaml` in the project root
 - Python 3 for the SES credentials script
-- Access to existing S3 buckets:
-  - `askdaokapra-opensource-mailserver-backup`
-  - `askdaokapra-opensource-mailserver-nextcloud`
-
-## 🔧 Special Deployment Notes
-
-### S3 Bucket Configuration
-
-The `deploy-stack.sh` script includes special handling for your existing S3 buckets:
-
-1. **Pre-deployment verification** - Checks that both existing buckets are accessible
-2. **Warning system** - Alerts about bucket name mismatch with CloudFormation template
-3. **Post-deployment steps** - Provides instructions for manual configuration
-
-### Post-Deployment Configuration Required
-
-After successful CloudFormation deployment, you'll need to:
-
-1. **SSH into the EC2 instance**:
-   ```bash
-   ./setup-ssh-access.sh
-   ssh -i ~/.ssh/askdaokapra.com-keypair.pem ubuntu@<INSTANCE_IP>
-   ```
-
-2. **Update backup configuration** to use your existing bucket:
-   ```bash
-   # Edit the backup configuration
-   sudo nano /home/user-data/backup/backup.conf
-   # Change S3 bucket reference to: askdaokapra-opensource-mailserver-backup
-   ```
-
-3. **Update NextCloud configuration** to use your existing bucket:
-   ```bash
-   # Edit NextCloud S3 configuration
-   sudo nano /home/user-data/owncloud/config.php
-   # Update S3 bucket to: askdaokapra-opensource-mailserver-nextcloud
-   ```
 
 ## 📝 Notes
 

@@ -60,7 +60,7 @@ Parameters:
   NightlyRebootSchedule:
     Type: String
     Default: 'cron(0 3 * * ? *)'
-    Description: Cron expression for nightly reboot schedule. Default is 3:00 AM UTC daily. Format: cron(minute hour day month dayOfWeek year)
+    Description: 'Cron expression for nightly reboot schedule. Default: 3:00 AM UTC daily.'
 
 Conditions:
   UseSesRelay:
