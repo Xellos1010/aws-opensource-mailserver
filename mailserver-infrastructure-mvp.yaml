@@ -63,7 +63,7 @@ Parameters:
     Description: 'Cron expression for nightly reboot schedule. Default: 3:00 AM UTC daily.'
   AlarmEmail:
     Type: String
-    Default: aws-systems@hepefoundation.org
+    Default: admin@askdaokapra.com
     Description: Email for alerts (SNS subscription)
   SwapSizeGiB:
     Type: Number
@@ -974,10 +974,11 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: /ec2/syslog
-      RetentionInDays: 30
+      RetentionInDays: 7
 
   OOMMetricFilter:
     Type: AWS::Logs::MetricFilter
+    DependsOn: SyslogGroup
     Properties:
       LogGroupName: /ec2/syslog
       FilterPattern: "Out of memory"
@@ -1107,3 +1108,6 @@ Outputs:
     Condition: EnableNightlyRebootCondition
     Description: Lambda function ARN that handles nightly reboots
     Value: !GetAtt NightlyRebootLambdaFunction.Arn
+  AlertTopicArn:
+    Description: SNS Topic ARN for memory and system alerts
+    Value: !Ref AlertTopic

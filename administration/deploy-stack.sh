@@ -35,10 +35,10 @@ else
     echo "Stack ${STACK_NAME} exists with status: ${STACK_STATUS}"
 fi
 
-# Deploy the CloudFormation stack for emcnotary infrastructure
+# Deploy the CloudFormation stack for mailserver infrastructure
 if ! aws cloudformation deploy \
     --profile hepe-admin-mfa \
-    --template-file mailserver-infrastructure-mvp.yaml \
+    --template-file ../mailserver-infrastructure-mvp.yaml \
     --stack-name "${STACK_NAME}" \
     --capabilities CAPABILITY_NAMED_IAM \
     --parameter-overrides DomainName="${DOMAIN_NAME}"; then
