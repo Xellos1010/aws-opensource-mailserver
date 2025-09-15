@@ -61,6 +61,24 @@ Parameters:
     Type: String
     Default: 'cron(0 3 * * ? *)'
     Description: 'Cron expression for nightly reboot schedule. Default: 3:00 AM UTC daily.'
+  AlarmEmail:
+    Type: String
+    Default: aws-systems@hepefoundation.org
+    Description: Email for alerts (SNS subscription)
+  SwapSizeGiB:
+    Type: Number
+    Default: 2
+    MinValue: 1
+    MaxValue: 8
+    Description: Swap size in GiB to create at boot
+  MemHighPercent:
+    Type: Number
+    Default: 85
+    Description: Percent memory used to alarm on
+  SwapHighPercent:
+    Type: Number
+    Default: 80
+    Description: Percent swap used to alarm on
 
 Conditions:
   UseSesRelay:
@@ -216,6 +234,23 @@ Resources:
           export PRIMARY_HOSTNAME=${InstanceDns}.${DomainName}
           export DEFAULT_PRIMARY_HOSTNAME=${InstanceDns}.${DomainName}
           export DEFAULT_PUBLIC_IP=${ElasticIP}
+
+          # --- Stability: swap + swappiness + systemd MemoryMax (soft caps) ---
+          if ! swapon --summary | grep -q '/swapfile'; then
+            fallocate -l ${SwapSizeGiB}G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+            echo '/swapfile none swap sw 0 0' >> /etc/fstab
+          fi
+          sysctl -w vm.swappiness=60
+          echo 'vm.swappiness=60' >> /etc/sysctl.conf
+
+          # Soft memory caps on heavy daemons (preempt OOM); harmless if service absent now, useful after MIAB setup
+          for svc in php8.0-fpm rspamd spamassassin named dovecot; do
+            if systemctl list-unit-files | grep -q "^$svc"; then
+              systemctl set-property "$svc".service MemoryMax=400M || true
+            fi
+          done
+          systemctl daemon-reload || true
+          # --------------------------------------------------------------------
 
           # Setup Admin Account
           echo "Setting up admin account..." | tee -a $LOGFILE | logger -t mailinabox_setup
@@ -896,6 +931,120 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
       SourceArn: !GetAtt NightlyRebootEventRule.Arn
+
+  # Ship mem/swap metrics & syslog to CloudWatch, and set alarms
+  CWAgentConfigParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /cwagent-linux
+      Type: String
+      Value: |
+        {
+          "agent": { "metrics_collection_interval": 60, "run_as_user": "root" },
+          "metrics": {
+            "append_dimensions": { "InstanceId": "${aws:InstanceId}" },
+            "metrics_collected": {
+              "mem": { "measurement": ["mem_used_percent","mem_available"], "metrics_collection_interval": 60 },
+              "swap": { "measurement": ["swap_used_percent"], "metrics_collection_interval": 60 }
+            }
+          },
+          "logs": {
+            "logs_collected": {
+              "files": { "collect_list": [
+                { "file_path": "/var/log/syslog", "log_group_name": "/ec2/syslog", "log_stream_name": "{instance_id}" }
+              ]}
+            }
+          }
+        }
+
+  CWAgentAssociation:
+    Type: AWS::SSM::Association
+    Properties:
+      Name: AmazonCloudWatch-ManageAgent
+      Parameters:
+        action: ["configure"]
+        mode: ["ec2"]
+        optionalConfigurationSource: ["ssm"]
+        optionalConfigurationLocation: ["/cwagent-linux"]
+      Targets:
+        - Key: InstanceIds
+          Values: [ !Ref EC2Instance ]
+
+  SyslogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /ec2/syslog
+      RetentionInDays: 30
+
+  OOMMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: /ec2/syslog
+      FilterPattern: "Out of memory"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "EC2"
+          MetricName: "oom_kills"
+
+  AlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ec2-memory-events-${AWS::StackName}
+
+  AlertSubscriptionEmail:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      TopicArn: !Ref AlertTopic
+      Endpoint: !Ref AlarmEmail
+
+  MemHighAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub MemHigh-${EC2Instance}
+      Namespace: CWAgent
+      MetricName: mem_used_percent
+      Dimensions:
+        - Name: InstanceId
+          Value: !Ref EC2Instance
+      Statistic: Average
+      Period: 60
+      Threshold: !Ref MemHighPercent
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 5
+      AlarmActions: [ !Ref AlertTopic ]
+      TreatMissingData: notBreaching
+
+  SwapHighAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub SwapHigh-${EC2Instance}
+      Namespace: CWAgent
+      MetricName: swap_used_percent
+      Dimensions:
+        - Name: InstanceId
+          Value: !Ref EC2Instance
+      Statistic: Average
+      Period: 60
+      Threshold: !Ref SwapHighPercent
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 5
+      AlarmActions: [ !Ref AlertTopic ]
+      TreatMissingData: notBreaching
+
+  OOMKillAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub OOMKillDetected-${EC2Instance}
+      Namespace: EC2
+      MetricName: oom_kills
+      Statistic: Sum
+      Period: 60
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      AlarmActions: [ !Ref AlertTopic ]
+      TreatMissingData: notBreaching
 
 Outputs:
   ElasticIPAddress:
