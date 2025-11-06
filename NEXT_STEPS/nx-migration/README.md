@@ -42,57 +42,39 @@ This document outlines the next steps and remaining work items for the Nx migrat
 echo "20.18.1" > .nvmrc
 ```
 
-### 2. CI/CD Pipeline Configuration
+### 2. Local Operations Setup
 
-**Status**: ⚠️ Missing
+**Status**: ✅ Complete
 
-**Action Required**:
-- [ ] Choose CI provider (GitHub Actions, GitLab CI, CircleCI, etc.)
-- [ ] Configure pipeline to run:
-  - `nx affected -t lint -t build -t test`
-  - `nx format:check`
-  - Coverage reporting (target: ≥80%)
-- [ ] Set up remote cache (Nx Cloud or alternative)
-- [ ] Configure PR checks
+**Completed**:
+- ✅ Created `ops-runner` app for unified command interface
+- ✅ Added `.env.example` template
+- ✅ Disabled GitHub Actions (moved to `workflows_disabled/`)
+- ✅ Added `docs/LOCAL-OPS.md` with usage examples
 
-**Example GitHub Actions**:
-```yaml
-# .github/workflows/ci.yml
-name: CI
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-      - run: pnpm install
-      - run: pnpm nx affected -t lint -t build -t test
-```
-
-### 3. AWS Account for E2E Testing
-
-**Status**: ⚠️ Missing
-
-**Action Required**:
-- [ ] Identify sandbox AWS account for MFA E2E testing
-- [ ] Configure test IAM user with MFA device
-- [ ] Document test account setup in `docs/testing.md`
-- [ ] Add integration test suite for MFA flow
-
-**Environment Variables for Testing**:
+**Usage**:
 ```bash
-export MFA_DEVICE_ARN="arn:aws:iam::<TEST_ACCOUNT_ID>:mfa/test-device"
-export SOURCE_PROFILE="test-admin"
-export TARGET_PROFILE="test-admin-mfa"
-export DURATION_SECONDS=3600
-export FEATURE_NX_SCRIPTS_ENABLED=1
-export DRY_RUN=1  # For initial testing
+# Load environment
+export $(grep -v '^#' .env.local | xargs)
+
+# Run operations
+pnpm nx run ops-runner:run -- <command>
 ```
+
+See `docs/LOCAL-OPS.md` for complete usage guide and scheduling examples.
+
+### 3. Local Testing & Verification
+
+**Status**: ✅ Ready
+
+**Action Required**:
+- [ ] Copy `.env.example` to `.env.local` and configure
+- [ ] Test MFA auth locally: `pnpm nx run ops-runner:run -- auth:mfa`
+- [ ] Test DNS backup: `pnpm nx run ops-runner:run -- dns:backup`
+- [ ] Test mail backup: `pnpm nx run ops-runner:run -- mail:backup`
+- [ ] Verify EC2/KMS operations with dry-run or test instances
+
+**Note**: MFA is interactive and manual-only. No automated E2E tests needed.
 
 ### 4. Additional Script Migrations
 
