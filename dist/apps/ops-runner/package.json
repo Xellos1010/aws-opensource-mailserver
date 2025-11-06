@@ -1,0 +1,6 @@
+{
+  "name": "ops-runner",
+  "version": "0.0.1",
+  "main": "./ops.cjs",
+  "type": "commonjs"
+}
