@@ -1,0 +1,14 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Separation of Concerns (SoC)
+
+Ensure that the codebase is divided into distinct layers: presentation (UI components in `components/` or `screens/`), business logic (services in `services/`), and data access (repositories in `backend/src/services/` or frontend equivalents). Each layer should handle its specific concern without overlapping responsibilities. For example, UI components should not directly interact with AWS APIs or perform business logic.
+
+**Justification**: This separation prevents tight coupling, making the TelassistMD app easier to maintain, test, and extend, especially given its complex interactions between UI, real-time services (e.g., AWS Chime), and data handling.
+
+**Example**: The `VideoConference` component should not call AWS Chime APIs directly. Instead, delegate to `VideoConferenceService` in `services/`, which may interact with a repository for persistence.
+
+**Related Rules**: [single-responsibility.mdc](mdc:.cursor/rules/single-responsibility.mdc), [modularity.mdc](mdc:.cursor/rules/modularity.mdc)

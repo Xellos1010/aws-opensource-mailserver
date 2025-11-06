@@ -1,0 +1,150 @@
+---
+description: Playwright automation & e2e testing standards for web automation projects
+alwaysApply: false
+---
+
+# Playwright Automation Standards (2025)
+
+## Testing Philosophy
+Test user-visible behavior, not implementation details. Automated tests should verify that the application works for end users, avoiding reliance on internal functions, CSS classes, or DOM structure that users won't interact with.
+
+## Test Isolation
+Each test should be completely isolated from others, running independently with its own local storage, session storage, data, and cookies. Test isolation improves reproducibility, makes debugging easier, and prevents cascading failures.
+
+## Locators & Navigation
+- **Prefer resilient locators**: Use `getByRole()`, `getByLabel()`, `getByTestId()` over brittle CSS/XPath selectors
+- **Auto-waiting**: Playwright's locators come with built-in auto-waiting and retry-ability
+- **User-facing attributes**: Prioritize attributes users can see/interact with (roles, labels, text)
+- **Locator chaining**: Use `filter()` and chaining to narrow down searches to specific page areas
+
+```typescript
+// 👍 Good - resilient locators
+await page.getByRole('button', { name: 'Submit' }).click();
+await page.getByLabel('Username').fill('user@example.com');
+
+// 👎 Avoid - brittle selectors
+await page.locator('.btn-primary.submit-btn').click();
+await page.locator('#username-input').fill('user@example.com');
+```
+
+## Assertions
+Use web-first assertions that automatically wait for expected conditions:
+
+```typescript
+// 👍 Good - web-first assertions with auto-waiting
+await expect(page.getByText('Welcome')).toBeVisible();
+
+// 👎 Avoid - manual assertions without waiting
+expect(await page.getByText('Welcome').isVisible()).toBe(true);
+```
+
+## Fixtures & Setup
+- Use fixtures for authentication, session setup, and test data
+- Leverage `beforeEach` hooks for common setup while maintaining test isolation
+- Consider setup projects for authenticated state reuse
+
+```typescript
+// Setup project example for auth reuse
+export default defineConfig({
+  projects: [
+    { name: 'setup', testMatch: 'auth.setup.ts' },
+    {
+      name: 'authenticated',
+      dependencies: ['setup'],
+      use: { storageState: 'playwright/.auth/user.json' }
+    }
+  ]
+});
+```
+
+## Network & External Dependencies
+- Avoid testing third-party dependencies you don't control
+- Use Playwright's Network API to mock external calls for determinism
+- Don't test links to external sites that might have cookie banners or overlays
+
+```typescript
+// Mock external API calls
+await page.route('**/api/external-service', route =>
+  route.fulfill({
+    status: 200,
+    body: JSON.stringify(mockResponse)
+  })
+);
+```
+
+## Configuration & Environments
+- **Suites**: Use `@smoke` for fast PR checks, `@regression` for comprehensive nightly runs
+- **Projects**: Configure for multiple browsers but run single browser on PR for speed
+- **Artifacts**: Keep traces/videos/screenshots only on failure to optimize CI performance
+
+```typescript
+// playwright.config.ts
+export default defineConfig({
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    // Only run chromium on PR for speed
+  ],
+  use: {
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure'
+  }
+});
+```
+
+## Debugging & Development
+- **Local debugging**: Use VS Code extension with breakpoints and live locator editing
+- **CI debugging**: Use trace viewer for failed tests - provides timeline, DOM snapshots, network requests
+- **Codegen**: Use `npx playwright codegen` to generate resilient locators
+- **Inspector**: Run tests with `--debug` flag for step-through debugging
+
+## Performance & CI Optimization
+- **Parallelism**: Tests run in parallel by default; use sharding for multiple machines
+- **Browser downloads**: Only install needed browsers on CI (`npx playwright install chromium`)
+- **Linting**: Use TypeScript and ESLint to catch errors early
+- **Updates**: Keep Playwright updated to test against latest browser versions
+
+## Nx Integration
+Each app should define an `"e2e"` target that runs Playwright with appropriate filters:
+
+```json
+{
+  "targets": {
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "apps/my-app/playwright.config.ts"
+      }
+    },
+    "e2e:smoke": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "apps/my-app/playwright.config.ts",
+        "grep": "@smoke"
+      }
+    }
+  }
+}
+```
+
+## Web Automation Specific Patterns
+For web automation projects like this workspace:
+
+- **Flow-based testing**: Test complete user workflows across multiple pages/actions
+- **Data validation**: Verify that automated actions produce expected results
+- **Error handling**: Test error states and recovery scenarios
+- **Cross-browser compatibility**: Ensure automation works across target browsers
+- **Performance monitoring**: Track execution times and failure rates
+
+## Best Practices Checklist
+- [ ] Tests verify user-visible behavior, not implementation details
+- [ ] Each test is completely isolated with its own context
+- [ ] Locators use roles, labels, and test IDs over CSS classes
+- [ ] Assertions use web-first patterns with auto-waiting
+- [ ] External dependencies are mocked, not tested directly
+- [ ] Authentication uses fixtures or setup projects
+- [ ] CI runs smoke tests on PR, full suite nightly
+- [ ] Traces/screenshots captured only on failures
+- [ ] Tests run in parallel with appropriate sharding
+- [ ] Playwright and browser versions kept current

@@ -1,0 +1,711 @@
+---
+description: This applies when we want to confirm run-time verification of features to determine if they are working.
+alwaysApply: false
+---
+# Runtime Verification Standards
+
+Implement runtime checks and verification scripts to catch integration issues before they reach production.
+
+**Justification:** The "Open Editor" issue could have been caught earlier with proper runtime verification. This rule ensures critical integrations are verified at startup and during development.
+
+## 🎯 Single Responsibility
+This rule ONLY covers runtime verification patterns and startup checks. Not unit testing (see unit-testing) or E2E testing (see playwright-automation-standards).
+
+## 📋 Implementation Checklist
+
+### Runtime Verification Requirements
+```markdown
+- [ ] Create verification scripts for critical integrations
+- [ ] Run pre-flight checks before application startup
+- [ ] Add runtime assertions in development mode
+- [ ] Log verification results clearly
+- [ ] Fail fast on critical verification failures
+- [ ] Provide actionable error messages
+- [ ] Include verification in CI/CD pipeline
+- [ ] Create developer-friendly verification commands
+```
+
+## 🔍 Verification Script Pattern
+
+### Structure
+```javascript
+#!/usr/bin/env node
+
+/**
+ * Verification script for [Feature Name]
+ * 
+ * This script verifies that [what it verifies]
+ * to prevent [what issues it prevents].
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+console.log('🔍 Verifying [Feature Name]...\n');
+
+let allPassed = true;
+const results = [];
+
+// Test 1: Check critical file/configuration
+console.log('📋 Test 1: [Test Description]');
+try {
+  // Verification logic
+  const passed = checkSomething();
+  
+  if (passed) {
+    console.log('✅ PASS: [Success message]');
+    results.push({ test: 'Test 1', status: 'PASS' });
+  } else {
+    console.log('❌ FAIL: [Failure message]');
+    results.push({ test: 'Test 1', status: 'FAIL' });
+    allPassed = false;
+  }
+} catch (error) {
+  console.log('❌ ERROR:', error.message);
+  results.push({ test: 'Test 1', status: 'ERROR' });
+  allPassed = false;
+}
+
+// Summary
+console.log('\n📊 Summary:');
+results.forEach(r => {
+  console.log(`${r.status === 'PASS' ? '✅' : '❌'} ${r.test}: ${r.status}`);
+});
+
+if (!allPassed) {
+  console.error('\n⚠️ Some verifications failed!');
+  process.exit(1);
+}
+
+console.log('\n🎉 All verifications passed!');
+```
+
+## 🚀 Startup Integration
+
+### Pre-flight Checks
+```javascript
+// In startup script (e.g., start-with-feature.cjs)
+async function runPreFlightChecks() {
+  console.log('🔍 Running pre-flight checks...');
+  
+  try {
+    const result = execSync('node verify-feature.cjs', {
+      encoding: 'utf8',
+      stdio: 'pipe'
+    });
+    
+    if (result.includes('All verifications passed')) {
+      console.log('✅ Pre-flight checks passed!');
+      return true;
+    }
+  } catch (error) {
+    console.error('❌ Pre-flight checks failed!');
+    console.log('Continuing anyway, but feature may not work correctly...');
+    return false;
+  }
+}
+
+// Run before starting application
+await runPreFlightChecks();
+```
+
+### Runtime Assertions
+```javascript
+class RuntimeVerifier {
+  constructor(feature) {
+    this.feature = feature;
+    this.checks = [];
+  }
+  
+  async verify(name, checkFn) {
+    const start = Date.now();
+    try {
+      const result = await checkFn();
+      const duration = Date.now() - start;
+      
+      this.checks.push({
+        name,
+        passed: result,
+        duration,
+        timestamp: new Date().toISOString()
+      });
+      
+      if (!result) {
+        console.warn(`⚠️ [${this.feature}] Check failed: ${name}`);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error(`❌ [${this.feature}] Check error: ${name}`, error);
+      this.checks.push({
+        name,
+        passed: false,
+        error: error.message,
+        duration: Date.now() - start
+      });
+      return false;
+    }
+  }
+  
+  report() {
+    const passed = this.checks.filter(c => c.passed).length;
+    const total = this.checks.length;
+    
+    console.log(`\n📊 ${this.feature} Verification Report:`);
+    console.log(`Passed: ${passed}/${total}`);
+    
+    this.checks.forEach(check => {
+      const icon = check.passed ? '✅' : '❌';
+      console.log(`${icon} ${check.name} (${check.duration}ms)`);
+      if (check.error) {
+        console.log(`   Error: ${check.error}`);
+      }
+    });
+    
+    return passed === total;
+  }
+}
+```
+
+## 🧪 Verification Examples
+
+### Bridge Communication Verification
+```javascript
+async function verifyBridgeCommunication() {
+  const verifier = new RuntimeVerifier('Bridge Communication');
+  
+  // Check bridge exists
+  await verifier.verify('Bridge function exists', async () => {
+    return await page.evaluate(() => 
+      typeof window.__bridge === 'function'
+    );
+  });
+  
+  // Check signature
+  await verifier.verify('Bridge has correct signature', async () => {
+    return await page.evaluate(() => 
+      window.__bridge?.length === 2
+    );
+  });
+  
+  // Check not overridden
+  await verifier.verify('Bridge not overridden', async () => {
+    const original = await page.evaluate(() => 
+      window.__bridge?.toString()
+    );
+    
+    // Inject potential override
+    await page.evaluate(() => {
+      // This should NOT override
+    });
+    
+    const after = await page.evaluate(() => 
+      window.__bridge?.toString()
+    );
+    
+    return original === after;
+  });
+  
+  return verifier.report();
+}
+```
+
+### UI Component Verification
+```javascript
+async function verifyUIComponents() {
+  const verifier = new RuntimeVerifier('UI Components');
+  
+  await verifier.verify('Overlay exists', async () => {
+    return await page.evaluate(() => 
+      !!document.getElementById('__overlay__')
+    );
+  });
+  
+  await verifier.verify('All buttons present', async () => {
+    const buttons = await page.evaluate(() => {
+      const overlay = document.getElementById('__overlay__');
+      return overlay?.querySelectorAll('button').length;
+    });
+    return buttons === 5; // Expected number
+  });
+  
+  await verifier.verify('Event handlers attached', async () => {
+    return await page.evaluate(() => {
+      const btn = document.getElementById('open-editor-btn');
+      return btn?.onclick !== null;
+    });
+  });
+  
+  return verifier.report();
+}
+```
+
+## 📊 Development Mode Checks
+
+### Automatic Verification
+```javascript
+if (process.env.NODE_ENV === 'development') {
+  // Run verification every N minutes
+  setInterval(async () => {
+    console.log('\n🔍 Running periodic verification...');
+    
+    const results = await Promise.all([
+      verifyBridgeCommunication(),
+      verifyUIComponents(),
+      verifyDataIntegrity()
+    ]);
+    
+    if (results.some(r => !r)) {
+      console.error('⚠️ Verification issues detected!');
+      // Could trigger developer notification
+    }
+  }, 5 * 60 * 1000); // Every 5 minutes
+}
+```
+
+### Console Helpers
+```javascript
+// Add verification commands to window in dev
+if (process.env.NODE_ENV === 'development') {
+  window.__verify = {
+    bridge: () => verifyBridgeCommunication(),
+    ui: () => verifyUIComponents(),
+    all: async () => {
+      await verifyBridgeCommunication();
+      await verifyUIComponents();
+      console.log('Run window.__verify.report() for details');
+    },
+    report: () => {
+      // Show detailed report
+    }
+  };
+  
+  console.log('💡 Verification available: window.__verify.all()');
+}
+```
+
+## 🚨 Critical Verification Points
+
+### Must Verify Before Production
+```markdown
+1. **Integration Points**
+   - External API connections
+   - Database connections
+   - Message queue connections
+   - WebSocket connections
+
+2. **Security Features**
+   - Authentication flow
+   - Authorization checks
+   - CSRF protection
+   - Rate limiting
+
+3. **Critical UI Features**
+   - Payment flows
+   - Data submission forms
+   - File uploads
+   - Real-time updates
+
+4. **Data Integrity**
+   - Schema migrations
+   - Data transformations
+   - Cache consistency
+   - Event sourcing
+```
+
+## ✅ Verification Best Practices
+
+```javascript
+// ✅ Clear, actionable messages
+console.log('❌ FAIL: Bridge function missing. Check if platform.setupBridge() was called before script injection.');
+
+// ✅ Graceful degradation
+if (!verificationPassed) {
+  console.warn('Feature may not work correctly, but continuing...');
+  // Enable fallback mode
+}
+
+// ✅ Detailed logging in verbose mode
+if (process.env.VERBOSE) {
+  console.log('Detailed verification steps...');
+}
+
+// ✅ Machine-readable output option
+if (process.env.CI) {
+  console.log(JSON.stringify(results));
+}
+
+// ✅ Quick verification command
+// package.json
+"scripts": {
+  "verify": "node verify-all.cjs",
+  "verify:quick": "node verify-critical.cjs"
+}
+```
+
+## 📈 Success Metrics
+
+- **Verification Coverage**: 100% of critical features have verification
+- **Pre-flight Success Rate**: > 99% of startups pass verification
+- **Early Detection**: Issues caught in development, not production
+- **Clear Diagnostics**: < 1 minute to identify issue from verification
+- **CI Integration**: All verifications run in CI pipeline
+
+## 🔗 Related Rules
+- [bridge-communication-testing](./bridge-communication-testing.mdc)
+- [comprehensive-testing-strategy](./comprehensive-testing-strategy.mdc)
+- [monitoring-and-alerting](../10-observability/monitoring-and-alerting.mdc)
+- [startup-procedures](../08-infrastructure/startup-procedures.mdc)# Runtime Verification Standards
+
+Implement runtime checks and verification scripts to catch integration issues before they reach production.
+
+**Justification:** The "Open Editor" issue could have been caught earlier with proper runtime verification. This rule ensures critical integrations are verified at startup and during development.
+
+## 🎯 Single Responsibility
+This rule ONLY covers runtime verification patterns and startup checks. Not unit testing (see unit-testing) or E2E testing (see playwright-automation-standards).
+
+## 📋 Implementation Checklist
+
+### Runtime Verification Requirements
+```markdown
+- [ ] Create verification scripts for critical integrations
+- [ ] Run pre-flight checks before application startup
+- [ ] Add runtime assertions in development mode
+- [ ] Log verification results clearly
+- [ ] Fail fast on critical verification failures
+- [ ] Provide actionable error messages
+- [ ] Include verification in CI/CD pipeline
+- [ ] Create developer-friendly verification commands
+```
+
+## 🔍 Verification Script Pattern
+
+### Structure
+```javascript
+#!/usr/bin/env node
+
+/**
+ * Verification script for [Feature Name]
+ * 
+ * This script verifies that [what it verifies]
+ * to prevent [what issues it prevents].
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+console.log('🔍 Verifying [Feature Name]...\n');
+
+let allPassed = true;
+const results = [];
+
+// Test 1: Check critical file/configuration
+console.log('📋 Test 1: [Test Description]');
+try {
+  // Verification logic
+  const passed = checkSomething();
+  
+  if (passed) {
+    console.log('✅ PASS: [Success message]');
+    results.push({ test: 'Test 1', status: 'PASS' });
+  } else {
+    console.log('❌ FAIL: [Failure message]');
+    results.push({ test: 'Test 1', status: 'FAIL' });
+    allPassed = false;
+  }
+} catch (error) {
+  console.log('❌ ERROR:', error.message);
+  results.push({ test: 'Test 1', status: 'ERROR' });
+  allPassed = false;
+}
+
+// Summary
+console.log('\n📊 Summary:');
+results.forEach(r => {
+  console.log(`${r.status === 'PASS' ? '✅' : '❌'} ${r.test}: ${r.status}`);
+});
+
+if (!allPassed) {
+  console.error('\n⚠️ Some verifications failed!');
+  process.exit(1);
+}
+
+console.log('\n🎉 All verifications passed!');
+```
+
+## 🚀 Startup Integration
+
+### Pre-flight Checks
+```javascript
+// In startup script (e.g., start-with-feature.cjs)
+async function runPreFlightChecks() {
+  console.log('🔍 Running pre-flight checks...');
+  
+  try {
+    const result = execSync('node verify-feature.cjs', {
+      encoding: 'utf8',
+      stdio: 'pipe'
+    });
+    
+    if (result.includes('All verifications passed')) {
+      console.log('✅ Pre-flight checks passed!');
+      return true;
+    }
+  } catch (error) {
+    console.error('❌ Pre-flight checks failed!');
+    console.log('Continuing anyway, but feature may not work correctly...');
+    return false;
+  }
+}
+
+// Run before starting application
+await runPreFlightChecks();
+```
+
+### Runtime Assertions
+```javascript
+class RuntimeVerifier {
+  constructor(feature) {
+    this.feature = feature;
+    this.checks = [];
+  }
+  
+  async verify(name, checkFn) {
+    const start = Date.now();
+    try {
+      const result = await checkFn();
+      const duration = Date.now() - start;
+      
+      this.checks.push({
+        name,
+        passed: result,
+        duration,
+        timestamp: new Date().toISOString()
+      });
+      
+      if (!result) {
+        console.warn(`⚠️ [${this.feature}] Check failed: ${name}`);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error(`❌ [${this.feature}] Check error: ${name}`, error);
+      this.checks.push({
+        name,
+        passed: false,
+        error: error.message,
+        duration: Date.now() - start
+      });
+      return false;
+    }
+  }
+  
+  report() {
+    const passed = this.checks.filter(c => c.passed).length;
+    const total = this.checks.length;
+    
+    console.log(`\n📊 ${this.feature} Verification Report:`);
+    console.log(`Passed: ${passed}/${total}`);
+    
+    this.checks.forEach(check => {
+      const icon = check.passed ? '✅' : '❌';
+      console.log(`${icon} ${check.name} (${check.duration}ms)`);
+      if (check.error) {
+        console.log(`   Error: ${check.error}`);
+      }
+    });
+    
+    return passed === total;
+  }
+}
+```
+
+## 🧪 Verification Examples
+
+### Bridge Communication Verification
+```javascript
+async function verifyBridgeCommunication() {
+  const verifier = new RuntimeVerifier('Bridge Communication');
+  
+  // Check bridge exists
+  await verifier.verify('Bridge function exists', async () => {
+    return await page.evaluate(() => 
+      typeof window.__bridge === 'function'
+    );
+  });
+  
+  // Check signature
+  await verifier.verify('Bridge has correct signature', async () => {
+    return await page.evaluate(() => 
+      window.__bridge?.length === 2
+    );
+  });
+  
+  // Check not overridden
+  await verifier.verify('Bridge not overridden', async () => {
+    const original = await page.evaluate(() => 
+      window.__bridge?.toString()
+    );
+    
+    // Inject potential override
+    await page.evaluate(() => {
+      // This should NOT override
+    });
+    
+    const after = await page.evaluate(() => 
+      window.__bridge?.toString()
+    );
+    
+    return original === after;
+  });
+  
+  return verifier.report();
+}
+```
+
+### UI Component Verification
+```javascript
+async function verifyUIComponents() {
+  const verifier = new RuntimeVerifier('UI Components');
+  
+  await verifier.verify('Overlay exists', async () => {
+    return await page.evaluate(() => 
+      !!document.getElementById('__overlay__')
+    );
+  });
+  
+  await verifier.verify('All buttons present', async () => {
+    const buttons = await page.evaluate(() => {
+      const overlay = document.getElementById('__overlay__');
+      return overlay?.querySelectorAll('button').length;
+    });
+    return buttons === 5; // Expected number
+  });
+  
+  await verifier.verify('Event handlers attached', async () => {
+    return await page.evaluate(() => {
+      const btn = document.getElementById('open-editor-btn');
+      return btn?.onclick !== null;
+    });
+  });
+  
+  return verifier.report();
+}
+```
+
+## 📊 Development Mode Checks
+
+### Automatic Verification
+```javascript
+if (process.env.NODE_ENV === 'development') {
+  // Run verification every N minutes
+  setInterval(async () => {
+    console.log('\n🔍 Running periodic verification...');
+    
+    const results = await Promise.all([
+      verifyBridgeCommunication(),
+      verifyUIComponents(),
+      verifyDataIntegrity()
+    ]);
+    
+    if (results.some(r => !r)) {
+      console.error('⚠️ Verification issues detected!');
+      // Could trigger developer notification
+    }
+  }, 5 * 60 * 1000); // Every 5 minutes
+}
+```
+
+### Console Helpers
+```javascript
+// Add verification commands to window in dev
+if (process.env.NODE_ENV === 'development') {
+  window.__verify = {
+    bridge: () => verifyBridgeCommunication(),
+    ui: () => verifyUIComponents(),
+    all: async () => {
+      await verifyBridgeCommunication();
+      await verifyUIComponents();
+      console.log('Run window.__verify.report() for details');
+    },
+    report: () => {
+      // Show detailed report
+    }
+  };
+  
+  console.log('💡 Verification available: window.__verify.all()');
+}
+```
+
+## 🚨 Critical Verification Points
+
+### Must Verify Before Production
+```markdown
+1. **Integration Points**
+   - External API connections
+   - Database connections
+   - Message queue connections
+   - WebSocket connections
+
+2. **Security Features**
+   - Authentication flow
+   - Authorization checks
+   - CSRF protection
+   - Rate limiting
+
+3. **Critical UI Features**
+   - Payment flows
+   - Data submission forms
+   - File uploads
+   - Real-time updates
+
+4. **Data Integrity**
+   - Schema migrations
+   - Data transformations
+   - Cache consistency
+   - Event sourcing
+```
+
+## ✅ Verification Best Practices
+
+```javascript
+// ✅ Clear, actionable messages
+console.log('❌ FAIL: Bridge function missing. Check if platform.setupBridge() was called before script injection.');
+
+// ✅ Graceful degradation
+if (!verificationPassed) {
+  console.warn('Feature may not work correctly, but continuing...');
+  // Enable fallback mode
+}
+
+// ✅ Detailed logging in verbose mode
+if (process.env.VERBOSE) {
+  console.log('Detailed verification steps...');
+}
+
+// ✅ Machine-readable output option
+if (process.env.CI) {
+  console.log(JSON.stringify(results));
+}
+
+// ✅ Quick verification command
+// package.json
+"scripts": {
+  "verify": "node verify-all.cjs",
+  "verify:quick": "node verify-critical.cjs"
+}
+```
+
+## 📈 Success Metrics
+
+- **Verification Coverage**: 100% of critical features have verification
+- **Pre-flight Success Rate**: > 99% of startups pass verification
+- **Early Detection**: Issues caught in development, not production
+- **Clear Diagnostics**: < 1 minute to identify issue from verification
+- **CI Integration**: All verifications run in CI pipeline
+
+## 🔗 Related Rules
+- [bridge-communication-testing](./bridge-communication-testing.mdc)
+- [comprehensive-testing-strategy](./comprehensive-testing-strategy.mdc)
+- [monitoring-and-alerting](../10-observability/monitoring-and-alerting.mdc)
+- [startup-procedures](../08-infrastructure/startup-procedures.mdc)

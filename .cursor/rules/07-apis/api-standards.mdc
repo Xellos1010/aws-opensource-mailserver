@@ -1,0 +1,88 @@
+---
+description: Apply to API client libraries, service endpoints, and type definitions for external and internal APIs
+alwaysApply: false
+---
+# API Design & Backward Compatibility - Freshworks Integration
+
+Design typed APIs for external services (Freshsales, ElevenLabs, Telnyx) and internal services with explicit contracts, validation, and backward compatibility guarantees.
+
+**Justification:** Reliable API integrations prevent service outages and simplify debugging in production CRM environments.
+
+## External API Clients
+
+### Client Library Structure
+- Export typed interfaces for all request/response objects
+- Include builder functions for complex request payloads (`buildOutboundCallBody`)
+- Document required vs optional fields clearly
+- Handle authentication consistently across clients
+
+### Error Handling
+- Standardize error responses across different providers
+- Include retry logic for transient failures
+- Log API failures with context for debugging
+
+### Examples from This Project
+```typescript
+// Good: Explicit types and builder pattern
+export interface OutboundCallRequest {
+  agentId: string;
+  phoneNumberId: string;
+  toNumber: string;
+}
+
+export function buildOutboundCallBody(req: OutboundCallRequest): Record<string, unknown> {
+  return {
+    agent_id: req.agentId,
+    agent_phone_number_id: req.phoneNumberId,
+    to_number: req.toNumber,
+  };
+}
+```
+
+## Internal Service APIs
+
+### Endpoint Design
+- Use explicit TypeScript types for request/response bodies
+- Validate inputs using schema validation (Zod, Joi, or similar)
+- Return consistent error response formats
+- Include health check endpoints (`/healthz`)
+
+### Authentication & Security
+- Use Bearer token authentication for webhook endpoints
+- Validate secrets and API keys securely
+- Log security events appropriately
+
+### Real-time APIs (WebSocket/WebRTC)
+- Define clear message schemas with discriminated unions
+- Handle connection lifecycle events properly
+- Include conversation/session management
+
+### Backward Compatibility
+- Avoid breaking changes to existing endpoints
+- Use optional fields for new features
+- Version APIs when breaking changes are necessary
+- Document deprecation timelines
+
+### Examples from This Project
+```typescript
+// Good: Explicit request/response types
+type PersonalizeBody = {
+  system__caller_id?: string;
+  caller?: string;
+  freshsales_contact_id?: number | string | null;
+  [k: string]: unknown;
+};
+
+// Good: Consistent error handling
+if (secret && auth !== `Bearer ${secret}`) {
+  return reply.code(401).send({ error: 'unauthorized' });
+}
+```
+
+## Type Safety & Validation
+
+- Use discriminated unions for polymorphic responses
+- Validate external data at boundaries
+- Export all public types from package index files
+- Consider runtime type validation for critical paths
+

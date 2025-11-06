@@ -1,0 +1,623 @@
+---
+description: When working with Cursor-Flow communication always implement these testing standards
+alwaysApply: false
+---
+# Bridge Communication Testing Standards
+
+Ensure robust testing of browser-to-platform communication bridges to prevent event handling failures.
+
+**Justification:** The "Open Editor" issue revealed that bridge functions can be silently overridden, causing events to be logged but never handled. This rule prevents such issues through comprehensive testing.
+
+## 🎯 Single Responsibility
+This rule ONLY covers testing of bridge communication patterns between browser scripts and platform handlers. Not general testing (see comprehensive-testing-strategy) or UI testing (see playwright-automation-standards).
+
+## 📋 Implementation Checklist
+
+### Bridge Testing Requirements
+```markdown
+- [ ] Verify bridge function exists before use
+- [ ] Test bridge function signature matches expectations
+- [ ] Ensure bridge is not overridden by subsequent scripts
+- [ ] Validate event routing to correct handlers
+- [ ] Test fallback mechanisms when bridge unavailable
+- [ ] Verify timing of bridge setup vs script injection
+- [ ] Monitor bridge events in development mode
+- [ ] Create automated tests for bridge communication
+```
+
+## 🔍 Common Bridge Issues & Prevention
+
+### Issue 1: Bridge Override
+**Problem:** Scripts override the platform's bridge with their own implementation
+```javascript
+// ❌ BAD: Unconditional override
+window.__bridgeFunction = function(event) { 
+  console.log(event); // Just logs, never handles!
+};
+
+// ✅ GOOD: Guarded implementation
+if (typeof window.__bridgeFunction !== 'function') {
+  window.__bridgeFunction = function(event, payload) {
+    // Fallback implementation
+  };
+}
+```
+
+### Issue 2: Signature Mismatch
+**Problem:** Bridge function called with wrong number/type of arguments
+```javascript
+// ❌ BAD: Inconsistent signatures
+// Platform expects: (event, payload)
+// Script calls: (combinedData)
+
+// ✅ GOOD: Consistent two-parameter signature
+bridge('eventName', { data: 'payload' });
+```
+
+### Issue 3: Timing Issues
+**Problem:** Bridge accessed before it's initialized
+```javascript
+// ❌ BAD: Immediate use without checking
+window.__bridge('event', data); // May not exist yet!
+
+// ✅ GOOD: Defensive checking
+if (typeof window.__bridge === 'function') {
+  window.__bridge('event', data);
+} else {
+  console.warn('Bridge not ready, queueing event');
+  // Queue or retry logic
+}
+```
+
+## 🧪 Required Bridge Tests
+
+### 1. Existence Test
+```javascript
+describe('Bridge Communication', () => {
+  it('should expose bridge function to page context', async () => {
+    await page.exposeFunction('__bridge', handler);
+    const exists = await page.evaluate(() => {
+      return typeof window.__bridge === 'function';
+    });
+    expect(exists).toBe(true);
+  });
+});
+```
+
+### 2. Non-Override Test
+```javascript
+it('should not override existing bridge', async () => {
+  // Setup bridge
+  await page.exposeFunction('__bridge', originalHandler);
+  
+  // Inject script that tries to override
+  await page.evaluate(() => {
+    if (typeof window.__bridge !== 'function') {
+      window.__bridge = () => console.log('override');
+    }
+  });
+  
+  // Verify original still works
+  await page.evaluate(() => window.__bridge('test', {}));
+  expect(originalHandler).toHaveBeenCalledWith('test', {});
+});
+```
+
+### 3. Event Routing Test
+```javascript
+it('should route events to correct handlers', async () => {
+  const handlers = {
+    openEditor: jest.fn(),
+    saveFlow: jest.fn()
+  };
+  
+  await page.exposeFunction('__bridge', (event, payload) => {
+    handlers[event]?.(payload);
+  });
+  
+  await page.evaluate(() => {
+    window.__bridge('openEditor', { source: 'test' });
+  });
+  
+  expect(handlers.openEditor).toHaveBeenCalledWith({ source: 'test' });
+});
+```
+
+### 4. Timing Test
+```javascript
+it('should handle bridge setup timing correctly', async () => {
+  // Inject script first (before bridge)
+  await page.addScriptTag({ content: scriptWithBridgeCheck });
+  
+  // Then setup bridge
+  await page.exposeFunction('__bridge', handler);
+  
+  // Verify script can now use bridge
+  const result = await page.evaluate(() => {
+    return window.__tryBridge?.('test');
+  });
+  
+  expect(result).toBe('success');
+});
+```
+
+## 🔧 Debug Tooling
+
+### Bridge Monitor
+Create a development-only bridge monitor:
+```javascript
+class BridgeMonitor {
+  constructor() {
+    this.events = [];
+    this.errors = [];
+  }
+  
+  wrap(originalBridge) {
+    return (event, payload) => {
+      const timestamp = Date.now();
+      console.log(`[Bridge] ${event} at ${new Date().toISOString()}`);
+      
+      try {
+        const result = originalBridge(event, payload);
+        this.events.push({ event, payload, timestamp, success: true });
+        return result;
+      } catch (error) {
+        this.errors.push({ event, payload, timestamp, error });
+        console.error('[Bridge] Error:', error);
+        throw error;
+      }
+    };
+  }
+  
+  getStats() {
+    return {
+      totalEvents: this.events.length,
+      errors: this.errors.length,
+      averageTime: this.calculateAverage()
+    };
+  }
+}
+```
+
+### Runtime Assertions
+Add runtime checks in development:
+```javascript
+if (process.env.NODE_ENV === 'development') {
+  // Verify bridge setup
+  await page.evaluate(() => {
+    const checks = {
+      exists: typeof window.__bridge === 'function',
+      correctSignature: window.__bridge?.length === 2,
+      notOverridden: window.__bridge?.toString().includes('exposeFunction')
+    };
+    
+    console.table(checks);
+    
+    if (!checks.exists) {
+      console.error('❌ Bridge not found!');
+    }
+    if (!checks.correctSignature) {
+      console.error('❌ Bridge has wrong signature!');
+    }
+    if (!checks.notOverridden) {
+      console.warn('⚠️ Bridge may have been overridden');
+    }
+  });
+}
+```
+
+## 📊 Testing Checklist
+
+### Before Every Release
+```markdown
+- [ ] Run bridge communication test suite
+- [ ] Verify no bridge override warnings in console
+- [ ] Check bridge event logs for dropped events
+- [ ] Test with scripts loaded in different orders
+- [ ] Verify fallback mechanisms work
+- [ ] Test in multiple browsers
+- [ ] Check for timing race conditions
+```
+
+### For New Features
+```markdown
+- [ ] Add bridge tests for new events
+- [ ] Document expected bridge behavior
+- [ ] Test error handling for bridge failures
+- [ ] Verify no conflicts with existing bridges
+- [ ] Add monitoring for new event types
+```
+
+## 🚨 Anti-Patterns to Avoid
+
+```javascript
+// ❌ Silent failures
+window.bridge = () => {}; // No-op override
+
+// ❌ Assuming bridge exists
+bridge('event'); // No existence check
+
+// ❌ Inconsistent signatures
+bridge(combinedObject); // vs bridge(event, payload)
+
+// ❌ No error handling
+window.bridge('event', data); // What if it throws?
+
+// ❌ No timing consideration
+// Script runs before bridge is ready
+```
+
+## ✅ Best Practices
+
+```javascript
+// ✅ Defensive bridge usage
+function safeBridge(event, payload) {
+  if (typeof window.__bridge === 'function') {
+    try {
+      return window.__bridge(event, payload);
+    } catch (error) {
+      console.error('Bridge error:', error);
+      // Fallback logic
+    }
+  } else {
+    console.warn('Bridge not available');
+    // Queue or retry
+  }
+}
+
+// ✅ Bridge setup verification
+async function setupBridge() {
+  // 1. Expose function
+  await page.exposeFunction('__bridge', handler);
+  
+  // 2. Verify it exists
+  const exists = await page.evaluate(() => 
+    typeof window.__bridge === 'function'
+  );
+  
+  if (!exists) {
+    throw new Error('Bridge setup failed');
+  }
+  
+  // 3. Log confirmation
+  console.log('✅ Bridge ready');
+}
+
+// ✅ Guarded script injection
+const overlayScript = `
+  // Don't override if already exists
+  if (typeof window.__bridge !== 'function') {
+    // Fallback implementation
+    window.__bridge = async (event, payload) => {
+      // HTTP fallback
+      await fetch('/bridge', {
+        method: 'POST',
+        body: JSON.stringify({ event, payload })
+      });
+    };
+  }
+`;
+```
+
+## 📈 Success Metrics
+
+- **Zero Bridge Failures**: No dropped events due to bridge issues
+- **100% Event Delivery**: All events reach their handlers
+- **Override Prevention**: No scripts override platform bridges
+- **Timing Resilience**: No race conditions in bridge setup
+- **Clear Error Messages**: Failures clearly indicate bridge issues
+
+## 🔗 Related Rules
+- [comprehensive-testing-strategy](./comprehensive-testing-strategy.mdc)
+- [playwright-automation-standards](./playwright/playwright-automation-standards.mdc)
+- [browser-injection-standards](../15-web-automation/browser-injection-standards.mdc)
+- [error-handling](../01-code-standards/error-handling.mdc)# Bridge Communication Testing Standards
+
+Ensure robust testing of browser-to-platform communication bridges to prevent event handling failures.
+
+**Justification:** The "Open Editor" issue revealed that bridge functions can be silently overridden, causing events to be logged but never handled. This rule prevents such issues through comprehensive testing.
+
+## 🎯 Single Responsibility
+This rule ONLY covers testing of bridge communication patterns between browser scripts and platform handlers. Not general testing (see comprehensive-testing-strategy) or UI testing (see playwright-automation-standards).
+
+## 📋 Implementation Checklist
+
+### Bridge Testing Requirements
+```markdown
+- [ ] Verify bridge function exists before use
+- [ ] Test bridge function signature matches expectations
+- [ ] Ensure bridge is not overridden by subsequent scripts
+- [ ] Validate event routing to correct handlers
+- [ ] Test fallback mechanisms when bridge unavailable
+- [ ] Verify timing of bridge setup vs script injection
+- [ ] Monitor bridge events in development mode
+- [ ] Create automated tests for bridge communication
+```
+
+## 🔍 Common Bridge Issues & Prevention
+
+### Issue 1: Bridge Override
+**Problem:** Scripts override the platform's bridge with their own implementation
+```javascript
+// ❌ BAD: Unconditional override
+window.__bridgeFunction = function(event) { 
+  console.log(event); // Just logs, never handles!
+};
+
+// ✅ GOOD: Guarded implementation
+if (typeof window.__bridgeFunction !== 'function') {
+  window.__bridgeFunction = function(event, payload) {
+    // Fallback implementation
+  };
+}
+```
+
+### Issue 2: Signature Mismatch
+**Problem:** Bridge function called with wrong number/type of arguments
+```javascript
+// ❌ BAD: Inconsistent signatures
+// Platform expects: (event, payload)
+// Script calls: (combinedData)
+
+// ✅ GOOD: Consistent two-parameter signature
+bridge('eventName', { data: 'payload' });
+```
+
+### Issue 3: Timing Issues
+**Problem:** Bridge accessed before it's initialized
+```javascript
+// ❌ BAD: Immediate use without checking
+window.__bridge('event', data); // May not exist yet!
+
+// ✅ GOOD: Defensive checking
+if (typeof window.__bridge === 'function') {
+  window.__bridge('event', data);
+} else {
+  console.warn('Bridge not ready, queueing event');
+  // Queue or retry logic
+}
+```
+
+## 🧪 Required Bridge Tests
+
+### 1. Existence Test
+```javascript
+describe('Bridge Communication', () => {
+  it('should expose bridge function to page context', async () => {
+    await page.exposeFunction('__bridge', handler);
+    const exists = await page.evaluate(() => {
+      return typeof window.__bridge === 'function';
+    });
+    expect(exists).toBe(true);
+  });
+});
+```
+
+### 2. Non-Override Test
+```javascript
+it('should not override existing bridge', async () => {
+  // Setup bridge
+  await page.exposeFunction('__bridge', originalHandler);
+  
+  // Inject script that tries to override
+  await page.evaluate(() => {
+    if (typeof window.__bridge !== 'function') {
+      window.__bridge = () => console.log('override');
+    }
+  });
+  
+  // Verify original still works
+  await page.evaluate(() => window.__bridge('test', {}));
+  expect(originalHandler).toHaveBeenCalledWith('test', {});
+});
+```
+
+### 3. Event Routing Test
+```javascript
+it('should route events to correct handlers', async () => {
+  const handlers = {
+    openEditor: jest.fn(),
+    saveFlow: jest.fn()
+  };
+  
+  await page.exposeFunction('__bridge', (event, payload) => {
+    handlers[event]?.(payload);
+  });
+  
+  await page.evaluate(() => {
+    window.__bridge('openEditor', { source: 'test' });
+  });
+  
+  expect(handlers.openEditor).toHaveBeenCalledWith({ source: 'test' });
+});
+```
+
+### 4. Timing Test
+```javascript
+it('should handle bridge setup timing correctly', async () => {
+  // Inject script first (before bridge)
+  await page.addScriptTag({ content: scriptWithBridgeCheck });
+  
+  // Then setup bridge
+  await page.exposeFunction('__bridge', handler);
+  
+  // Verify script can now use bridge
+  const result = await page.evaluate(() => {
+    return window.__tryBridge?.('test');
+  });
+  
+  expect(result).toBe('success');
+});
+```
+
+## 🔧 Debug Tooling
+
+### Bridge Monitor
+Create a development-only bridge monitor:
+```javascript
+class BridgeMonitor {
+  constructor() {
+    this.events = [];
+    this.errors = [];
+  }
+  
+  wrap(originalBridge) {
+    return (event, payload) => {
+      const timestamp = Date.now();
+      console.log(`[Bridge] ${event} at ${new Date().toISOString()}`);
+      
+      try {
+        const result = originalBridge(event, payload);
+        this.events.push({ event, payload, timestamp, success: true });
+        return result;
+      } catch (error) {
+        this.errors.push({ event, payload, timestamp, error });
+        console.error('[Bridge] Error:', error);
+        throw error;
+      }
+    };
+  }
+  
+  getStats() {
+    return {
+      totalEvents: this.events.length,
+      errors: this.errors.length,
+      averageTime: this.calculateAverage()
+    };
+  }
+}
+```
+
+### Runtime Assertions
+Add runtime checks in development:
+```javascript
+if (process.env.NODE_ENV === 'development') {
+  // Verify bridge setup
+  await page.evaluate(() => {
+    const checks = {
+      exists: typeof window.__bridge === 'function',
+      correctSignature: window.__bridge?.length === 2,
+      notOverridden: window.__bridge?.toString().includes('exposeFunction')
+    };
+    
+    console.table(checks);
+    
+    if (!checks.exists) {
+      console.error('❌ Bridge not found!');
+    }
+    if (!checks.correctSignature) {
+      console.error('❌ Bridge has wrong signature!');
+    }
+    if (!checks.notOverridden) {
+      console.warn('⚠️ Bridge may have been overridden');
+    }
+  });
+}
+```
+
+## 📊 Testing Checklist
+
+### Before Every Release
+```markdown
+- [ ] Run bridge communication test suite
+- [ ] Verify no bridge override warnings in console
+- [ ] Check bridge event logs for dropped events
+- [ ] Test with scripts loaded in different orders
+- [ ] Verify fallback mechanisms work
+- [ ] Test in multiple browsers
+- [ ] Check for timing race conditions
+```
+
+### For New Features
+```markdown
+- [ ] Add bridge tests for new events
+- [ ] Document expected bridge behavior
+- [ ] Test error handling for bridge failures
+- [ ] Verify no conflicts with existing bridges
+- [ ] Add monitoring for new event types
+```
+
+## 🚨 Anti-Patterns to Avoid
+
+```javascript
+// ❌ Silent failures
+window.bridge = () => {}; // No-op override
+
+// ❌ Assuming bridge exists
+bridge('event'); // No existence check
+
+// ❌ Inconsistent signatures
+bridge(combinedObject); // vs bridge(event, payload)
+
+// ❌ No error handling
+window.bridge('event', data); // What if it throws?
+
+// ❌ No timing consideration
+// Script runs before bridge is ready
+```
+
+## ✅ Best Practices
+
+```javascript
+// ✅ Defensive bridge usage
+function safeBridge(event, payload) {
+  if (typeof window.__bridge === 'function') {
+    try {
+      return window.__bridge(event, payload);
+    } catch (error) {
+      console.error('Bridge error:', error);
+      // Fallback logic
+    }
+  } else {
+    console.warn('Bridge not available');
+    // Queue or retry
+  }
+}
+
+// ✅ Bridge setup verification
+async function setupBridge() {
+  // 1. Expose function
+  await page.exposeFunction('__bridge', handler);
+  
+  // 2. Verify it exists
+  const exists = await page.evaluate(() => 
+    typeof window.__bridge === 'function'
+  );
+  
+  if (!exists) {
+    throw new Error('Bridge setup failed');
+  }
+  
+  // 3. Log confirmation
+  console.log('✅ Bridge ready');
+}
+
+// ✅ Guarded script injection
+const overlayScript = `
+  // Don't override if already exists
+  if (typeof window.__bridge !== 'function') {
+    // Fallback implementation
+    window.__bridge = async (event, payload) => {
+      // HTTP fallback
+      await fetch('/bridge', {
+        method: 'POST',
+        body: JSON.stringify({ event, payload })
+      });
+    };
+  }
+`;
+```
+
+## 📈 Success Metrics
+
+- **Zero Bridge Failures**: No dropped events due to bridge issues
+- **100% Event Delivery**: All events reach their handlers
+- **Override Prevention**: No scripts override platform bridges
+- **Timing Resilience**: No race conditions in bridge setup
+- **Clear Error Messages**: Failures clearly indicate bridge issues
+
+## 🔗 Related Rules
+- [comprehensive-testing-strategy](./comprehensive-testing-strategy.mdc)
+- [playwright-automation-standards](./playwright/playwright-automation-standards.mdc)
+- [browser-injection-standards](../15-web-automation/browser-injection-standards.mdc)
+- [error-handling](../01-code-standards/error-handling.mdc)

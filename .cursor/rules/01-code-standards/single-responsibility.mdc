@@ -1,0 +1,14 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Single Responsibility Principle (SRP)
+
+Each function, class, or module should have one, and only one, responsibility. This means focusing on a single task or concern.
+
+**Justification**: Reliability is critical, SRP reduces bug risk by limiting scope and simplifies debugging and refactoring.
+
+**Example**: `AuthService` in `contexts/AuthenticationContext.tsx` should only handle authentication (e.g., `signIn`, `signOut`), not user profile management or appointment scheduling, which belong to separate services.
+
+**Related Rules**: [separation-of-concerns.mdc](mdc:.cursor/rules/separation-of-concerns.mdc)

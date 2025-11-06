@@ -1,0 +1,8 @@
+---
+globs: apps/automation-chrome-ext/src/**
+alwaysApply: false
+---
+- **TypeScript strict** only; no `any`. Repo already standardized on TS + ESLint/Prettier + Vite.
+- All modules must be **pure** where possible; keep DOM side effects in content scripts.
+- Each `content/*.ts` should export **one** capability (waits, actions, selection utilities).
+- Use **functional** helpers for selectors (`byTestId`, `first`, `withinFrame`) and **never** inline long query strings in steps.

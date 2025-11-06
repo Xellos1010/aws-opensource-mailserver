@@ -16,8 +16,12 @@ fi
 # Create stack name from domain (remove dots, ensure it starts with a letter, and add a suffix)
 STACK_NAME=$(echo "${DOMAIN_NAME}" | sed 's/\./-/g')-mailserver
 
-# Create logs directory if it doesn't exist
-mkdir -p logs
+# Determine repository root and per-domain backup directory
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+STACK_BACKUP_DIR="${ROOT_DIR}/backups/${DOMAIN_NAME}/stack"
+
+# Create per-domain stack backup directory
+mkdir -p "${STACK_BACKUP_DIR}"
 
 # Get current timestamp
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
@@ -30,18 +34,18 @@ echo "Describing stack resources..."
 aws cloudformation describe-stacks \
     --profile hepe-admin-mfa \
     --stack-name "${STACK_NAME}" \
-    --output json > "logs/stack_resources_${TIMESTAMP}.json"
+    --output json > "${STACK_BACKUP_DIR}/stack_resources_${TIMESTAMP}.json"
 
-echo "Stack resources logged to logs/stack_resources_${TIMESTAMP}.json"
+echo "Stack resources logged to ${STACK_BACKUP_DIR}/stack_resources_${TIMESTAMP}.json"
 
 # Log stack events
 echo -e "\nDescribing stack events..."
 aws cloudformation describe-stack-events \
     --profile hepe-admin-mfa \
     --stack-name "${STACK_NAME}" \
-    --output json > "logs/stack_events_${TIMESTAMP}.json"
+    --output json > "${STACK_BACKUP_DIR}/stack_events_${TIMESTAMP}.json"
 
-echo "Stack events logged to logs/stack_events_${TIMESTAMP}.json"
+echo "Stack events logged to ${STACK_BACKUP_DIR}/stack_events_${TIMESTAMP}.json"
 
 # Also display the latest events in the terminal
 echo -e "\nLatest stack events:"

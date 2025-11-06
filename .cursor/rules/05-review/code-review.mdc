@@ -1,0 +1,14 @@
+---
+alwaysApply: true
+---
+# Code Review Standards
+
+## Ownership
+- Respect CODEOWNERS; reviewers with domain context required.
+
+## What to Check
+- Correctness, tests, security, performance, readability, boundary rules.
+- Verify Task DoD checked, docs updated, ADR added if needed.
+
+## Anti-Patterns
+- Large PRs with mixed concerns; unexplained `eslint-disable`; dead code.

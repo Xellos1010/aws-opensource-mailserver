@@ -1,0 +1,35 @@
+---
+globs: apps/automation-chrome-ext/src/background.ts,apps/automation-chrome-ext/src/**
+alwaysApply: false
+---
+## Goals
+Make the AI handle **service worker suspension**, **tab reloads**, and **content-script rehydration** without losing in-flight flow state.
+
+## Golden Rules
+1) **Single source of truth in background**  
+   - Keep runtime state (active flow, current step, timers) in **background**. Persist a minimal snapshot to `chrome.storage.session` on every step so worker suspension or tab navigations can be recovered.
+   - On worker wake (`chrome.runtime.onStartup`, `onInstalled`, `onMessage`, `onConnect`), rehydrate snapshot and **probe** all live tabs to rebuild ports (see “Messaging Contracts” rule).
+
+2) **Rehydrate after navigation**  
+   - Content script on `document_start` immediately sends a **HELLO(port, tabId, url, frameId)**. Background responds with **SYNC(flowState)** if a flow is in progress for that tab.  
+   - If background knows a step was “Navigate to first result → then wait for contact page”, it must **arm phased waits** again after `goto()`. (Your README already frames phased waits/pagination—apply the same robustness for SPA routes.)
+
+3) **Never rely on `setInterval` keep-alives**  
+   - MV3 workers sleep. Use **events**: `onMessage`, `onConnect`, `chrome.alarms` lightweight pings for long gaps, and **idempotent step execution** (steps re-run safely after resume).
+
+4) **Flow step idempotency**  
+   - Every step should accept re-entry. Example: a `waitFor(selector)` that already found the node simply resolves; a `click(selector)` ensures visibility/attached DOM before acting.
+
+5) **Durable step log**  
+   - Append each step result to a **ring buffer** in `chrome.storage.session` and mirror to a **per-run log** file only when the user requests export from the popup/panel (see “Logging & Observability”).
+
+## Implementation nudges for Cursor
+- Add `rehydrateContent(tabId)` in `background.ts` that:  
+  a) looks up `flowState[tabId]`,  
+  b) posts `SYNC` to content,  
+  c) re-arms any **post-navigation waits**.
+- Add a `content/handshake.ts` that sends `HELLO` on load and on `visibilitychange` when it returns to `visible`.
+- Require **typed** messages: `HelloMsg`, `SyncMsg`, `StepRequest`, `StepResult`.
+
+## Build/Test Anchors
+- The extension is **MV3 + Vite multi-entry**; the build already outputs `background.js`, `content.js`, `popup.js` to `apps/automation-chrome-ext/dist` and ships `manifest.json`/`popup.html`. Keep that artifact map stable.

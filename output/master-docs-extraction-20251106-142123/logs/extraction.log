@@ -1,0 +1,201 @@
+[0;34m[INFO][0m Starting master documentation extraction...
+[0;34m[INFO][0m Working directory: /Users/evanmccall/Projects/aws-opensource-mailserver
+[0;34m[INFO][0m Cleaning up previous master documents...
+[0;34m[INFO][0m Generating master codebase document...
+[0;34m[INFO][0m Processing: .pre-commit-config.yaml
+[0;34m[INFO][0m Processing: mfa-user.sh
+[0;34m[INFO][0m Processing: mailserver-infrastructure-mvp.yaml
+[0;34m[INFO][0m Processing: README.md
+[0;34m[INFO][0m Found PEM references in README.md
+[0;34m[INFO][0m Processing: administration/README-DNS-ADMIN.md
+[0;34m[INFO][0m Processing: administration/README-MEMORY-MANAGEMENT.md
+[0;34m[INFO][0m Processing: administration/check-alarm-status.sh
+[0;34m[INFO][0m Processing: administration/check-memory-and-stop-instance.sh
+[0;34m[INFO][0m Processing: administration/check-sns-subscription.sh
+[0;34m[INFO][0m Processing: administration/cleanup-keys.sh
+[0;34m[INFO][0m Found PEM references in administration/cleanup-keys.sh
+[0;34m[INFO][0m Processing: administration/delete-stack.sh
+[0;34m[INFO][0m Processing: administration/deploy-stack.sh
+[0;34m[INFO][0m Processing: administration/describe-stack.sh
+[0;34m[INFO][0m Processing: administration/dns-admin.sh
+[0;34m[INFO][0m Processing: administration/generate_ses_smtp_credentials.py
+[0;34m[INFO][0m Found PEM references in administration/generate_ses_smtp_credentials.py
+[0;34m[INFO][0m Processing: administration/get-admin-password.sh
+[0;34m[INFO][0m Processing: administration/get-ses-config.sh
+[0;34m[INFO][0m Found PEM references in administration/get-ses-config.sh
+[0;34m[INFO][0m Processing: administration/mailboxes-master.sh
+[0;34m[INFO][0m Processing: administration/master-download-mailboxes.sh
+[0;34m[INFO][0m Found PEM references in administration/master-download-mailboxes.sh
+[0;34m[INFO][0m Processing: administration/miab-enforce-settings.sh
+[0;34m[INFO][0m Found PEM references in administration/miab-enforce-settings.sh
+[0;34m[INFO][0m Processing: administration/miab-mail-smoke-test.sh
+[0;34m[INFO][0m Found PEM references in administration/miab-mail-smoke-test.sh
+[0;34m[INFO][0m Processing: administration/print-ses-dns-records.sh
+[0;34m[INFO][0m Processing: administration/restart-ec2-instance.sh
+[0;34m[INFO][0m Processing: administration/set-reverse-dns-elastic-ip.sh
+[0;34m[INFO][0m Processing: administration/set-ses-dns-records.sh
+[0;34m[INFO][0m Found PEM references in administration/set-ses-dns-records.sh
+[0;34m[INFO][0m Processing: administration/setup-ssh-access.sh
+[0;34m[INFO][0m Found PEM references in administration/setup-ssh-access.sh
+[0;34m[INFO][0m Processing: administration/simulate-merge-test.sh
+[0;34m[INFO][0m Processing: administration/start-instance-and-wait.sh
+[0;34m[INFO][0m Processing: administration/test-dns-admin.sh
+[0;34m[INFO][0m Processing: administration/test-dns-api.sh
+[0;34m[INFO][0m Processing: administration/test-memory-alarms.sh
+[0;34m[INFO][0m Found PEM references in administration/test-memory-alarms.sh
+[0;34m[INFO][0m Processing: administration/test-sns-alert.sh
+[0;34m[INFO][0m Processing: askdaokapra/README.md
+[0;34m[INFO][0m Processing: askdaokapra/check-memory-and-stop-instance.sh
+[0;34m[INFO][0m Processing: askdaokapra/cleanup-keys.sh
+[0;34m[INFO][0m Processing: askdaokapra/delete-stack.sh
+[0;34m[INFO][0m Processing: askdaokapra/deploy-stack.sh
+[0;34m[INFO][0m Processing: askdaokapra/describe-stack.sh
+[0;34m[INFO][0m Processing: askdaokapra/download-mailboxes.sh
+[0;34m[INFO][0m Found PEM references in askdaokapra/download-mailboxes.sh
+[0;34m[INFO][0m Processing: askdaokapra/finalize-mailbox-upload.sh
+[0;34m[INFO][0m Found PEM references in askdaokapra/finalize-mailbox-upload.sh
+[0;34m[INFO][0m Processing: askdaokapra/generate_ses_smtp_credentials.sh
+[0;34m[INFO][0m Processing: askdaokapra/get-admin-password.sh
+[0;34m[INFO][0m Processing: askdaokapra/get-ses-config.sh
+[0;34m[INFO][0m Processing: askdaokapra/print-ses-dns-records.sh
+[0;34m[INFO][0m Processing: askdaokapra/restart-ec2-instance.sh
+[0;34m[INFO][0m Processing: askdaokapra/set-reverse-dns-elastic-ip.sh
+[0;34m[INFO][0m Processing: askdaokapra/set-ses-dns-records.sh
+[0;34m[INFO][0m Processing: askdaokapra/setup-ssh-access.sh
+[0;34m[INFO][0m Processing: askdaokapra/start-instance-and-wait.sh
+[0;34m[INFO][0m Processing: askdaokapra/test-dns-api.sh
+[0;34m[INFO][0m Processing: askdaokapra/upload-mailboxes.sh
+[0;34m[INFO][0m Found PEM references in askdaokapra/upload-mailboxes.sh
+[0;34m[INFO][0m Processing: emcnotary/README-MAINTENANCE.md
+[0;34m[INFO][0m Found PEM references in emcnotary/README-MAINTENANCE.md
+[0;34m[INFO][0m Processing: emcnotary/README-SYNC.md
+[0;34m[INFO][0m Processing: emcnotary/README.md
+[0;34m[INFO][0m Processing: emcnotary/check-memory-and-stop-instance.sh
+[0;34m[INFO][0m Processing: emcnotary/cleanup-keys.sh
+[0;34m[INFO][0m Processing: emcnotary/delete-stack.sh
+[0;34m[INFO][0m Processing: emcnotary/deploy-stack.sh
+[0;34m[INFO][0m Processing: emcnotary/describe-stack.sh
+[0;34m[INFO][0m Processing: emcnotary/download-mailboxes.sh
+[0;34m[INFO][0m Found PEM references in emcnotary/download-mailboxes.sh
+[0;34m[INFO][0m Processing: emcnotary/emcnotary-disk-maintenance.sh
+[0;34m[INFO][0m Found PEM references in emcnotary/emcnotary-disk-maintenance.sh
+[0;34m[INFO][0m Processing: emcnotary/finalize-mailbox-upload.sh
+[0;34m[INFO][0m Found PEM references in emcnotary/finalize-mailbox-upload.sh
+[0;34m[INFO][0m Processing: emcnotary/generate_ses_smtp_credentials.sh
+[0;34m[INFO][0m Processing: emcnotary/get-admin-password.sh
+[0;34m[INFO][0m Processing: emcnotary/get-ses-config.sh
+[0;34m[INFO][0m Processing: emcnotary/print-ses-dns-records.sh
+[0;34m[INFO][0m Processing: emcnotary/restart-ec2-instance.sh
+[0;34m[INFO][0m Processing: emcnotary/set-reverse-dns-elastic-ip.sh
+[0;34m[INFO][0m Processing: emcnotary/set-ses-dns-records.sh
+[0;34m[INFO][0m Processing: emcnotary/setup-ssh-access.sh
+[0;34m[INFO][0m Processing: emcnotary/start-instance-and-wait.sh
+[0;34m[INFO][0m Processing: emcnotary/sync-mailboxes.sh
+[0;34m[INFO][0m Found PEM references in emcnotary/sync-mailboxes.sh
+[0;34m[INFO][0m Processing: emcnotary/test-dns-api.sh
+[0;34m[INFO][0m Processing: emcnotary/upload-mailboxes.sh
+[0;34m[INFO][0m Found PEM references in emcnotary/upload-mailboxes.sh
+[0;34m[INFO][0m Processing: hepefoundation/README.md
+[0;34m[INFO][0m Processing: hepefoundation/check-memory-and-stop-instance.sh
+[0;34m[INFO][0m Processing: hepefoundation/cleanup-keys.sh
+[0;34m[INFO][0m Processing: hepefoundation/delete-stack.sh
+[0;34m[INFO][0m Processing: hepefoundation/deploy-stack.sh
+[0;34m[INFO][0m Processing: hepefoundation/describe-stack.sh
+[0;34m[INFO][0m Processing: hepefoundation/generate_ses_smtp_credentials.sh
+[0;34m[INFO][0m Processing: hepefoundation/get-admin-password.sh
+[0;34m[INFO][0m Processing: hepefoundation/get-ses-config.sh
+[0;34m[INFO][0m Processing: hepefoundation/hepeFoundation-Mail-Server-Files/download-mailboxes.sh
+[0;34m[INFO][0m Found PEM references in hepefoundation/hepeFoundation-Mail-Server-Files/download-mailboxes.sh
+[0;34m[INFO][0m Processing: hepefoundation/hepeFoundation-Mail-Server-Files/finalize-mailbox-upload.sh
+[0;34m[INFO][0m Found PEM references in hepefoundation/hepeFoundation-Mail-Server-Files/finalize-mailbox-upload.sh
+[0;34m[INFO][0m Processing: hepefoundation/hepeFoundation-Mail-Server-Files/upload-mailboxes.sh
+[0;34m[INFO][0m Found PEM references in hepefoundation/hepeFoundation-Mail-Server-Files/upload-mailboxes.sh
+[0;34m[INFO][0m Processing: hepefoundation/print-ses-dns-records.sh
+[0;34m[INFO][0m Processing: hepefoundation/restart-ec2-instance.sh
+[0;34m[INFO][0m Processing: hepefoundation/set-reverse-dns-elastic-ip.sh
+[0;34m[INFO][0m Processing: hepefoundation/set-ses-dns-records.sh
+[0;34m[INFO][0m Processing: hepefoundation/setup-ssh-access.sh
+[0;34m[INFO][0m Processing: hepefoundation/start-instance-and-wait.sh
+[0;34m[INFO][0m Processing: hepefoundation/test-dns-api.sh
+[0;34m[INFO][0m Processing: policies/aws-server.guard
+[0;34m[INFO][0m Processing: telassistmd/README.md
+[0;34m[INFO][0m Processing: telassistmd/cleanup-keys.sh
+[0;34m[INFO][0m Processing: telassistmd/delete-stack.sh
+[0;34m[INFO][0m Processing: telassistmd/deploy-stack.sh
+[0;34m[INFO][0m Processing: telassistmd/describe-stack.sh
+[0;34m[INFO][0m Processing: telassistmd/generate_ses_smtp_credentials.sh
+[0;34m[INFO][0m Processing: telassistmd/get-admin-password.sh
+[0;34m[INFO][0m Processing: telassistmd/get-ses-config.sh
+[0;34m[INFO][0m Processing: telassistmd/print-ses-dns-records.sh
+[0;34m[INFO][0m Processing: telassistmd/set-reverse-dns-elastic-ip.sh
+[0;34m[INFO][0m Processing: telassistmd/set-ses-dns-records.sh
+[0;34m[INFO][0m Processing: telassistmd/setup-ssh-access.sh
+[0;34m[INFO][0m Processing: telassistmd/test-dns-api.sh
+[0;32m[SUCCESS][0m Master codebase document generated: master-codebase.md
+[0;34m[INFO][0m Generating master rules document...
+[0;34m[INFO][0m Processing: .cursor/rules/01-code-standards/error-handling-and-reliability.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/01-code-standards/eslint-configuration.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/01-code-standards/node-platform-standards.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/01-code-standards/separation-of-concerns.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/01-code-standards/simplicity.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/01-code-standards/single-responsibility.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/01-code-standards/ts-standards-and-strictness.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/02-architecture/architecture-and-nx-boundaries.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/03-workflow/dev-workflow-and-git.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/03-workflow/documentation-standards.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/03-workflow/sdlc-setup.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/03-workflow/ship-it-workflow.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/04-testing/bridge-communication-testing.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/04-testing/comprehensive-testing-strategy.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/04-testing/playwright/playwright-automation-standards.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/04-testing/runtime-verification.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/05-review/code-review.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/07-apis/api-standards.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/08-infrastructure/ci-cd-and-releases.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/08-infrastructure/configuration-standards.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/08-infrastructure/deployment-workflow.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/08-infrastructure/ui-feature-flags.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/10-observability/alert-definitions.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/10-observability/distributed-tracing.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/10-observability/incident-management.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/10-observability/metrics-collection.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/10-observability/structured-logging.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/11-security/security-and-secrets-policy.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/12-performance/performance-and-bundling.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/13-ux/accessibility-standards.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/13-ux/react-standards.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/14-automation/nx-rules.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/15-chome-extension/build-and-serve.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/15-chome-extension/chrome-extension-app-structure.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/15-chome-extension/code-style-and-structure.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/15-chome-extension/flows-spec-and-execution.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/15-chome-extension/logging-and-observability.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/15-chome-extension/messaging-contracts.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/15-chome-extension/mv3-lifecycle-and-state.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/15-chome-extension/playwright-and-e2e.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/15-chome-extension/prompts-and-workflows.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/15-chome-extension/repo-conventions.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/15-chome-extension/security-and-permissions.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/15-chome-extension/selectors-and-waits.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/15-chome-extension/sidepanel-application-model.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/15-chome-extension/surgical-edits-rule.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/16-web-automation/browser-injection-standards.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/16-web-automation/flow-standards.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/16-web-automation/web-automation-development.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/00-master-index.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/aws-cdk-2025.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/nx-configuration.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/nx-rules.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/nx-sdlc.mdc
+[0;34m[INFO][0m Processing: .cursor/rules/surgical-edits-rule.mdc
+[0;32m[SUCCESS][0m Master rules document generated: master-rules.md
+[0;34m[INFO][0m Validating generated files...
+[0;32m[SUCCESS][0m Master codebase file created (  365816 bytes)
+[0;32m[SUCCESS][0m Master rules file created (  288544 bytes)
+[0;32m[SUCCESS][0m Master documentation extraction completed successfully!
+
+Generated files:
+  - master-codebase.md
+  - master-rules.md
+
+You can now use these master documents for reference or sharing.

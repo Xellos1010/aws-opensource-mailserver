@@ -1,0 +1,28 @@
+---
+alwaysApply: true
+---
+
+# Error Taxonomy, Propagation, Retries & Timeouts
+
+Define domain error classes, wrap third-party errors at boundaries, and retry only transient failures with capped backoff + jitter.
+
+**Justification:** Clear error semantics and disciplined retries improve resilience and reduce noisy failures.
+
+## Domain Error Types
+
+Wrap third-party errors once at module boundaries; rethrow as domain errors.
+
+```typescript
+export class TransientNetworkError extends Error {
+  constructor(message: string, cause?: unknown) {
+    super(message); this.name = 'TransientNetworkError'; (this as any).cause = cause;
+  }
+}
+```
+
+## Retries & Timeouts
+
+- Use capped exponential backoff with jitter for network calls
+- Never retry non-idempotent operations
+- Apply request timeouts and circuit breakers for unstable deps
+

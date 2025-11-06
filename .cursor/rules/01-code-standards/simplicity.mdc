@@ -1,0 +1,14 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Simplicity
+
+Favor simple, straightforward solutions over complex ones, avoiding unnecessary abstractions or over-engineering.
+
+**Justification**: Simplicity reduces technical debt and enhances maintainability.
+
+**Example**: Use basic hooks in `HomeScreen.tsx` instead of complex state management unless needed.
+
+**Related Rules**: [kiss.mdc](mdc:.cursor/rules/kiss.mdc)

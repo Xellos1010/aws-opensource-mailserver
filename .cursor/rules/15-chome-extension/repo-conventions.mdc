@@ -1,0 +1,6 @@
+---
+globs: apps/automation-chrome-ext/**
+alwaysApply: false
+---
+- Tech stack: TS 5.9+, Vite 5.4+, MV3, Playwright, ESLint/Prettier—keep consistent across new files.
+- Follow the workspace’s existing doc: build artifacts and how to load in Chrome (Developer mode → Load unpacked → `apps/automation-chrome-ext/dist`).

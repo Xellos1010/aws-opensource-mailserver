@@ -1,0 +1,299 @@
+---
+alwaysApply: true
+---
+
+# Surgical Edits Rule - Chrome Extension Development
+
+**Applies to:** All code in `.cursor/rules/` directory
+
+## 🎯 Purpose
+Enable precise, targeted modifications to Cursor rules that propagate consistently across the entire rules ecosystem without breaking existing functionality or introducing conflicts.
+
+## 📋 Implementation Requirements
+
+### Edit Types Supported
+- **Configuration Updates**: Modify settings, paths, or parameters in rule files
+- **Content Additions**: Add new sections, examples, or clarifications
+- **Documentation Fixes**: Correct typos, improve clarity, update examples
+- **Cross-Reference Updates**: Maintain consistency between related rules
+- **Version Bumps**: Update version numbers and change logs
+
+### Edit Constraints
+- **NO Breaking Changes**: Never remove existing functionality without explicit approval
+- **Preserve Structure**: Maintain existing file organization and section hierarchy
+- **Update References**: Ensure all cross-references remain valid
+- **Test Compatibility**: Verify edits don't break existing rule relationships
+
+## 🔧 Surgical Edit Protocol
+
+### Step 1: Impact Assessment
+```markdown
+Before making any edit:
+- [ ] Identify all files that reference the target content
+- [ ] Assess downstream effects on dependent rules
+- [ ] Check for version dependencies
+- [ ] Verify backward compatibility
+```
+
+### Step 2: Atomic Changes
+```markdown
+Each edit must be:
+- [ ] Self-contained (no external dependencies)
+- [ ] Reversible (can be undone without side effects)
+- [ ] Documented (clear change description)
+- [ ] Tested (verified against existing content)
+```
+
+### Step 3: Validation Checks
+```markdown
+After making changes:
+- [ ] Cross-reference integrity maintained
+- [ ] All linked examples still valid
+- [ ] Rule hierarchy preserved
+- [ ] No orphaned references created
+```
+
+## 🎨 Edit Categories
+
+### Configuration Edits
+```markdown
+# ✅ ALLOWED: Update configuration values
+OLD: timeout: 10000
+NEW: timeout: 15000
+
+# ✅ ALLOWED: Add new configuration options
+OLD: timeout: 10000
+NEW: timeout: 10000, retries: 3
+
+# ❌ NOT ALLOWED: Remove configuration without replacement
+OLD: timeout: 10000, retries: 3
+NEW: timeout: 10000
+```
+
+### Content Edits
+```markdown
+# ✅ ALLOWED: Add clarifying information
+OLD: Use this method for API calls.
+NEW: Use this method for API calls. Recommended timeout: 10 seconds.
+
+# ✅ ALLOWED: Fix documentation errors
+OLD: Use `chrome.tabs.query()` for tab management
+NEW: Use `chrome.tabs.query()` for tab information retrieval
+
+# ❌ NOT ALLOWED: Change core functionality
+OLD: Use `chrome.tabs.query()` for tab management
+NEW: Use `browser.tabs.query()` for Firefox compatibility
+```
+
+### Structural Edits
+```markdown
+# ✅ ALLOWED: Add new sections
+OLD: ## Implementation
+NEW: ## Implementation
+## Best Practices
+
+# ✅ ALLOWED: Reorganize within sections
+OLD: 1. Step one 2. Step two
+NEW: 1. Step one 2. Step two 3. Step three
+
+# ❌ NOT ALLOWED: Remove major sections
+OLD: ## Implementation ## Examples
+NEW: ## Implementation
+```
+
+## 🔍 Validation Commands
+
+### Pre-Edit Checks
+```bash
+# Verify rule file integrity
+find .cursor/rules -name "*.mdc" -exec echo "Checking: {}" \;
+
+# Check for broken cross-references
+grep -r "\]\(" .cursor/rules/ | grep -v "http" | wc -l
+```
+
+### Post-Edit Validation
+```bash
+# Verify all files still parse correctly
+find .cursor/rules -name "*.mdc" -exec head -1 {} \; | grep -v "^#"
+
+# Check for orphaned references
+grep -r "](#" .cursor/rules/ | grep -v "\.mdc" | sort | uniq
+```
+
+## 🚨 Emergency Rollback
+
+If a surgical edit causes issues:
+
+1. **Immediate Revert**: Undo the change within 5 minutes
+2. **Impact Assessment**: Document what broke and why
+3. **Alternative Approach**: Implement fix using different method
+4. **Prevention**: Add the problematic pattern to "NOT ALLOWED" list
+
+## 📊 Success Metrics
+
+- **Zero Breaking Changes**: No edits that break existing functionality
+- **100% Reference Integrity**: All cross-references remain valid
+- **< 5 min Validation**: Each edit validates in under 5 minutes
+- **Clear Documentation**: Every edit has clear reasoning and impact
+
+## 🔗 Related Rules
+
+- [chrome-extension-app-structure](./chrome-extension-app-structure.mdc) - For structural changes
+- [code-style-and-structure](./code-style-and-structure.mdc) - For code formatting consistency
+- [messaging-contracts](./messaging-contracts.mdc) - For communication protocol updates
+
+## 📝 Change Log
+
+### Version 1.0.0
+- Initial surgical edits protocol established
+- Validation procedures defined
+- Edit categories documented
+- Emergency rollback process created# Surgical Edits Rule - Chrome Extension Development
+
+**Applies to:** All code in `.cursor/rules/` directory
+
+## 🎯 Purpose
+Enable precise, targeted modifications to Cursor rules that propagate consistently across the entire rules ecosystem without breaking existing functionality or introducing conflicts.
+
+## 📋 Implementation Requirements
+
+### Edit Types Supported
+- **Configuration Updates**: Modify settings, paths, or parameters in rule files
+- **Content Additions**: Add new sections, examples, or clarifications
+- **Documentation Fixes**: Correct typos, improve clarity, update examples
+- **Cross-Reference Updates**: Maintain consistency between related rules
+- **Version Bumps**: Update version numbers and change logs
+
+### Edit Constraints
+- **NO Breaking Changes**: Never remove existing functionality without explicit approval
+- **Preserve Structure**: Maintain existing file organization and section hierarchy
+- **Update References**: Ensure all cross-references remain valid
+- **Test Compatibility**: Verify edits don't break existing rule relationships
+
+## 🔧 Surgical Edit Protocol
+
+### Step 1: Impact Assessment
+```markdown
+Before making any edit:
+- [ ] Identify all files that reference the target content
+- [ ] Assess downstream effects on dependent rules
+- [ ] Check for version dependencies
+- [ ] Verify backward compatibility
+```
+
+### Step 2: Atomic Changes
+```markdown
+Each edit must be:
+- [ ] Self-contained (no external dependencies)
+- [ ] Reversible (can be undone without side effects)
+- [ ] Documented (clear change description)
+- [ ] Tested (verified against existing content)
+```
+
+### Step 3: Validation Checks
+```markdown
+After making changes:
+- [ ] Cross-reference integrity maintained
+- [ ] All linked examples still valid
+- [ ] Rule hierarchy preserved
+- [ ] No orphaned references created
+```
+
+## 🎨 Edit Categories
+
+### Configuration Edits
+```markdown
+# ✅ ALLOWED: Update configuration values
+OLD: timeout: 10000
+NEW: timeout: 15000
+
+# ✅ ALLOWED: Add new configuration options
+OLD: timeout: 10000
+NEW: timeout: 10000, retries: 3
+
+# ❌ NOT ALLOWED: Remove configuration without replacement
+OLD: timeout: 10000, retries: 3
+NEW: timeout: 10000
+```
+
+### Content Edits
+```markdown
+# ✅ ALLOWED: Add clarifying information
+OLD: Use this method for API calls.
+NEW: Use this method for API calls. Recommended timeout: 10 seconds.
+
+# ✅ ALLOWED: Fix documentation errors
+OLD: Use `chrome.tabs.query()` for tab management
+NEW: Use `chrome.tabs.query()` for tab information retrieval
+
+# ❌ NOT ALLOWED: Change core functionality
+OLD: Use `chrome.tabs.query()` for tab management
+NEW: Use `browser.tabs.query()` for Firefox compatibility
+```
+
+### Structural Edits
+```markdown
+# ✅ ALLOWED: Add new sections
+OLD: ## Implementation
+NEW: ## Implementation
+## Best Practices
+
+# ✅ ALLOWED: Reorganize within sections
+OLD: 1. Step one 2. Step two
+NEW: 1. Step one 2. Step two 3. Step three
+
+# ❌ NOT ALLOWED: Remove major sections
+OLD: ## Implementation ## Examples
+NEW: ## Implementation
+```
+
+## 🔍 Validation Commands
+
+### Pre-Edit Checks
+```bash
+# Verify rule file integrity
+find .cursor/rules -name "*.mdc" -exec echo "Checking: {}" \;
+
+# Check for broken cross-references
+grep -r "\]\(" .cursor/rules/ | grep -v "http" | wc -l
+```
+
+### Post-Edit Validation
+```bash
+# Verify all files still parse correctly
+find .cursor/rules -name "*.mdc" -exec head -1 {} \; | grep -v "^#"
+
+# Check for orphaned references
+grep -r "](#" .cursor/rules/ | grep -v "\.mdc" | sort | uniq
+```
+
+## 🚨 Emergency Rollback
+
+If a surgical edit causes issues:
+
+1. **Immediate Revert**: Undo the change within 5 minutes
+2. **Impact Assessment**: Document what broke and why
+3. **Alternative Approach**: Implement fix using different method
+4. **Prevention**: Add the problematic pattern to "NOT ALLOWED" list
+
+## 📊 Success Metrics
+
+- **Zero Breaking Changes**: No edits that break existing functionality
+- **100% Reference Integrity**: All cross-references remain valid
+- **< 5 min Validation**: Each edit validates in under 5 minutes
+- **Clear Documentation**: Every edit has clear reasoning and impact
+
+## 🔗 Related Rules
+
+- [chrome-extension-app-structure](./chrome-extension-app-structure.mdc) - For structural changes
+- [code-style-and-structure](./code-style-and-structure.mdc) - For code formatting consistency
+- [messaging-contracts](./messaging-contracts.mdc) - For communication protocol updates
+
+## 📝 Change Log
+
+### Version 1.0.0
+- Initial surgical edits protocol established
+- Validation procedures defined
+- Edit categories documented
+- Emergency rollback process created
