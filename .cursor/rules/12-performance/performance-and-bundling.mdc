@@ -1,0 +1,30 @@
+---
+alwaysApply: true
+---
+
+# Performance: Caching, Named Inputs & Bundling
+
+Enable Nx local+remote cache, incremental typechecking, code-splitting, and lazy loading for heavy routes/assets.
+
+**Justification:** Shortens feedback cycles and delivers faster user experiences on constrained devices.
+
+## Nx Caching & Named Inputs
+
+```json
+{
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/tsconfig.base.json",
+      "!**/*.md"
+    ]
+  }
+}
+```
+
+## Bundling & Splitting
+
+- Tree-shake and split vendor/runtime chunks
+- Lazy load admin/analytics routes
+- Defer non-critical work with requestIdleCallback
+

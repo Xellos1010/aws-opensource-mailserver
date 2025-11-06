@@ -1,0 +1,571 @@
+---
+description: Alert definitions with SLIs, SLOs, error budgets, and escalation policies for proactive incident detection
+alwaysApply: false
+---
+# Alert Definitions & SLO Management - 2025
+
+Define Service Level Indicators (SLIs), Service Level Objectives (SLOs), and actionable alerts with proper thresholds and escalation.
+
+**Justification:** Well-defined alerts prevent alert fatigue, ensure critical issues are addressed quickly, and maintain service reliability.
+
+## 🎯 Single Responsibility
+This rule ONLY defines WHAT to alert on and WHEN. Not how to respond (see incident-management) or how to visualize (see dashboards).
+
+## 📋 Implementation Checklist
+
+### Initial Setup
+```markdown
+- [ ] Define SLIs for each service
+- [ ] Establish SLOs with error budgets
+- [ ] Create alert rules for each SLI
+- [ ] Configure alert severity levels
+- [ ] Set up notification channels
+- [ ] Define escalation policies
+- [ ] Configure alert suppression rules
+- [ ] Set up runbook links
+- [ ] Test alert delivery
+- [ ] Document alert response procedures
+```
+
+## 🎯 Service Level Indicators (SLIs)
+
+### Core SLIs for Every Service
+```yaml
+# sli-definitions.yml
+slis:
+  availability:
+    description: "Percentage of successful requests"
+    formula: "(successful_requests / total_requests) * 100"
+    measurement_window: "5m"
+    
+  latency:
+    description: "95th percentile request latency"
+    formula: "histogram_quantile(0.95, http_request_duration_seconds)"
+    measurement_window: "5m"
+    
+  error_rate:
+    description: "Percentage of failed requests"
+    formula: "(failed_requests / total_requests) * 100"
+    measurement_window: "5m"
+    
+  throughput:
+    description: "Requests per second"
+    formula: "rate(http_requests_total[5m])"
+    measurement_window: "5m"
+```
+
+### Business-Specific SLIs
+```yaml
+business_slis:
+  order_success_rate:
+    description: "Percentage of successful order completions"
+    formula: "(completed_orders / total_orders) * 100"
+    measurement_window: "15m"
+    
+  payment_processing_time:
+    description: "Time to process payment"
+    formula: "histogram_quantile(0.99, payment_duration_seconds)"
+    measurement_window: "5m"
+    
+  data_freshness:
+    description: "Age of most recent data sync"
+    formula: "time() - last_sync_timestamp"
+    measurement_window: "1m"
+```
+
+## 📊 Service Level Objectives (SLOs)
+
+### SLO Definitions with Error Budgets
+```typescript
+interface SLO {
+  name: string;
+  sli: string;
+  target: number;
+  window: '7d' | '30d' | '90d';
+  errorBudget: number;
+  burnRateThresholds: BurnRateThreshold[];
+}
+
+const slos: SLO[] = [
+  {
+    name: 'api-availability',
+    sli: 'availability',
+    target: 99.9, // Three 9s
+    window: '30d',
+    errorBudget: 43.2, // minutes per month
+    burnRateThresholds: [
+      { rate: 14.4, window: '1h', severity: 'critical' },  // 2% budget in 1h
+      { rate: 6, window: '6h', severity: 'warning' },      // 5% budget in 6h
+      { rate: 1, window: '3d', severity: 'info' }          // 10% budget in 3d
+    ]
+  },
+  {
+    name: 'api-latency',
+    sli: 'p95_latency',
+    target: 95, // 95% of requests < 500ms
+    window: '30d',
+    errorBudget: 2160, // minutes per month
+    burnRateThresholds: [
+      { rate: 10, window: '1h', severity: 'critical' },
+      { rate: 5, window: '6h', severity: 'warning' },
+      { rate: 2, window: '1d', severity: 'info' }
+    ]
+  }
+];
+```
+
+### Error Budget Calculation
+```typescript
+class ErrorBudgetCalculator {
+  calculateRemaining(slo: SLO, currentPerformance: number): {
+    remaining: number;
+    percentage: number;
+    timeUntilExhaustion: string;
+  } {
+    const totalBudget = (100 - slo.target) * this.getWindowMinutes(slo.window);
+    const consumed = (100 - currentPerformance) * this.getWindowMinutes(slo.window);
+    const remaining = totalBudget - consumed;
+    const percentage = (remaining / totalBudget) * 100;
+    
+    // Calculate burn rate
+    const burnRate = consumed / this.getElapsedMinutes();
+    const timeUntilExhaustion = remaining / burnRate;
+    
+    return {
+      remaining,
+      percentage,
+      timeUntilExhaustion: this.formatDuration(timeUntilExhaustion)
+    };
+  }
+}
+```
+
+## 🚨 Alert Rule Definitions
+
+### Prometheus Alert Rules
+```yaml
+# alerts/rules.yml
+groups:
+  - name: availability
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[5m])) 
+            / 
+            sum(rate(http_requests_total[5m]))
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          team: platform
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "High error rate on {{ $labels.service }}"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+          runbook: "https://runbooks.example.com/high-error-rate"
+          dashboard: "https://grafana.example.com/d/api-errors"
+
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)
+          ) > 1.0
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "High latency on {{ $labels.service }}"
+          description: "P95 latency is {{ $value | humanizeDuration }} (threshold: 1s)"
+          
+      - alert: ServiceDown
+        expr: up{job="api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+          page: true
+        annotations:
+          summary: "Service {{ $labels.instance }} is down"
+          description: "{{ $labels.instance }} has been down for more than 1 minute"
+```
+
+### CloudWatch Alarms (AWS)
+```typescript
+// alerts/cloudwatch.ts
+import { CloudWatch } from '@aws-sdk/client-cloudwatch';
+
+const cloudwatch = new CloudWatch();
+
+async function createAlarms() {
+  // Lambda Error Rate
+  await cloudwatch.putMetricAlarm({
+    AlarmName: 'lambda-high-error-rate',
+    ComparisonOperator: 'GreaterThanThreshold',
+    EvaluationPeriods: 2,
+    MetricName: 'Errors',
+    Namespace: 'AWS/Lambda',
+    Period: 300,
+    Statistic: 'Sum',
+    Threshold: 10,
+    ActionsEnabled: true,
+    AlarmActions: [process.env.SNS_TOPIC_ARN],
+    AlarmDescription: 'Lambda function error rate too high',
+    Dimensions: [
+      {
+        Name: 'FunctionName',
+        Value: 'webhook-processor'
+      }
+    ]
+  });
+
+  // API Gateway Latency
+  await cloudwatch.putMetricAlarm({
+    AlarmName: 'api-gateway-high-latency',
+    ComparisonOperator: 'GreaterThanThreshold',
+    EvaluationPeriods: 3,
+    MetricName: 'Latency',
+    Namespace: 'AWS/ApiGateway',
+    Period: 60,
+    Statistic: 'Average',
+    Threshold: 1000, // 1 second
+    TreatMissingData: 'notBreaching',
+    AlarmDescription: 'API Gateway latency exceeds 1 second'
+  });
+
+  // Custom Business Metric
+  await cloudwatch.putMetricAlarm({
+    AlarmName: 'low-order-completion-rate',
+    ComparisonOperator: 'LessThanThreshold',
+    EvaluationPeriods: 4,
+    MetricName: 'OrderCompletionRate',
+    Namespace: 'FreshsalesApp/Business',
+    Period: 900, // 15 minutes
+    Statistic: 'Average',
+    Threshold: 0.95, // 95% completion rate
+    AlarmDescription: 'Order completion rate below 95%'
+  });
+}
+```
+
+## 📈 Alert Severity Levels
+
+### Severity Matrix
+```typescript
+enum AlertSeverity {
+  CRITICAL = 'critical',  // Page immediately, customer impact
+  WARNING = 'warning',    // Notify on-call, potential issue
+  INFO = 'info',         // Record for analysis, no immediate action
+}
+
+interface AlertConfig {
+  severity: AlertSeverity;
+  notificationChannels: string[];
+  autoResolve: boolean;
+  escalationDelay: number; // minutes
+  requiresAck: boolean;
+}
+
+const severityConfig: Record<AlertSeverity, AlertConfig> = {
+  [AlertSeverity.CRITICAL]: {
+    severity: AlertSeverity.CRITICAL,
+    notificationChannels: ['pagerduty', 'slack-critical', 'email', 'sms'],
+    autoResolve: false,
+    escalationDelay: 5,
+    requiresAck: true
+  },
+  [AlertSeverity.WARNING]: {
+    severity: AlertSeverity.WARNING,
+    notificationChannels: ['slack-alerts', 'email'],
+    autoResolve: true,
+    escalationDelay: 30,
+    requiresAck: false
+  },
+  [AlertSeverity.INFO]: {
+    severity: AlertSeverity.INFO,
+    notificationChannels: ['slack-monitoring'],
+    autoResolve: true,
+    escalationDelay: 0,
+    requiresAck: false
+  }
+};
+```
+
+## 🔔 Notification Channels
+
+### Multi-Channel Configuration
+```yaml
+# alertmanager.yml
+global:
+  resolve_timeout: 5m
+  
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'default'
+  
+  routes:
+    - match:
+        severity: critical
+      receiver: pagerduty
+      continue: true
+      
+    - match:
+        severity: warning
+      receiver: slack-warnings
+      
+    - match:
+        severity: info
+      receiver: slack-info
+
+receivers:
+  - name: 'default'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#alerts'
+        
+  - name: 'pagerduty'
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_SERVICE_KEY}'
+        description: '{{ .GroupLabels.alertname }}'
+        
+  - name: 'slack-warnings'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#alerts-warning'
+        send_resolved: true
+        title: '⚠️ Warning: {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+```
+
+## 🎯 Alert Correlation & Deduplication
+
+### Correlation Rules
+```typescript
+class AlertCorrelator {
+  correlate(alerts: Alert[]): CorrelatedIncident[] {
+    const incidents: Map<string, CorrelatedIncident> = new Map();
+    
+    for (const alert of alerts) {
+      const key = this.generateCorrelationKey(alert);
+      
+      if (incidents.has(key)) {
+        incidents.get(key)!.alerts.push(alert);
+      } else {
+        incidents.set(key, {
+          id: uuidv4(),
+          key,
+          alerts: [alert],
+          severity: this.getHighestSeverity([alert]),
+          startTime: alert.startsAt,
+          service: alert.labels.service,
+          title: this.generateIncidentTitle([alert])
+        });
+      }
+    }
+    
+    return Array.from(incidents.values());
+  }
+  
+  private generateCorrelationKey(alert: Alert): string {
+    // Correlate by service and error signature
+    return `${alert.labels.service}-${alert.labels.error_type || 'unknown'}`;
+  }
+}
+```
+
+## 📊 Composite Alerts
+
+### Multi-Signal Alerts
+```yaml
+# Composite alert combining multiple signals
+- alert: ServiceDegraded
+  expr: |
+    (
+      # High error rate
+      (sum(rate(http_errors_total[5m])) by (service) / sum(rate(http_requests_total[5m])) by (service) > 0.01)
+      AND
+      # High latency
+      (histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)) > 0.5)
+    )
+    OR
+    (
+      # Low success rate for critical business metric
+      sum(rate(orders_completed_total[15m])) by (service) / sum(rate(orders_total[15m])) by (service) < 0.95
+    )
+  for: 5m
+  labels:
+    severity: critical
+    composite: true
+```
+
+## 🔕 Alert Suppression & Maintenance Windows
+
+### Suppression Rules
+```typescript
+interface SuppressionRule {
+  name: string;
+  condition: string;
+  duration: string;
+  reason: string;
+}
+
+const suppressionRules: SuppressionRule[] = [
+  {
+    name: 'deployment-window',
+    condition: 'label:deployment_in_progress="true"',
+    duration: '30m',
+    reason: 'Suppress during deployments'
+  },
+  {
+    name: 'known-issue',
+    condition: 'label:known_issue_id!=""',
+    duration: '24h',
+    reason: 'Known issue being worked on'
+  },
+  {
+    name: 'scheduled-maintenance',
+    condition: 'time >= "02:00" AND time <= "04:00" AND day="Sunday"',
+    duration: '2h',
+    reason: 'Weekly maintenance window'
+  }
+];
+```
+
+## 📝 Alert Documentation
+
+### Alert Runbook Template
+```markdown
+# Alert: {{ AlertName }}
+
+## Overview
+Brief description of what this alert means
+
+## Impact
+- **Customer Impact**: How this affects users
+- **Business Impact**: Revenue/operations impact
+- **Severity**: Critical/Warning/Info
+
+## Diagnosis Steps
+1. Check dashboard: [Link to dashboard]
+2. Query logs: `query here`
+3. Verify upstream dependencies
+4. Check recent deployments
+
+## Remediation Steps
+1. **Immediate**: Quick fix to stop bleeding
+2. **Short-term**: Temporary solution
+3. **Long-term**: Permanent fix
+
+## Escalation
+- **L1**: Try remediation steps (15 min)
+- **L2**: Page on-call engineer if not resolved
+- **L3**: Escalate to team lead after 30 min
+- **L4**: Involve VP Engineering for customer impact
+
+## Prevention
+- Add monitoring for X
+- Improve test coverage for Y
+- Consider architectural change Z
+
+## Related Alerts
+- [Alert A]: Often fires together
+- [Alert B]: May be root cause
+
+## Historical Context
+- Last occurred: Date
+- Frequency: X times per month
+- Common causes: List here
+```
+
+## ✅ Testing Alerts
+
+### Alert Testing Framework
+```typescript
+describe('Alert Rules', () => {
+  it('should fire high error rate alert', async () => {
+    // Generate error metrics
+    for (let i = 0; i < 100; i++) {
+      metrics.recordError('500', '/api/orders');
+    }
+    
+    // Wait for evaluation
+    await sleep(5000);
+    
+    // Check if alert fired
+    const alerts = await alertmanager.getAlerts();
+    expect(alerts).toContainEqual(
+      expect.objectContaining({
+        name: 'HighErrorRate',
+        severity: 'critical'
+      })
+    );
+  });
+  
+  it('should calculate error budget correctly', () => {
+    const calculator = new ErrorBudgetCalculator();
+    const result = calculator.calculateRemaining(
+      { target: 99.9, window: '30d' },
+      99.5 // Current performance
+    );
+    
+    expect(result.percentage).toBeLessThan(50);
+    expect(result.timeUntilExhaustion).toMatch(/\d+ hours/);
+  });
+});
+```
+
+## 🚨 Common Alert Anti-Patterns
+
+```yaml
+# ❌ BAD: Too sensitive, will cause alert fatigue
+- alert: HighCPU
+  expr: cpu_usage > 50
+  for: 1m
+
+# ❌ BAD: No actionable information
+- alert: SomethingWrong
+  expr: errors > 0
+  annotations:
+    summary: "Errors detected"
+
+# ❌ BAD: Missing labels for routing
+- alert: DatabaseSlow
+  expr: db_latency > 100
+
+# ✅ GOOD: Appropriate threshold with context
+- alert: HighCPUUtilization
+  expr: |
+    (
+      100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m]))) > 85
+    )
+  for: 15m
+  labels:
+    severity: warning
+    service: "{{ $labels.instance }}"
+    team: infrastructure
+  annotations:
+    summary: "High CPU utilization on {{ $labels.instance }}"
+    description: "CPU usage is {{ $value | humanizePercentage }} for 15 minutes"
+    runbook: "https://runbooks.example.com/high-cpu"
+```
+
+## 📊 Success Metrics
+
+- **Alert Precision**: > 95% of alerts are actionable
+- **Alert Recall**: < 5% of incidents without alerts
+- **MTTA (Mean Time to Alert)**: < 2 minutes
+- **False Positive Rate**: < 10%
+- **Alert Response Rate**: > 90% acknowledged within SLA
+- **Error Budget Burn Rate**: < 100% per period
+
+## 🔗 Related Rules
+- [incident-management](./incident-management.mdc) - For responding to alerts
+- [metrics-collection](./metrics-collection.mdc) - For metrics that trigger alerts
+- [dashboards](./dashboards.mdc) - For visualizing alert trends
+- [structured-logging](./structured-logging.mdc) - For alert correlation with logs

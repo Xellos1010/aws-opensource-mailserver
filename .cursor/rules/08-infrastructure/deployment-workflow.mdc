@@ -1,0 +1,342 @@
+---
+description: Apply to deployment scripts, CI/CD pipelines, infrastructure code, and Docker configurations
+alwaysApply: false
+---
+# Deployment Workflow - Simple but Scalable
+
+Progressive deployment strategy with preview environments, automated staging, and gated production releases for Freshworks apps and services.
+
+**Justification:** Safe, incremental deployments reduce risk, enable rapid iteration, and maintain production stability for enterprise CRM integrations.
+
+## 🚀 Deployment Flow Overview
+
+```mermaid
+graph LR
+    PR[Pull Request] --> Preview[Preview URL]
+    Preview --> Smoke[E2E Smoke Tests]
+    Smoke --> Merge[Merge to Main]
+    Merge --> Staging[Auto-Deploy Staging]
+    Staging --> StagingTests[Post-Deploy Tests]
+    StagingTests --> Approve{Manual Approve?}
+    Approve -->|Yes| Prod[Production Deploy]
+    Approve -->|Auto| ProdAuto[Auto-Promote if Green]
+    Prod --> ProdTests[Production Smoke Tests]
+    ProdTests --> Notify[Notify Team]
+```
+
+## 📦 Phase 1: Preview Deployments (Per PR)
+
+**Purpose:** Test changes in isolation before merging
+
+### Freshworks Apps (FDK)
+```bash
+# Local preview for Freshworks apps
+cd apps/freshsales-intake-guard
+pnpm fdk run --tunnel  # Creates temporary public URL
+
+# Automated in CI
+on:
+  pull_request:
+    paths:
+      - 'apps/freshsales-*/**'
+jobs:
+  preview:
+    steps:
+      - run: pnpm nx build freshsales-intake-guard
+      - run: pnpm fdk validate
+      - run: pnpm fdk pack
+      - comment: "Preview URL: https://pr-${{ github.event.number }}.preview.freshworks.dev"
+```
+
+### Web Services (Vercel/Netlify)
+```yaml
+# Automatic preview deployments
+# vercel.json or netlify.toml
+{
+  "github": {
+    "enabled": true,
+    "autoAlias": ["pr-*.preview.example.com"]
+  }
+}
+```
+
+### AWS Services (CDK)
+```bash
+# Ephemeral stack per PR
+./scripts/deploy-webhook-stack.sh up \
+  --name "pr-${PR_NUMBER}-webhook" \
+  --region us-east-1 \
+  --profile dev
+
+# Auto-cleanup after merge
+./scripts/deploy-webhook-stack.sh down \
+  --name "pr-${PR_NUMBER}-webhook"
+```
+
+### E2E Tests Against Preview
+```typescript
+// tests/e2e/smoke.test.ts
+const PREVIEW_URL = process.env.PREVIEW_URL || 'http://localhost:3000';
+
+describe('Preview Smoke Tests', () => {
+  it('should have working health endpoint', async () => {
+    const res = await fetch(`${PREVIEW_URL}/healthz`);
+    expect(res.ok).toBe(true);
+  });
+  
+  it('should handle webhook requests', async () => {
+    const res = await fetch(`${PREVIEW_URL}/eleven/personalize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ freshsales_contact_id: 123 })
+    });
+    expect(res.status).toBe(200);
+  });
+});
+```
+
+## 🎯 Phase 2: Staging Deployment (Main Branch)
+
+**Purpose:** Integration testing in production-like environment
+
+### Auto-Deploy on Merge
+```yaml
+# .github/workflows/deploy-staging.yml
+name: Deploy to Staging
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-staging:
+    environment: staging
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+      
+      # Deploy affected services
+      - run: pnpm nx affected -t deploy --stage=staging
+      
+      # Deploy CDK stacks
+      - run: |
+          cd apps/infra/eleven-webhook-cdk
+          npx cdk deploy --context stage=staging --require-approval never
+      
+      # Deploy Freshworks apps
+      - run: |
+          cd apps/freshsales-intake-guard
+          pnpm fdk pack
+          curl -X POST ${{ secrets.FRESHWORKS_STAGING_API }}/apps \
+            -F "app=@dist/freshsales-intake-guard.zip"
+```
+
+### Post-Deploy Validation
+```bash
+# Run smoke tests against staging
+pnpm test:e2e:staging
+
+# Health checks
+curl -f https://staging.api.example.com/healthz
+curl -f https://staging.webhook.example.com/healthz
+
+# Synthetic monitoring
+aws synthetics start-canary --name staging-smoke-tests
+```
+
+### Staging Environment Config
+```typescript
+// config/staging.ts
+export const stagingConfig = {
+  freshsales: {
+    domain: 'company-staging.myfreshworks.com',
+    apiKey: process.env.STAGING_FRESHSALES_API_KEY
+  },
+  elevenlabs: {
+    apiUrl: 'https://api.elevenlabs.io',
+    apiKey: process.env.STAGING_ELEVENLABS_API_KEY
+  },
+  aws: {
+    region: 'us-east-1',
+    account: process.env.STAGING_AWS_ACCOUNT
+  }
+};
+```
+
+## 🏭 Phase 3: Production Deployment
+
+**Purpose:** Controlled release to production with safety gates
+
+### Manual Approval Gate
+```yaml
+# .github/workflows/deploy-production.yml
+name: Deploy to Production
+on:
+  workflow_dispatch:  # Manual trigger
+  schedule:
+    - cron: '0 10 * * 2,4'  # Auto-deploy Tue/Thu if staging green
+
+jobs:
+  deploy-production:
+    environment:
+      name: production
+      url: https://app.example.com
+    steps:
+      - name: Check staging health
+        run: |
+          ./scripts/check-staging-health.sh
+          if [ $? -ne 0 ]; then
+            echo "Staging unhealthy, blocking production deploy"
+            exit 1
+          fi
+      
+      - name: Deploy to production
+        run: |
+          pnpm nx run-many -t deploy --stage=production
+          
+      - name: Run production smoke tests
+        run: pnpm test:e2e:production --smoke-only
+      
+      - name: Notify team
+        if: always()
+        run: |
+          ./scripts/notify-deployment.sh \
+            --status ${{ job.status }} \
+            --environment production \
+            --version ${{ github.sha }}
+```
+
+### Automated Promotion (If Staging Green)
+```typescript
+// scripts/auto-promote.ts
+async function shouldPromoteToProduction(): Promise<boolean> {
+  const checks = await Promise.all([
+    checkStagingUptime(),      // > 99.9% last 24h
+    checkStagingErrors(),       // < 0.1% error rate
+    checkStagingPerformance(),  // p95 < 500ms
+    checkTestsPassing(),        // All e2e tests green
+    checkNoOpenIncidents()      // No P0/P1 incidents
+  ]);
+  
+  return checks.every(check => check === true);
+}
+
+if (await shouldPromoteToProduction()) {
+  await deployToProduction();
+}
+```
+
+### Blue-Green Deployment (AWS)
+```bash
+# Deploy to green environment
+./scripts/deploy-webhook-stack.sh up \
+  --name production-green \
+  --profile prod
+
+# Run smoke tests
+pnpm test:e2e:production --target=green
+
+# Switch traffic
+aws elbv2 modify-listener \
+  --listener-arn $PROD_LISTENER_ARN \
+  --default-actions Type=forward,TargetGroupArn=$GREEN_TG_ARN
+
+# Keep blue for rollback
+```
+
+## 🔔 Phase 4: Post-Deploy Actions
+
+### Smoke Tests
+```typescript
+// tests/e2e/production-smoke.test.ts
+describe('Production Smoke Tests', () => {
+  beforeAll(() => {
+    // Use read-only test account
+    authenticate(process.env.PROD_TEST_CREDENTIALS);
+  });
+
+  it('critical: webhook endpoint responds', async () => {
+    const res = await fetch('https://api.example.com/healthz');
+    expect(res.status).toBe(200);
+  });
+
+  it('critical: Freshsales integration works', async () => {
+    const contact = await freshsales.getContact(TEST_CONTACT_ID);
+    expect(contact).toBeDefined();
+  });
+
+  it('critical: ElevenLabs connection active', async () => {
+    const status = await elevenlabs.getStatus();
+    expect(status.connected).toBe(true);
+  });
+});
+```
+
+### Notifications
+```bash
+# scripts/notify-deployment.sh
+#!/bin/bash
+WEBHOOK_URL="${SLACK_WEBHOOK_URL}"
+STATUS="${1:-success}"
+ENV="${2:-production}"
+VERSION="${3:-unknown}"
+
+curl -X POST "${WEBHOOK_URL}" \
+  -H 'Content-Type: application/json' \
+  -d @- <<EOF
+{
+  "text": "🚀 Deployment to ${ENV}",
+  "attachments": [{
+    "color": "${STATUS}" == "success" ? "good" : "danger",
+    "fields": [
+      {"title": "Environment", "value": "${ENV}", "short": true},
+      {"title": "Version", "value": "${VERSION}", "short": true},
+      {"title": "Status", "value": "${STATUS}", "short": true},
+      {"title": "Dashboard", "value": "<https://dashboard.example.com|View Metrics>"}
+    ]
+  }]
+}
+EOF
+```
+
+## 🛡️ Rollback Strategy
+
+### Instant Rollback
+```bash
+# Freshworks Apps
+curl -X POST $FRESHWORKS_API/apps/$APP_ID/rollback \
+  -H "Authorization: Bearer $API_KEY"
+
+# AWS Services (Blue-Green)
+aws elbv2 modify-listener \
+  --listener-arn $PROD_LISTENER_ARN \
+  --default-actions Type=forward,TargetGroupArn=$BLUE_TG_ARN
+
+# Vercel/Netlify
+vercel rollback production --yes
+```
+
+### Monitoring & Alerts
+```yaml
+# Datadog/CloudWatch alerts
+alerts:
+  - name: deployment-error-rate
+    query: "avg(last_5m):error_rate > 0.05"
+    action: 
+      - notify: "@oncall"
+      - trigger: "rollback-automation"
+  
+  - name: deployment-latency
+    query: "avg(last_5m):p95_latency > 1000"
+    action:
+      - notify: "@team"
+      - suggest: "rollback"
+```
+
+## 📊 Success Metrics
+
+- **Preview Deployments:** Created within 2 minutes of PR
+- **Staging Deploy:** Completes within 5 minutes of merge
+- **Production Deploy:** Zero-downtime, < 10 minute total time
+- **Rollback Time:** < 30 seconds to revert
+- **Test Coverage:** 100% critical paths covered by smoke tests
+- **Alert Response:** < 2 minutes to detect production issues

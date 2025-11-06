@@ -1,0 +1,27 @@
+---
+globs: apps/automation-chrome-ext/src/flows/**,apps/automation-chrome-ext/src/background.ts,apps/automation-chrome-ext/src/content/**
+alwaysApply: false
+---
+## Flow Spec (JSON-ish)
+
+type Locator = { by:'css'|'role'|'testid', selector:string, hasText?:string };
+type Step =
+ | { type:'goto', url:string }
+ | { type:'waitFor', locator:Locator, timeout?:number, description?:string }
+ | { type:'click', locator:Locator, description?:string }
+ | { type:'fill', locator:Locator, value:string, description?:string }
+ | { type:'custom', description:string, data:{ action:string, [k:string]:any } };
+
+interface FlowDoc { name:string; steps: Step[]; }
+
+## Engine Rules
+
+Background owns the state machine; content performs DOM actions and returns StepResult.
+
+Custom actions like your navigateToFirstResult must emit a post-navigation hint { postNavigate:true, routePattern:/contacts\/\d+/ } so background arms the “phased wait” automatically.
+
+The engine retries idempotent waits up to 2 times; mutating steps (click/fill) retry only on transient errors (detached/obscured) and never if a side effect already happened.
+
+Packaging
+
+Ship flows as code-split chunks (chunks/), matching the README’s build outputs. 

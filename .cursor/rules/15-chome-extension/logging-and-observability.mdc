@@ -1,0 +1,11 @@
+---
+globs: apps/automation-chrome-ext/src/**
+alwaysApply: false
+---
+- Use a minimal **logger** wrapper with levels `debug|info|warn|error`.
+- Prefix automation logs with an app tag (e.g., `[Bravado]`, `[Freshsales]`).
+- Store last **1000** entries in `chrome.storage.session` keyed by `runId`.
+- Side Panel shows a **live tail** and can **export** the run log as JSON on demand.
+- Keep logs concise; include `tabId`, `stepId`, durations, and final status.
+
+> The repo already emphasizes structured logs and progress reporting; keep it consistent.

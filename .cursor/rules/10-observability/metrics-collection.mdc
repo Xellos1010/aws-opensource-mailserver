@@ -1,0 +1,538 @@
+---
+globs: **/*.ts, **/*.js, **/server.js, **/main.ts, **/handler.ts
+description: Application and business metrics collection using Prometheus/OpenTelemetry for comprehensive monitoring
+alwaysApply: false
+---
+# Metrics Collection Standards - 2025
+
+Implement comprehensive metrics collection for RED (Rate, Errors, Duration) and USE (Utilization, Saturation, Errors) methodologies.
+
+**Justification:** Metrics provide quantitative insights into system health, performance, and business KPIs enabling proactive issue detection.
+
+## 🎯 Single Responsibility
+This rule is ONLY responsible for defining WHAT metrics to collect and HOW to collect them. Not alerting (see alert-definitions) or visualization (see dashboards).
+
+## 📋 Implementation Checklist
+
+### Initial Setup
+```markdown
+- [ ] Choose metrics library (Prometheus client, OpenTelemetry Metrics)
+- [ ] Set up metrics endpoint (/metrics)
+- [ ] Configure metric types (Counter, Gauge, Histogram, Summary)
+- [ ] Implement RED metrics (Rate, Errors, Duration)
+- [ ] Implement USE metrics (Utilization, Saturation, Errors)
+- [ ] Add business KPI metrics
+- [ ] Configure Prometheus scraping
+- [ ] Set up Grafana dashboards
+- [ ] Define SLIs and SLOs
+- [ ] Configure metric retention
+```
+
+## 📊 Metrics Types & Usage
+
+### Counter - Monotonically Increasing Values
+```typescript
+import { Counter } from 'prom-client';
+
+// Define counters
+const httpRequestsTotal = new Counter({
+  name: 'http_requests_total',
+  help: 'Total number of HTTP requests',
+  labelNames: ['method', 'route', 'status_code'],
+});
+
+const ordersProcessedTotal = new Counter({
+  name: 'orders_processed_total',
+  help: 'Total number of orders processed',
+  labelNames: ['status', 'payment_method', 'region'],
+});
+
+// Usage
+httpRequestsTotal.inc({ 
+  method: 'POST', 
+  route: '/api/orders', 
+  status_code: '200' 
+});
+
+ordersProcessedTotal.inc({ 
+  status: 'completed',
+  payment_method: 'credit_card',
+  region: 'us-west'
+});
+```
+
+### Gauge - Values That Go Up and Down
+```typescript
+import { Gauge } from 'prom-client';
+
+// Define gauges
+const activeConnections = new Gauge({
+  name: 'active_connections',
+  help: 'Number of active connections',
+  labelNames: ['service'],
+});
+
+const queueDepth = new Gauge({
+  name: 'queue_depth',
+  help: 'Current depth of the message queue',
+  labelNames: ['queue_name', 'priority'],
+});
+
+const memoryUsageBytes = new Gauge({
+  name: 'memory_usage_bytes',
+  help: 'Current memory usage in bytes',
+  labelNames: ['type'], // heap, rss, external
+});
+
+// Usage
+activeConnections.set({ service: 'webhook' }, 42);
+queueDepth.inc({ queue_name: 'orders', priority: 'high' }); // Increment
+queueDepth.dec({ queue_name: 'orders', priority: 'high' }); // Decrement
+```
+
+### Histogram - Distribution of Values
+```typescript
+import { Histogram } from 'prom-client';
+
+// Define histograms with buckets
+const httpRequestDuration = new Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'Duration of HTTP requests in seconds',
+  labelNames: ['method', 'route', 'status_code'],
+  buckets: [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 7, 10], // in seconds
+});
+
+const databaseQueryDuration = new Histogram({
+  name: 'db_query_duration_seconds',
+  help: 'Duration of database queries in seconds',
+  labelNames: ['operation', 'table'],
+  buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5],
+});
+
+// Usage with timer
+const end = httpRequestDuration.startTimer({ 
+  method: 'GET', 
+  route: '/api/users' 
+});
+// ... do work ...
+end({ status_code: '200' }); // Automatically records duration
+```
+
+### Summary - Percentiles Over Time Window
+```typescript
+import { Summary } from 'prom-client';
+
+const apiLatency = new Summary({
+  name: 'api_latency_seconds',
+  help: 'API latency in seconds',
+  labelNames: ['endpoint'],
+  percentiles: [0.5, 0.9, 0.95, 0.99], // Calculate these percentiles
+  maxAgeSeconds: 600, // 10-minute sliding window
+  ageBuckets: 5, // Number of buckets for sliding window
+});
+
+// Usage
+apiLatency.observe({ endpoint: '/api/orders' }, 0.123);
+```
+
+## 🔴 RED Metrics (Request-Oriented)
+
+### Rate - Requests Per Second
+```typescript
+class REDMetrics {
+  private requestRate = new Counter({
+    name: 'http_requests_total',
+    help: 'Total HTTP requests',
+    labelNames: ['method', 'endpoint', 'service'],
+  });
+
+  recordRequest(method: string, endpoint: string) {
+    this.requestRate.inc({
+      method,
+      endpoint,
+      service: process.env.SERVICE_NAME,
+    });
+  }
+}
+```
+
+### Errors - Error Rate
+```typescript
+private errorRate = new Counter({
+  name: 'http_errors_total',
+  help: 'Total HTTP errors',
+  labelNames: ['method', 'endpoint', 'status_code', 'error_type'],
+});
+
+recordError(method: string, endpoint: string, statusCode: number, error?: Error) {
+  this.errorRate.inc({
+    method,
+    endpoint,
+    status_code: statusCode.toString(),
+    error_type: error?.name || 'unknown',
+  });
+}
+```
+
+### Duration - Request Latency
+```typescript
+private requestDuration = new Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'HTTP request duration in seconds',
+  labelNames: ['method', 'endpoint', 'status_code'],
+  buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
+});
+
+// Express middleware
+app.use((req, res, next) => {
+  const timer = this.requestDuration.startTimer({
+    method: req.method,
+    endpoint: req.route?.path || req.path,
+  });
+
+  res.on('finish', () => {
+    timer({ status_code: res.statusCode.toString() });
+  });
+
+  next();
+});
+```
+
+## 🔧 USE Metrics (Resource-Oriented)
+
+### Utilization - Average Resource Use
+```typescript
+class USEMetrics {
+  private cpuUtilization = new Gauge({
+    name: 'cpu_utilization_ratio',
+    help: 'CPU utilization from 0 to 1',
+    labelNames: ['service'],
+  });
+
+  private memoryUtilization = new Gauge({
+    name: 'memory_utilization_ratio',
+    help: 'Memory utilization from 0 to 1',
+    labelNames: ['service', 'type'],
+  });
+
+  collectResourceMetrics() {
+    // CPU utilization
+    const cpuUsage = process.cpuUsage();
+    const cpuPercent = (cpuUsage.user + cpuUsage.system) / 1000000; // Convert to seconds
+    this.cpuUtilization.set({ service: process.env.SERVICE_NAME }, cpuPercent);
+
+    // Memory utilization
+    const memUsage = process.memoryUsage();
+    this.memoryUtilization.set(
+      { service: process.env.SERVICE_NAME, type: 'heap' },
+      memUsage.heapUsed / memUsage.heapTotal
+    );
+    this.memoryUtilization.set(
+      { service: process.env.SERVICE_NAME, type: 'rss' },
+      memUsage.rss / os.totalmem()
+    );
+  }
+}
+```
+
+### Saturation - Queue Depth, Thread Pool Usage
+```typescript
+private queueSaturation = new Gauge({
+  name: 'queue_saturation_ratio',
+  help: 'Queue saturation from 0 to 1',
+  labelNames: ['queue_name'],
+});
+
+private threadPoolSaturation = new Gauge({
+  name: 'thread_pool_saturation_ratio',
+  help: 'Thread pool saturation from 0 to 1',
+  labelNames: ['pool_name'],
+});
+
+recordQueueMetrics(queueName: string, currentSize: number, maxSize: number) {
+  this.queueSaturation.set(
+    { queue_name: queueName },
+    currentSize / maxSize
+  );
+}
+```
+
+### Errors - Resource Errors
+```typescript
+private resourceErrors = new Counter({
+  name: 'resource_errors_total',
+  help: 'Total resource errors',
+  labelNames: ['resource_type', 'error_type'],
+});
+
+recordResourceError(resourceType: string, errorType: string) {
+  this.resourceErrors.inc({
+    resource_type: resourceType, // 'database', 'cache', 'queue'
+    error_type: errorType, // 'timeout', 'connection_refused', 'pool_exhausted'
+  });
+}
+```
+
+## 💼 Business KPI Metrics
+
+```typescript
+class BusinessMetrics {
+  // Revenue metrics
+  private orderValue = new Histogram({
+    name: 'order_value_dollars',
+    help: 'Order value in dollars',
+    labelNames: ['product_category', 'customer_segment'],
+    buckets: [10, 50, 100, 500, 1000, 5000, 10000],
+  });
+
+  // Conversion metrics
+  private conversionRate = new Gauge({
+    name: 'conversion_rate_ratio',
+    help: 'Conversion rate from 0 to 1',
+    labelNames: ['funnel_stage', 'channel'],
+  });
+
+  // User engagement
+  private activeUsers = new Gauge({
+    name: 'active_users_count',
+    help: 'Number of active users',
+    labelNames: ['time_window', 'user_type'],
+  });
+
+  // Feature adoption
+  private featureUsage = new Counter({
+    name: 'feature_usage_total',
+    help: 'Feature usage count',
+    labelNames: ['feature_name', 'user_segment'],
+  });
+
+  // Customer satisfaction
+  private npsScore = new Gauge({
+    name: 'nps_score',
+    help: 'Net Promoter Score',
+    labelNames: ['segment'],
+  });
+
+  recordOrder(value: number, category: string, segment: string) {
+    this.orderValue.observe(
+      { product_category: category, customer_segment: segment },
+      value
+    );
+  }
+
+  updateConversionRate(stage: string, channel: string, rate: number) {
+    this.conversionRate.set(
+      { funnel_stage: stage, channel: channel },
+      rate
+    );
+  }
+}
+```
+
+## 🔌 Metrics Endpoint Setup
+
+### Express Metrics Endpoint
+```typescript
+import { register, collectDefaultMetrics } from 'prom-client';
+import express from 'express';
+
+const app = express();
+
+// Collect default Node.js metrics
+collectDefaultMetrics({
+  prefix: 'node_',
+  gcDurationBuckets: [0.001, 0.01, 0.1, 1, 2, 5],
+});
+
+// Metrics endpoint
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', register.contentType);
+    const metrics = await register.metrics();
+    res.end(metrics);
+  } catch (error) {
+    res.status(500).end(error);
+  }
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+```
+
+### OpenTelemetry Metrics
+```typescript
+import { MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
+import { PrometheusExporter } from '@opentelemetry/exporter-prometheus';
+import { metrics } from '@opentelemetry/api';
+
+// Create Prometheus exporter
+const prometheusExporter = new PrometheusExporter({
+  port: 9090,
+  endpoint: '/metrics',
+}, () => {
+  console.log('Prometheus metrics server started on port 9090');
+});
+
+// Create meter provider
+const meterProvider = new MeterProvider({
+  readers: [prometheusExporter],
+});
+
+// Set global meter provider
+metrics.setGlobalMeterProvider(meterProvider);
+
+// Get meter for your service
+const meter = metrics.getMeter(process.env.SERVICE_NAME, process.env.npm_package_version);
+
+// Create metrics
+const requestCounter = meter.createCounter('requests', {
+  description: 'Count of requests',
+});
+
+const requestDuration = meter.createHistogram('request_duration', {
+  description: 'Duration of requests',
+  unit: 'ms',
+});
+```
+
+## 📊 Prometheus Configuration
+
+```yaml
+# prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'freshsales-app'
+    static_configs:
+      - targets:
+        - 'webhook-service:3000'
+        - 'api-gateway:3001'
+        - 'worker-service:3002'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+```
+
+## 📈 Grafana Dashboard Example
+
+```json
+{
+  "dashboard": {
+    "title": "Freshsales App Metrics",
+    "panels": [
+      {
+        "title": "Request Rate",
+        "targets": [{
+          "expr": "rate(http_requests_total[5m])",
+          "legendFormat": "{{method}} {{endpoint}}"
+        }]
+      },
+      {
+        "title": "Error Rate",
+        "targets": [{
+          "expr": "rate(http_errors_total[5m]) / rate(http_requests_total[5m])",
+          "legendFormat": "{{endpoint}}"
+        }]
+      },
+      {
+        "title": "P95 Latency",
+        "targets": [{
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+          "legendFormat": "{{endpoint}}"
+        }]
+      },
+      {
+        "title": "Memory Usage",
+        "targets": [{
+          "expr": "process_resident_memory_bytes",
+          "legendFormat": "{{service}}"
+        }]
+      }
+    ]
+  }
+}
+```
+
+## ✅ Testing Metrics
+
+```typescript
+import { register } from 'prom-client';
+
+describe('Metrics', () => {
+  beforeEach(() => {
+    register.clear();
+  });
+
+  it('should increment request counter', async () => {
+    const metrics = new REDMetrics();
+    
+    metrics.recordRequest('GET', '/api/users');
+    metrics.recordRequest('GET', '/api/users');
+    
+    const metricsText = await register.metrics();
+    expect(metricsText).toContain('http_requests_total{method="GET",endpoint="/api/users"} 2');
+  });
+
+  it('should record request duration', async () => {
+    const metrics = new REDMetrics();
+    
+    const timer = metrics.startTimer('GET', '/api/users');
+    await new Promise(resolve => setTimeout(resolve, 100));
+    timer({ status_code: '200' });
+    
+    const metricsText = await register.metrics();
+    expect(metricsText).toContain('http_request_duration_seconds_bucket');
+  });
+});
+```
+
+## 🚨 Anti-Patterns
+
+```typescript
+// ❌ BAD: High cardinality labels
+httpRequestsTotal.inc({ 
+  user_id: userId, // Millions of unique values!
+  timestamp: Date.now() // Infinite cardinality!
+});
+
+// ❌ BAD: Not using labels
+const getUsersTotal = new Counter({ name: 'get_users_total' });
+const postUsersTotal = new Counter({ name: 'post_users_total' });
+
+// ❌ BAD: Wrong metric type
+const requestCount = new Gauge({ // Should be Counter!
+  name: 'request_count'
+});
+
+// ✅ GOOD: Proper labels and types
+const httpRequests = new Counter({
+  name: 'http_requests_total',
+  labelNames: ['method', 'endpoint', 'status_code'],
+});
+```
+
+## 📊 Success Metrics for Metrics (Meta!)
+
+- **Metric Coverage**: 100% of services expose /metrics
+- **Scrape Success Rate**: > 99.9%
+- **Metric Cardinality**: < 10,000 unique series per service
+- **Query Performance**: P95 < 1 second
+- **Dashboard Load Time**: < 3 seconds
+- **Alert Evaluation Time**: < 10 seconds
+
+## 🔗 Related Rules
+- [alert-definitions](./alert-definitions.mdc) - For creating alerts from metrics
+- [structured-logging](./structured-logging.mdc) - For correlating logs with metrics
+- [distributed-tracing](./distributed-tracing.mdc) - For trace-based metrics
+- [dashboards](./dashboards.mdc) - For visualizing metrics

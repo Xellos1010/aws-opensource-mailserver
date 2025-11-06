@@ -1,0 +1,59 @@
+---
+description: Apply to HTML templates, CSS stylesheets, and TypeScript/JavaScript files in Freshworks apps that handle UI rendering, styling, or user interactions
+alwaysApply: false
+---
+# Accessibility Standards (WCAG 2.2 AA) - Freshworks Apps
+
+Ensure semantic HTML, proper focus management, keyboard navigation, and color contrast checks for Freshworks CRM apps that run in iframes.
+
+**Justification:** Inclusive experiences broaden reach and reduce legal risk for enterprise CRM users.
+
+## Core Practices
+
+### HTML & Semantics
+- Use semantic HTML elements (`<button>`, `<input>`, `<label>`, `<table>`, `<nav>`)
+- Associate form controls with `<label>` elements using `for` attribute
+- Use proper heading hierarchy (`<h1>` through `<h6>`)
+- Add descriptive `title` attributes for interactive elements
+
+### Keyboard Navigation & Focus
+- Ensure all interactive elements are keyboard accessible
+- Implement visible focus indicators (avoid `outline: none`)
+- Maintain logical tab order
+- Handle focus management for dynamic content (modals, tabs, tooltips)
+
+### Screen Reader Support
+- Use ARIA labels/roles only when semantic HTML isn't sufficient
+- Provide descriptive button text (avoid generic "Click here")
+- Include `alt` text for images and icons
+- Use `aria-live` regions for dynamic status updates
+
+### Color & Contrast
+- Maintain 4.5:1 contrast ratio for normal text, 3:1 for large text
+- Don't rely solely on color to convey meaning
+- Test with color blindness simulators
+
+### Freshworks-Specific Considerations
+- Apps run in iframes - ensure proper focus trapping when needed
+- Integrate with Freshworks notification system for status messages
+- Support keyboard shortcuts that don't conflict with Freshworks UI
+- Consider mobile/tablet accessibility within CRM interface
+
+### Testing & CI
+```bash
+pnpm a11y:check
+```
+
+### Common Patterns in This Project
+
+#### Entity Menu Apps (Intake Guard)
+- Use `role="tooltip"` for help badges
+- Ensure notification messages are accessible
+- Make status maps readable by screen readers
+
+#### Dashboard Apps (Agent Dashboard)
+- Use proper `<nav>` elements for tab interfaces
+- Ensure table headers are properly associated with data cells
+- Provide keyboard shortcuts for common actions
+- Use `aria-expanded` for collapsible sections
+

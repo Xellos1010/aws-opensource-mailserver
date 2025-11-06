@@ -1,0 +1,90 @@
+---
+globs: apps/automation-chrome-ext/**/*
+alwaysApply: false
+---
+# Chrome Extension App Structure (2025) — MV3 + Side Panel
+
+**Goal:** Standardize structure for background (service worker), content scripts, side panel UI, popup & options UIs, shared modules, and automation flows. Ensures reliable state across navigations and clean build outputs.
+
+> Build context: app uses Vite multi-build and copies MV3 artifacts into `dist/` during `nx build`.
+
+## Directory Layout
+
+```text
+apps/automation-chrome-ext/
+├─ src/
+│  ├─ manifest.json
+│  ├─ background/               # MV3 service worker (durable orchestration & messaging)
+│  │  ├─ index.ts
+│  │  ├─ lifecycle.ts           # service worker lifecycle management
+│  │  ├─ messaging.ts           # typed messaging contracts
+│  │  └─ storage.ts             # durable state storage with chrome.storage
+│  ├─ content/                  # Content scripts (page automation + site adapters)
+│  │  ├─ index.ts
+│  │  ├─ dom/
+│  │  │  ├─ wait.ts             # robust waitFor*, auto-retry, visibility guards
+│  │  │  ├─ query.ts            # functional DOM querying utilities
+│  │  │  └─ actions.ts          # reliable element interactions with retries
+│  │  ├─ sites/
+│  │  │  ├─ freshsales/
+│  │  │  │  ├─ search.ts        # search field interactions
+│  │  │  │  ├─ openContact.ts   # navigate to first result URL
+│  │  │  │  └─ marketing.ts     # show-all + field edits (digital/ooh)
+│  │  │  └─ callrail/
+│  │  │     ├─ activity.ts
+│  │  │     └─ pagination.ts
+│  ├─ sidepanel/                # Side panel UI (per-tab tools / status)
+│  │  ├─ index.html
+│  │  ├─ index.tsx
+│  │  └─ ui/                    # reusable UI components
+│  │     ├─ Button.tsx
+│  │     ├─ StatusIndicator.tsx
+│  │     └─ LogViewer.tsx
+│  ├─ popup/                    # Browser action popup
+│  │  ├─ index.html
+│  │  └─ index.ts
+│  ├─ options/
+│  │  ├─ index.html
+│  │  └─ index.ts
+│  ├─ automation/               # High-level flows & step runner
+│  │  ├─ flows/
+│  │  │  ├─ freshsales/
+│  │  │  │  ├─ searchAndOpenContact.ts
+│  │  │  │  └─ updateMarketingFields.ts
+│  │  │  └─ callrail/
+│  │  │     └─ downloadActivityCsv.ts
+│  │  ├─ steps.ts               # typed step config + dispatcher
+│  │  └─ orchestrator.ts        # tab-scoped orchestration; resumes across navigations
+│  ├─ common/                   # Shared modules (no DOM)
+│  │  ├─ types/
+│  │  │  └─ index.ts            # TypeScript type definitions
+│  │  ├─ constants.ts           # app-wide constants and configuration
+│  │  ├─ logging.ts             # centralized logging with levels and context
+│  │  ├─ messaging.ts           # typed messages; port/connect helpers
+│  │  ├─ state.ts               # durable state management and persistence
+│  │  └─ utils.ts               # common utility functions
+│  └─ tests/
+│     ├─ unit/                  # vitest/jest unit tests
+│     └─ e2e/                   # Playwright E2E specs, fixtures, config
+│        ├─ playwright.config.ts
+│        ├─ fixtures/
+│        └─ specs/
+├─ docs/
+│  ├─ README.md                 # documentation guide
+│  ├─ html-snapshots/           # HTML snapshots for debugging and testing
+│  └─ flows/                    # human-readable flow documentation
+│     └─ freshsales-contact-lookup.md
+├─ tools/
+│  └─ debug/
+│     ├─ debug-connection.ts    # connection debugging utilities
+│     └─ debug-pagination.ts    # pagination analysis and testing tools
+├─ data/
+│  └─ fixtures/                 # test data fixtures
+│     ├─ sample-contacts.json
+│     └─ sample-flows.json
+├─ vite.config.ts
+├─ vite.config.content.ts
+├─ tsconfig.json
+├─ project.json                 # nx targets (build / e2e)
+├─ package.json
+└─ README.md

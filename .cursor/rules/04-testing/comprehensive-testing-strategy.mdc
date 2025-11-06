@@ -1,0 +1,926 @@
+---
+description: Comprehensive testing strategy combining unit, integration, and E2E testing with coverage requirements and best practices
+alwaysApply: false
+---
+# Comprehensive Testing Strategy - 2025
+
+Complete testing pyramid implementation with Vitest/Jest for unit tests, integration tests with mocked dependencies, and Playwright for E2E testing.
+
+**Justification:** Multi-layered testing prevents regressions, ensures reliability, validates business logic, and maintains confidence in production deployments.
+
+## 🎯 Single Responsibility
+This rule defines testing standards, patterns, and coverage requirements. It does NOT cover CI/CD integration (see ci-pipeline) or deployment validation (see deployment-stages).
+
+## 📋 Master Testing Checklist
+
+### Project Setup
+```markdown
+- [ ] Choose test framework (Vitest for new, Jest for existing)
+- [ ] Configure test runners and environments
+- [ ] Set up coverage thresholds (80% global, 70% per-file)
+- [ ] Configure test directories structure
+- [ ] Set up test data factories
+- [ ] Configure mocking strategies
+- [ ] Set up E2E test infrastructure
+- [ ] Configure mutation testing (Stryker)
+- [ ] Set up visual regression testing
+- [ ] Configure performance testing
+- [ ] **NEW:** Configure TypeScript for test compatibility (isolatedModules, esModuleInterop)
+- [ ] **NEW:** Set up proper module name mapping for workspace aliases
+```
+
+## 🏗️ Test Structure & Organization
+
+### Directory Structure
+```
+src/
+  __tests__/          # Unit tests (alongside source)
+    utils.spec.ts
+    helpers.spec.ts
+  __it__/            # Integration tests
+    api.integration.spec.ts
+    database.integration.spec.ts
+  __fixtures__/      # Test fixtures and mocks
+    users.fixture.ts
+    orders.fixture.ts
+tests/
+  e2e/              # End-to-end tests
+    smoke.test.ts
+    sanity.test.ts
+    user-journey.e2e.test.ts
+  performance/      # Performance tests
+    load.test.ts
+    stress.test.ts
+  visual/          # Visual regression tests
+    screenshots/
+    snapshots/
+```
+
+### Naming Conventions
+```typescript
+// Unit tests - *.spec.ts
+user.service.spec.ts       // Tests for user.service.ts
+
+// Integration tests - *.integration.spec.ts  
+api.integration.spec.ts    // API integration tests
+
+// E2E tests - *.e2e.test.ts
+checkout.e2e.test.ts       // Checkout flow E2E test
+
+// Test descriptions
+describe('UserService', () => {                    // Component/Class
+  describe('createUser', () => {                   // Method
+    it('should create user with valid data', () => {  // Behavior
+    it('should throw error for duplicate email', () => {
+    it('should sanitize user input', () => {
+```
+
+## 🔬 Unit Testing (Foundation Layer)
+
+### Vitest Configuration
+```typescript
+// vitest.config.ts
+import { defineConfig } from 'vitest/config';
+import { resolve } from 'path';
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node', // or 'jsdom' for frontend
+    setupFiles: ['./tests/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      exclude: [
+        'node_modules/',
+        'tests/',
+        '*.config.ts',
+        '**/*.d.ts',
+        '**/*.spec.ts',
+        '**/*.test.ts',
+      ],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 75,
+        statements: 80,
+        perFile: true,
+      },
+    },
+    testTimeout: 10000,
+    hookTimeout: 10000,
+    mockReset: true,
+    restoreMocks: true,
+  },
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, './src'),
+      '@mm': resolve(__dirname, './packages'),
+    },
+  },
+});
+```
+
+### Jest Configuration (Legacy Projects)
+```typescript
+// jest.config.cjs (recommended for ES module projects)
+module.exports = {
+  preset: 'ts-jest/presets/default-esm',
+  testEnvironment: 'jsdom', // or 'node' for backend
+  extensionsToTreatAsEsm: ['.ts'],
+  globals: {
+    'ts-jest': {
+      useESM: true,
+      tsconfig: {
+        module: 'ESNext',
+        target: 'ES2022',
+        isolatedModules: true,
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+      },
+    },
+  },
+  transform: {
+    '^.+\\.ts$': [
+      'ts-jest',
+      {
+        useESM: true,
+      },
+    ],
+  },
+  roots: ['<rootDir>/src'],
+  testMatch: [
+    '**/__tests__/**/*.ts',
+    '**/__it__/**/*.ts',
+    '**/*.spec.ts',
+    '**/*.test.ts',
+  ],
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.d.ts',
+    '!src/**/index.ts',
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 70,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+  },
+  setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@org/(.*)$': '<rootDir>/../../libs/$1/src/index.ts',
+  },
+  transformIgnorePatterns: [
+    'node_modules/',
+  ],
+};
+```
+
+### ES Module Handling in Tests
+
+#### Node.js Built-in Module Imports
+```typescript
+// ❌ Incorrect - ES module syntax for Node.js built-ins
+import fs from 'fs';
+import path from 'path';
+import http from 'http';
+
+// ✅ Correct - Namespace imports for Node.js built-ins
+import * as fs from 'fs';
+import * as path from 'path';
+import * as http from 'http';
+```
+
+#### Import.meta.url Fallback
+```typescript
+// Handle import.meta.url for both build and test environments
+const currentDir = typeof import.meta !== 'undefined' && import.meta.url
+  ? path.dirname(fileURLToPath(import.meta.url))
+  : path.dirname(__filename);
+```
+
+### Constructor and Dependency Testing
+
+#### Testing Classes with Dependencies
+```typescript
+// ❌ Incorrect - Testing implementation details
+describe('MyService', () => {
+  it('should call logger.info', () => {
+    const service = new MyService(logger, db);
+    service.doWork();
+    expect(logger.info).toHaveBeenCalled();
+  });
+});
+
+// ✅ Correct - Test behavior, not implementation
+describe('MyService', () => {
+  let mockLogger: Logger;
+  let mockDb: Database;
+  let service: MyService;
+
+  beforeEach(() => {
+    mockLogger = {
+      info: jest.fn(),
+      error: jest.fn(),
+      child: jest.fn().mockReturnValue({
+        info: jest.fn(),
+        error: jest.fn(),
+      }),
+    } as any;
+
+    mockDb = { query: jest.fn() } as any;
+    service = new MyService(mockLogger, mockDb);
+  });
+
+  it('should perform work successfully', async () => {
+    mockDb.query.mockResolvedValue([{ id: 1 }]);
+    const result = await service.doWork();
+    expect(result).toEqual([{ id: 1 }]);
+  });
+});
+```
+
+#### Mocking Complex Dependencies
+```typescript
+// For classes with complex constructor requirements
+jest.mock('../logger', () => ({
+  CloudLogger: jest.fn().mockImplementation(() => ({
+    info: jest.fn(),
+    error: jest.fn(),
+    child: jest.fn().mockReturnValue({
+      info: jest.fn(),
+      error: jest.fn(),
+    }),
+  })),
+}));
+
+jest.mock('../database', () => ({
+  DatabaseConnection: jest.fn().mockImplementation(() => ({
+    connect: jest.fn(),
+    query: jest.fn(),
+    disconnect: jest.fn(),
+  })),
+}));
+
+// Import after mocking
+import { MyService } from './my-service';
+```
+
+### Testing Anti-Patterns to Avoid
+
+#### Constructor Signature Changes
+```typescript
+// ❌ Problem - Tests break when constructor changes
+it('should work', () => {
+  const service = new Service({ logger, db, config });
+});
+
+// ✅ Solution - Use dependency injection with mocks
+it('should work', () => {
+  const mockLogger = createMockLogger();
+  const mockDb = createMockDb();
+  const service = new Service(mockLogger, mockDb);
+});
+```
+
+#### Private Method Testing
+```typescript
+// ❌ Problem - Testing private methods couples to implementation
+it('should validate input', () => {
+  const service = new Service();
+  (service as any).validateInput('test'); // Accessing private method
+});
+
+// ✅ Solution - Test public behavior, not private methods
+it('should reject invalid input', async () => {
+  const service = new Service();
+  await expect(service.processInput('invalid')).rejects.toThrow('Invalid input');
+});
+```
+
+#### Incorrect Mock Return Types
+```typescript
+// ❌ Problem - Jest mock typing issues
+mockPage.locator().innerText.mockResolvedValue('text'); // Type error
+
+// ✅ Solution - Proper type assertions
+mockPage.locator().innerText.mockResolvedValue('text' as any);
+```
+
+#### Node.js Built-in Module Imports
+```typescript
+// ❌ Problem - ES module syntax for Node.js built-ins
+import fs from 'fs'; // Fails in test environment
+
+// ✅ Solution - Namespace imports
+import * as fs from 'fs';
+```
+
+### Unit Test Patterns
+
+#### Testing Pure Functions
+```typescript
+// math.utils.spec.ts
+import { describe, it, expect } from 'vitest';
+import { calculateDiscount, validateEmail, formatCurrency } from './utils';
+
+describe('Utils', () => {
+  describe('calculateDiscount', () => {
+    it('should calculate percentage discount correctly', () => {
+      expect(calculateDiscount(100, 10)).toBe(90);
+      expect(calculateDiscount(50, 50)).toBe(25);
+    });
+
+    it('should handle edge cases', () => {
+      expect(calculateDiscount(0, 10)).toBe(0);
+      expect(calculateDiscount(100, 0)).toBe(100);
+      expect(calculateDiscount(100, 100)).toBe(0);
+    });
+
+    it('should throw for invalid inputs', () => {
+      expect(() => calculateDiscount(-100, 10)).toThrow('Invalid price');
+      expect(() => calculateDiscount(100, -10)).toThrow('Invalid discount');
+      expect(() => calculateDiscount(100, 150)).toThrow('Discount exceeds 100%');
+    });
+  });
+});
+```
+
+#### Testing Classes with Dependencies
+```typescript
+// user.service.spec.ts
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { UserService } from './user.service';
+import { UserRepository } from './user.repository';
+import { EmailService } from './email.service';
+
+vi.mock('./user.repository');
+vi.mock('./email.service');
+
+describe('UserService', () => {
+  let service: UserService;
+  let mockRepository: vi.Mocked<UserRepository>;
+  let mockEmailService: vi.Mocked<EmailService>;
+
+  beforeEach(() => {
+    mockRepository = vi.mocked(new UserRepository());
+    mockEmailService = vi.mocked(new EmailService());
+    service = new UserService(mockRepository, mockEmailService);
+  });
+
+  describe('createUser', () => {
+    it('should create user and send welcome email', async () => {
+      const userData = { email: 'test@example.com', name: 'Test User' };
+      const createdUser = { id: '123', ...userData };
+
+      mockRepository.create.mockResolvedValue(createdUser);
+      mockEmailService.sendWelcomeEmail.mockResolvedValue(true);
+
+      const result = await service.createUser(userData);
+
+      expect(result).toEqual(createdUser);
+      expect(mockRepository.create).toHaveBeenCalledWith(userData);
+      expect(mockEmailService.sendWelcomeEmail).toHaveBeenCalledWith(userData.email);
+    });
+
+    it('should rollback user creation if email fails', async () => {
+      const userData = { email: 'test@example.com', name: 'Test User' };
+      const createdUser = { id: '123', ...userData };
+
+      mockRepository.create.mockResolvedValue(createdUser);
+      mockEmailService.sendWelcomeEmail.mockRejectedValue(new Error('Email failed'));
+      mockRepository.delete.mockResolvedValue(true);
+
+      await expect(service.createUser(userData)).rejects.toThrow('User creation failed');
+      expect(mockRepository.delete).toHaveBeenCalledWith('123');
+    });
+  });
+});
+```
+
+#### Testing Async Operations
+```typescript
+// api.client.spec.ts
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { ApiClient } from './api.client';
+
+describe('ApiClient', () => {
+  let client: ApiClient;
+
+  beforeEach(() => {
+    client = new ApiClient('https://api.example.com');
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('should retry failed requests with exponential backoff', async () => {
+    const fetchSpy = vi.spyOn(global, 'fetch');
+    fetchSpy
+      .mockRejectedValueOnce(new Error('Network error'))
+      .mockRejectedValueOnce(new Error('Network error'))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ data: 'success' })));
+
+    const promise = client.get('/endpoint');
+    
+    // Fast-forward through retries
+    await vi.advanceTimersByTimeAsync(1000); // First retry
+    await vi.advanceTimersByTimeAsync(2000); // Second retry
+    
+    const result = await promise;
+    
+    expect(result).toEqual({ data: 'success' });
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
+  });
+
+  it('should timeout long requests', async () => {
+    const fetchSpy = vi.spyOn(global, 'fetch');
+    fetchSpy.mockImplementation(() => new Promise(() => {})); // Never resolves
+
+    const promise = client.get('/endpoint', { timeout: 5000 });
+    
+    await vi.advanceTimersByTimeAsync(5000);
+    
+    await expect(promise).rejects.toThrow('Request timeout');
+  });
+});
+```
+
+## 🔗 Integration Testing (Middle Layer)
+
+### Database Integration Tests
+```typescript
+// user.repository.integration.spec.ts
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { UserRepository } from './user.repository';
+import { TestDatabase } from '../test-utils/test-database';
+
+describe('UserRepository Integration', () => {
+  let repository: UserRepository;
+  let testDb: TestDatabase;
+
+  beforeAll(async () => {
+    testDb = await TestDatabase.create();
+    repository = new UserRepository(testDb.connection);
+  });
+
+  afterAll(async () => {
+    await testDb.destroy();
+  });
+
+  beforeEach(async () => {
+    await testDb.clear();
+  });
+
+  it('should create and retrieve user', async () => {
+    const userData = {
+      email: 'test@example.com',
+      name: 'Test User',
+      age: 25,
+    };
+
+    const created = await repository.create(userData);
+    expect(created.id).toBeDefined();
+
+    const retrieved = await repository.findById(created.id);
+    expect(retrieved).toMatchObject(userData);
+  });
+
+  it('should handle concurrent creates with unique constraint', async () => {
+    const email = 'unique@example.com';
+    
+    const promises = Array(5).fill(null).map(() => 
+      repository.create({ email, name: 'Test' })
+    );
+
+    const results = await Promise.allSettled(promises);
+    
+    const successful = results.filter(r => r.status === 'fulfilled');
+    const failed = results.filter(r => r.status === 'rejected');
+    
+    expect(successful).toHaveLength(1);
+    expect(failed).toHaveLength(4);
+    expect(failed[0].reason).toMatch(/unique constraint/i);
+  });
+});
+```
+
+### API Integration Tests
+```typescript
+// api.integration.spec.ts
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { createApp } from './app';
+import request from 'supertest';
+import { MockAuthService } from '../test-utils/mock-auth';
+
+describe('API Integration', () => {
+  let app: any;
+  let authService: MockAuthService;
+
+  beforeAll(async () => {
+    authService = new MockAuthService();
+    app = await createApp({ authService });
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  describe('POST /api/orders', () => {
+    it('should create order with valid auth token', async () => {
+      const token = authService.generateToken({ userId: '123' });
+      
+      const response = await request(app)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          items: [{ productId: 'ABC', quantity: 2 }],
+          shippingAddress: '123 Main St',
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty('orderId');
+      expect(response.body).toHaveProperty('status', 'pending');
+    });
+
+    it('should reject order without auth', async () => {
+      const response = await request(app)
+        .post('/api/orders')
+        .send({ items: [] });
+
+      expect(response.status).toBe(401);
+      expect(response.body.error).toBe('Unauthorized');
+    });
+  });
+});
+```
+
+## 🌐 E2E Testing (Top Layer)
+
+### Playwright Configuration
+```typescript
+// playwright.config.ts
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './tests/e2e',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: [
+    ['html'],
+    ['json', { outputFile: 'test-results.json' }],
+    ['junit', { outputFile: 'junit.xml' }],
+  ],
+  use: {
+    baseURL: process.env.BASE_URL || 'http://localhost:3000',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
+    {
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 5'] },
+    },
+  ],
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+  },
+});
+```
+
+### E2E Test Patterns
+
+#### Smoke Tests
+```typescript
+// smoke.test.ts
+import { test, expect } from '@playwright/test';
+
+test.describe('Smoke Tests', () => {
+  test('application should be accessible', async ({ page }) => {
+    await page.goto('/');
+    await expect(page).toHaveTitle(/Freshsales App/);
+    
+    // Check critical elements
+    await expect(page.locator('nav')).toBeVisible();
+    await expect(page.locator('#app')).toBeVisible();
+  });
+
+  test('health endpoint should respond', async ({ request }) => {
+    const response = await request.get('/health');
+    expect(response.ok()).toBeTruthy();
+    
+    const body = await response.json();
+    expect(body.status).toBe('healthy');
+  });
+
+  test('can navigate to main sections', async ({ page }) => {
+    await page.goto('/');
+    
+    // Navigate to dashboard
+    await page.click('text=Dashboard');
+    await expect(page).toHaveURL('/dashboard');
+    
+    // Navigate to settings
+    await page.click('text=Settings');
+    await expect(page).toHaveURL('/settings');
+  });
+});
+```
+
+#### User Journey Tests
+```typescript
+// user-journey.e2e.test.ts
+import { test, expect, Page } from '@playwright/test';
+import { LoginPage } from './pages/login.page';
+import { DashboardPage } from './pages/dashboard.page';
+import { CheckoutPage } from './pages/checkout.page';
+
+test.describe('User Journey - Purchase Flow', () => {
+  let loginPage: LoginPage;
+  let dashboardPage: DashboardPage;
+  let checkoutPage: CheckoutPage;
+
+  test.beforeEach(async ({ page }) => {
+    loginPage = new LoginPage(page);
+    dashboardPage = new DashboardPage(page);
+    checkoutPage = new CheckoutPage(page);
+  });
+
+  test('complete purchase flow', async ({ page }) => {
+    // Login
+    await loginPage.goto();
+    await loginPage.login('user@example.com', 'password123');
+    
+    // Verify dashboard
+    await expect(page).toHaveURL('/dashboard');
+    await expect(dashboardPage.welcomeMessage).toContainText('Welcome back');
+    
+    // Add items to cart
+    await dashboardPage.addToCart('Product A');
+    await dashboardPage.addToCart('Product B');
+    await expect(dashboardPage.cartCount).toHaveText('2');
+    
+    // Proceed to checkout
+    await dashboardPage.goToCheckout();
+    
+    // Complete checkout
+    await checkoutPage.fillShippingInfo({
+      name: 'John Doe',
+      address: '123 Main St',
+      city: 'New York',
+      zip: '10001',
+    });
+    
+    await checkoutPage.fillPaymentInfo({
+      cardNumber: '4111111111111111',
+      expiry: '12/25',
+      cvv: '123',
+    });
+    
+    await checkoutPage.placeOrder();
+    
+    // Verify success
+    await expect(page).toHaveURL(/\/order-confirmation/);
+    await expect(page.locator('.order-number')).toBeVisible();
+  });
+});
+```
+
+## 🧬 Mutation Testing (Quality Gate)
+
+### Stryker Configuration
+```javascript
+// stryker.config.js
+module.exports = {
+  packageManager: 'pnpm',
+  reporters: ['html', 'clear-text', 'progress', 'dashboard'],
+  testRunner: 'vitest',
+  coverageAnalysis: 'perTest',
+  mutate: [
+    'src/**/*.ts',
+    '!src/**/*.spec.ts',
+    '!src/**/*.test.ts',
+  ],
+  thresholds: {
+    high: 80,
+    low: 60,
+    break: 50,
+  },
+  dashboard: {
+    project: 'github.com/yourorg/yourrepo',
+    version: 'main',
+  },
+};
+```
+
+## 🎭 Test Data Management
+
+### Fixtures and Factories
+```typescript
+// test-utils/factories.ts
+import { faker } from '@faker-js/faker';
+
+export class UserFactory {
+  static create(overrides: Partial<User> = {}): User {
+    return {
+      id: faker.string.uuid(),
+      email: faker.internet.email(),
+      name: faker.person.fullName(),
+      age: faker.number.int({ min: 18, max: 80 }),
+      createdAt: faker.date.past(),
+      ...overrides,
+    };
+  }
+
+  static createMany(count: number, overrides: Partial<User> = {}): User[] {
+    return Array.from({ length: count }, () => this.create(overrides));
+  }
+}
+
+// Usage in tests
+const testUser = UserFactory.create({ age: 25 });
+const testUsers = UserFactory.createMany(10);
+```
+
+### Test Database Seeding
+```typescript
+// test-utils/seed.ts
+export class TestSeeder {
+  constructor(private db: Database) {}
+
+  async seedBasicData() {
+    // Create test users
+    const users = await this.db.users.createMany(
+      UserFactory.createMany(5)
+    );
+
+    // Create test products
+    const products = await this.db.products.createMany(
+      ProductFactory.createMany(10)
+    );
+
+    // Create test orders
+    for (const user of users) {
+      await this.db.orders.create(
+        OrderFactory.create({ userId: user.id })
+      );
+    }
+
+    return { users, products };
+  }
+
+  async cleanup() {
+    await this.db.orders.deleteAll();
+    await this.db.products.deleteAll();
+    await this.db.users.deleteAll();
+  }
+}
+```
+
+## 📊 Coverage Requirements
+
+### Minimum Thresholds
+```yaml
+coverage:
+  global:
+    lines: 80%
+    functions: 80%
+    branches: 75%
+    statements: 80%
+  
+  per-file:
+    lines: 70%
+    functions: 70%
+    branches: 65%
+    statements: 70%
+
+  critical-paths:  # Higher for critical code
+    lines: 95%
+    functions: 95%
+    branches: 90%
+    statements: 95%
+```
+
+### Coverage Reporting
+```bash
+# Generate coverage report
+pnpm test:coverage
+
+# Generate coverage with different reporters
+pnpm vitest run --coverage.reporter=text
+pnpm vitest run --coverage.reporter=html
+pnpm vitest run --coverage.reporter=lcov
+
+# Check coverage thresholds
+pnpm vitest run --coverage.thresholds.lines=80
+```
+
+## ✅ Testing Checklist
+
+### Before Committing
+```markdown
+- [ ] All tests pass locally
+- [ ] Coverage thresholds met
+- [ ] No skipped tests without justification
+- [ ] No console.log in tests
+- [ ] Test names clearly describe behavior
+- [ ] Mocks are properly cleaned up
+- [ ] No hardcoded test data
+- [ ] Tests run in isolation
+```
+
+### Test Quality Review
+```markdown
+- [ ] Tests follow AAA pattern (Arrange, Act, Assert)
+- [ ] One assertion per test (when possible)
+- [ ] Edge cases covered
+- [ ] Error scenarios tested
+- [ ] Async operations properly handled
+- [ ] No implementation details tested
+- [ ] Tests document behavior
+- [ ] Performance benchmarks included (where relevant)
+```
+
+## 🚨 Anti-Patterns to Avoid
+
+```typescript
+// ❌ BAD: Testing implementation details
+it('should call internal method', () => {
+  const spy = vi.spyOn(service, '_internalMethod');
+  service.publicMethod();
+  expect(spy).toHaveBeenCalled(); // Brittle!
+});
+
+// ❌ BAD: Multiple assertions without context
+it('should work', () => {
+  expect(result.a).toBe(1);
+  expect(result.b).toBe(2);
+  expect(result.c).toBe(3); // Which one failed?
+});
+
+// ❌ BAD: Shared mutable state
+let sharedUser;
+beforeEach(() => {
+  sharedUser = { name: 'Test' }; // Can cause test pollution
+});
+
+// ✅ GOOD: Test behavior, not implementation
+it('should return formatted user name', () => {
+  const result = service.getFormattedName({ first: 'John', last: 'Doe' });
+  expect(result).toBe('John Doe');
+});
+
+// ✅ GOOD: Clear test descriptions
+describe('when user is authenticated', () => {
+  it('should allow access to protected resources', () => {
+    // Test code
+  });
+});
+
+// ✅ GOOD: Isolated test data
+it('should create user', () => {
+  const userData = UserFactory.create(); // Fresh data each test
+  // Test code
+});
+```
+
+## 📈 Testing Metrics
+
+- **Test Execution Time**: < 5 minutes for unit tests
+- **E2E Execution Time**: < 15 minutes for critical paths
+- **Test Flakiness**: < 2% failure rate
+- **Coverage Trend**: Increasing or stable, never decreasing
+- **Mutation Score**: > 80% for critical modules
+- **Test-to-Code Ratio**: ~1.5:1 for business logic
+- **TypeScript Compilation Errors**: 0 in test files (prevents ts-jest issues)
+- **Mock Configuration Failures**: < 1% of tests (proper dependency injection)
+- **Test Environment Compatibility**: 100% tests run in CI (isolatedModules, ES module support)
+
+## 🔗 Related Rules
+- [ci-pipeline](../08-infrastructure/ci-pipeline.mdc) - For test automation in CI
+- [code-review-checklist](../05-review/code-review-checklist.mdc) - For test review criteria
+- [performance-testing](./performance-testing.mdc) - For load and stress testing
+- [visual-regression](./visual-regression.mdc) - For UI screenshot testing

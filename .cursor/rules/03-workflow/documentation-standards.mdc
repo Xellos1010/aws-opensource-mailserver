@@ -1,0 +1,348 @@
+---
+description: Documentation standards for code, APIs, and project maintenance
+globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/README.md", "**/docs/**"]
+alwaysApply: true
+---
+
+# Documentation Standards
+
+## JSDoc Requirements
+
+### Public API Documentation
+All exported functions, classes, and interfaces must include comprehensive JSDoc comments:
+
+```typescript
+/**
+ * Creates a new user account with email verification
+ * @param userData - User registration data
+ * @param options - Additional registration options
+ * @returns Promise resolving to created user with verification token
+ * @throws {ValidationError} When user data is invalid
+ * @throws {DuplicateUserError} When email already exists
+ * @example
+ * ```typescript
+ * const user = await createUser({
+ *   email: 'user@example.com',
+ *   name: 'John Doe'
+ * });
+ * ```
+ */
+export async function createUser(
+  userData: UserData,
+  options?: RegistrationOptions
+): Promise<User> {
+  // implementation
+}
+```
+
+### Documentation Requirements Checklist
+- [ ] **@param** - All parameters with types and descriptions
+- [ ] **@returns** - Return value description and type
+- [ ] **@throws** - All possible error types and conditions
+- [ ] **@example** - At least one runnable usage example
+- [ ] **@since** - Version when feature was added (for major APIs)
+- [ ] **@deprecated** - Deprecation notice with migration path
+
+## README Standards
+
+### Project README Structure
+Every project must have a comprehensive README.md:
+
+```markdown
+# Project Name
+
+Brief description of what this project does and its purpose.
+
+## Installation
+
+```bash
+pnpm install
+```
+
+## Quick Start
+
+```typescript
+import { mainFunction } from '@mm/project-name';
+
+const result = await mainFunction();
+```
+
+## API Reference
+
+### Core Functions
+
+#### `mainFunction(options: Options): Promise<Result>`
+
+Main entry point for the library.
+
+**Parameters:**
+- `options` - Configuration options
+
+**Returns:** Promise resolving to operation result
+
+**Example:**
+```typescript
+const result = await mainFunction({ debug: true });
+```
+
+## Environment Variables
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `API_KEY` | API authentication key | Yes | - |
+| `LOG_LEVEL` | Logging verbosity | No | `info` |
+
+## Nx Targets
+
+| Target | Description | Command |
+|--------|-------------|---------|
+| `build` | Build the library | `nx build project-name` |
+| `test` | Run unit tests | `nx test project-name` |
+| `lint` | Lint the codebase | `nx lint project-name` |
+
+## Development
+
+### Prerequisites
+- Node.js 18+
+- pnpm 8+
+
+### Setup
+```bash
+pnpm install
+pnpm build
+```
+
+### Testing
+```bash
+pnpm test
+pnpm test:watch
+```
+
+## Architecture
+
+[Include diagrams or flowcharts showing key components]
+
+## Contributing
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for development guidelines.
+
+## License
+
+MIT
+```
+
+## ADR (Architecture Decision Records)
+
+### When to Create ADRs
+Create an ADR for any non-trivial architectural decision:
+
+- Choosing between major technology options
+- Significant API design changes
+- Performance vs maintainability trade-offs
+- Security implementation decisions
+- Breaking changes to existing patterns
+
+### ADR Structure
+```markdown
+# ADR-001: Decision Title
+
+## Status
+Accepted | Proposed | Rejected
+
+## Context
+What problem are we solving? What constraints exist?
+
+## Decision
+What did we decide and why?
+
+## Consequences
+What becomes easier/harder? What are the trade-offs?
+
+## Alternatives Considered
+What other options did we evaluate?
+
+- **Option A**: Pros/cons
+- **Option B**: Pros/cons
+
+## Implementation
+How will this be implemented? Timeline? Migration plan?
+```
+
+### ADR Organization
+```
+docs/
+  adr/
+    001-use-typescript-strict-mode.md
+    002-adopt-nx-monorepo.md
+    003-implement-error-boundaries.md
+```
+
+## API Documentation
+
+### OpenAPI/Swagger Standards
+For HTTP APIs, maintain OpenAPI specifications:
+
+```yaml
+openapi: 3.0.3
+info:
+  title: User Management API
+  version: 1.0.0
+  description: User account and profile management
+paths:
+  /users:
+    post:
+      summary: Create new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+components:
+  schemas:
+    UserInput:
+      type: object
+      required:
+        - email
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+```
+
+## Auto-Generated Documentation
+
+### CI Documentation Generation
+Configure CI to automatically generate and publish documentation:
+
+```yaml
+# .github/workflows/docs.yml
+name: Generate Docs
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm docs:generate
+      - run: pnpm docs:publish
+```
+
+### TypeDoc Configuration
+```javascript
+// typedoc.config.js
+module.exports = {
+  entryPoints: ['./src/index.ts'],
+  out: './docs/api',
+  exclude: ['**/*.spec.ts', '**/*.test.ts'],
+  includeVersion: true,
+  disableSources: false,
+  excludePrivate: true,
+  excludeProtected: true,
+  hideGenerator: true,
+  theme: 'default',
+  readme: './README.md',
+  name: 'My Library',
+  tsconfig: './tsconfig.json'
+};
+```
+
+## Code Comments Standards
+
+### When to Comment
+- **Complex business logic** - Explain why, not what
+- **Workarounds** - Document temporary solutions and TODOs
+- **Public APIs** - JSDoc as specified above
+- **Configuration choices** - Why specific values were chosen
+
+### Comment Style
+```typescript
+// ❌ Bad: states the obvious
+const total = price * quantity; // multiply price by quantity
+
+// ✅ Good: explains business logic
+const total = price * quantity; // Apply volume discount threshold check
+
+// ✅ Good: documents workaround
+// TODO: Remove when API supports bulk operations
+// Using individual requests due to rate limiting
+for (const item of items) {
+  await api.update(item);
+}
+```
+
+## Diagrams and Visual Documentation
+
+### Mermaid Diagrams
+Use Mermaid for architecture and flow diagrams:
+
+```mermaid
+graph TD
+    A[User Request] --> B[API Gateway]
+    B --> C[Authentication]
+    C --> D[Business Logic]
+    D --> E[Database]
+    D --> F[External API]
+    E --> G[Response]
+    F --> G
+```
+
+### Architecture Diagrams
+Include diagrams for:
+- System architecture overview
+- Data flow diagrams
+- Component interaction diagrams
+- Deployment diagrams
+
+## Documentation Quality Checklist
+
+### Code Documentation
+- [ ] All public APIs have JSDoc comments
+- [ ] Examples are runnable and tested
+- [ ] Error conditions are documented
+- [ ] Breaking changes are versioned and documented
+
+### Project Documentation
+- [ ] README includes setup, usage, and API reference
+- [ ] Environment variables are documented
+- [ ] Nx targets are listed and described
+- [ ] Architecture diagrams exist for complex systems
+
+### Process Documentation
+- [ ] ADRs exist for major decisions
+- [ ] Development workflow is documented
+- [ ] Deployment process is clear
+- [ ] Troubleshooting guides exist
+
+### Maintenance
+- [ ] Documentation is reviewed in PRs
+- [ ] Outdated docs are updated with code changes
+- [ ] CI validates documentation generation
+- [ ] Documentation is versioned with releases
+
+## Success Metrics
+
+- **Documentation Coverage**: > 90% of public APIs documented
+- **README Completeness**: All projects have comprehensive READMEs
+- **ADR Compliance**: Major decisions have corresponding ADRs
+- **Documentation Freshness**: < 30 days since last update
+- **Developer Satisfaction**: > 80% of developers can find needed information

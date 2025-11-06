@@ -1,0 +1,184 @@
+---
+description: Apply to all files when setting up new projects, services, or major features to ensure complete SDLC coverage
+alwaysApply: false
+---
+# SDLC Setup & Quality Gates - Freshworks App Monorepo
+
+Comprehensive checklist for managing the Software Development Life Cycle in a Freshworks CRM app environment. Use this when spinning up new apps, services, or major features.
+
+**Justification:** Structured SDLC prevents technical debt, ensures quality, and reduces production incidents in enterprise CRM integrations.
+
+## SDLC Phases Overview
+
+1. **Plan & Spec** → Define goals, users, scope, success criteria, risks
+2. **Design** → Architecture, data models, APIs, UI flows, test strategy
+3. **Implement** → Code + tests + configs (with continuous quality gates)
+4. **Verify** → Automated + manual testing, QA
+5. **Release** → Deploy, migrate, feature toggles
+6. **Operate** → Monitor, alert, incident response
+7. **Improve** → Learnings, backlog, iteration
+
+## SDLC Checklist - Order of Operations
+
+Use this checklist for new apps/services or major features. Each phase builds on the previous.
+
+### 🚀 Phase 1: Project Initialization & Planning
+
+**Repository & Workspace Setup**
+- [ ] Create repository with main branch protection rules
+- [ ] Initialize pnpm workspace (monorepo structure)
+- [ ] Set up Nx workspace configuration
+- [ ] Add appropriate Nx tags for dependency constraints
+
+**Documentation & Governance**
+- [ ] Choose license (MIT for open-source components)
+- [ ] Create README.md with setup instructions
+- [ ] Add CONTRIBUTING.md guidelines
+- [ ] Configure CODEOWNERS for domain reviewers
+- [ ] Document success criteria and acceptance tests
+
+### 🛡️ Phase 2: Quality Gates & Development Standards
+
+**Code Quality Tools**
+- [ ] Add Prettier formatter with consistent rules
+- [ ] Configure ESLint with strict TypeScript rules
+- [ ] Enable TypeScript strict mode (noImplicitAny, etc.)
+- [ ] Add Husky pre-commit hooks + lint-staged
+- [ ] Configure .editorconfig for consistent formatting
+
+**Testing Framework Setup**
+- [ ] Add Vitest for unit tests (preferred for new projects)
+- [ ] Configure Jest for existing packages (backward compatibility)
+- [ ] Set up test coverage thresholds (80% global, 70% per-file)
+- [ ] Add mutation testing (Stryker) for critical paths
+- [ ] Create smoke test for basic functionality
+
+### 🔧 Phase 3: Infrastructure & Configuration
+
+**Environment Management**
+- [ ] Define environments: dev, staging, prod (+ PR previews)
+- [ ] Create .env.example with all required variables
+- [ ] Set up secret management (GitHub Secrets, SSM, Doppler)
+- [ ] Implement 12-factor config (env vars, no secrets in code)
+- [ ] Add runtime config validation (fail fast on boot)
+
+**CI/CD Pipeline**
+- [ ] Configure GitHub Actions with Nx affected commands
+- [ ] Set up pnpm store caching for faster builds
+- [ ] Implement PR pipeline: install → typecheck → lint → test → build
+- [ ] Add accessibility checks (a11y) for UI components
+- [ ] Configure SBOM generation and dependency scanning
+- [ ] Ensure fast feedback (<10 min for basic checks)
+
+### 🧪 Phase 4: Testing Strategy Implementation
+
+**Unit Testing (White-box)**
+- [ ] Write unit tests for all new functions and classes
+- [ ] Use Vitest with TypeScript support
+- [ ] Mock external dependencies (APIs, databases)
+- [ ] Achieve coverage thresholds (80% global, 70% per-file)
+- [ ] Add mutation testing for critical business logic
+
+**Integration Testing**
+- [ ] Test module/service interactions
+- [ ] Add contract tests for API boundaries
+- [ ] Mock external services (Freshsales, ElevenLabs, Telnyx)
+- [ ] Test database operations with test containers
+- [ ] Verify authentication and authorization flows
+
+**End-to-End Testing**
+- [ ] Implement smoke tests (basic functionality verification)
+- [ ] Add sanity tests for critical user journeys
+- [ ] Create regression tests for existing features
+- [ ] Set up Playwright for UI component testing
+- [ ] Automate webhook service integration tests
+
+### 🚀 Phase 5: Deployment & Release
+
+**Preview & Staging**
+- [ ] Set up ephemeral preview deployments per PR
+- [ ] Configure staging environment for main branch merges
+- [ ] Implement feature flags for gradual rollouts
+- [ ] Add database migration scripts (if needed)
+- [ ] Configure blue-green deployment strategy
+
+**Production Release**
+- [ ] Set up manual approval gates for production
+- [ ] Implement canary deployments for high-risk changes
+- [ ] Add automated rollback procedures
+- [ ] Configure health checks and monitoring
+- [ ] Set up alerting for production incidents
+
+### 📊 Phase 6: Observability & Operations
+
+**Logging & Monitoring**
+- [ ] Implement structured JSON logging
+- [ ] Add OpenTelemetry traces and metrics
+- [ ] Configure health endpoints (/healthz, /ready)
+- [ ] Set up error tracking (Sentry) with context
+- [ ] Create dashboards for key SLIs/SLOs
+
+**Security & Compliance**
+- [ ] Enable dependency vulnerability scanning
+- [ ] Configure secret scanning in CI
+- [ ] Set up least-privilege IAM roles
+- [ ] Implement encryption at rest and in transit
+- [ ] Add HIPAA compliance mode for PHI modules
+
+**Operational Readiness**
+- [ ] Document runbook (local dev, deploy, rollback)
+- [ ] Set up on-call rotation and alerting
+- [ ] Create incident response procedures
+- [ ] Add post-deployment smoke tests
+- [ ] Configure backup and disaster recovery
+
+### 📚 Phase 7: Documentation & Knowledge
+
+**Technical Documentation**
+- [ ] Create architecture diagrams (system, data flow)
+- [ ] Document API contracts and schemas
+- [ ] Write ADRs for architectural decisions
+- [ ] Add inline code documentation
+- [ ] Create troubleshooting guides
+
+**Operational Documentation**
+- [ ] Document deployment procedures
+- [ ] Create monitoring and alerting runbooks
+- [ ] Add security incident response guides
+- [ ] Document backup and recovery procedures
+- [ ] Create performance tuning guidelines
+
+## Quality Gates by Phase
+
+### Pre-commit (Automatic)
+- [ ] Code formatting (Prettier)
+- [ ] Linting (ESLint)
+- [ ] Type checking (TypeScript)
+- [ ] Unit tests pass
+
+### Pre-merge (PR Review)
+- [ ] All pre-commit checks pass
+- [ ] Code review by domain experts
+- [ ] Integration tests pass
+- [ ] Accessibility checks pass (for UI)
+- [ ] Security scanning clean
+
+### Pre-deploy (CI/CD)
+- [ ] Full test suite passes
+- [ ] Build artifacts generated
+- [ ] SBOM and vulnerability scan complete
+- [ ] Smoke tests pass in staging
+
+### Post-deploy (Production)
+- [ ] Health checks pass
+- [ ] Monitoring alerts configured
+- [ ] Rollback plan documented
+- [ ] Incident response team notified
+
+## Success Metrics
+
+- **Development Velocity**: PR merge time < 24 hours
+- **Code Quality**: 0 critical linting errors, 80%+ test coverage
+- **Reliability**: 99.9% uptime, < 5 min incident response
+- **Security**: 0 critical vulnerabilities in production
+- **User Experience**: All accessibility standards met

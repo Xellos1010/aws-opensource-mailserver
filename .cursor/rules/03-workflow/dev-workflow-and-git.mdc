@@ -1,0 +1,49 @@
+---
+alwaysApply: true
+---
+
+# Development Workflow, Branching & Reviews
+
+Use Conventional Commits, short-lived branches, CODEOWNERS-based reviews, and objective quality gates.
+
+**Justification:** Consistent workflow and automated checks keep velocity high and reduce regressions.
+
+## Conventional Commits
+
+- Types: feat, fix, chore, docs, refactor, perf, test, build, ci, revert
+- Scopes: use Nx domain tags (e.g., patients, dialer, intake)
+
+**Example:** Example: feat(patients): add consent verification to intake flow
+
+## PR Hygiene & Reviews
+
+- Aim for ≤ 400 LOC per PR where feasible
+- Require passing gates: lint, typecheck, unit, e2e smoke, docs
+- CODEOWNERS assign domain reviewers automatically
+
+```markdown
+# CODEOWNERS
+/apps/** @mm/frontend-leads
+/libs/** @mm/architecture
+/tools/** @mm/devex
+```
+
+## Pre-commit & Pre-push
+
+Automate formatting, linting, and typechecking with Husky/lefthook.
+
+```json
+{
+  "husky": {
+    "hooks": {
+      "pre-commit": "pnpm lint && pnpm format",
+      "pre-push": "pnpm typecheck && pnpm test:ci"
+    }
+  }
+}
+```
+
+## Related Rules
+
+- ci-cd-and-releases
+

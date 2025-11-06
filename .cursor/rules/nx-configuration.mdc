@@ -1,0 +1,47 @@
+---
+alwaysApply: true
+---
+Required Configuration (Repo-wide)
+nx.json (target defaults & cache)
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "targetDefaults": {
+    "build": { "cache": true, "outputs": ["{workspaceRoot}/dist/{projectRoot}"] },
+    "test":  { "cache": true },
+    "lint":  { "cache": true },
+    "e2e":   { "cache": true }
+  }
+}
+
+
+(Use targetDefaults and declare outputs to maximize cache hits.)
+
+ESLint (flat) with Boundaries
+
+Use the flat config from /rules/nx-sdlc.mdc in the repo root (eslint.config.mjs).
+
+Example tsconfig.base.json (paths)
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@mm/ads-data-access-core": ["libs/ads/data-access/core/src/index.ts"],
+      "@mm/shared-ui-charts": ["libs/shared/ui/charts/src/index.ts"]
+    }
+  }
+}
+
+
+(Generators normally update this for you; verify after moves/renames.) 
+
+Generators Defaults
+
+Add defaults (optional) to .nx.generators.json to pre-tag libs and enforce directory/importPath conventions.
+
+Customize or extend generators when you need opinionated scaffolds.
+
+Caching & CI
+
+Enable remote cache (Nx Replay) for CI; keep local cache on dev machines.
+
+Configure provider + auth; verify with back-to-back runs and nx graph to confirm affected calc.

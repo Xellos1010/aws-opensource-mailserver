@@ -1,0 +1,20 @@
+Master Documentation Extraction Summary
+======================================
+
+Operation: master-docs-extraction-20251106-142123
+Started: 2025-11-06 14:21:23
+Completed: 2025-11-06 14:21:27
+Duration: 4 seconds
+
+Output Directory: /Users/evanmccall/Projects/aws-opensource-mailserver/output/master-docs-extraction-20251106-142123
+
+Generated Files:
+
+Documentation:
+  - /Users/evanmccall/Projects/aws-opensource-mailserver/output/master-docs-extraction-20251106-142123/docs/master-codebase.md (357K)
+  - /Users/evanmccall/Projects/aws-opensource-mailserver/output/master-docs-extraction-20251106-142123/docs/master-rules.md (282K)
+
+Logs:
+  - /Users/evanmccall/Projects/aws-opensource-mailserver/output/master-docs-extraction-20251106-142123/logs/extraction.log (14K)
+
+Summary file: /Users/evanmccall/Projects/aws-opensource-mailserver/output/master-docs-extraction-20251106-142123/summary.txt

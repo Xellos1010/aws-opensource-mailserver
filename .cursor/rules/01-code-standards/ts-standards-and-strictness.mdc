@@ -1,0 +1,86 @@
+---
+alwaysApply: true
+---
+
+# TypeScript Standards: Strictness, Imports & Public Surfaces
+
+Enable strict compiler options across all projects, avoid `any`, and restrict imports to stable public surfaces via path aliases.
+
+**Justification:** Strict typing and stable import surfaces reduce defects, improve editor tooling, and make refactors safer across shared code.
+
+## Compiler Options
+
+Enable strict, noUncheckedIndexedAccess, noImplicitOverride, exactOptionalPropertyTypes, bundler module resolution, and isolatedModules for test compatibility.
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": true,
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
+  }
+}
+```
+
+### Test Environment Configuration
+
+For projects using ES modules in tests, ensure tsconfig supports both build and test environments:
+
+```json
+// tsconfig.json (project root)
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "module": "ESNext"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "coverage"]
+}
+```
+
+⚠️ **Warning:** Do not disable strict mode in project tsconfigs; request waivers via ADR if absolutely necessary.
+
+## No `any` & Safer Assertions
+
+Disallow `any`. Prefer `unknown` with user-defined type guards. Use `as` assertions sparingly at boundaries.
+
+```typescript
+function isLead(x: unknown): x is { id: string } {
+  return typeof x === 'object' && x !== null && 'id' in x;
+}
+```
+
+## Path Aliases & Public Surfaces
+
+Expose only `src/index.ts` from each library through path aliases. Internal files are not importable across libs.
+
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": { "@mm/*": ["libs/*/src/index.ts"] }
+  }
+}
+```
+
+💡 **Tip:** Create explicit barrel files per library to keep public APIs small and documented.
+
+## Examples
+
+```json
+{ "rules": { "@typescript-eslint/no-explicit-any": "error" } }
+```
+
+## Related Rules
+
+- architecture-and-nx-boundaries
+- testing-strategy
+

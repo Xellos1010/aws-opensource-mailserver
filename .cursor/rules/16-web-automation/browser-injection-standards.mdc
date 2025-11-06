@@ -1,0 +1,53 @@
+---
+description: Standards for browser script injection and content security in web automation
+globs: ["apps/**", "libs/**", "tools/**"]
+alwaysApply: true
+---
+
+# Browser Injection Standards
+
+## Content Validation
+Validate all content being injected into browser contexts for security and compatibility.
+
+### Security Checks
+- **No template literals**: Avoid template literals in injected scripts as they can introduce XSS vulnerabilities
+- **No Unicode characters**: Use escaped sequences or avoid Unicode in injected JavaScript
+- **ES module compatibility**: Ensure injected scripts work in browser environments
+- **Input sanitization**: Validate and sanitize all dynamic content before injection
+
+### Code Quality
+- **Strict TypeScript**: Use TypeScript strict mode for all injection scripts
+- **Error handling**: Include proper try-catch blocks and error reporting
+- **Performance**: Minimize script size and execution time
+- **Compatibility**: Test across target browsers (Chrome, Firefox, Safari)
+
+## Injection Patterns
+```typescript
+// 👍 Good - static, validated content
+const script = `
+  (function() {
+    const button = document.querySelector('[data-automation-id="submit"]');
+    if (button) {
+      button.addEventListener('click', function() {
+        console.log('Button clicked');
+      });
+    }
+  })();
+`;
+
+// 👎 Avoid - template literals with dynamic content
+const script = `
+  (function() {
+    const selector = '${dynamicSelector}'; // XSS vulnerability
+    document.querySelector(selector);
+  })();
+`;
+```
+
+## Validation Checklist
+- [ ] No template literals in injected scripts
+- [ ] No Unicode characters that could cause encoding issues
+- [ ] Scripts tested in target browser environments
+- [ ] Error handling included for runtime failures
+- [ ] Content properly escaped and sanitized
+- [ ] Scripts follow CSP (Content Security Policy) requirements

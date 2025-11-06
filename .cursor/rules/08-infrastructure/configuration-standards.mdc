@@ -1,0 +1,15 @@
+---
+alwaysApply: true
+---
+
+# Configuration Standards
+
+Centralize configuration, document required variables, and keep environment-specific values out of source control.
+
+**Justification:** Consistent configuration prevents environment drift and start-up failures.
+
+## Config Registry
+
+- Document all required env vars in project READMEs
+- Prefer .env.example with typed validation at boot
+

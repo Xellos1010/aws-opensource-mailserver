@@ -86,12 +86,15 @@ fi
 
 echo "Instance IP: ${INSTANCE_IP}"
 
-# Create backup directory name
+# Create standardized per-domain mailboxes backup directory
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+BACKUP_DIR_ROOT="$ROOT/backups/${DOMAIN_NAME}/mailboxes"
+mkdir -p "$BACKUP_DIR_ROOT"
+
 if [ -n "$BACKUP_NAME" ]; then
-  BACKUP_DIR="$SCRIPT_DIR/mailboxes-backup-${BACKUP_NAME}"
+  BACKUP_DIR="$BACKUP_DIR_ROOT/mailboxes-backup-${BACKUP_NAME}"
 else
-  TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-  BACKUP_DIR="$SCRIPT_DIR/mailboxes-backup-${TIMESTAMP}"
+  BACKUP_DIR="$BACKUP_DIR_ROOT/mailboxes-backup-${TIMESTAMP}"
 fi
 
 echo "Backup directory: ${BACKUP_DIR}"
@@ -121,14 +124,14 @@ fi
 
 # Test SSH connection first
 echo "Testing SSH connection..."
-if ! ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no -o ConnectTimeout=10 "ubuntu@${INSTANCE_IP}" "echo 'SSH connection successful'"; then
+if ! ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 "ubuntu@${INSTANCE_IP}" "echo 'SSH connection successful'"; then
   echo "Error: Could not establish SSH connection to ubuntu@${INSTANCE_IP}"
   exit 1
 fi
 
 # Check if mailboxes directory exists on remote server
 echo "Checking if mailboxes directory exists on remote server..."
-if ! ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no "ubuntu@${INSTANCE_IP}" "test -d /home/user-data/mail/mailboxes"; then
+if ! ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "ubuntu@${INSTANCE_IP}" "test -d /home/user-data/mail/mailboxes"; then
   echo "Error: /home/user-data/mail/mailboxes directory does not exist on remote server"
   exit 1
 fi
@@ -164,8 +167,8 @@ chmod +x "${TEMP_DIR}/prepare-mailboxes.sh"
 
 # Copy preparation script to server and execute
 echo "Preparing mailboxes for download on remote server..."
-scp -i "$KEY_FILE" -o StrictHostKeyChecking=no "${TEMP_DIR}/prepare-mailboxes.sh" "ubuntu@${INSTANCE_IP}:~/"
-REMOTE_TEMP_DIR=$(ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no "ubuntu@${INSTANCE_IP}" "~/prepare-mailboxes.sh" | tail -n 1 | tr -d '\n\r' | xargs)
+scp -i "$KEY_FILE" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "${TEMP_DIR}/prepare-mailboxes.sh" "ubuntu@${INSTANCE_IP}:~/"
+REMOTE_TEMP_DIR=$(ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "ubuntu@${INSTANCE_IP}" "~/prepare-mailboxes.sh" | tail -n 1 | tr -d '\n\r' | xargs)
 
 if [ -z "$REMOTE_TEMP_DIR" ]; then
   echo "Error: Failed to prepare mailboxes on remote server"
@@ -179,7 +182,7 @@ echo "Downloading mailboxes from ubuntu@${INSTANCE_IP}:${REMOTE_TEMP_DIR}/ to ${
 echo "This may take a while depending on the size of your mailboxes..."
 
 rsync -avz --progress \
-    -e "ssh -i ${KEY_FILE} -o StrictHostKeyChecking=no" \
+    -e "ssh -i ${KEY_FILE} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
     "ubuntu@${INSTANCE_IP}:${REMOTE_TEMP_DIR}/" \
     "${BACKUP_DIR}/"
 
@@ -187,7 +190,7 @@ RSYNC_EXIT_CODE=$?
 
 # Clean up temporary directory on remote server (non-critical)
 echo "Cleaning up temporary files on remote server..."
-if ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no -o ConnectTimeout=10 "ubuntu@${INSTANCE_IP}" "sudo rm -rf ${REMOTE_TEMP_DIR}" 2>/dev/null; then
+if ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 "ubuntu@${INSTANCE_IP}" "sudo rm -rf ${REMOTE_TEMP_DIR}" 2>/dev/null; then
   echo "Remote cleanup completed successfully"
 else
   echo "Warning: Could not clean up remote temporary directory ${REMOTE_TEMP_DIR}"

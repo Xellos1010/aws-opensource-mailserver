@@ -1,0 +1,308 @@
+---
+description: Incident response procedures, on-call rotation, escalation policies, and postmortem processes
+alwaysApply: false
+---
+# Incident Management & Response - 2025
+
+Comprehensive incident response framework with clear roles, communication protocols, and learning processes.
+
+**Justification:** Well-defined incident management reduces MTTR, improves communication during outages, and prevents repeat incidents through systematic learning.
+
+## 🎯 Single Responsibility
+This rule defines HOW to respond to incidents. Not what to alert on (see alert-definitions) or how to monitor (see metrics-collection).
+
+## 📋 Incident Response Checklist
+
+### Preparation Phase
+```markdown
+- [ ] Define incident severity levels
+- [ ] Establish on-call rotation
+- [ ] Create communication channels
+- [ ] Set up incident command structure
+- [ ] Prepare runbook templates
+- [ ] Configure incident tracking system
+- [ ] Train incident commanders
+- [ ] Set up war room procedures
+- [ ] Define stakeholder communication
+- [ ] Create postmortem template
+```
+
+## 🚨 Incident Severity Levels
+
+### Severity Matrix
+```yaml
+severity_levels:
+  SEV-1:
+    name: "Critical"
+    description: "Complete service outage or data loss"
+    impact: "All users affected, revenue impact"
+    response_time: "< 5 minutes"
+    escalation: "Immediate page to on-call and management"
+    communication: "Executive team, all customers"
+    examples:
+      - "Production database down"
+      - "Payment processing failure"
+      - "Security breach"
+      - "Complete API outage"
+
+  SEV-2:
+    name: "Major"
+    description: "Significant degradation or partial outage"
+    impact: "Many users affected, feature unavailable"
+    response_time: "< 15 minutes"
+    escalation: "Page on-call engineer"
+    communication: "Affected customers, status page"
+    examples:
+      - "Login failures for subset of users"
+      - "Slow API responses (>5s)"
+      - "Search functionality down"
+
+  SEV-3:
+    name: "Minor"
+    description: "Minor feature issue or degradation"
+    impact: "Some users affected, workaround available"
+    response_time: "< 1 hour"
+    escalation: "Notify on-call via Slack"
+    communication: "Internal team, status page"
+    examples:
+      - "UI glitch in specific browser"
+      - "Non-critical background job failure"
+      - "Delayed notifications"
+
+  SEV-4:
+    name: "Low"
+    description: "Minimal impact issue"
+    impact: "Few users affected, cosmetic issues"
+    response_time: "< 4 hours"
+    escalation: "Create ticket"
+    communication: "Internal tracking only"
+    examples:
+      - "Typo in UI"
+      - "Non-critical log errors"
+      - "Minor performance degradation"
+```
+
+## 👥 Incident Command Structure
+
+### Roles & Responsibilities
+```typescript
+interface IncidentRoles {
+  incidentCommander: {
+    responsibilities: [
+      'Overall incident coordination',
+      'Decision making authority',
+      'External communication',
+      'Resource allocation',
+      'Postmortem ownership'
+    ];
+    requirements: [
+      'Senior engineer or above',
+      'Incident command training',
+      'System architecture knowledge'
+    ];
+  };
+
+  technicalLead: {
+    responsibilities: [
+      'Technical investigation',
+      'Solution implementation',
+      'Technical decision making',
+      'Team coordination'
+    ];
+    requirements: [
+      'Deep system knowledge',
+      'Debugging expertise'
+    ];
+  };
+
+  communicationsLead: {
+    responsibilities: [
+      'Customer communication',
+      'Status page updates',
+      'Internal updates',
+      'Stakeholder management'
+    ];
+    requirements: [
+      'Clear communication skills',
+      'Customer empathy'
+    ];
+  };
+
+  scribe: {
+    responsibilities: [
+      'Document timeline',
+      'Record actions taken',
+      'Track open items',
+      'Prepare incident report'
+    ];
+    requirements: [
+      'Attention to detail',
+      'Fast note-taking'
+    ];
+  };
+}
+```
+
+## 📞 On-Call Rotation
+
+### PagerDuty Configuration
+```yaml
+# pagerduty-schedule.yml
+schedules:
+  primary:
+    name: "Platform Team Primary"
+    rotation_type: "weekly"
+    handoff_time: "09:00 PST Monday"
+    layers:
+      - name: "Weekly Rotation"
+        users:
+          - email: "engineer1@example.com"
+          - email: "engineer2@example.com"
+          - email: "engineer3@example.com"
+        rotation_virtual_start: "2024-01-01T09:00:00-08:00"
+        rotation_turn_length_seconds: 604800 # 1 week
+
+  secondary:
+    name: "Platform Team Secondary"
+    rotation_type: "weekly"
+    handoff_time: "09:00 PST Monday"
+    escalation_delay: 15 # minutes
+
+escalation_policies:
+  - name: "Platform Escalation"
+    num_loops: 0
+    escalation_rules:
+      - escalation_delay_in_minutes: 0
+        targets:
+          - type: "schedule_reference"
+            id: "primary_schedule_id"
+      - escalation_delay_in_minutes: 15
+        targets:
+          - type: "schedule_reference"
+            id: "secondary_schedule_id"
+      - escalation_delay_in_minutes: 30
+        targets:
+          - type: "user_reference"
+            id: "engineering_manager_id"
+```
+
+## 📊 Postmortem Process
+
+### Postmortem Template
+```markdown
+# Postmortem: [Incident Title]
+
+## Incident Summary
+- **Date**: YYYY-MM-DD
+- **Duration**: X hours Y minutes
+- **Impact**: [User/Revenue impact]
+- **Severity**: SEV-X
+
+## Timeline
+| Time | Event | Actor |
+|------|-------|-------|
+| HH:MM | Alert triggered | System |
+| HH:MM | On-call acknowledged | @engineer |
+| HH:MM | Investigation started | @engineer |
+| HH:MM | Root cause identified | @team |
+| HH:MM | Fix deployed | @engineer |
+| HH:MM | Incident resolved | @engineer |
+
+## Root Cause Analysis
+
+### What Happened
+[Detailed explanation of the incident]
+
+### Root Cause
+[The fundamental reason the incident occurred]
+
+### Contributing Factors
+1. [Factor 1]
+2. [Factor 2]
+3. [Factor 3]
+
+## Resolution
+[How the incident was resolved]
+
+## Lessons Learned
+
+### What Went Well
+- ✅ [Positive aspect 1]
+- ✅ [Positive aspect 2]
+
+### What Could Be Improved
+- ⚠️ [Improvement area 1]
+- ⚠️ [Improvement area 2]
+
+## Action Items
+| Action | Owner | Due Date | Priority |
+|--------|-------|----------|----------|
+| Add monitoring for X | @engineer1 | YYYY-MM-DD | High |
+| Update runbook for Y | @engineer2 | YYYY-MM-DD | Medium |
+| Implement circuit breaker | @engineer3 | YYYY-MM-DD | High |
+
+## Supporting Data
+- [Link to graphs]
+- [Link to logs]
+- [Link to traces]
+```
+
+## 🎯 Incident Metrics
+
+### Key Performance Indicators
+```typescript
+interface IncidentKPIs {
+  MTTD: number;  // Mean Time To Detect
+  MTTA: number;  // Mean Time To Acknowledge  
+  MTTR: number;  // Mean Time To Resolve
+  MTBF: number;  // Mean Time Between Failures
+  
+  incidentFrequency: {
+    sev1: number;  // per month
+    sev2: number;
+    sev3: number;
+    sev4: number;
+  };
+  
+  customerImpact: {
+    affectedUsers: number;
+    downtime: number;  // minutes
+    revenueImpact: number;  // dollars
+  };
+  
+  responseQuality: {
+    slaCompliance: number;  // percentage
+    postmortemCompletion: number;  // percentage
+    actionItemCompletion: number;  // percentage
+    repeatIncidents: number;  // count
+  };
+}
+
+// Monthly targets
+const incidentTargets = {
+  MTTD: 5,    // minutes
+  MTTA: 5,    // minutes
+  MTTR: 30,   // minutes
+  MTBF: 720,  // hours (30 days)
+  
+  slaCompliance: 99,  // percent
+  postmortemCompletion: 100,  // percent
+  actionItemCompletion: 90,  // percent
+};
+```
+
+## 📊 Success Metrics
+
+- **MTTR**: < 30 minutes for SEV-1
+- **MTTD**: < 5 minutes for critical issues
+- **SLA Compliance**: > 99%
+- **Postmortem Completion**: 100% for SEV-1/2
+- **Action Item Completion**: > 90% within deadline
+- **Repeat Incident Rate**: < 10%
+- **On-Call Happiness**: > 7/10 survey score
+
+## 🔗 Related Rules
+- [alert-definitions](./alert-definitions.mdc) - For alert configuration
+- [structured-logging](./structured-logging.mdc) - For incident investigation
+- [distributed-tracing](./distributed-tracing.mdc) - For root cause analysis
+- [metrics-collection](./metrics-collection.mdc) - For impact assessment

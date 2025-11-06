@@ -1,0 +1,608 @@
+---
+globs: **/*.ts, **/*.tsx, **/*.js, **/*.jsx, eslint.config.*, .eslintrc.*
+description: Comprehensive ESLint configuration combining TypeScript strictness, code quality rules, and security patterns
+alwaysApply: false
+---
+# ESLint Configuration Standards - 2025
+
+Unified ESLint configuration with TypeScript support, security rules, and framework-specific patterns for consistent code quality.
+
+**Justification:** Consistent linting prevents bugs, enforces best practices, ensures code readability, and catches security issues early.
+
+## 🎯 Single Responsibility
+This rule ONLY defines ESLint configuration and rules. Not formatting (see prettier-config) or TypeScript compiler options (see typescript-standards).
+
+## 📋 Implementation Checklist
+
+### Initial Setup
+```markdown
+- [ ] Install ESLint and TypeScript ESLint
+- [ ] Configure flat config (ESLint 9+) or classic config
+- [ ] Set up TypeScript parser and plugin
+- [ ] Configure environment settings
+- [ ] Add framework-specific plugins (React, Vue, etc.)
+- [ ] Set up security plugins
+- [ ] Configure import sorting and validation
+- [ ] Add custom rules for project patterns
+- [ ] Set up pre-commit hooks
+- [ ] Configure IDE integration
+```
+
+## 🔧 Flat Config (ESLint 9+)
+
+### Complete Configuration
+```javascript
+// eslint.config.mjs
+import js from '@eslint/js';
+import typescript from '@typescript-eslint/eslint-plugin';
+import typescriptParser from '@typescript-eslint/parser';
+import security from 'eslint-plugin-security';
+import importPlugin from 'eslint-plugin-import';
+import unicorn from 'eslint-plugin-unicorn';
+import sonarjs from 'eslint-plugin-sonarjs';
+import prettier from 'eslint-config-prettier';
+
+export default [
+  // Base JavaScript rules
+  js.configs.recommended,
+  
+  // Global ignores
+  {
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/build/**',
+      '**/.next/**',
+      '**/coverage/**',
+      '**/*.min.js',
+      '**/vendor/**'
+    ]
+  },
+
+  // TypeScript configuration
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      parser: typescriptParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        project: './tsconfig.json',
+        tsconfigRootDir: import.meta.dirname,
+      },
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+      }
+    },
+    plugins: {
+      '@typescript-eslint': typescript,
+      'security': security,
+      'import': importPlugin,
+      'unicorn': unicorn,
+      'sonarjs': sonarjs,
+    },
+    rules: {
+      // TypeScript Strict Rules
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/explicit-function-return-type': ['error', {
+        allowExpressions: true,
+        allowTypedFunctionExpressions: true,
+        allowHigherOrderFunctions: true,
+      }],
+      '@typescript-eslint/no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+      }],
+      '@typescript-eslint/strict-boolean-expressions': ['error', {
+        allowString: false,
+        allowNumber: false,
+        allowNullableObject: false,
+      }],
+      '@typescript-eslint/no-non-null-assertion': 'error',
+      '@typescript-eslint/no-unnecessary-condition': 'error',
+      '@typescript-eslint/no-unsafe-assignment': 'error',
+      '@typescript-eslint/no-unsafe-member-access': 'error',
+      '@typescript-eslint/no-unsafe-call': 'error',
+      '@typescript-eslint/no-unsafe-return': 'error',
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/await-thenable': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
+      '@typescript-eslint/consistent-type-assertions': ['error', {
+        assertionStyle: 'as',
+        objectLiteralTypeAssertions: 'never',
+      }],
+      '@typescript-eslint/consistent-type-imports': ['error', {
+        prefer: 'type-imports',
+        fixStyle: 'inline-type-imports',
+      }],
+      
+      // Code Quality Rules
+      'complexity': ['error', { max: 10 }],
+      'max-lines-per-function': ['error', {
+        max: 50,
+        skipBlankLines: true,
+        skipComments: true,
+      }],
+      'max-depth': ['error', 4],
+      'max-nested-callbacks': ['error', 3],
+      'no-console': ['warn', {
+        allow: ['warn', 'error', 'info']
+      }],
+      'no-debugger': 'error',
+      'no-alert': 'error',
+      'no-eval': 'error',
+      'no-implied-eval': 'error',
+      'no-new-func': 'error',
+      'eqeqeq': ['error', 'always'],
+      'no-var': 'error',
+      'prefer-const': 'error',
+      'prefer-template': 'error',
+      'no-param-reassign': ['error', {
+        props: true,
+        ignorePropertyModificationsFor: ['acc', 'req', 'res', 'session']
+      }],
+      
+      // Security Rules
+      'security/detect-object-injection': 'warn',
+      'security/detect-non-literal-regexp': 'warn',
+      'security/detect-unsafe-regex': 'error',
+      'security/detect-buffer-noassert': 'error',
+      'security/detect-child-process': 'warn',
+      'security/detect-disable-mustache-escape': 'error',
+      'security/detect-eval-with-expression': 'error',
+      'security/detect-no-csrf-before-method-override': 'error',
+      'security/detect-non-literal-fs-filename': 'warn',
+      'security/detect-non-literal-require': 'warn',
+      'security/detect-possible-timing-attacks': 'warn',
+      
+      // Import Rules
+      'import/order': ['error', {
+        groups: [
+          'builtin',
+          'external',
+          'internal',
+          'parent',
+          'sibling',
+          'index',
+          'object',
+          'type'
+        ],
+        pathGroups: [
+          {
+            pattern: '@mm/**',
+            group: 'internal',
+            position: 'before'
+          }
+        ],
+        'newlines-between': 'always',
+        alphabetize: {
+          order: 'asc',
+          caseInsensitive: true
+        }
+      }],
+      'import/no-duplicates': 'error',
+      'import/no-cycle': 'error',
+      'import/no-unused-modules': ['error', {
+        unusedExports: true,
+        ignoreExports: ['*.config.ts', '*.config.js', 'index.ts']
+      }],
+      
+      // Unicorn Best Practices
+      'unicorn/no-array-callback-reference': 'error',
+      'unicorn/no-array-for-each': 'error',
+      'unicorn/no-null': 'off', // Too strict for most projects
+      'unicorn/prevent-abbreviations': 'off', // Too opinionated
+      'unicorn/filename-case': ['error', {
+        cases: {
+          camelCase: true,
+          pascalCase: true,
+          kebabCase: true
+        }
+      }],
+      'unicorn/no-abusive-eslint-disable': 'error',
+      'unicorn/no-process-exit': 'error',
+      'unicorn/prefer-node-protocol': 'error',
+      'unicorn/prefer-module': 'error',
+      
+      // SonarJS Code Quality
+      'sonarjs/cognitive-complexity': ['error', 15],
+      'sonarjs/no-duplicate-string': ['error', 5],
+      'sonarjs/no-identical-functions': 'error',
+      'sonarjs/no-collapsible-if': 'error',
+      'sonarjs/no-collection-size-mischeck': 'error',
+      'sonarjs/no-duplicated-branches': 'error',
+      'sonarjs/no-identical-conditions': 'error',
+      'sonarjs/no-inverted-boolean-checks': 'error',
+      'sonarjs/no-redundant-boolean': 'error',
+      'sonarjs/no-unused-collection': 'error',
+      'sonarjs/no-useless-catch': 'error',
+      'sonarjs/prefer-immediate-return': 'error',
+    }
+  },
+
+  // JavaScript-specific overrides
+  {
+    files: ['**/*.js', '**/*.mjs'],
+    rules: {
+      '@typescript-eslint/no-var-requires': 'off',
+    }
+  },
+
+  // Test file overrides
+  {
+    files: ['**/*.spec.ts', '**/*.test.ts', '**/__tests__/**', '**/__it__/**'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-var-requires': 'off', // Allow require() in tests
+      'max-lines-per-function': 'off',
+      'max-nested-callbacks': 'off',
+      'sonarjs/no-duplicate-string': 'off',
+      // Node.js built-in modules should use namespace imports
+      'import/no-named-as-default': 'error',
+      'import/no-named-as-default-member': 'off', // Allow namespace imports
+    }
+  },
+
+  // Configuration file overrides
+  {
+    files: ['*.config.ts', '*.config.js', '*.config.mjs'],
+    rules: {
+      'import/no-default-export': 'off',
+      '@typescript-eslint/no-var-requires': 'off',
+    }
+  },
+
+  // Freshworks FDK specific rules
+  {
+    files: ['apps/freshsales-*/src/**/*.ts'],
+    rules: {
+      'no-eval': 'error',
+      'no-new-func': 'error',
+      'security/detect-eval-with-expression': 'error',
+      'no-template-curly-in-string': 'error', // Avoid template literals in injected code
+      'unicorn/no-hex-escape': 'error', // Avoid unicode in strings
+      'prefer-template': 'off', // Use concatenation in injected scripts
+    }
+  },
+
+  // Node.js built-in module handling
+  {
+    files: ['**/*.ts', '**/*.js'],
+    rules: {
+      // Node.js built-ins should use namespace imports in ES modules
+      'import/no-named-as-default': 'error',
+      'import/no-named-as-default-member': 'off',
+    }
+  },
+
+  // Prettier compatibility (must be last)
+  prettier,
+];
+```
+
+## 🔧 Classic Config (Legacy Projects)
+
+### .eslintrc.js Configuration
+```javascript
+// .eslintrc.js
+module.exports = {
+  root: true,
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    ecmaVersion: 2022,
+    sourceType: 'module',
+    project: './tsconfig.json',
+    tsconfigRootDir: __dirname,
+  },
+  env: {
+    node: true,
+    es2022: true,
+    jest: true,
+  },
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended-requiring-type-checking',
+    'plugin:security/recommended',
+    'plugin:import/recommended',
+    'plugin:import/typescript',
+    'prettier', // Must be last
+  ],
+  plugins: [
+    '@typescript-eslint',
+    'security',
+    'import',
+    'unicorn',
+    'sonarjs',
+  ],
+  rules: {
+    // Include all rules from flat config above
+    // ... (same rules structure)
+  },
+  overrides: [
+    {
+      files: ['*.spec.ts', '*.test.ts'],
+      env: {
+        jest: true,
+      },
+      rules: {
+        // Test-specific overrides
+      }
+    }
+  ],
+  settings: {
+    'import/resolver': {
+      typescript: {
+        project: './tsconfig.json',
+      },
+    },
+  },
+};
+```
+
+## 🎯 Framework-Specific Rules
+
+### React/Next.js
+```javascript
+// Additional React rules
+{
+  files: ['**/*.tsx', '**/*.jsx'],
+  extends: [
+    'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
+    'plugin:jsx-a11y/recommended',
+  ],
+  rules: {
+    'react/prop-types': 'off', // TypeScript handles this
+    'react/react-in-jsx-scope': 'off', // Next.js handles this
+    'react/display-name': 'error',
+    'react/no-array-index-key': 'warn',
+    'react/no-danger': 'error',
+    'react/no-deprecated': 'error',
+    'react/no-unstable-nested-components': 'error',
+    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/exhaustive-deps': 'error',
+    'jsx-a11y/anchor-is-valid': 'error',
+    'jsx-a11y/alt-text': 'error',
+    'jsx-a11y/aria-props': 'error',
+  }
+}
+```
+
+### Node.js/Express
+```javascript
+// Node.js specific rules
+{
+  files: ['**/server/**/*.ts', '**/api/**/*.ts'],
+  plugins: ['node'],
+  extends: ['plugin:node/recommended'],
+  rules: {
+    'node/no-unsupported-features/es-syntax': 'off', // TypeScript handles this
+    'node/no-missing-import': 'off', // TypeScript handles this
+    'node/no-unpublished-import': 'off',
+    'node/no-process-exit': 'error',
+    'node/no-sync': 'error',
+    'node/handle-callback-err': 'error',
+  }
+}
+```
+
+## 🚫 Custom Project Rules
+
+### Enforce Project Patterns
+```javascript
+// Custom rules for your project patterns
+const customRules = {
+  // Enforce error handling patterns
+  'custom/catch-error-handling': {
+    create(context) {
+      return {
+        CatchClause(node) {
+          if (!node.param) {
+            context.report({
+              node,
+              message: 'Catch blocks must handle the error parameter',
+            });
+          }
+        }
+      };
+    }
+  },
+
+  // Enforce async/await over promises
+  'custom/prefer-async-await': {
+    create(context) {
+      return {
+        CallExpression(node) {
+          if (node.callee.property?.name === 'then') {
+            context.report({
+              node,
+              message: 'Prefer async/await over .then() chains',
+              fix(fixer) {
+                // Auto-fix logic here
+              }
+            });
+          }
+        }
+      };
+    }
+  },
+
+  // Enforce proper logging
+  'custom/structured-logging': {
+    create(context) {
+      return {
+        CallExpression(node) {
+          if (node.callee.object?.name === 'console') {
+            context.report({
+              node,
+              message: 'Use structured logger instead of console',
+              fix(fixer) {
+                return fixer.replaceText(node.callee.object, 'logger');
+              }
+            });
+          }
+        }
+      };
+    }
+  },
+};
+```
+
+## 🔧 Auto-Fix Configuration
+
+### Fixable Rules Setup
+```json
+// package.json scripts
+{
+  "scripts": {
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "lint:fix-dry": "eslint . --ext .ts,.tsx,.js,.jsx --fix-dry-run",
+    "lint:changed": "eslint $(git diff --name-only HEAD | grep -E '\\.(ts|tsx|js|jsx)$')",
+    "lint:staged": "lint-staged"
+  }
+}
+```
+
+### Lint-Staged Configuration
+```javascript
+// lint-staged.config.js
+module.exports = {
+  '*.{ts,tsx,js,jsx}': [
+    'eslint --fix',
+    'prettier --write',
+    'git add'
+  ],
+  '*.{json,md,yml,yaml}': [
+    'prettier --write',
+    'git add'
+  ]
+};
+```
+
+## 🎯 Performance Optimization
+
+### ESLint Performance Config
+```javascript
+// Optimize for large codebases
+{
+  settings: {
+    // Cache results for faster subsequent runs
+    cache: true,
+    cacheLocation: '.eslintcache',
+    
+    // Limit TypeScript type checking to improve performance
+    '@typescript-eslint/parser': {
+      project: './tsconfig.json',
+      createDefaultProgram: false, // Faster parsing
+    }
+  },
+  
+  // Disable expensive rules in development
+  rules: process.env.NODE_ENV === 'development' ? {
+    'import/no-cycle': 'off', // Expensive
+    '@typescript-eslint/no-misused-promises': 'off', // Type-heavy
+  } : {}
+}
+```
+
+## ✅ ESLint Ignore Patterns
+
+### .eslintignore
+```gitignore
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+coverage/
+
+# Generated files
+*.generated.ts
+*.d.ts
+schema.graphql
+
+# Vendor code
+vendor/
+public/lib/
+
+# Config files
+*.config.js
+*.config.ts
+
+# Test fixtures
+__fixtures__/
+__mocks__/
+
+# IDE
+.vscode/
+.idea/
+```
+
+## 🚨 Common ESLint Issues & Solutions
+
+```typescript
+// ❌ Issue: Unexpected any
+function process(data: any) { // Error: no-explicit-any
+  return data;
+}
+
+// ✅ Solution: Use proper types or unknown
+function process(data: unknown): ProcessedData {
+  if (isValidData(data)) {
+    return data as ProcessedData;
+  }
+  throw new Error('Invalid data');
+}
+
+// ❌ Issue: Floating promises
+async function main() {
+  doAsyncWork(); // Error: no-floating-promises
+}
+
+// ✅ Solution: Await or explicitly handle
+async function main() {
+  await doAsyncWork();
+  // or
+  void doAsyncWork(); // Explicitly ignore
+}
+
+// ❌ Issue: Unsafe member access
+function getValue(obj: any) {
+  return obj.nested.value; // Error: no-unsafe-member-access
+}
+
+// ✅ Solution: Type guards and optional chaining
+function getValue(obj: unknown): string | undefined {
+  if (isValidObject(obj)) {
+    return obj?.nested?.value;
+  }
+  return undefined;
+}
+```
+
+## 📊 Success Metrics
+
+- **Zero ESLint Errors**: In production code
+- **Auto-Fix Rate**: > 80% of issues auto-fixable
+- **Lint Time**: < 30 seconds for full codebase
+- **False Positive Rate**: < 5%
+- **Developer Adoption**: 100% pre-commit compliance
+
+## 🔗 Related Rules
+- [typescript-standards](./typescript-standards.mdc) - For TypeScript compiler options
+- [prettier-config](./prettier-config.mdc) - For code formatting
+- [pre-commit-hooks](../14-automation/pre-commit-hooks.mdc) - For git hooks
+- [code-review-checklist](../05-review/code-review-checklist.mdc) - For review standards

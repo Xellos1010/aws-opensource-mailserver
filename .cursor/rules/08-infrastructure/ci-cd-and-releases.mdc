@@ -1,0 +1,47 @@
+---
+alwaysApply: true
+---
+
+# CI/CD, Caching & Automated Releases
+
+Standardize pipelines with Nx affected commands, pnpm store caching, SBOM generation, and Changesets-based semantic releases.
+
+**Justification:** Fast feedback, deterministic builds, and reliable releases are essential for multi-app monorepos.
+
+## Pull Request Pipeline
+
+- Restore pnpm store cache and Nx remote cache
+- Run affected lint/test/build and Playwright smoke e2e
+- Generate docs and SBOM; upload coverage
+
+```yaml
+jobs:
+  pr:
+    steps:
+      - run: pnpm i --frozen-lockfile
+      - run: pnpm nx affected -t lint,test,build
+      - run: pnpm test:ci
+      - run: pnpm docs && pnpm sbom
+```
+
+## Main & Release
+
+Publish on protected tags with Changesets; generate version bumps and changelogs automatically.
+
+```bash
+pnpm changeset version && pnpm i --lockfile-only && pnpm nx release publish
+```
+
+💡 **Tip:** Use matrix builds to test Node LTS versions and OS variance for critical packages.
+
+## Examples
+
+```markdown
+### Release summary\n- Packages: ...\n- Breaking changes: ...\n- Migrations: ...
+```
+
+## Related Rules
+
+- security-and-secrets-policy
+- testing-strategy
+

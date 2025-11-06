@@ -1,0 +1,74 @@
+---
+alwaysApply: true
+description: "Monorepo layout and boundary rules"
+---
+
+# Architecture, Workspace Layout & Nx Boundaries
+
+Define a predictable Nx layout with strict domain boundaries and dependency constraints to keep the monorepo fast and modular.
+
+**Justification:** Clear layers and enforced constraints prevent accidental coupling, enable parallel work, and support safe refactors at scale.
+
+## Workspace Layout
+
+Organize the monorepo into top-level directories: apps, libs, tools, e2e, and docs.
+
+Libraries follow <domain>/<type> where type ∈ feature, ui, data-access, util, config, testing.
+
+Every project declares Nx tags to enable lint rules for dependency constraints.
+
+- apps/: runnable applications and entry points
+- libs/: reusable libraries grouped by domain and type
+- tools/: repo automation, codegen, migration scripts
+- e2e/: Playwright-based end-to-end suites
+- docs/: ADRs, architecture diagrams, API references
+
+## Dependency Constraints
+
+Enforce domain and layer constraints using Nx and ESLint. Higher layers may depend on lower layers; never the reverse.
+
+Only import from a library's public surface (index.ts).
+
+```json
+{
+  "extends": ["plugin:@nx/typescript"],
+  "rules": {
+    "@nx/enforce-module-boundaries": [
+      "error",
+      {
+        "enforceBuildableLibDependency": true,
+        "allow": [],
+        "depConstraints": [
+          { "sourceTag": "type:feature", "onlyDependOnLibsWithTags": ["type:data-access","type:ui","type:util","type:config"] },
+          { "sourceTag": "type:data-access", "onlyDependOnLibsWithTags": ["type:util","type:config"] },
+          { "sourceTag": "type:ui", "onlyDependOnLibsWithTags": ["type:util","type:config"] }
+        ]
+      }
+    ]
+  }
+}
+```
+
+💡 **Tip:** Prefer small, composable libraries over monolithic ones to maximize reuse and cache hits.
+
+## Tagging Examples
+
+```json
+{
+  "name": "@mm/patients/data-access",
+  "tags": ["scope:patients","type:data-access"]
+}
+```
+
+## Examples
+
+```json
+{"name":"@mm/pipeline/util","tags":["scope:eng","type:util"]}
+```
+
+## Related Rules
+
+- ts-standards-and-strictness
+- dev-workflow-and-git
+- ci-cd-and-releases
+

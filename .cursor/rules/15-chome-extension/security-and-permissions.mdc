@@ -1,0 +1,8 @@
+---
+globs: apps/automation-chrome-ext/src/manifest.json,apps/automation-chrome-ext/src/**
+alwaysApply: false
+---
+- **No secrets in code**. If integration creds are needed, depend on the panel to prompt and store in `chrome.storage.session` only.
+- Use **host_permissions** as narrowly as possible (prefer *specific* domains).
+- For external pages opened by flows, prefer `chrome.tabs.update` + waits rather than injecting blanket permissions.
+- Avoid `eval`/Function; use strict CSP defaults.

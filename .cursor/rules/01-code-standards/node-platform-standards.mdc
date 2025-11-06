@@ -1,0 +1,22 @@
+---
+alwaysApply: true
+---
+
+# Node Platform Standards
+
+Validate inputs, avoid blocking CPU on request threads, enforce request timeouts, and prefer streaming for large payloads.
+
+**Justification:** Prevents reliability and performance pitfalls in services and webhooks.
+
+## Input Validation
+
+```typescript
+const validate = ajv.compile(schema);
+if (!validate(body)) throw new Error('invalid');
+```
+
+## Concurrency & Timeouts
+
+- Reject long CPU work on request threads; offload to workers/queues
+- Enforce per-request timeouts and sensible connection pooling
+

@@ -1,0 +1,25 @@
+---
+globs: apps/automation-chrome-ext/src/sidepanel/**,apps/automation-chrome-ext/src/background.ts,apps/automation-chrome-ext/src/panel.ts
+alwaysApply: false
+---
+## Goals
+Treat the **Side Panel** as a **view** bound to background state; never as the source of truth.
+
+## Rules
+1) **Open/close orchestration in background**
+   - Background owns `chrome.sidePanel.setOptions` and `open` flows; panel UI only requests actions.
+
+2) **Panel <-> Background contract**
+   - Establish a `chrome.runtime.connect({name:'sidepanel'})` port when panel mounts.
+   - On connect, background pushes current `RunStatus` + steps log.
+   - Panel sends **INTENT** messages (StartFlow, Pause, Resume, Abort, ExportLog).
+
+3) **Panel survives reloads**
+   - If panel is reopened or side panel toggled for the active tab, background re-sends last `RunStatus` + last 100 log entries from `chrome.storage.session`.
+
+4) **E2E targets already exist**
+   - Keep the `@sidepanel` E2E slice in Playwright; extend only in-place (don’t invent new configs):  
+     `playwright test --config apps/automation-chrome-ext/tests/playwright.config.ts --grep @sidepanel`
+
+5) **Static assets are copied at build**
+   - Don’t forget to copy `panel.html` and panel styles to `dist`—your build pipeline already does this with a `cp` chain; preserve/extend it rather than replacing.

@@ -1,0 +1,178 @@
+---
+alwaysApply: true
+---
+Nx Monorepo SDLC Rules
+Objectives
+
+Keep architecture clean and evolvable with strict boundaries and clear library types.
+
+Enforce repo-wide consistency via generators, tags, lint rules, and CI.
+
+Prefer local-first iteration; validate via unit → integration → E2E gates.
+
+Library Types & Naming (authoritative)
+
+Allowed types: feature, ui, data-access, util. Keep it small and predictable. 
+
+Name pattern: scope-type-identifier (e.g., ads-data-access-core, shared-ui-charts). Place libs under libs/<scope>/<type>/<identifier>.
+
+Project Tags (multi-dimension)
+
+Every lib/app must specify tags in project.json:
+
+type:{feature|ui|data-access|util}
+
+scope:{shared|ads|crm|callrail|admin|marketing|sales} (extend as needed)
+
+platform:{web|node|lambda}
+
+These drive module boundary rules (below). 
+
+Module Boundaries (lint-enforced)
+
+Use ESLint flat config with @nx/enforce-module-boundaries.
+
+Constraints:
+
+type:feature → may depend on ui, data-access, util in same scope or scope:shared.
+
+type:ui → may depend on ui, util in same scope or scope:shared (no data-access).
+
+type:data-access → may depend on util and data-access in same scope or scope:shared (no ui).
+
+type:util → may depend on util only.
+
+Ban deep imports (*/src/*) and optionally ban router imports in non-app layers.
+
+Why: this keeps layers clean and prevents cycles/bleed-through. 
+
+eslint.config.mjs (drop-in)
+// eslint.config.mjs
+import nx from '@nx/eslint-plugin';
+
+export default [
+  ...nx.configs['flat/base'],
+  ...nx.configs['flat/typescript'],
+  ...nx.configs['flat/javascript'],
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          allow: [],
+          depConstraints: [
+            { sourceTag: 'type:feature', onlyDependOnLibsWithTags: ['type:feature','type:ui','type:data-access','type:util','scope:shared'] },
+            { sourceTag: 'type:ui',      onlyDependOnLibsWithTags: ['type:ui','type:util','scope:shared'] },
+            { sourceTag: 'type:data-access', onlyDependOnLibsWithTags: ['type:data-access','type:util','scope:shared'] },
+            { sourceTag: 'type:util',    onlyDependOnLibsWithTags: ['type:util'] },
+            // Keep scopes local or shared
+            { sourceTag: 'scope:ads',    onlyDependOnLibsWithTags: ['scope:ads','scope:shared'] },
+            { sourceTag: 'scope:crm',    onlyDependOnLibsWithTags: ['scope:crm','scope:shared'] },
+            { sourceTag: 'scope:callrail', onlyDependOnLibsWithTags: ['scope:callrail','scope:shared'] },
+          ],
+          bannedExternalImports: ['**/src/**'],
+        },
+      ],
+    },
+  },
+];
+
+
+(Flat config + multi-dimensional tags pattern per Nx docs.) 
+
+Generators & Creation Rules
+
+Always generate via Nx generators (no hand-rolled libs). Use --directory, --importPath, and --tags. 
+
+Only mark a lib buildable/publishable when you truly need to build or publish it (requires --importPath). 
+
+Prefer as-provided path semantics for predictable folder roots in new workspaces.
+
+Linking & Imports
+
+Import only from the library’s root export (no deep paths).
+
+Nx sets up TS path aliases; ensure importPath matches desired alias and avoid collisions with package names. 
+
+Task Pipelines & Defaults
+
+Define repo-wide targetDefaults in nx.json for build, test, lint, e2e (including caching, inputs/outputs, and dependsOn).
+
+Use nx affected in CI to scope work; enable remote cache (Nx Replay) to share results across dev/CI. 
+
+Caching & CI
+
+Understand computation hashing; don’t break cache with ad-hoc scripts. Prefer Nx executors and declare outputs. 
+
+Remote caching cuts CI time dramatically; wire a provider (e.g., Nx Replay). 
+
+/rules/nx-libraries.mdc
+How To Create & Link Libraries (Canonical)
+Create (React/JS example)
+# feature lib (web)
+nx g @nx/react:lib ads-feature-campaigns \
+  --directory=libs/ads/feature/campaigns \
+  --importPath=@mm/ads-feature-campaigns \
+  --tags="scope:ads,type:feature,platform:web" \
+  --unitTestRunner=vitest --linter=eslint
+
+# data-access (node)
+nx g @nx/js:lib ads-data-access-core \
+  --directory=libs/ads/data-access/core \
+  --importPath=@mm/ads-data-access-core \
+  --tags="scope:ads,type:data-access,platform:node" \
+  --bundler=tsc --unitTestRunner=vitest --linter=eslint
+
+# ui
+nx g @nx/react:lib shared-ui-charts \
+  --directory=libs/shared/ui/charts \
+  --importPath=@mm/shared-ui-charts \
+  --tags="scope:shared,type:ui,platform:web" \
+  --unitTestRunner=vitest
+
+
+(Use framework-appropriate plugins; Angular/Next generators analogous.) 
+
+Create (publishable when needed)
+nx g @nx/js:lib shared-util-dates \
+  --directory=libs/shared/util/dates \
+  --importPath=@mm/shared-util-dates \
+  --tags="scope:shared,type:util,platform:node" \
+  --publishable --bundler=tsc --unitTestRunner=vitest
+
+
+(Requires --importPath; use publishable/buildable only if distributing/isolated builds are needed.) 
+
+project.json (tagging & targets)
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "ads-data-access-core",
+  "sourceRoot": "libs/ads/data-access/core/src",
+  "projectType": "library",
+  "tags": ["scope:ads","type:data-access","platform:node"],
+  "targets": {
+    "build": { "executor": "@nx/js:tsc", "options": { "outputPath": "dist/libs/ads/data-access/core" } },
+    "test": { "executor": "@nx/vite:test", "options": { "passWithNoTests": true } },
+    "lint": { "executor": "@nx/eslint:lint" }
+  }
+}
+
+Linking Between Libs
+
+Import using the alias (set by --importPath), e.g.:
+
+import { AdsService } from '@mm/ads-data-access-core';
+
+
+Ensure every lib has a proper src/index.ts public surface.
+
+Avoid deep imports; ESLint rule bans them. (See boundaries rule.) 
+
+TS Path & Scope Notes
+
+Nx manages tsconfig.base.json paths for you; avoid manual edits unless necessary. If you change, keep alias ≠ package name to prevent resolution conflicts.
+
+Prefer the latest generator behaviors (as-provided paths).
+
+npmScope in nx.json is deprecated; rely on package names/importPath instead.
