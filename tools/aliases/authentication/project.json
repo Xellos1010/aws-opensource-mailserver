@@ -1,0 +1,14 @@
+{
+  "name": "authentication",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "mfa": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run support-scripts-aws-authentication:mfa"
+      }
+    }
+  },
+  "tags": ["alias:authentication"]
+}
+

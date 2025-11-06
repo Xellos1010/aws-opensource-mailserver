@@ -15,7 +15,12 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "authentication": ["libs/support-scripts/aws/authentication/src/index.ts"]
+      "authentication": ["libs/support-scripts/aws/authentication/src/index.ts"],
+      "admin": ["libs/admin/src/index.ts"],
+      "admin-dns-backup": ["libs/admin/admin-dns-backup/src/index.ts"],
+      "admin-mail-backup": ["libs/admin/admin-mail-backup/src/index.ts"],
+      "admin-ec2": ["libs/admin/admin-ec2/src/index.ts"],
+      "admin-kms": ["libs/admin/admin-kms/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
