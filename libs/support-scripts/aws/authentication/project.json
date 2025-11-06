@@ -11,18 +11,23 @@
       "options": {
         "outputPath": "dist/libs/support-scripts/aws/authentication",
         "main": "libs/support-scripts/aws/authentication/bin/mfa-user.ts",
-        "outputFileName": "mfa-user.js",
+        "outputFileName": "mfa-user.mjs",
         "platform": "node",
         "bundle": true,
         "format": ["esm"],
         "target": "node20",
-        "tsConfig": "libs/support-scripts/aws/authentication/tsconfig.lib.json"
+        "tsConfig": "libs/support-scripts/aws/authentication/tsconfig.lib.json",
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
       }
     },
     "mfa": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node dist/libs/support-scripts/aws/authentication/mfa-user.js"
+        "command": "node dist/libs/support-scripts/aws/authentication/mfa-user.mjs"
       },
       "dependsOn": ["build"]
     },

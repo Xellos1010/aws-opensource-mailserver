@@ -176,10 +176,3 @@ export async function main(): Promise<void> {
   console.log('Environment variables are also set for the current session');
 }
 
-if (require.main === module) {
-  main().catch((err) => {
-    log('error', err.message, { error: err.name, stack: err.stack });
-    process.exit(1);
-  });
-}
-
