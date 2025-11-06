@@ -1,0 +1,34 @@
+{
+  "name": "ops-runner",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/ops-runner/src",
+  "projectType": "application",
+  "tags": ["type:tool", "scope:ops"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/ops-runner",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/ops-runner/src/main.ts",
+        "outputFileName": "ops.js",
+        "tsConfig": "apps/ops-runner/tsconfig.app.json",
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true
+        }
+      }
+    },
+    "run": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/apps/ops-runner/ops.js"
+      }
+    }
+  }
+}
+

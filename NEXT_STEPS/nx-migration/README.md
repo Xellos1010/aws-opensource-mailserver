@@ -204,11 +204,56 @@ pnpm nx format:check
 pnpm nx affected -t lint -t build -t test
 
 # Test MFA auth (dry run)
-FEATURE_NX_SCRIPTS_ENABLED=1 DRY_RUN=1 pnpm nx run authentication:mfa
+FEATURE_NX_SCRIPTS_ENABLED=1 DRY_RUN=1 pnpm nx run ops-runner:run -- auth:mfa
 
 # Test CDK synthesis
-pnpm nx run cdk-ec2-stack:build
-pnpm nx run cdk-ec2-stack:synth
+pnpm nx run cdk-emc-notary:build && pnpm nx run cdk-emc-notary:synth
+```
+
+## Local Usage Commands
+
+### Load Environment (Linux/macOS)
+```bash
+export $(grep -v '^#' .env.local | xargs)
+```
+
+### Operations via ops-runner
+```bash
+# 1) Authenticate (interactive MFA)
+pnpm nx run ops-runner:run -- auth:mfa
+
+# 2) DNS backup
+pnpm nx run ops-runner:run -- dns:backup
+
+# 3) Mail backup
+pnpm nx run ops-runner:run -- mail:backup
+
+# 4) EC2 controls
+pnpm nx run ops-runner:run -- ec2:restart
+pnpm nx run ops-runner:run -- ec2:stop
+pnpm nx run ops-runner:run -- ec2:start
+pnpm nx run ops-runner:run -- ec2:type t3.medium
+
+# 5) KMS rotation
+pnpm nx run ops-runner:run -- kms:status
+pnpm nx run ops-runner:run -- kms:enable
+```
+
+### Local Scheduling Examples
+
+**macOS/Linux (cron)**
+```bash
+crontab -e
+
+# Daily 02:15 local time
+15 2 * * * cd /path/to/repo && . ./.env.local && pnpm nx run ops-runner:run -- dns:backup >> ./logs/dns-backup.log 2>&1
+20 2 * * * cd /path/to/repo && . ./.env.local && pnpm nx run ops-runner:run -- mail:backup >> ./logs/mail-backup.log 2>&1
+```
+
+**Windows (Task Scheduler)**
+```powershell
+# Create daily DNS backup task
+schtasks /Create /SC DAILY /TN "dns-backup" /TR "cmd /c cd C:\repo && call dotenv.cmd && pnpm nx run ops-runner:run -- dns:backup" /ST 02:15
 ```
 
 ## Environment Variables Reference
