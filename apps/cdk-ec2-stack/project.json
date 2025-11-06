@@ -1,0 +1,46 @@
+{
+  "name": "cdk-ec2-stack",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cdk-ec2-stack/src",
+  "projectType": "application",
+  "tags": ["type:cdk", "scope:infra", "domain:mail"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/cdk-ec2-stack",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/cdk-ec2-stack/src/main.ts",
+        "tsConfig": "apps/cdk-ec2-stack/tsconfig.app.json",
+        "assets": ["apps/cdk-ec2-stack/src/assets"],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "external": ["aws-sdk"]
+        }
+      }
+    },
+    "synth": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk synth",
+        "cwd": "dist/apps/cdk-ec2-stack"
+      },
+      "dependsOn": ["build"]
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk deploy --require-approval never",
+        "cwd": "dist/apps/cdk-ec2-stack"
+      },
+      "dependsOn": ["build"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
