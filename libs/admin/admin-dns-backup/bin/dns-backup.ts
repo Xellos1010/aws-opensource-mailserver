@@ -6,11 +6,12 @@ import { getStackInfo, getStackInfoFromApp } from '@mm/admin-stack-info';
 async function main() {
   const appPath = process.env.APP_PATH;
   const stackName = process.env.STACK_NAME;
-  const domain = process.env.DOMAIN;
+  const domainEnv = process.env.DOMAIN;
 
   let hostedZoneId: string | undefined;
+  let domain: string | undefined;
   
-  // If app path is provided, get stack info to find hosted zone
+  // If app path is provided, get stack info to find hosted zone and domain
   if (appPath) {
     try {
       const stackInfo = await getStackInfoFromApp(appPath, {
@@ -18,6 +19,7 @@ async function main() {
         profile: process.env.AWS_PROFILE,
       });
       hostedZoneId = stackInfo.hostedZoneId;
+      domain = stackInfo.domain;
       console.log(`Using stack: ${stackInfo.stackName} (${stackInfo.domain})`);
       if (hostedZoneId) {
         console.log(`Found hosted zone: ${hostedZoneId}`);
@@ -25,15 +27,16 @@ async function main() {
     } catch (err) {
       console.warn(`Could not get stack info from app path: ${err}`);
     }
-  } else if (stackName || domain) {
+  } else if (stackName || domainEnv) {
     try {
       const stackInfo = await getStackInfo({
         stackName,
-        domain,
+        domain: domainEnv,
         region: process.env.AWS_REGION,
         profile: process.env.AWS_PROFILE,
       });
       hostedZoneId = stackInfo.hostedZoneId;
+      domain = stackInfo.domain;
       console.log(`Using stack: ${stackInfo.stackName} (${stackInfo.domain})`);
       if (hostedZoneId) {
         console.log(`Found hosted zone: ${hostedZoneId}`);
@@ -51,6 +54,8 @@ async function main() {
     bucket: process.env.DNS_BACKUP_BUCKET,
     prefix: process.env.DNS_BACKUP_PREFIX,
     zones: zoneIds,
+    domain: domain || domainEnv,
+    outputDir: process.env.OUTPUT_DIR,
   })
     .then((dir) => console.log(`DNS backup written to ${dir}`))
     .catch((e) => {

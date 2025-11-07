@@ -15,11 +15,12 @@ const log = (
 async function main() {
   const appPath = process.env.APP_PATH;
   const stackName = process.env.STACK_NAME;
-  const domain = process.env.DOMAIN;
+  const domainEnv = process.env.DOMAIN;
 
   let mailHost: string | undefined;
   let mailUser: string | undefined;
   let mailPass: string | undefined;
+  let domain: string | undefined;
 
   // If app path is provided, get stack info to find mail server details
   if (appPath) {
@@ -31,6 +32,7 @@ async function main() {
       mailHost = stackInfo.instancePublicIp || stackInfo.outputs.InstancePublicIp;
       mailUser = `admin@${stackInfo.domain}`;
       mailPass = stackInfo.adminPassword;
+      domain = stackInfo.domain;
       log('info', 'Retrieved stack info', {
         stack: stackInfo.stackName,
         domain: stackInfo.domain,
@@ -40,17 +42,18 @@ async function main() {
     } catch (err) {
       log('warn', 'Could not get stack info from app path', { error: String(err) });
     }
-  } else if (stackName || domain) {
+  } else if (stackName || domainEnv) {
     try {
       const stackInfo = await getStackInfo({
         stackName,
-        domain,
+        domain: domainEnv,
         region: process.env.AWS_REGION,
         profile: process.env.AWS_PROFILE,
       });
       mailHost = stackInfo.instancePublicIp || stackInfo.outputs.InstancePublicIp;
       mailUser = `admin@${stackInfo.domain}`;
       mailPass = stackInfo.adminPassword;
+      domain = stackInfo.domain;
       log('info', 'Retrieved stack info', {
         stack: stackInfo.stackName,
         domain: stackInfo.domain,
@@ -80,6 +83,8 @@ async function main() {
     s3Prefix: process.env.MAIL_BACKUP_PREFIX,
     includeMailboxes: process.env.MAIL_INCLUDE?.split(',').filter(Boolean),
     excludeMailboxes: process.env.MAIL_EXCLUDE?.split(',').filter(Boolean),
+    domain: domain || domainEnv,
+    outputDir: process.env.OUTPUT_DIR,
   })
     .then((r) => log('info', 'backup complete', r))
     .catch((e) => {

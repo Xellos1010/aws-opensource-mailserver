@@ -11,6 +11,8 @@ type Cfg = {
   bucket?: string; // optional S3 bucket
   prefix?: string; // e.g. backups/dns/
   zones?: string[]; // optional zone IDs to restrict
+  domain?: string; // domain name for organizing backups (e.g., "askdaokapra.com")
+  outputDir?: string; // optional custom output directory
 };
 
 export async function backupDns(cfg: Cfg = {}) {
@@ -25,7 +27,13 @@ export async function backupDns(cfg: Cfg = {}) {
       (z) => !cfg.zones || cfg.zones.includes(z.Id!.replace('/hostedzone/', ''))
     ) ?? [];
 
-  const outDir = path.resolve('dist/backups/dns', stamp);
+  // Use domain-based directory structure if domain is provided
+  // Format: dist/backups/{domain-name}/dns/{timestamp}
+  const domainName = cfg.domain ? cfg.domain.replace(/\./g, '-') : undefined;
+  const outDir = cfg.outputDir || 
+    (domainName 
+      ? path.resolve('dist/backups', domainName, 'dns', stamp)
+      : path.resolve('dist/backups/dns', stamp));
   fs.mkdirSync(outDir, { recursive: true });
 
   for (const z of zones) {

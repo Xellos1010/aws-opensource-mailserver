@@ -73,7 +73,8 @@ async function uploadTarToS3(tarPath, bucket, key, region) {
 async function backupMailbox(cfg) {
   const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
   const runId = crypto.randomUUID();
-  const workDir = path.resolve("dist/backups/mail", `${stamp}-${runId}`);
+  const domainName = cfg.domain ? cfg.domain.replace(/\./g, "-") : void 0;
+  const workDir = cfg.outputDir || (domainName ? path.resolve("dist/backups", domainName, "mail", `${stamp}-${runId}`) : path.resolve("dist/backups/mail", `${stamp}-${runId}`));
   fs.mkdirSync(workDir, { recursive: true });
   const client = new ImapFlow({
     host: cfg.host,
@@ -143,7 +144,8 @@ function resolveDomain(appPath, stackName) {
     const domainPart = appName.replace(/^cdk-/, "");
     const domainMap = {
       "emc-notary": "emcnotary.com",
-      "emcnotary": "emcnotary.com"
+      "emcnotary": "emcnotary.com",
+      "askdaokapra": "askdaokapra.com"
     };
     return domainMap[domainPart] || `${domainPart.replace(/-/g, "")}.com`;
   }
@@ -247,6 +249,18 @@ async function getStackInfo(config) {
     }
   }
   let adminPassword = outputs.AdminPassword;
+  if (adminPassword && adminPassword.startsWith("/MailInABoxAdminPassword-")) {
+    try {
+      const ssmResp = await ssmClient.send(
+        new GetParameterCommand({
+          Name: adminPassword,
+          WithDecryption: true
+        })
+      );
+      adminPassword = ssmResp.Parameter?.Value;
+    } catch (err) {
+    }
+  }
   if (!adminPassword) {
     try {
       const ssmParamName = `/MailInABoxAdminPassword-${stackName}`;
@@ -299,10 +313,11 @@ var require_mail_backup = __commonJS({
     async function main() {
       const appPath = process.env.APP_PATH;
       const stackName = process.env.STACK_NAME;
-      const domain = process.env.DOMAIN;
+      const domainEnv = process.env.DOMAIN;
       let mailHost;
       let mailUser;
       let mailPass;
+      let domain;
       if (appPath) {
         try {
           const stackInfo = await getStackInfoFromApp(appPath, {
@@ -312,6 +327,7 @@ var require_mail_backup = __commonJS({
           mailHost = stackInfo.instancePublicIp || stackInfo.outputs.InstancePublicIp;
           mailUser = `admin@${stackInfo.domain}`;
           mailPass = stackInfo.adminPassword;
+          domain = stackInfo.domain;
           log2("info", "Retrieved stack info", {
             stack: stackInfo.stackName,
             domain: stackInfo.domain,
@@ -321,17 +337,18 @@ var require_mail_backup = __commonJS({
         } catch (err) {
           log2("warn", "Could not get stack info from app path", { error: String(err) });
         }
-      } else if (stackName || domain) {
+      } else if (stackName || domainEnv) {
         try {
           const stackInfo = await getStackInfo({
             stackName,
-            domain,
+            domain: domainEnv,
             region: process.env.AWS_REGION,
             profile: process.env.AWS_PROFILE
           });
           mailHost = stackInfo.instancePublicIp || stackInfo.outputs.InstancePublicIp;
           mailUser = `admin@${stackInfo.domain}`;
           mailPass = stackInfo.adminPassword;
+          domain = stackInfo.domain;
           log2("info", "Retrieved stack info", {
             stack: stackInfo.stackName,
             domain: stackInfo.domain,
@@ -359,7 +376,9 @@ var require_mail_backup = __commonJS({
         s3Bucket: process.env.MAIL_BACKUP_BUCKET,
         s3Prefix: process.env.MAIL_BACKUP_PREFIX,
         includeMailboxes: process.env.MAIL_INCLUDE?.split(",").filter(Boolean),
-        excludeMailboxes: process.env.MAIL_EXCLUDE?.split(",").filter(Boolean)
+        excludeMailboxes: process.env.MAIL_EXCLUDE?.split(",").filter(Boolean),
+        domain: domain || domainEnv,
+        outputDir: process.env.OUTPUT_DIR
       }).then((r) => log2("info", "backup complete", r)).catch((e) => {
         log2("error", e.message);
         process.exit(1);
