@@ -178,8 +178,12 @@ import { fromIni } from "@aws-sdk/credential-providers";
 function resolveDomain(appPath, stackName) {
   if (appPath) {
     const parts = appPath.split("/");
-    const appName = parts[parts.length - 1];
-    const domainPart = appName.replace(/^cdk-/, "");
+    let appName = parts[parts.length - 1];
+    if (appName === "core" || appName === "instance") {
+      appName = parts[parts.length - 2] || appName;
+    }
+    let domainPart = appName.replace(/^cdk-/, "");
+    domainPart = domainPart.replace(/-core$/, "");
     const domainMap = {
       "emc-notary": "emcnotary.com",
       "emcnotary": "emcnotary.com",
@@ -188,7 +192,7 @@ function resolveDomain(appPath, stackName) {
     return domainMap[domainPart] || `${domainPart.replace(/-/g, "")}.com`;
   }
   if (stackName) {
-    const withoutSuffix = stackName.replace(/-mailserver$/, "");
+    const withoutSuffix = stackName.replace(/-mailserver(-core)?$/, "");
     return withoutSuffix.replace(/-/g, ".");
   }
   return null;
@@ -202,7 +206,15 @@ function resolveStackName(domain, appPath, explicitStackName) {
   }
   const resolvedDomain = resolveDomain(appPath);
   if (resolvedDomain) {
-    return `${resolvedDomain.replace(/\./g, "-")}-mailserver`;
+    const pathParts = appPath?.split("/") || [];
+    const lastPart = pathParts[pathParts.length - 1] || "";
+    let suffix = "-mailserver";
+    if (lastPart === "core" || lastPart.includes("-core")) {
+      suffix = "-mailserver-core";
+    } else if (lastPart === "instance" || lastPart.includes("-instance")) {
+      suffix = "-mailserver-instance";
+    }
+    return `${resolvedDomain.replace(/\./g, "-")}${suffix}`;
   }
   throw new Error(
     "Cannot resolve stack name. Provide domain, appPath, or explicit stackName"
@@ -212,7 +224,7 @@ async function getStackInfo(config) {
   const region = config.region || process.env["AWS_REGION"] || "us-east-1";
   const profile = config.profile || process.env["AWS_PROFILE"] || "hepe-admin-mfa";
   const domain = config.domain || resolveDomain(config.appPath, config.stackName) || "emcnotary.com";
-  const stackName = resolveStackName(
+  let stackName = resolveStackName(
     config.domain,
     config.appPath,
     config.stackName
@@ -221,9 +233,27 @@ async function getStackInfo(config) {
   const cfClient = new CloudFormationClient({ region, credentials });
   const ssmClient = new SSMClient({ region, credentials });
   const ec2Client = new EC2Client({ region, credentials });
-  const stackResp = await cfClient.send(
-    new DescribeStacksCommand({ StackName: stackName })
-  );
+  let stackResp;
+  try {
+    stackResp = await cfClient.send(
+      new DescribeStacksCommand({ StackName: stackName })
+    );
+  } catch (err) {
+    const error = err;
+    if (error?.name === "ValidationError" && stackName.includes("-com-mailserver-instance")) {
+      const fallbackStackName = stackName.replace("-com-mailserver-instance", "-mailserver-instance");
+      try {
+        stackResp = await cfClient.send(
+          new DescribeStacksCommand({ StackName: fallbackStackName })
+        );
+        stackName = fallbackStackName;
+      } catch (fallbackErr) {
+        throw new Error(`Stack ${stackName} or ${fallbackStackName} not found`);
+      }
+    } else {
+      throw err;
+    }
+  }
   if (!stackResp.Stacks || stackResp.Stacks.length === 0) {
     throw new Error(`Stack ${stackName} not found`);
   }
@@ -287,6 +317,18 @@ async function getStackInfo(config) {
     }
   }
   let adminPassword = outputs.AdminPassword;
+  if (adminPassword && adminPassword.startsWith("/MailInABoxAdminPassword-")) {
+    try {
+      const ssmResp = await ssmClient.send(
+        new GetParameterCommand({
+          Name: adminPassword,
+          WithDecryption: true
+        })
+      );
+      adminPassword = ssmResp.Parameter?.Value;
+    } catch (err) {
+    }
+  }
   if (!adminPassword) {
     try {
       const ssmParamName = `/MailInABoxAdminPassword-${stackName}`;
