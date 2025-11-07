@@ -9,7 +9,8 @@ import {
   SendCommandCommand,
   GetCommandInvocationCommand,
   CommandStatus,
-  GetParametersCommand
+  GetParametersCommand,
+  DescribeInstanceInformationCommand
 } from "@aws-sdk/client-ssm";
 import { EC2Client, DescribeInstancesCommand } from "@aws-sdk/client-ec2";
 import { fromIni } from "@aws-sdk/credential-providers";
@@ -66,9 +67,27 @@ function resolveStackName(options) {
   }
   return deriveStackName(options.domain);
 }
-async function describeInstanceStack(cf, stackName) {
-  const command = new DescribeStacksCommand({ StackName: stackName });
-  const response = await retryWithBackoff(() => cf.send(command));
+async function describeInstanceStack(cf, stackName, ec2) {
+  let command = new DescribeStacksCommand({ StackName: stackName });
+  let response;
+  try {
+    response = await retryWithBackoff(() => cf.send(command));
+  } catch (error) {
+    const err = error;
+    if (err?.name === "ValidationError" && stackName.includes("-com-mailserver-instance")) {
+      const fallbackStackName = stackName.replace("-com-mailserver-instance", "-mailserver-instance");
+      console.log(`\u26A0\uFE0F  Stack ${stackName} not found, trying fallback: ${fallbackStackName}`);
+      command = new DescribeStacksCommand({ StackName: fallbackStackName });
+      try {
+        response = await retryWithBackoff(() => cf.send(command));
+        stackName = fallbackStackName;
+      } catch (fallbackError) {
+        throw new Error(`Stack ${stackName} or ${fallbackStackName} not found`);
+      }
+    } else {
+      throw error;
+    }
+  }
   const stack = response.Stacks?.[0];
   if (!stack) {
     throw new Error(`Stack ${stackName} not found`);
@@ -81,30 +100,56 @@ async function describeInstanceStack(cf, stackName) {
   const outputs = Object.fromEntries(
     (stack.Outputs || []).map((o) => [o.OutputKey, o.OutputValue])
   );
-  const instanceId = outputs["InstanceId"];
-  const instanceDns = outputs["InstanceDnsName"] || outputs["InstanceDns"];
+  let instanceId = outputs["InstanceId"] || outputs["RestorePrefix"];
+  let instanceDns = outputs["InstanceDnsName"] || outputs["InstanceDns"];
   const domainName = outputs["DomainName"];
   const keyPairId = outputs["KeyPairId"];
   const eipAllocationId = outputs["ElasticIPAllocationId"];
+  const instancePublicIp = outputs["InstancePublicIp"];
+  if (!instanceId && instancePublicIp && ec2) {
+    const describeCommand = new DescribeInstancesCommand({
+      Filters: [
+        { Name: "ip-address", Values: [instancePublicIp] },
+        { Name: "instance-state-name", Values: ["running", "pending", "stopped"] }
+      ]
+    });
+    try {
+      const ec2Response = await retryWithBackoff(() => ec2.send(describeCommand));
+      const reservation = ec2Response.Reservations?.[0];
+      instanceId = reservation?.Instances?.[0]?.InstanceId;
+    } catch (ec2Error) {
+    }
+  }
   if (!instanceId) {
     throw new Error(
-      `InstanceId output not found on stack ${stackName}. Available outputs: ${Object.keys(outputs).join(", ")}`
+      `InstanceId not found on stack ${stackName}. Available outputs: ${Object.keys(outputs).join(", ")}. Tried: InstanceId, RestorePrefix${instancePublicIp ? ", EC2 lookup by IP" : ""}`
     );
   }
   if (!instanceDns) {
-    throw new Error(
-      `InstanceDnsName or InstanceDns output not found on stack ${stackName}`
-    );
+    instanceDns = "box";
+    console.log(`\u26A0\uFE0F  InstanceDnsName/InstanceDns not found, using default: ${instanceDns}`);
   }
-  if (!domainName) {
-    throw new Error(
-      `DomainName output not found on stack ${stackName}`
-    );
+  let resolvedDomainName = domainName;
+  if (!resolvedDomainName) {
+    const stackNameMatch = stackName.match(/^([a-z0-9-]+)-mailserver-instance$/);
+    if (stackNameMatch) {
+      const domainPart = stackNameMatch[1].replace(/-/g, ".");
+      if (!domainPart.match(/\.[a-z]{2,}$/)) {
+        resolvedDomainName = `${domainPart}.com`;
+      } else {
+        resolvedDomainName = domainPart;
+      }
+      console.log(`\u26A0\uFE0F  DomainName not found, derived from stack name: ${resolvedDomainName}`);
+    } else {
+      throw new Error(
+        `DomainName output not found on stack ${stackName} and could not derive from stack name`
+      );
+    }
   }
   return {
     instanceId,
     instanceDns,
-    domainName,
+    domainName: resolvedDomainName,
     keyPairId: keyPairId || "",
     stackName,
     eipAllocationId
@@ -163,18 +208,60 @@ async function verifyInstance(ec2, ssm, instanceId) {
       `Instance ${instanceId} is in ${state} state. Must be running for SSM commands.`
     );
   }
+  console.log(`\u23F3 Waiting for SSM agent to be ready on instance ${instanceId}...`);
+  const maxWaitTime = 3e5;
+  const checkInterval = 1e4;
+  const startTime = Date.now();
+  while (Date.now() - startTime < maxWaitTime) {
+    try {
+      const describeCommand2 = new DescribeInstanceInformationCommand({
+        Filters: [
+          { Key: "InstanceIds", Values: [instanceId] }
+        ]
+      });
+      const ssmInfo = await ssm.send(describeCommand2);
+      const instanceInfo = ssmInfo.InstanceInformationList?.[0];
+      if (instanceInfo && instanceInfo.PingStatus === "Online") {
+        console.log(`
+\u2705 SSM agent is ready on instance ${instanceId} (PingStatus: ${instanceInfo.PingStatus})`);
+        return;
+      }
+      await sleep(checkInterval);
+      process.stdout.write(".");
+    } catch (error) {
+      const err = error;
+      if (err?.message?.includes("not found") || err?.message?.includes("InvalidInstanceId")) {
+        await sleep(checkInterval);
+        process.stdout.write(".");
+        continue;
+      }
+      console.log(`
+\u26A0\uFE0F  SSM readiness check warning: ${err?.message || String(error)}`);
+      break;
+    }
+  }
+  console.log(`
+\u26A0\uFE0F  SSM agent may not be fully ready, but proceeding with bootstrap command...`);
 }
 function loadMiabScript() {
-  const scriptPath = path.join(
-    __dirname,
-    "../../../assets/miab-setup.sh"
-  );
-  if (!fs.existsSync(scriptPath)) {
-    throw new Error(
-      `MIAB setup script not found at ${scriptPath}. Ensure assets are included in build.`
-    );
+  const possiblePaths = [
+    path.join(__dirname, "../assets/miab-setup.sh"),
+    // Built location
+    path.join(__dirname, "../../../assets/miab-setup.sh"),
+    // Alternative built location
+    path.join(process.cwd(), "libs/support-scripts/aws/instance-bootstrap/assets/miab-setup.sh"),
+    // Source location
+    path.join(process.cwd(), "dist/libs/support-scripts/aws/instance-bootstrap/assets/miab-setup.sh")
+    // Built from workspace root
+  ];
+  for (const scriptPath of possiblePaths) {
+    if (fs.existsSync(scriptPath)) {
+      return fs.readFileSync(scriptPath, "utf8");
+    }
   }
-  return fs.readFileSync(scriptPath, "utf8");
+  throw new Error(
+    `MIAB setup script not found. Tried: ${possiblePaths.join(", ")}. Ensure assets are included in build.`
+  );
 }
 function buildEnvironmentMap(stackInfo, coreParams, options) {
   const env = {
@@ -258,11 +345,62 @@ async function bootstrapInstance(options) {
     console.log("  3. Verify instance is running and accessible via SSM");
     console.log("  4. Build environment map with configuration values");
     console.log("  5. Send SSM RunCommand to execute MIAB setup script");
+    console.log("\n\u{1F510} Testing SSH connectivity (required for bootstrap)...");
+    try {
+      const { spawn } = await import("child_process");
+      const { promisify } = await import("util");
+      const domain = options.domain || "emcnotary.com";
+      const region2 = options.region || "us-east-1";
+      const profile = options.profile || process.env.AWS_PROFILE || "hepe-admin-mfa";
+      const sshTestProcess = spawn("pnpm", [
+        "nx",
+        "run",
+        "cdk-emcnotary-instance:admin:ssh:test"
+      ], {
+        env: {
+          ...process.env,
+          AWS_PROFILE: profile,
+          AWS_REGION: region2,
+          DOMAIN: domain,
+          APP_PATH: "apps/cdk-emc-notary/instance"
+        },
+        stdio: ["ignore", "pipe", "pipe"]
+      });
+      let stdout = "";
+      let stderr = "";
+      sshTestProcess.stdout?.on("data", (data) => {
+        stdout += data.toString();
+      });
+      sshTestProcess.stderr?.on("data", (data) => {
+        stderr += data.toString();
+      });
+      const exitCode = await new Promise((resolve) => {
+        sshTestProcess.on("close", resolve);
+      });
+      if (exitCode === 0) {
+        console.log("\u2705 SSH test passed");
+      } else {
+        console.log(`\u26A0\uFE0F  SSH test failed (exit code: ${exitCode})`);
+        if (stderr) {
+          const errorLines = stderr.split("\n").filter(
+            (line) => line.includes("error") || line.includes("Error") || line.includes("failed")
+          );
+          if (errorLines.length > 0) {
+            console.log(`   ${errorLines[0]}`);
+          }
+        }
+        console.log("   Note: Bootstrap uses SSM, but SSH may be needed for troubleshooting");
+      }
+    } catch (error) {
+      const err = error;
+      console.log(`\u26A0\uFE0F  SSH test error: ${err?.message || String(error)}`);
+      console.log("   Note: Bootstrap uses SSM, but SSH may be needed for troubleshooting");
+    }
     console.log("\n\u2705 Dry run complete - no AWS calls made, no changes");
     return;
   }
   const { cf, ssm, ec2 } = createClients(region, options.profile);
-  const stackInfo = await describeInstanceStack(cf, stackName);
+  const stackInfo = await describeInstanceStack(cf, stackName, ec2);
   console.log(`\u2705 Found instance: ${stackInfo.instanceId}`);
   console.log(`   Domain: ${stackInfo.domainName}`);
   console.log(`   DNS: ${stackInfo.instanceDns}.${stackInfo.domainName}`);
