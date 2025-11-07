@@ -10,18 +10,39 @@
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/admin/admin-dns-backup",
-        "main": "libs/admin/admin-dns-backup/src/lib/backup.ts",
-        "outputFileName": "dns-backup.js",
+        "main": "libs/admin/admin-dns-backup/bin/dns-backup.ts",
+        "outputFileName": "dns-backup.mjs",
         "bundle": true,
         "platform": "node",
-        "tsConfig": "libs/admin/admin-dns-backup/tsconfig.lib.json"
+        "format": ["esm"],
+        "target": "node20",
+        "tsConfig": "libs/admin/admin-dns-backup/tsconfig.lib.json",
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
       }
     },
     "backup": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
       "options": {
-        "command": "node dist/libs/admin/admin-dns-backup/dns-backup.js"
+        "command": "node dist/libs/admin/admin-dns-backup/dns-backup.mjs"
+      }
+    },
+    "backup:emcnotary": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emc-notary node dist/libs/admin/admin-dns-backup/dns-backup.mjs"
+      }
+    },
+    "backup:apps:cdk-emc-notary": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emc-notary node dist/libs/admin/admin-dns-backup/dns-backup.mjs"
       }
     },
     "test": {

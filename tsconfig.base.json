@@ -20,7 +20,10 @@
       "admin-dns-backup": ["libs/admin/admin-dns-backup/src/index.ts"],
       "admin-mail-backup": ["libs/admin/admin-mail-backup/src/index.ts"],
       "admin-ec2": ["libs/admin/admin-ec2/src/index.ts"],
-      "admin-kms": ["libs/admin/admin-kms/src/index.ts"]
+      "admin-kms": ["libs/admin/admin-kms/src/index.ts"],
+      "@mm/admin-stack-info": ["libs/admin/admin-stack-info/src/index.ts"],
+      "@mm/admin-backup-bridge": ["libs/admin/admin-backup-bridge/src/index.ts"],
+      "@mm/admin-ssh": ["libs/admin/admin-ssh/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
