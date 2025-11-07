@@ -59,9 +59,12 @@ function normalizeQnameForApi(qname: string, zone: string): string {
  * Normalizes DNS value for Mail-in-a-Box API
  */
 function normalizeValue(value: string, rtype: string): string {
-  // Remove trailing dot for CNAME, MX, NS records
-  // Mail-in-a-Box API doesn't expect trailing dots
-  if ((rtype === 'CNAME' || rtype === 'MX' || rtype === 'NS') && value.endsWith('.')) {
+  // CNAME values MUST have a trailing period per Mail-in-a-Box API docs
+  if (rtype === 'CNAME' && !value.endsWith('.')) {
+    return `${value}.`;
+  }
+  // Keep trailing dots for CNAME, remove for others if present
+  if ((rtype === 'MX' || rtype === 'NS') && value.endsWith('.')) {
     return value.slice(0, -1);
   }
   return value;
@@ -89,8 +92,11 @@ async function makeApiCall(
   headers['Authorization'] = `Basic ${auth}`;
 
   // API expects form data: value=<value>
-  // Use URLSearchParams to properly encode form data
-  const body = data ? new URLSearchParams({ value: data }).toString() : undefined;
+  // Based on curl examples: curl -X PUT -d "bar.mydomain.com." 
+  // curl automatically sends this as form data with key "value"
+  // But the error suggests the API might expect just the value, not "value=..."
+  // Let's try sending just the value directly
+  const body = data || undefined;
 
   try {
     const response = await fetch(url, {
@@ -157,18 +163,11 @@ export async function restoreDnsFromBackup(
 
   for (const record of backupRecords) {
     const { qname, rtype, value } = record;
-    
-    // Skip root domain A records - these are managed by the mail server itself
-    if (qname === zone && rtype === 'A') {
-      log('warn', 'Skipping root domain A record (managed by mail server)', { qname, rtype });
-      successCount++;
-      continue;
-    }
-    
     const normalizedValue = normalizeValue(value, rtype);
     
     // Build API path - Mail-in-a-Box API requires the full qname in the path
-    const apiPath = `/admin/dns/custom/${qname}/${rtype}`;
+    // Use uppercase for rtype in path (A, CNAME, TXT, etc.)
+    const apiPath = `/admin/dns/custom/${qname}/${rtype.toUpperCase()}`;
 
     log('info', 'Restoring DNS record', {
       qname,
@@ -182,9 +181,13 @@ export async function restoreDnsFromBackup(
       continue;
     }
 
+    // Use PUT for single-value records (A, CNAME), POST for multi-value (TXT)
+    // Per Mail-in-a-Box docs: PUT replaces existing records, POST adds new ones
+    const method = (rtype === 'A' || rtype === 'CNAME' || rtype === 'AAAA') ? 'PUT' : 'POST';
+
     try {
       const result = await makeApiCall(
-        'POST',
+        method,
         apiPath,
         normalizedValue,
         baseUrl,
