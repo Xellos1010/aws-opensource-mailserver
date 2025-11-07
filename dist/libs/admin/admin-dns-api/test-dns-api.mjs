@@ -174,76 +174,185 @@ var init_stack_info = __esm({
   }
 });
 
-// libs/admin/admin-stack-info/bin/get-stack-info.ts
-var require_get_stack_info = __commonJS({
-  "libs/admin/admin-stack-info/bin/get-stack-info.ts"() {
+// libs/admin/admin-stack-info/src/index.ts
+var init_src = __esm({
+  "libs/admin/admin-stack-info/src/index.ts"() {
+    "use strict";
     init_stack_info();
-    var log = (level, msg, meta = {}) => console.log(
+  }
+});
+
+// libs/admin/admin-credentials/src/lib/credentials.ts
+async function getAdminCredentials(config) {
+  let stackInfo;
+  if (config.appPath) {
+    stackInfo = await getStackInfoFromApp(config.appPath, {
+      region: config.region,
+      profile: config.profile
+    });
+  } else {
+    stackInfo = await getStackInfo({
+      stackName: config.stackName,
+      domain: config.domain,
+      region: config.region,
+      profile: config.profile
+    });
+  }
+  if (!stackInfo.adminPassword) {
+    throw new Error(
+      `Admin password not found for stack ${stackInfo.stackName}. Check SSM parameter: /MailInABoxAdminPassword-${stackInfo.stackName}`
+    );
+  }
+  const email = `admin@${stackInfo.domain}`;
+  const adminUrl = `https://${stackInfo.domain}/admin`;
+  log("info", "Retrieved admin credentials", {
+    domain: stackInfo.domain,
+    stackName: stackInfo.stackName,
+    hasPassword: !!stackInfo.adminPassword
+  });
+  return {
+    email,
+    password: stackInfo.adminPassword,
+    domain: stackInfo.domain,
+    adminUrl
+  };
+}
+var log;
+var init_credentials = __esm({
+  "libs/admin/admin-credentials/src/lib/credentials.ts"() {
+    "use strict";
+    init_src();
+    log = (level, msg, meta = {}) => console.log(
       JSON.stringify({ ts: (/* @__PURE__ */ new Date()).toISOString(), level, msg, ...meta })
     );
+  }
+});
+
+// libs/admin/admin-credentials/src/index.ts
+var init_src2 = __esm({
+  "libs/admin/admin-credentials/src/index.ts"() {
+    "use strict";
+    init_credentials();
+  }
+});
+
+// libs/admin/admin-dns-api/bin/test-dns-api.ts
+var require_test_dns_api = __commonJS({
+  "libs/admin/admin-dns-api/bin/test-dns-api.ts"() {
+    init_src2();
+    var log2 = (level, msg, meta = {}) => console.log(
+      JSON.stringify({ ts: (/* @__PURE__ */ new Date()).toISOString(), level, msg, ...meta })
+    );
+    async function makeApiCall(method, path, data, baseUrl, email, password) {
+      const url = `${baseUrl}${path}`;
+      log2("info", "Making API call", { method, url });
+      const headers = {
+        "Content-Type": "application/x-www-form-urlencoded"
+      };
+      const auth = Buffer.from(`${email}:${password}`).toString("base64");
+      headers["Authorization"] = `Basic ${auth}`;
+      const body = data ? `value=${encodeURIComponent(data)}` : void 0;
+      try {
+        const response = await fetch(url, {
+          method,
+          headers,
+          body
+          // Note: In production, you should verify SSL certificates
+          // For development/testing with self-signed certs, you may need to disable verification
+          // This is handled via NODE_TLS_REJECT_UNAUTHORIZED=0 environment variable if needed
+        });
+        const responseBody = await response.text();
+        const httpCode = response.status;
+        log2("info", "API response", { method, path, httpCode });
+        return { httpCode, body: responseBody };
+      } catch (err) {
+        log2("error", "API call failed", { error: String(err), method, path });
+        throw err;
+      }
+    }
     async function main() {
       const appPath = process.env["APP_PATH"];
       const stackName = process.env["STACK_NAME"];
       const domain = process.env["DOMAIN"];
-      const outputFormat = process.env["OUTPUT_FORMAT"] || "json";
-      log("info", "Retrieving stack information", {
+      log2("info", "Retrieving admin credentials");
+      const credentials = await getAdminCredentials({
         appPath,
         stackName,
         domain,
-        outputFormat
+        region: process.env["AWS_REGION"],
+        profile: process.env["AWS_PROFILE"]
       });
+      const testHostname = process.env["TEST_HOSTNAME"] || `test.${credentials.domain}`;
+      const testValue = process.env["TEST_VALUE"] || `This is a test TXT record ${(/* @__PURE__ */ new Date()).toISOString()}`;
+      const baseUrl = `https://box.${credentials.domain}`;
+      const apiPath = `/admin/dns/custom/${testHostname}/TXT`;
+      console.log(`
+Testing DNS API for domain: ${credentials.domain}`);
+      console.log(`Test hostname: ${testHostname}`);
+      console.log(`Test value: ${testValue}`);
+      console.log(`API Base URL: ${baseUrl}`);
+      console.log("");
       try {
-        let stackInfo;
-        if (appPath) {
-          stackInfo = await getStackInfoFromApp(appPath, {
-            region: process.env["AWS_REGION"],
-            profile: process.env["AWS_PROFILE"]
-          });
-        } else {
-          stackInfo = await getStackInfo({
-            stackName,
-            domain,
-            region: process.env["AWS_REGION"],
-            profile: process.env["AWS_PROFILE"]
-          });
+        console.log("Test 1: Adding TXT record...");
+        const addResult = await makeApiCall(
+          "POST",
+          apiPath,
+          testValue,
+          baseUrl,
+          credentials.email,
+          credentials.password
+        );
+        console.log(`Response (HTTP ${addResult.httpCode}):`);
+        console.log(addResult.body);
+        console.log("----------------------------------------");
+        if (addResult.httpCode !== 200) {
+          console.error(`Error: API call failed (HTTP ${addResult.httpCode})`);
+          process.exit(1);
         }
-        if (outputFormat === "json") {
-          console.log(JSON.stringify(stackInfo, null, 2));
-        } else {
-          console.log("\n=== Stack Information ===");
-          console.log(`Stack Name: ${stackInfo.stackName}`);
-          console.log(`Domain: ${stackInfo.domain}`);
-          console.log(`Region: ${stackInfo.region}`);
-          if (stackInfo.instanceId) {
-            console.log(`Instance ID: ${stackInfo.instanceId}`);
-          }
-          if (stackInfo.instancePublicIp) {
-            console.log(`Instance IP: ${stackInfo.instancePublicIp}`);
-          }
-          if (stackInfo.instanceKeyName) {
-            console.log(`Instance Key Name: ${stackInfo.instanceKeyName}`);
-          }
-          if (stackInfo.keyPairId) {
-            console.log(`Key Pair ID: ${stackInfo.keyPairId}`);
-          }
-          if (stackInfo.hostedZoneId) {
-            console.log(`Hosted Zone ID: ${stackInfo.hostedZoneId}`);
-          }
-          if (stackInfo.adminPassword) {
-            console.log(`Admin Password: ${stackInfo.adminPassword.substring(0, 8)}...`);
-          }
-          console.log("\n=== Stack Outputs ===");
-          Object.entries(stackInfo.outputs).forEach(([key, value]) => {
-            console.log(`${key}: ${value}`);
-          });
-        }
+        console.log("\nTest 2: Verifying TXT record...");
+        const verifyResult = await makeApiCall(
+          "GET",
+          apiPath,
+          void 0,
+          baseUrl,
+          credentials.email,
+          credentials.password
+        );
+        console.log(`Response (HTTP ${verifyResult.httpCode}):`);
+        console.log(verifyResult.body);
+        console.log("----------------------------------------");
+        console.log("\nTest 3: Deleting specific TXT record...");
+        const deleteResult = await makeApiCall(
+          "DELETE",
+          apiPath,
+          testValue,
+          baseUrl,
+          credentials.email,
+          credentials.password
+        );
+        console.log(`Response (HTTP ${deleteResult.httpCode}):`);
+        console.log(deleteResult.body);
+        console.log("----------------------------------------");
+        console.log("\nTest 4: Verifying TXT record was deleted...");
+        const finalVerifyResult = await makeApiCall(
+          "GET",
+          apiPath,
+          void 0,
+          baseUrl,
+          credentials.email,
+          credentials.password
+        );
+        console.log(`Response (HTTP ${finalVerifyResult.httpCode}):`);
+        console.log(finalVerifyResult.body);
+        console.log("----------------------------------------");
+        console.log("\n\u2713 Test completed!");
       } catch (err) {
-        log("error", "Failed to get stack info", { error: String(err) });
-        console.error("\nError:", err);
+        log2("error", "Test failed", { error: String(err) });
+        console.error("\n\u2717 Test failed:", err);
         process.exit(1);
       }
     }
     main();
   }
 });
-export default require_get_stack_info();
+export default require_test_dns_api();
