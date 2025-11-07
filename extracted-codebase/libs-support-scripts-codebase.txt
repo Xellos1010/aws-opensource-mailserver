@@ -1,5 +1,5 @@
 # libs-support-scripts Codebase
-# Generated on: Thu Nov  6 23:02:43 EST 2025
+# Generated on: Fri Nov  7 13:35:39 EST 2025
 # Source: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts
 # 
 # This file contains all source code files from the libs-support-scripts component.
@@ -597,6 +597,202 @@ export async function main(): Promise<void> {
     "types": ["jest", "node"]
   },
   "include": ["jest.config.ts", "src/**/*.test.ts", "src/**/*.spec.ts", "src/**/*.d.ts"]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/instance/bin/setup-instance.ts ====
+#!/usr/bin/env ts-node
+
+import { runMiaBSetupForDomain } from '../src/lib/setup';
+
+const domain = process.env.DOMAIN || 'emcnotary.com';
+const region = process.env.CDK_DEFAULT_REGION || 'us-east-1';
+
+runMiaBSetupForDomain(domain, region).catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/instance/project.json ====
+{
+  "name": "support-scripts-aws-instance",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/support-scripts/aws/instance/src",
+  "projectType": "library",
+  "tags": ["scope:support", "type:util", "platform:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/support-scripts/aws/instance",
+        "main": "libs/support-scripts/aws/instance/bin/setup-instance.ts",
+        "tsConfig": "libs/support-scripts/aws/instance/tsconfig.lib.json",
+        "assets": [],
+        "format": ["esm"],
+        "outputFileName": "setup-instance.mjs",
+        "bundle": true,
+        "platform": "node",
+        "target": "node20",
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
+      }
+    },
+    "provision": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/support-scripts/aws/instance/setup-instance.mjs"
+      }
+    },
+    "provision:emcnotary": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/support-scripts/aws/instance/setup-instance.mjs"
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/instance/src/index.ts ====
+export * from './lib/setup';
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/instance/src/lib/setup.ts ====
+import { SSMClient, SendCommandCommand } from '@aws-sdk/client-ssm';
+import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-cloudformation';
+import * as fs from 'fs';
+import * as path from 'path';
+
+export async function runMiaBSetupForDomain(domain: string, region: string) {
+  const stackName = `${domain.replace(/\./g,'-')}-mailserver-instance`;
+  const cf = new CloudFormationClient({ region });
+  const ssm = new SSMClient({ region });
+
+  // get InstanceId + outputs
+  const stacks = await cf.send(new DescribeStacksCommand({ StackName: stackName }));
+  const outputs = Object.fromEntries((stacks.Stacks?.[0].Outputs||[]).map(o => [o.OutputKey!, o.OutputValue!]));
+  const instanceId = outputs['InstanceId'];
+  const instanceDns = outputs['InstanceDns'];
+
+  if (!instanceId) throw new Error(`InstanceId output not found on stack ${stackName}`);
+
+  // ship the same asset script to the instance via SSM and execute
+  const script = fs.readFileSync(path.join(__dirname, '../../../../apps/cdk-emcnotary-instance/src/assets/userdata/miab-setup.sh'), 'utf8');
+
+  const commands = [
+    'set -euxo pipefail',
+    'cat > /root/miab-setup.sh << "EOF_MIAB"',
+    script,
+    'EOF_MIAB',
+    `export DOMAIN_NAME='${domain}'`,
+    `export INSTANCE_DNS='${instanceDns}'`,
+    `export REGION='${region}'`,
+    `export STACK_NAME='${stackName}'`,
+    // For EIP: look up AllocationId from SSM param written by core
+    `EIP_ALLOC=$(aws ssm get-parameter --region ${region} --name "/emcnotary/core/eipAllocationId" --query Parameter.Value --output text || true)`,
+    `export EIP_ALLOCATION_ID="$EIP_ALLOC"`,
+    // permit ad-hoc overrides through env on the runner if desired
+    'bash -xe /root/miab-setup.sh'
+  ];
+
+  await ssm.send(new SendCommandCommand({
+    InstanceIds: [instanceId],
+    DocumentName: 'AWS-RunShellScript',
+    Parameters: { commands },
+    CloudWatchOutputConfig: { CloudWatchOutputEnabled: true }
+  }));
+
+  console.log(`Triggered MIAB setup on ${instanceId} (${instanceDns}.${domain})`);
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/instance/tsconfig.json ====
+{
+  "extends": "../../../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/instance/tsconfig.lib.json ====
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../../dist/out-tsc",
+    "declaration": true,
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "vite.config.ts",
+    "vite.config.mts",
+    "vitest.config.ts",
+    "vitest.config.mts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx"
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/instance/tsconfig.spec.json ====
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../../dist/out-tsc",
+    "types": ["vitest/globals"]
+  },
+  "include": [
+    "vite.config.ts",
+    "vite.config.mts",
+    "vitest.config.ts",
+    "vitest.config.mts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx"
+  ]
 }
 
 

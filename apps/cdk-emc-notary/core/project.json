@@ -1,0 +1,112 @@
+{
+  "name": "cdk-emcnotary-core",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cdk-emc-notary/core/src",
+  "projectType": "application",
+  "tags": ["type:cdk", "domain:infra", "scope:core"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/cdk-emc-notary/core",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/cdk-emc-notary/core/src/main.ts",
+        "tsConfig": "apps/cdk-emc-notary/core/tsconfig.app.json",
+        "assets": [
+          "apps/cdk-emc-notary/core/cdk.json"
+        ],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "external": ["aws-sdk"]
+        }
+      }
+    },
+    "synth": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk synth ${DOMAIN:+--context domain=$DOMAIN}",
+        "cwd": "dist/apps/cdk-emc-notary/core"
+      },
+      "dependsOn": ["build"]
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "if [ \"$FEATURE_CDK_EMCNOTARY_STACKS_ENABLED\" != \"1\" ]; then echo \"ERROR: FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 required for deployment\"; exit 1; fi && node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js deploy --require-approval never ${DOMAIN:+--context domain=$DOMAIN}",
+        "cwd": "dist/apps/cdk-emc-notary/core"
+      },
+      "dependsOn": ["build", "infra-config-loader:build"]
+    },
+    "diff": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk diff ${DOMAIN:+--context domain=$DOMAIN}",
+        "cwd": "dist/apps/cdk-emc-notary/core"
+      },
+      "dependsOn": ["build"]
+    },
+    "destroy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "if [ \"$FEATURE_CDK_EMCNOTARY_STACKS_ENABLED\" != \"1\" ]; then echo \"ERROR: FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 required for deployment\"; exit 1; fi && if [ -n \"$DOMAIN\" ] && [ \"$DOMAIN\" != \"emcnotary.com\" ]; then echo \"Note: Emptying buckets for domain $DOMAIN\"; DOMAIN=$DOMAIN APP_PATH=apps/cdk-emc-notary/core pnpm nx run admin-s3-empty:empty || true; else pnpm nx run admin-s3-empty:empty:emcnotary || true; fi && node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js destroy --force ${DOMAIN:+--context domain=$DOMAIN}",
+        "cwd": "dist/apps/cdk-emc-notary/core"
+      },
+      "dependsOn": ["build", "infra-config-loader:build"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "admin:info": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["admin-stack-info:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/core DOMAIN=${DOMAIN:-emcnotary.com} pnpm nx run admin-stack-info:get"
+      },
+      "description": "Get core stack information (outputs, instance details, etc.)"
+    },
+    "admin:events": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["admin-stack-events:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/core DOMAIN=${DOMAIN:-emcnotary.com} MAX_RESULTS=${MAX_RESULTS:-50} pnpm nx run admin-stack-events:events"
+      },
+      "description": "Get recent CloudFormation stack events"
+    },
+    "admin:events:failed": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["admin-stack-events:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/core DOMAIN=${DOMAIN:-emcnotary.com} FAILED_ONLY=1 pnpm nx run admin-stack-events:events"
+      },
+      "description": "Get only failed CloudFormation stack events"
+    },
+    "admin:reverse-dns": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["admin-reverse-dns:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/core DOMAIN=${DOMAIN:-emcnotary.com} pnpm nx run admin-reverse-dns:set"
+      },
+      "description": "Set reverse DNS for Elastic IP (box.{domain})"
+    },
+    "admin:s3-empty": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["admin-s3-empty:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/core DOMAIN=${DOMAIN:-emcnotary.com} DRY_RUN=${DRY_RUN:-0} pnpm nx run admin-s3-empty:empty"
+      },
+      "description": "Empty S3 buckets in core stack (required before destroy)"
+    },
+    "admin:s3-empty:dry-run": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["admin-s3-empty:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/core DOMAIN=${DOMAIN:-emcnotary.com} DRY_RUN=1 pnpm nx run admin-s3-empty:empty"
+      },
+      "description": "Dry run: Show what would be emptied from S3 buckets"
+    }
+  }
+}

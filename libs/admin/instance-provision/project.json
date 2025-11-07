@@ -1,0 +1,61 @@
+{
+  "name": "instance-provision",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/admin/instance-provision/src",
+  "projectType": "library",
+  "tags": ["scope:admin", "type:util", "domain:infra"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/admin/instance-provision",
+        "main": "libs/admin/instance-provision/bin/provision-instance.ts",
+        "tsConfig": "libs/admin/instance-provision/tsconfig.lib.json",
+        "assets": [],
+        "format": ["esm"],
+        "outputFileName": "provision-instance.mjs",
+        "generatePackageJson": true,
+        "bundle": true,
+        "platform": "node",
+        "target": "node20",
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
+      }
+    },
+    "provision": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/admin/instance-provision/provision-instance.mjs"
+      }
+    },
+    "provision:emcnotary": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/admin/instance-provision/provision-instance.mjs --domain emcnotary.com"
+      }
+    },
+    "provision:emcnotary:skip-ssh": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/admin/instance-provision/provision-instance.mjs --domain emcnotary.com --skip-ssh"
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

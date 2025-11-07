@@ -1,5 +1,5 @@
 # Root Directory Files
-# Generated on: Thu Nov  6 23:02:44 EST 2025
+# Generated on: Fri Nov  7 13:35:40 EST 2025
 # Source: /Users/evanmccall/Projects/aws-opensource-mailserver
 #
 # This file contains specific configuration files from the root directory.
@@ -58,6 +58,9 @@
 .env.local
 .env.production
 
+# Local AWS/CDK configuration (contains sensitive account info)
+.aws-config.local.json
+
 # IDE and editor files
 .vscode/
 .idea/
@@ -82,6 +85,8 @@ Thumbs.db
 .github/instructions/nx.instructions.md
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
+
+data/godaddy/api-keys/*
 
 
 ==== FILE: .nvmrc ====
@@ -290,7 +295,15 @@ vitest.config.*.timestamp*
       "@mm/admin-dns-api": ["libs/admin/admin-dns-api/src/index.ts"],
       "@mm/admin-users-backup": ["libs/admin/admin-users-backup/src/index.ts"],
       "@mm/admin-ssl-check": ["libs/admin/admin-ssl-check/src/index.ts"],
-      "@mm/admin-ssl-provision": ["libs/admin/admin-ssl-provision/src/index.ts"]
+      "@mm/admin-ssl-provision": ["libs/admin/admin-ssl-provision/src/index.ts"],
+      "@mm/admin-s3-empty": ["libs/admin/admin-s3-empty/src/index.ts"],
+      "@mm/admin-stack-events": ["libs/admin/admin-stack-events/src/index.ts"],
+      "@mm/infra-shared-constructs": ["libs/infra/shared-constructs/src/index.ts"],
+      "@mm/infra-core-params": ["libs/infra/core-params/src/index.ts"],
+      "@mm/infra-config-loader": ["libs/infra/config-loader/src/index.ts"],
+      "@mm/admin-ssh-access": ["libs/admin/ssh-access/src/index.ts"],
+      "@mm/admin-ses-dns": ["libs/admin/ses-dns/src/index.ts"],
+      "@mm/admin-instance-provision": ["libs/admin/instance-provision/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

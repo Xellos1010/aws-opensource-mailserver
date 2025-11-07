@@ -35,7 +35,11 @@
       "@mm/admin-stack-events": ["libs/admin/admin-stack-events/src/index.ts"],
       "@mm/infra-shared-constructs": ["libs/infra/shared-constructs/src/index.ts"],
       "@mm/infra-core-params": ["libs/infra/core-params/src/index.ts"],
-      "@mm/infra-config-loader": ["libs/infra/config-loader/src/index.ts"]
+      "@mm/infra-config-loader": ["libs/infra/config-loader/src/index.ts"],
+      "@mm/infra-instance-constructs": ["libs/infra/instance-constructs/src/index.ts"],
+      "@mm/admin-ssh-access": ["libs/admin/ssh-access/src/index.ts"],
+      "@mm/admin-ses-dns": ["libs/admin/ses-dns/src/index.ts"],
+      "@mm/admin-instance-provision": ["libs/admin/instance-provision/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

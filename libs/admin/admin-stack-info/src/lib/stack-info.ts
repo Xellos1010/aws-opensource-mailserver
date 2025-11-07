@@ -59,9 +59,18 @@ export function resolveDomain(
   stackName?: string
 ): string | null {
   if (appPath) {
-    // Extract domain from app path: "apps/cdk-emc-notary" -> "emcnotary"
+    // Extract domain from app path: 
+    // "apps/cdk-emc-notary/core" -> "emcnotary"
+    // "apps/cdk-emc-notary/instance" -> "emcnotary"
+    // "apps/cdk-emc-notary" -> "emcnotary"
     const parts = appPath.split('/');
-    const appName = parts[parts.length - 1];
+    // Get the app directory name (second-to-last if last is 'core' or 'instance')
+    let appName = parts[parts.length - 1];
+    
+    // If last part is 'core' or 'instance', use the parent directory
+    if (appName === 'core' || appName === 'instance') {
+      appName = parts[parts.length - 2] || appName;
+    }
     
     // Remove "cdk-" prefix if present
     let domainPart = appName.replace(/^cdk-/, '');
@@ -110,11 +119,17 @@ export function resolveStackName(
   
   const resolvedDomain = resolveDomain(appPath);
   if (resolvedDomain) {
-    // Check if app path contains '-core' suffix (e.g., cdk-emcnotary-core)
-    // CDK core stacks use format: {domain}-mailserver-core
-    const appName = appPath?.split('/').pop() || '';
-    const isCoreStack = appName.includes('-core');
-    const suffix = isCoreStack ? '-mailserver-core' : '-mailserver';
+    // Check if app path ends with '/core' or '/instance' (e.g., apps/cdk-emc-notary/core)
+    // or contains '-core' suffix (e.g., cdk-emcnotary-core)
+    // CDK stacks use format: {domain}-mailserver-core or {domain}-mailserver-instance
+    const pathParts = appPath?.split('/') || [];
+    const lastPart = pathParts[pathParts.length - 1] || '';
+    let suffix = '-mailserver';
+    if (lastPart === 'core' || lastPart.includes('-core')) {
+      suffix = '-mailserver-core';
+    } else if (lastPart === 'instance' || lastPart.includes('-instance')) {
+      suffix = '-mailserver-instance';
+    }
     return `${resolvedDomain.replace(/\./g, '-')}${suffix}`;
   }
   
@@ -138,7 +153,7 @@ export async function getStackInfo(
     resolveDomain(config.appPath, config.stackName) ||
     'emcnotary.com'; // default fallback
   
-  const stackName = resolveStackName(
+  let stackName = resolveStackName(
     config.domain,
     config.appPath,
     config.stackName
@@ -150,10 +165,31 @@ export async function getStackInfo(
   const ssmClient = new SSMClient({ region, credentials });
   const ec2Client = new EC2Client({ region, credentials });
   
-  // Get stack outputs
-  const stackResp = await cfClient.send(
-    new DescribeStacksCommand({ StackName: stackName })
-  );
+  // Get stack outputs - try the resolved stack name first
+  let stackResp;
+  try {
+    stackResp = await cfClient.send(
+      new DescribeStacksCommand({ StackName: stackName })
+    );
+  } catch (err: unknown) {
+    // If stack not found and it's an instance stack with -com-, try without -com-
+    // This handles legacy naming: emcnotary-mailserver-instance vs emcnotary-com-mailserver-instance
+    const error = err as { name?: string };
+    if (error?.name === 'ValidationError' && stackName.includes('-com-mailserver-instance')) {
+      const fallbackStackName = stackName.replace('-com-mailserver-instance', '-mailserver-instance');
+      try {
+        stackResp = await cfClient.send(
+          new DescribeStacksCommand({ StackName: fallbackStackName })
+        );
+        // Update stackName to the actual found stack name
+        stackName = fallbackStackName;
+      } catch (fallbackErr) {
+        throw new Error(`Stack ${stackName} or ${fallbackStackName} not found`);
+      }
+    } else {
+      throw err;
+    }
+  }
   
   if (!stackResp.Stacks || stackResp.Stacks.length === 0) {
     throw new Error(`Stack ${stackName} not found`);

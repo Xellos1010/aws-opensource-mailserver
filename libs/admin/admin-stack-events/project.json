@@ -48,14 +48,14 @@
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
       "options": {
-        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emcnotary-core node dist/libs/admin/admin-stack-events/get-stack-events.mjs"
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emc-notary/core node dist/libs/admin/admin-stack-events/get-stack-events.mjs"
       }
     },
     "events:emcnotary:failed": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
       "options": {
-        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emcnotary-core FAILED_ONLY=1 node dist/libs/admin/admin-stack-events/get-stack-events.mjs"
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emc-notary/core FAILED_ONLY=1 node dist/libs/admin/admin-stack-events/get-stack-events.mjs"
       }
     },
     "events:askdaokapra": {

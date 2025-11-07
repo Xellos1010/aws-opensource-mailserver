@@ -63,6 +63,19 @@
         "command": "node dist/apps/ops-runner/src/commands/cfn-outputs.js"
       },
       "dependsOn": ["build"]
+    },
+    "instance:setup": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ts-node tools/instance-setup.cli.ts"
+      }
+    },
+    "instance:bootstrap": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "if [ \"$FEATURE_INSTANCE_BOOTSTRAP_ENABLED\" = \"0\" ]; then echo \"ERROR: FEATURE_INSTANCE_BOOTSTRAP_ENABLED=0 - Bootstrap is disabled\"; exit 1; fi && ts-node tools/instance-bootstrap.cli.ts --domain=${DOMAIN:-emcnotary.com} --region=${CDK_DEFAULT_REGION:-us-east-1} ${STACK:+--stack=$STACK} ${PROFILE:+--profile=$PROFILE} ${DRY_RUN:+--dry-run} ${RESTORE_PREFIX:+--restore-prefix=$RESTORE_PREFIX} ${REBOOT_AFTER_SETUP:+--reboot}"
+      },
+      "dependsOn": ["^build", "support-scripts-aws-instance-bootstrap:build"]
     }
   }
 }
