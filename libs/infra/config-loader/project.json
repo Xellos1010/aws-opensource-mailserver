@@ -6,16 +6,15 @@
   "tags": ["type:util", "scope:infra", "domain:config"],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
       "options": {
-        "outputPath": "dist/libs/infra/config-loader",
-        "main": "libs/infra/config-loader/src/index.ts",
-        "tsConfig": "libs/infra/config-loader/tsconfig.lib.json",
-        "assets": [
-          "libs/infra/config-loader/*.md"
-        ]
-      }
+        "commands": [
+          "tsc -p libs/infra/config-loader/tsconfig.lib.json",
+          "tsc -p libs/infra/config-loader/bin/tsconfig.json"
+        ],
+        "parallel": false
+      },
+      "outputs": ["{workspaceRoot}/dist/libs/infra/config-loader"]
     },
     "lint": {
       "executor": "@nx/eslint:lint"
