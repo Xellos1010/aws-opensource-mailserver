@@ -21,6 +21,9 @@ new EmcNotaryCoreStack(app, stackName, {
   },
   description:
     'EMC Notary Mailserver – Core stack (SES/S3/SNS/CloudWatch/SSM params)',
+  // Optional: Pass central backup bucket if mailservers-backups stack exists
+  // This can be set via environment variable or CDK context
+  // If not provided, core stack will work without it
 });
 
 app.synth();

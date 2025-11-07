@@ -1,0 +1,66 @@
+{
+  "name": "cdk-mailservers-backups",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cdk-mailservers-backups/src",
+  "projectType": "application",
+  "tags": ["type:cdk", "domain:infra", "scope:backups"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/cdk-mailservers-backups",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/cdk-mailservers-backups/src/main.ts",
+        "tsConfig": "apps/cdk-mailservers-backups/tsconfig.app.json",
+        "assets": [
+          "apps/cdk-mailservers-backups/src/assets",
+          "apps/cdk-mailservers-backups/cdk.json"
+        ],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "external": ["aws-sdk"]
+        }
+      }
+    },
+    "synth": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk synth",
+        "cwd": "dist/apps/cdk-mailservers-backups"
+      },
+      "dependsOn": ["build"]
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node ../../../dist/libs/infra/config-loader/bin/cdk-deploy.js deploy --require-approval never",
+        "cwd": "dist/apps/cdk-mailservers-backups"
+      },
+      "dependsOn": ["build", "infra-config-loader:build"]
+    },
+    "diff": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk diff",
+        "cwd": "dist/apps/cdk-mailservers-backups"
+      },
+      "dependsOn": ["build"]
+    },
+    "destroy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node ../../../dist/libs/infra/config-loader/bin/cdk-deploy.js destroy --force",
+        "cwd": "dist/apps/cdk-mailservers-backups"
+      },
+      "dependsOn": ["build", "infra-config-loader:build"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
+
