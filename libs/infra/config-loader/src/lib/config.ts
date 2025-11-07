@@ -95,8 +95,11 @@ export function getCdkEnvVars(): Record<string, string> {
     CDK_DEFAULT_REGION: config.cdk.defaultRegion,
   };
 
+  // Set CDK_DEFAULT_ACCOUNT if available
   if (config.cdk.defaultAccount) {
     env['CDK_DEFAULT_ACCOUNT'] = config.cdk.defaultAccount;
+  } else if (config.aws.accountId) {
+    env['CDK_DEFAULT_ACCOUNT'] = config.aws.accountId;
   }
 
   return env;

@@ -4,9 +4,9 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "../../../../dist/libs/infra/config-loader/bin",
-    "rootDir": ".",
+    "rootDir": "../..",
     "strict": true
   },
-  "include": ["cdk-deploy.ts"]
+  "include": ["cdk-deploy.ts", "../src/**/*.ts"]
 }
 

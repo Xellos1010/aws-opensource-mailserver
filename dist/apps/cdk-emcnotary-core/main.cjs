@@ -54,27 +54,27 @@ var EmcNotaryCoreStack = class extends import_aws_cdk_lib3.Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
     tagStack(this, "emcnotary-mailserver");
-    const domainName = new import_aws_cdk_lib3.CfnParameter(this, "DomainName", {
+    const domainName2 = new import_aws_cdk_lib3.CfnParameter(this, "DomainName", {
       type: "String",
       default: "emcnotary.com",
       description: "The domain name for the mail server resources",
       allowedPattern: "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$"
     });
-    const domain = domainName.valueAsString;
+    const domain2 = domainName2.valueAsString;
     const identity = new import_aws_cdk_lib3.aws_ses.EmailIdentity(this, "SesIdentity", {
-      identity: import_aws_cdk_lib3.aws_ses.Identity.domain(domain),
+      identity: import_aws_cdk_lib3.aws_ses.Identity.domain(domain2),
       dkimSigning: true,
-      mailFromDomain: `mail.${domain}`
+      mailFromDomain: `mail.${domain2}`
     });
     const backupBucket = new import_aws_cdk_lib3.aws_s3.Bucket(this, "BackupBucket", {
-      bucketName: `${domain}-backup`,
+      bucketName: `${domain2}-backup`,
       removalPolicy: import_aws_cdk_lib3.RemovalPolicy.RETAIN,
       versioned: true,
       blockPublicAccess: import_aws_cdk_lib3.aws_s3.BlockPublicAccess.BLOCK_ALL,
       encryption: import_aws_cdk_lib3.aws_s3.BucketEncryption.S3_MANAGED
     });
     const nextcloudBucket = new import_aws_cdk_lib3.aws_s3.Bucket(this, "NextcloudBucket", {
-      bucketName: `${domain}-nextcloud`,
+      bucketName: `${domain2}-nextcloud`,
       removalPolicy: import_aws_cdk_lib3.RemovalPolicy.RETAIN,
       versioned: true,
       blockPublicAccess: import_aws_cdk_lib3.aws_s3.BlockPublicAccess.BLOCK_ALL,
@@ -261,7 +261,7 @@ def lambda_handler(event, context):
     });
     new import_aws_cdk_lib3.aws_ssm.StringParameter(this, "ParamDomainName", {
       parameterName: P_DOMAIN_NAME,
-      stringValue: domain,
+      stringValue: domain2,
       description: "Domain name for EMC Notary mailserver"
     });
     new import_aws_cdk_lib3.aws_ssm.StringParameter(this, "ParamBackupBucket", {
@@ -285,7 +285,7 @@ def lambda_handler(event, context):
       description: "SES email identity ARN"
     });
     new import_aws_cdk_lib3.CfnOutput(this, "DomainNameOutput", {
-      value: domain,
+      value: domain2,
       description: "Domain name for mail server"
     });
     new import_aws_cdk_lib3.CfnOutput(this, "SesIdentityArn", {
@@ -305,7 +305,11 @@ def lambda_handler(event, context):
 
 // apps/cdk-emcnotary-core/src/main.ts
 var app = new cdk.App();
-new EmcNotaryCoreStack(app, "emcnotary-mailserver-core", {
+var defaultDomain = "emcnotary.com";
+var domain = process.env["DOMAIN"] || defaultDomain;
+var domainName = domain.replace(/\./g, "-");
+var stackName = `${domainName}-mailserver-core`;
+new EmcNotaryCoreStack(app, stackName, {
   env: {
     account: process.env["CDK_DEFAULT_ACCOUNT"],
     region: process.env["CDK_DEFAULT_REGION"] || "us-east-1"

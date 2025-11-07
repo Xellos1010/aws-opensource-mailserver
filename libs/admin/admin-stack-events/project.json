@@ -1,0 +1,77 @@
+{
+  "name": "admin-stack-events",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/admin/admin-stack-events/src",
+  "projectType": "library",
+  "tags": ["scope:admin", "type:util", "platform:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/admin/admin-stack-events",
+        "main": "libs/admin/admin-stack-events/bin/get-stack-events.ts",
+        "tsConfig": "libs/admin/admin-stack-events/tsconfig.lib.json",
+        "assets": [],
+        "format": ["esm"],
+        "outputFileName": "get-stack-events.mjs",
+        "generatePackageJson": true,
+        "bundle": true,
+        "platform": "node",
+        "target": "node20",
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/admin/admin-stack-events/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "events": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=${APP_PATH} STACK_NAME=${STACK_NAME} DOMAIN=${DOMAIN} MAX_RESULTS=${MAX_RESULTS:-50} FAILED_ONLY=${FAILED_ONLY:-0} node dist/libs/admin/admin-stack-events/get-stack-events.mjs"
+      }
+    },
+    "events:emcnotary": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emcnotary-core node dist/libs/admin/admin-stack-events/get-stack-events.mjs"
+      }
+    },
+    "events:emcnotary:failed": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emcnotary-core FAILED_ONLY=1 node dist/libs/admin/admin-stack-events/get-stack-events.mjs"
+      }
+    },
+    "events:askdaokapra": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-askdaokapra node dist/libs/admin/admin-stack-events/get-stack-events.mjs"
+      }
+    },
+    "events:askdaokapra:failed": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-askdaokapra FAILED_ONLY=1 node dist/libs/admin/admin-stack-events/get-stack-events.mjs"
+      }
+    }
+  }
+}
+

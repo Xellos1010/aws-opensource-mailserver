@@ -53,10 +53,10 @@
     "destroy": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "cdk destroy --force",
+        "command": "node ../../../dist/libs/infra/config-loader/bin/cdk-deploy.js destroy --force",
         "cwd": "dist/apps/cdk-emcnotary-core"
       },
-      "dependsOn": ["build"]
+      "dependsOn": ["build", "infra-config-loader:build", "admin-s3-empty:empty:emcnotary"]
     },
     "lint": {
       "executor": "@nx/eslint:lint"

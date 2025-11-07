@@ -31,6 +31,8 @@
       "@mm/admin-users-backup": ["libs/admin/admin-users-backup/src/index.ts"],
       "@mm/admin-ssl-check": ["libs/admin/admin-ssl-check/src/index.ts"],
       "@mm/admin-ssl-provision": ["libs/admin/admin-ssl-provision/src/index.ts"],
+      "@mm/admin-s3-empty": ["libs/admin/admin-s3-empty/src/index.ts"],
+      "@mm/admin-stack-events": ["libs/admin/admin-stack-events/src/index.ts"],
       "@mm/infra-shared-constructs": ["libs/infra/shared-constructs/src/index.ts"],
       "@mm/infra-core-params": ["libs/infra/core-params/src/index.ts"],
       "@mm/infra-config-loader": ["libs/infra/config-loader/src/index.ts"]
