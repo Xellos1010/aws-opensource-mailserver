@@ -42,7 +42,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
       "options": {
-        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emc-notary node dist/libs/admin/admin-reverse-dns/set-reverse-dns.mjs"
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emcnotary-core node dist/libs/admin/admin-reverse-dns/set-reverse-dns.mjs"
       }
     },
     "test": {
