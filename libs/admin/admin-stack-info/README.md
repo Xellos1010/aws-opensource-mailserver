@@ -16,7 +16,6 @@ Tasks are organized hierarchically by project (base and emcnotary):
 
 ```bash
 # EMC Notary - Get stack info
-pnpm nx run admin-stack-info:emcnotary:get
 pnpm nx run admin-stack-info:get:emcnotary  # Alternative syntax
 
 # Base - Get stack info (requires DOMAIN or STACK_NAME)

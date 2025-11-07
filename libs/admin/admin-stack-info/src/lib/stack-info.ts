@@ -1,7 +1,6 @@
 import {
   CloudFormationClient,
   DescribeStacksCommand,
-  DescribeStackResourcesCommand,
 } from '@aws-sdk/client-cloudformation';
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { EC2Client, DescribeInstancesCommand } from '@aws-sdk/client-ec2';
@@ -68,10 +67,11 @@ export function resolveDomain(
     const domainPart = appName.replace(/^cdk-/, '');
     
     // Convert kebab-case to domain: "emc-notary" -> "emcnotary.com"
-    // For now, simple mapping - can be extended
+    // Domain mapping for known apps
     const domainMap: Record<string, string> = {
       'emc-notary': 'emcnotary.com',
       'emcnotary': 'emcnotary.com',
+      'askdaokapra': 'askdaokapra.com',
     };
     
     return domainMap[domainPart] || `${domainPart.replace(/-/g, '')}.com`;

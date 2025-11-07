@@ -31,34 +31,27 @@
         "command": "node dist/libs/admin/admin-stack-info/get-stack-info.mjs"
       }
     },
-    "get:emcnotary": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["build"],
-      "options": {
-        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emc-notary node dist/libs/admin/admin-stack-info/get-stack-info.mjs"
-      }
-    },
-    "get:base": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["build"],
-      "options": {
-        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 node dist/libs/admin/admin-stack-info/get-stack-info.mjs"
-      }
-    },
-    "emcnotary:get": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["build"],
-      "options": {
-        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emc-notary node dist/libs/admin/admin-stack-info/get-stack-info.mjs"
-      }
-    },
-    "base:get": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["build"],
-      "options": {
-        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 node dist/libs/admin/admin-stack-info/get-stack-info.mjs"
-      }
-    },
+      "get:emcnotary": {
+        "executor": "nx:run-commands",
+        "dependsOn": ["build"],
+        "options": {
+          "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emc-notary node dist/libs/admin/admin-stack-info/get-stack-info.mjs"
+        }
+      },
+      "get:askdaokapra": {
+        "executor": "nx:run-commands",
+        "dependsOn": ["build"],
+        "options": {
+          "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-askdaokapra node dist/libs/admin/admin-stack-info/get-stack-info.mjs"
+        }
+      },
+      "get:base": {
+        "executor": "nx:run-commands",
+        "dependsOn": ["build"],
+        "options": {
+          "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 node dist/libs/admin/admin-stack-info/get-stack-info.mjs"
+        }
+      },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],

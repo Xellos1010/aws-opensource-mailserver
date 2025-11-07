@@ -43,45 +43,70 @@ async function main() {
     log('info', 'Stack information retrieved', {
       stackName: stackInfo.stackName,
       domain: stackInfo.domain,
-      hasKeyPairId: !!stackInfo.keyPairId,
-      hasInstanceKeyName: !!stackInfo.instanceKeyName,
-      hasInstanceIp: !!stackInfo.instancePublicIp,
+      instanceId: stackInfo.instanceId,
+      instanceIp: stackInfo.instancePublicIp,
+      keyPairId: stackInfo.keyPairId,
+      instanceKeyName: stackInfo.instanceKeyName,
     });
 
-    // Setup SSH key
+    // Validate we have the required information (matching bash script validation)
+    if (!stackInfo.keyPairId) {
+      throw new Error('Could not retrieve KeyPairId from stack outputs');
+    }
+
+    if (!stackInfo.instanceId) {
+      throw new Error('Could not find EC2 instance ID in the stack outputs');
+    }
+
+    if (!stackInfo.instancePublicIp) {
+      throw new Error('Could not get instance IP address');
+    }
+
+    // Setup SSH key (follows setup-ssh-access.sh flow)
     const result = await setupSshForStack({
       keyPairId: stackInfo.keyPairId,
       instanceKeyName: stackInfo.instanceKeyName,
       instancePublicIp: stackInfo.instancePublicIp,
+      instanceId: stackInfo.instanceId,
       domain: stackInfo.domain,
       stackName: stackInfo.stackName,
       region: stackInfo.region,
       profile: process.env['AWS_PROFILE'],
     });
 
-    // Print results
-    console.log('\n=== SSH Setup Summary ===');
-    console.log(`Stack: ${stackInfo.stackName} (${stackInfo.domain})`);
-    console.log(`Instance IP: ${stackInfo.instancePublicIp}`);
-    console.log(`Key File: ${result.keyFilePath}`);
-    console.log(`Status: ${result.success ? '✓ Success' : '✗ Failed'}`);
+    // Print results (matching bash script output format)
+    console.log('----------------------------------------');
+    console.log('SSH access has been set up successfully!');
+    console.log('');
+    console.log('Instance ID:', stackInfo.instanceId);
+    console.log('Instance IP:', stackInfo.instancePublicIp);
+    console.log('Key Pair:', result.keyFilePath.replace(/^.*\//, '').replace(/\.pem$/, ''));
+    console.log('Key File:', result.keyFilePath);
+    console.log('');
 
     if (result.sshConfigEntry) {
-      console.log('\nSSH Config Entry (add to ~/.ssh/config):');
+      console.log('To connect to your instance, use:');
+      console.log(`ssh -i ${result.keyFilePath} ubuntu@${stackInfo.instancePublicIp}`);
+      console.log('');
+      console.log('Or create an SSH config entry by adding these lines to ~/.ssh/config:');
       console.log(result.sshConfigEntry);
-      console.log('\nThen connect using:');
+      console.log('');
+      console.log('Then you can simply connect using:');
       console.log(`ssh ${stackInfo.domain}`);
     } else {
-      console.log('\nConnect using:');
+      console.log('To connect to your instance, use:');
       console.log(`ssh -i ${result.keyFilePath} ubuntu@${stackInfo.instancePublicIp}`);
     }
 
     if (result.errors.length > 0) {
-      console.log('\nWarnings/Errors:');
+      console.log('');
+      console.log('Warnings/Errors:');
       result.errors.forEach((err) => console.log(`  - ${err}`));
     }
 
     if (!result.success) {
+      console.log('');
+      console.log('SSH setup completed with errors. Please review the warnings above.');
       process.exit(1);
     }
   } catch (err) {

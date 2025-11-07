@@ -7,140 +7,159 @@ var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
 
-// libs/admin/admin-ssh/src/lib/ssh-setup.ts
-import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
-import { fromIni } from "@aws-sdk/credential-providers";
-import * as fs from "node:fs";
+// libs/admin/admin-ssh/src/lib/ssh-test.ts
+import { spawn } from "node:child_process";
 import * as path from "node:path";
 import * as os from "node:os";
-import { execSync } from "node:child_process";
-async function setupSshKey(config) {
-  const errors = [];
-  const region = config.region || process.env["AWS_REGION"] || "us-east-1";
-  const profile = config.profile || process.env["AWS_PROFILE"] || "hepe-admin-mfa";
-  const sshDir = config.sshDir || path.join(os.homedir(), ".ssh");
-  fs.mkdirSync(sshDir, { recursive: true, mode: 448 });
-  const keyFilePath = path.join(sshDir, `${config.instanceKeyName}.pem`);
-  if (fs.existsSync(keyFilePath)) {
-    log("info", "SSH key file already exists", { keyFilePath });
-    try {
-      execSync(`ssh-keygen -l -f "${keyFilePath}"`, { stdio: "ignore" });
-      log("info", "Existing key file is valid", { keyFilePath });
-      fs.chmodSync(keyFilePath, 256);
-      return {
-        keyFilePath,
-        success: true,
-        errors: []
-      };
-    } catch (err) {
-      log("warn", "Existing key file is invalid, will re-download", {
-        keyFilePath,
-        error: String(err)
-      });
-    }
-  }
-  log("info", "Retrieving SSH key from SSM", {
-    keyPairId: config.keyPairId,
-    ssmPath: `/ec2/keypair/${config.keyPairId}`
-  });
-  try {
-    const credentials = fromIni({ profile });
-    const ssmClient = new SSMClient({ region, credentials });
-    const ssmResp = await ssmClient.send(
-      new GetParameterCommand({
-        Name: `/ec2/keypair/${config.keyPairId}`,
-        WithDecryption: true
-      })
-    );
-    if (!ssmResp.Parameter?.Value) {
-      throw new Error("SSM parameter value is empty");
-    }
-    fs.writeFileSync(keyFilePath, ssmResp.Parameter.Value, { mode: 256 });
-    log("info", "SSH key retrieved and saved", { keyFilePath });
-    try {
-      execSync(`ssh-keygen -l -f "${keyFilePath}"`, { stdio: "ignore" });
-      log("info", "SSH key format verified", { keyFilePath });
-    } catch (err) {
-      const errorMsg = `SSH key format verification failed: ${err}`;
-      log("error", errorMsg);
-      errors.push(errorMsg);
-    }
-  } catch (err) {
-    const errorMsg = `Failed to retrieve SSH key from SSM: ${err}`;
-    log("error", errorMsg);
-    errors.push(errorMsg);
+import * as fs from "node:fs";
+async function testSshConnection(config) {
+  const startTime = Date.now();
+  const user = config.user || "ubuntu";
+  const timeout = config.timeout || 10;
+  const port = config.port || 22;
+  const keyFilePath = path.resolve(config.keyFilePath);
+  if (!fs.existsSync(keyFilePath)) {
     return {
-      keyFilePath,
       success: false,
-      errors
+      error: `SSH key file not found: ${keyFilePath}`,
+      duration: 0
     };
   }
-  try {
-    const knownHostsFile = path.join(sshDir, "known_hosts");
-    const knownHostsContent = fs.existsSync(knownHostsFile) ? fs.readFileSync(knownHostsFile, "utf-8") : "";
-    if (!knownHostsContent.includes(config.instanceIp)) {
-      log("info", "Adding host to known_hosts", { instanceIp: config.instanceIp });
-      try {
-        const keyscanOutput = execSync(
-          `ssh-keyscan -H ${config.instanceIp}`,
-          { encoding: "utf-8", timeout: 5e3 }
-        );
-        fs.appendFileSync(knownHostsFile, keyscanOutput);
-        log("info", "Host added to known_hosts");
-      } catch (err) {
-        log("warn", "Could not add host to known_hosts (may be unreachable)", {
-          error: String(err)
-        });
+  log("info", "Testing SSH connection", {
+    instanceIp: config.instanceIp,
+    user,
+    timeout,
+    keyFilePath
+  });
+  let lastRemaining = timeout;
+  const countdownInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1e3);
+    const remaining = Math.max(0, timeout - elapsed);
+    if (remaining !== lastRemaining) {
+      lastRemaining = remaining;
+      if (remaining > 0) {
+        process.stdout.write(`\rConnecting... ${remaining}s remaining`);
+      } else {
+        process.stdout.write(`\rConnecting... timeout`);
       }
     }
+  }, 100);
+  try {
+    const sshCommand = [
+      "ssh",
+      "-i",
+      keyFilePath,
+      `-o`,
+      `ConnectTimeout=${timeout}`,
+      "-o",
+      "BatchMode=yes",
+      "-o",
+      "StrictHostKeyChecking=no",
+      "-o",
+      "UserKnownHostsFile=/dev/null",
+      "-o",
+      "LogLevel=ERROR",
+      "-p",
+      String(port),
+      `${user}@${config.instanceIp}`,
+      "exit"
+    ];
+    const result = spawn("ssh", sshCommand.slice(1), {
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+    const connectionPromise = new Promise(
+      (resolve2) => {
+        let resolved = false;
+        const timeoutId = setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            result.kill("SIGTERM");
+            resolve2({
+              success: false,
+              error: `Connection timeout after ${timeout} seconds`
+            });
+          }
+        }, timeout * 1e3);
+        result.on("close", (code) => {
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timeoutId);
+            if (code === 0) {
+              resolve2({ success: true });
+            } else {
+              resolve2({
+                success: false,
+                error: `SSH connection failed with exit code ${code}`
+              });
+            }
+          }
+        });
+        result.on("error", (err) => {
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timeoutId);
+            resolve2({
+              success: false,
+              error: `SSH command error: ${err.message}`
+            });
+          }
+        });
+      }
+    );
+    const result_data = await connectionPromise;
+    clearInterval(countdownInterval);
+    const duration = (Date.now() - startTime) / 1e3;
+    process.stdout.write("\r" + " ".repeat(50) + "\r");
+    if (result_data.success) {
+      console.log(`\u2713 SSH connection successful (${duration.toFixed(1)}s)`);
+      log("info", "SSH connection test passed", { duration });
+      return {
+        success: true,
+        duration
+      };
+    } else {
+      console.log(`\u2717 SSH connection failed: ${result_data.error || "Unknown error"}`);
+      log("error", "SSH connection test failed", {
+        error: result_data.error,
+        duration
+      });
+      return {
+        success: false,
+        error: result_data.error,
+        duration
+      };
+    }
   } catch (err) {
-    log("warn", "Could not update known_hosts", { error: String(err) });
+    clearInterval(countdownInterval);
+    process.stdout.write("\r" + " ".repeat(50) + "\r");
+    const duration = (Date.now() - startTime) / 1e3;
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.log(`\u2717 SSH connection test error: ${errorMsg}`);
+    log("error", "SSH connection test error", { error: errorMsg, duration });
+    return {
+      success: false,
+      error: errorMsg,
+      duration
+    };
   }
-  let sshConfigEntry;
-  if (config.domain) {
-    sshConfigEntry = `Host ${config.domain}
-    HostName ${config.instanceIp}
-    User ubuntu
-    IdentityFile ${keyFilePath}
-    StrictHostKeyChecking no`;
-  }
-  return {
-    keyFilePath,
-    sshConfigEntry,
-    success: errors.length === 0,
-    errors
-  };
 }
-async function setupSshForStack(stackInfo) {
-  if (!stackInfo.keyPairId) {
-    throw new Error("KeyPairId not found in stack info");
-  }
+async function testSshForStack(stackInfo) {
   if (!stackInfo.instancePublicIp) {
     throw new Error("Instance public IP not found in stack info");
   }
-  let instanceKeyName = stackInfo.instanceKeyName;
-  if (!instanceKeyName) {
-    if (stackInfo.stackName) {
-      instanceKeyName = `${stackInfo.stackName.replace(/-mailserver$/, "")}-keypair`;
-    } else {
-      instanceKeyName = `${stackInfo.domain.replace(/\./g, "-")}-keypair`;
-    }
-    log("warn", "Instance key name not found, using derived name", {
-      derivedKeyName: instanceKeyName
-    });
-  }
-  return setupSshKey({
-    keyPairId: stackInfo.keyPairId,
-    instanceKeyName,
+  const sshDir = path.join(os.homedir(), ".ssh");
+  const instanceKeyName = stackInfo.instanceKeyName || `${stackInfo.domain.replace(/\./g, "-")}-keypair`;
+  const keyFilePath = path.join(sshDir, `${instanceKeyName}.pem`);
+  return testSshConnection({
+    keyFilePath,
     instanceIp: stackInfo.instancePublicIp,
-    domain: stackInfo.domain,
-    region: stackInfo.region,
-    profile: stackInfo.profile
+    user: "ubuntu",
+    timeout: 10
   });
 }
 var log;
-var init_ssh_setup = __esm({
-  "libs/admin/admin-ssh/src/lib/ssh-setup.ts"() {
+var init_ssh_test = __esm({
+  "libs/admin/admin-ssh/src/lib/ssh-test.ts"() {
     "use strict";
     log = (level, msg, meta = {}) => console.log(
       JSON.stringify({ ts: (/* @__PURE__ */ new Date()).toISOString(), level, msg, ...meta })
@@ -153,9 +172,9 @@ import {
   CloudFormationClient,
   DescribeStacksCommand
 } from "@aws-sdk/client-cloudformation";
-import { SSMClient as SSMClient2, GetParameterCommand as GetParameterCommand2 } from "@aws-sdk/client-ssm";
+import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
 import { EC2Client, DescribeInstancesCommand } from "@aws-sdk/client-ec2";
-import { fromIni as fromIni2 } from "@aws-sdk/credential-providers";
+import { fromIni } from "@aws-sdk/credential-providers";
 function resolveDomain(appPath, stackName) {
   if (appPath) {
     const parts = appPath.split("/");
@@ -163,7 +182,8 @@ function resolveDomain(appPath, stackName) {
     const domainPart = appName.replace(/^cdk-/, "");
     const domainMap = {
       "emc-notary": "emcnotary.com",
-      "emcnotary": "emcnotary.com"
+      "emcnotary": "emcnotary.com",
+      "askdaokapra": "askdaokapra.com"
     };
     return domainMap[domainPart] || `${domainPart.replace(/-/g, "")}.com`;
   }
@@ -197,9 +217,9 @@ async function getStackInfo(config) {
     config.appPath,
     config.stackName
   );
-  const credentials = fromIni2({ profile });
+  const credentials = fromIni({ profile });
   const cfClient = new CloudFormationClient({ region, credentials });
-  const ssmClient = new SSMClient2({ region, credentials });
+  const ssmClient = new SSMClient({ region, credentials });
   const ec2Client = new EC2Client({ region, credentials });
   const stackResp = await cfClient.send(
     new DescribeStacksCommand({ StackName: stackName })
@@ -271,7 +291,7 @@ async function getStackInfo(config) {
     try {
       const ssmParamName = `/MailInABoxAdminPassword-${stackName}`;
       const ssmResp = await ssmClient.send(
-        new GetParameterCommand2({
+        new GetParameterCommand({
           Name: ssmParamName,
           WithDecryption: true
         })
@@ -310,10 +330,10 @@ var init_src = __esm({
   }
 });
 
-// libs/admin/admin-ssh/bin/setup-ssh.ts
-var require_setup_ssh = __commonJS({
-  "libs/admin/admin-ssh/bin/setup-ssh.ts"() {
-    init_ssh_setup();
+// libs/admin/admin-ssh/bin/test-ssh.ts
+var require_test_ssh = __commonJS({
+  "libs/admin/admin-ssh/bin/test-ssh.ts"() {
+    init_ssh_test();
     init_src();
     var log2 = (level, msg, meta = {}) => console.log(
       JSON.stringify({ ts: (/* @__PURE__ */ new Date()).toISOString(), level, msg, ...meta })
@@ -322,10 +342,12 @@ var require_setup_ssh = __commonJS({
       const appPath = process.env["APP_PATH"];
       const stackName = process.env["STACK_NAME"];
       const domain = process.env["DOMAIN"];
-      log2("info", "Setting up SSH access", {
+      const timeout = process.env["SSH_TEST_TIMEOUT"] ? Number(process.env["SSH_TEST_TIMEOUT"]) : void 0;
+      log2("info", "Testing SSH connection", {
         appPath,
         stackName,
-        domain
+        domain,
+        timeout
       });
       try {
         let stackInfo;
@@ -345,42 +367,31 @@ var require_setup_ssh = __commonJS({
         log2("info", "Stack information retrieved", {
           stackName: stackInfo.stackName,
           domain: stackInfo.domain,
-          hasKeyPairId: !!stackInfo.keyPairId,
-          hasInstanceKeyName: !!stackInfo.instanceKeyName,
-          hasInstanceIp: !!stackInfo.instancePublicIp
+          instanceIp: stackInfo.instancePublicIp,
+          instanceKeyName: stackInfo.instanceKeyName
         });
-        const result = await setupSshForStack({
-          keyPairId: stackInfo.keyPairId,
-          instanceKeyName: stackInfo.instanceKeyName,
+        if (!stackInfo.instancePublicIp) {
+          throw new Error("Could not get instance IP address");
+        }
+        console.log(`
+Testing SSH connection to ${stackInfo.domain} (${stackInfo.instancePublicIp})...`);
+        const result = await testSshForStack({
           instancePublicIp: stackInfo.instancePublicIp,
           domain: stackInfo.domain,
-          stackName: stackInfo.stackName,
+          instanceKeyName: stackInfo.instanceKeyName,
           region: stackInfo.region,
           profile: process.env["AWS_PROFILE"]
         });
-        console.log("\n=== SSH Setup Summary ===");
-        console.log(`Stack: ${stackInfo.stackName} (${stackInfo.domain})`);
-        console.log(`Instance IP: ${stackInfo.instancePublicIp}`);
-        console.log(`Key File: ${result.keyFilePath}`);
-        console.log(`Status: ${result.success ? "\u2713 Success" : "\u2717 Failed"}`);
-        if (result.sshConfigEntry) {
-          console.log("\nSSH Config Entry (add to ~/.ssh/config):");
-          console.log(result.sshConfigEntry);
-          console.log("\nThen connect using:");
-          console.log(`ssh ${stackInfo.domain}`);
+        console.log("");
+        if (result.success) {
+          console.log("\u2713 SSH connection test passed");
+          process.exit(0);
         } else {
-          console.log("\nConnect using:");
-          console.log(`ssh -i ${result.keyFilePath} ubuntu@${stackInfo.instancePublicIp}`);
-        }
-        if (result.errors.length > 0) {
-          console.log("\nWarnings/Errors:");
-          result.errors.forEach((err) => console.log(`  - ${err}`));
-        }
-        if (!result.success) {
+          console.log(`\u2717 SSH connection test failed: ${result.error}`);
           process.exit(1);
         }
       } catch (err) {
-        log2("error", "SSH setup failed", { error: String(err) });
+        log2("error", "SSH test failed", { error: String(err) });
         console.error("\nFatal error:", err);
         process.exit(1);
       }
@@ -388,4 +399,4 @@ var require_setup_ssh = __commonJS({
     main();
   }
 });
-export default require_setup_ssh();
+export default require_test_ssh();

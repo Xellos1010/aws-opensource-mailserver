@@ -1,0 +1,47 @@
+{
+  "name": "cdk-askdaokapra",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cdk-askdaokapra/src",
+  "projectType": "application",
+  "tags": ["type:cdk", "scope:infra", "domain:askdaokapra"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/cdk-askdaokapra",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/cdk-askdaokapra/src/main.ts",
+        "tsConfig": "apps/cdk-askdaokapra/tsconfig.app.json",
+        "assets": ["apps/cdk-askdaokapra/src/assets"],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "external": ["aws-sdk"]
+        }
+      }
+    },
+    "synth": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk synth",
+        "cwd": "dist/apps/cdk-askdaokapra"
+      },
+      "dependsOn": ["build"]
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk deploy --require-approval never",
+        "cwd": "dist/apps/cdk-askdaokapra"
+      },
+      "dependsOn": ["build"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
+
