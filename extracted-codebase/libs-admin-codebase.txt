@@ -1,5 +1,5 @@
 # libs-admin Codebase
-# Generated on: Thu Nov  6 23:02:40 EST 2025
+# Generated on: Fri Nov  7 13:35:36 EST 2025
 # Source: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin
 # 
 # This file contains all source code files from the libs-admin component.
@@ -2962,7 +2962,9 @@ if (require.main === module) {
   "compilerOptions": {
     "outDir": "../../../dist/out-tsc",
     "declaration": true,
-    "types": ["node"]
+    "types": ["node"],
+    "module": "ESNext",
+    "moduleResolution": "bundler"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
@@ -3176,7 +3178,9 @@ if (require.main === module) {
   "compilerOptions": {
     "outDir": "../../../dist/out-tsc",
     "declaration": true,
-    "types": ["node"]
+    "types": ["node"],
+    "module": "ESNext",
+    "moduleResolution": "bundler"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
@@ -3925,7 +3929,7 @@ main();
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
       "options": {
-        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emc-notary node dist/libs/admin/admin-reverse-dns/set-reverse-dns.mjs"
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emcnotary-core node dist/libs/admin/admin-reverse-dns/set-reverse-dns.mjs"
       }
     },
     "test": {
@@ -4186,6 +4190,582 @@ export async function setReverseDns(
     "src/**/*.d.ts"
   ]
 }
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-s3-empty/bin/empty-buckets.ts ====
+#!/usr/bin/env node
+
+import { emptyStackBuckets } from '../src/lib/empty-buckets';
+
+async function main() {
+  const appPath = process.env['APP_PATH'];
+  const stackName = process.env['STACK_NAME'];
+  const domain = process.env['DOMAIN'];
+  const region = process.env['AWS_REGION'];
+  const profile = process.env['AWS_PROFILE'];
+  const dryRun = process.env['DRY_RUN'] === '1' || process.env['DRY_RUN'] === 'true';
+
+  try {
+    const result = await emptyStackBuckets({
+      appPath,
+      stackName,
+      domain,
+      region,
+      profile,
+      dryRun,
+    });
+
+    console.log('='.repeat(60));
+    console.log('Summary:');
+    console.log('='.repeat(60));
+    console.log(`Total buckets processed: ${result.buckets.length}`);
+    
+    if (result.results.length > 0) {
+      let totalVersions = 0;
+      let totalMarkers = 0;
+      
+      for (const res of result.results) {
+        totalVersions += res.versionsDeleted;
+        totalMarkers += res.markersDeleted;
+        console.log(`  ${res.bucket}: ${res.versionsDeleted} versions, ${res.markersDeleted} markers`);
+      }
+      
+      console.log('');
+      console.log(`Total: ${totalVersions} versions, ${totalMarkers} markers deleted`);
+    }
+
+    if (dryRun) {
+      console.log('');
+      console.log('⚠️  This was a dry run. No buckets were actually emptied.');
+    }
+
+    process.exit(0);
+  } catch (error) {
+    console.error('Error emptying stack buckets:', error);
+    process.exit(1);
+  }
+}
+
+main();
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-s3-empty/jest.config.ts ====
+export default {
+  displayName: 'admin-s3-empty',
+  preset: '../../../jest.preset.js',
+  testEnvironment: 'node',
+  transform: {
+    '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+  },
+  moduleFileExtensions: ['ts', 'js', 'html'],
+  coverageDirectory: '../../../coverage/libs/admin/admin-s3-empty',
+};
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-s3-empty/package.json ====
+{
+  "name": "@mm/admin-s3-empty",
+  "version": "0.0.1",
+  "type": "module"
+}
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-s3-empty/project.json ====
+{
+  "name": "admin-s3-empty",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/admin/admin-s3-empty/src",
+  "projectType": "library",
+  "tags": ["scope:admin", "type:util", "platform:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/admin/admin-s3-empty",
+        "main": "libs/admin/admin-s3-empty/bin/empty-buckets.ts",
+        "tsConfig": "libs/admin/admin-s3-empty/tsconfig.lib.json",
+        "assets": [],
+        "format": ["esm"],
+        "outputFileName": "empty-buckets.mjs",
+        "generatePackageJson": true,
+        "bundle": true,
+        "platform": "node",
+        "target": "node20",
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/admin/admin-s3-empty/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "empty": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=${APP_PATH} STACK_NAME=${STACK_NAME} DOMAIN=${DOMAIN} DRY_RUN=${DRY_RUN:-0} node dist/libs/admin/admin-s3-empty/empty-buckets.mjs"
+      }
+    },
+    "empty:emcnotary": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emcnotary-core node dist/libs/admin/admin-s3-empty/empty-buckets.mjs"
+      }
+    },
+    "empty:emcnotary:dry-run": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emcnotary-core DRY_RUN=1 node dist/libs/admin/admin-s3-empty/empty-buckets.mjs"
+      }
+    },
+    "empty:emcnotary:old-stack": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 STACK_NAME=emcnotary-mailserver-core node dist/libs/admin/admin-s3-empty/empty-buckets.mjs"
+      }
+    },
+    "empty:askdaokapra": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-askdaokapra node dist/libs/admin/admin-s3-empty/empty-buckets.mjs"
+      }
+    },
+    "empty:askdaokapra:dry-run": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-askdaokapra DRY_RUN=1 node dist/libs/admin/admin-s3-empty/empty-buckets.mjs"
+      }
+    }
+  }
+}
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-s3-empty/README.md ====
+# Admin S3 Empty
+
+Utility library for emptying S3 buckets in a CloudFormation stack before stack deletion.
+
+## Overview
+
+When deleting a CloudFormation stack that contains S3 buckets, AWS requires that all buckets be empty before deletion. This library automates the process of:
+
+1. Discovering all S3 buckets in a CloudFormation stack
+2. Emptying each bucket by deleting all object versions and delete markers
+3. Providing a summary of the operation
+
+## Usage
+
+### Via Nx Tasks
+
+#### Empty buckets for EMC Notary (old stack)
+```bash
+pnpm nx run admin-s3-empty:empty:emcnotary
+```
+
+#### Dry run (preview what would be deleted)
+```bash
+pnpm nx run admin-s3-empty:empty:emcnotary:dry-run
+```
+
+#### Empty buckets for AskDaoKapra
+```bash
+pnpm nx run admin-s3-empty:empty:askdaokapra
+```
+
+#### Generic usage with environment variables
+```bash
+APP_PATH=apps/cdk-emcnotary-core \
+STACK_NAME=emcnotary-mailserver-core \
+AWS_PROFILE=hepe-admin-mfa \
+AWS_REGION=us-east-1 \
+pnpm nx run admin-s3-empty:empty
+```
+
+### Environment Variables
+
+- `APP_PATH` - Path to the CDK app directory (e.g., `apps/cdk-emcnotary-core`)
+- `STACK_NAME` - Explicit CloudFormation stack name (takes precedence over `APP_PATH`)
+- `DOMAIN` - Domain name (used for stack name resolution)
+- `AWS_PROFILE` - AWS CLI profile to use (default: `hepe-admin-mfa`)
+- `AWS_REGION` - AWS region (default: `us-east-1`)
+- `DRY_RUN` - Set to `1` or `true` for dry run mode (default: `0`)
+
+## How It Works
+
+1. **Stack Discovery**: Uses `admin-stack-info` to resolve the stack name from `APP_PATH`, `STACK_NAME`, or `DOMAIN`
+2. **Bucket Discovery**: Lists all CloudFormation resources in the stack and filters for `AWS::S3::Bucket` resources
+3. **Bucket Emptying**: For each bucket:
+   - Lists all object versions (including delete markers)
+   - Deletes all versions and markers in batches
+   - Handles pagination for large buckets
+4. **Summary**: Provides a detailed summary of what was deleted
+
+## Example Output
+
+```
+Finding S3 buckets in stack: emcnotary-mailserver-core
+Region: us-east-1, Profile: hepe-admin-mfa
+
+Found 2 S3 bucket(s):
+  - emcnotary.com-backup (BackupBucket26B8E51C)
+  - emcnotary.com-nextcloud (NextcloudBucket8B0187A4)
+
+  Emptying bucket: emcnotary.com-backup
+    Deleted 15 object version(s)
+    Deleted 2 delete marker(s)
+  ✅ Completed: 15 versions, 2 markers
+
+  Emptying bucket: emcnotary.com-nextcloud
+    Deleted 8 object version(s)
+  ✅ Completed: 8 versions, 0 markers
+
+============================================================
+Summary:
+============================================================
+Total buckets processed: 2
+  emcnotary.com-backup: 15 versions, 2 markers
+  emcnotary.com-nextcloud: 8 versions, 0 markers
+
+Total: 23 versions, 2 markers deleted
+```
+
+## Important Notes
+
+- **Versioned Buckets**: This script handles versioned buckets correctly by deleting all versions and delete markers
+- **Dry Run**: Always test with `--dry-run` first to preview what will be deleted
+- **Irreversible**: Emptying buckets is irreversible. Ensure you have backups if needed
+- **Stack Deletion**: After emptying buckets, you can safely delete the CloudFormation stack
+
+## Integration with Stack Deletion
+
+This script is designed to be run before deleting a CloudFormation stack:
+
+```bash
+# 1. Empty buckets (dry run first)
+pnpm nx run admin-s3-empty:empty:emcnotary:dry-run
+
+# 2. Empty buckets (actual)
+pnpm nx run admin-s3-empty:empty:emcnotary
+
+# 3. Delete stack
+aws cloudformation delete-stack --stack-name emcnotary-mailserver-core
+```
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-s3-empty/src/index.ts ====
+export * from './lib/empty-buckets';
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-s3-empty/src/lib/empty-buckets.ts ====
+import {
+  CloudFormationClient,
+  ListStackResourcesCommand,
+  DescribeStackResourcesCommand,
+} from '@aws-sdk/client-cloudformation';
+import {
+  S3Client,
+  ListObjectVersionsCommand,
+  DeleteObjectCommand,
+  DeleteObjectsCommand,
+} from '@aws-sdk/client-s3';
+import { fromIni } from '@aws-sdk/credential-providers';
+import { getStackInfo, type StackInfoConfig } from '@mm/admin-stack-info';
+
+export type EmptyBucketsConfig = StackInfoConfig & {
+  dryRun?: boolean;
+};
+
+export type BucketInfo = {
+  bucketName: string;
+  logicalId: string;
+};
+
+/**
+ * Lists all S3 buckets in a CloudFormation stack
+ */
+export async function listStackBuckets(
+  stackName: string,
+  region: string,
+  profile: string
+): Promise<BucketInfo[]> {
+  const credentials = fromIni({ profile });
+  const cfClient = new CloudFormationClient({ region, credentials });
+
+  const buckets: BucketInfo[] = [];
+  let nextToken: string | undefined;
+
+  do {
+    const command = nextToken
+      ? new ListStackResourcesCommand({
+          StackName: stackName,
+          NextToken: nextToken,
+        })
+      : new ListStackResourcesCommand({ StackName: stackName });
+
+    const response = await cfClient.send(command);
+
+    if (response.StackResourceSummaries) {
+      for (const resource of response.StackResourceSummaries) {
+        if (resource.ResourceType === 'AWS::S3::Bucket') {
+          // Get the physical resource ID (bucket name)
+          const describeCommand = new DescribeStackResourcesCommand({
+            StackName: stackName,
+            LogicalResourceId: resource.LogicalResourceId,
+          });
+          const describeResponse = await cfClient.send(describeCommand);
+          const physicalId = describeResponse.StackResources?.[0]?.PhysicalResourceId;
+
+          if (physicalId) {
+            buckets.push({
+              bucketName: physicalId,
+              logicalId: resource.LogicalResourceId || 'Unknown',
+            });
+          }
+        }
+      }
+    }
+
+    nextToken = response.NextToken;
+  } while (nextToken);
+
+  return buckets;
+}
+
+/**
+ * Empties an S3 bucket by deleting all object versions and delete markers
+ */
+export async function emptyBucket(
+  bucketName: string,
+  region: string,
+  profile: string,
+  dryRun: boolean = false
+): Promise<{ versionsDeleted: number; markersDeleted: number }> {
+  const credentials = fromIni({ profile });
+  const s3Client = new S3Client({ region, credentials });
+
+  let versionsDeleted = 0;
+  let markersDeleted = 0;
+  let nextKeyMarker: string | undefined;
+  let nextVersionIdMarker: string | undefined;
+
+  console.log(`  ${dryRun ? '[DRY RUN] ' : ''}Emptying bucket: ${bucketName}`);
+
+  do {
+    const command = new ListObjectVersionsCommand({
+      Bucket: bucketName,
+      KeyMarker: nextKeyMarker,
+      VersionIdMarker: nextVersionIdMarker,
+    });
+
+    const response = await s3Client.send(command);
+
+    // Delete object versions
+    if (response.Versions && response.Versions.length > 0) {
+      const objectsToDelete = response.Versions.map((version) => ({
+        Key: version.Key!,
+        VersionId: version.VersionId,
+      }));
+
+      if (!dryRun) {
+        const deleteCommand = new DeleteObjectsCommand({
+          Bucket: bucketName,
+          Delete: {
+            Objects: objectsToDelete,
+            Quiet: true,
+          },
+        });
+        await s3Client.send(deleteCommand);
+      }
+
+      versionsDeleted += objectsToDelete.length;
+      console.log(
+        `    ${dryRun ? '[DRY RUN] ' : ''}Deleted ${objectsToDelete.length} object version(s)`
+      );
+    }
+
+    // Delete delete markers
+    if (response.DeleteMarkers && response.DeleteMarkers.length > 0) {
+      const markersToDelete = response.DeleteMarkers.map((marker) => ({
+        Key: marker.Key!,
+        VersionId: marker.VersionId,
+      }));
+
+      if (!dryRun) {
+        const deleteCommand = new DeleteObjectsCommand({
+          Bucket: bucketName,
+          Delete: {
+            Objects: markersToDelete,
+            Quiet: true,
+          },
+        });
+        await s3Client.send(deleteCommand);
+      }
+
+      markersDeleted += markersToDelete.length;
+      console.log(
+        `    ${dryRun ? '[DRY RUN] ' : ''}Deleted ${markersToDelete.length} delete marker(s)`
+      );
+    }
+
+    nextKeyMarker = response.NextKeyMarker;
+    nextVersionIdMarker = response.NextVersionIdMarker;
+  } while (nextKeyMarker || nextVersionIdMarker);
+
+  return { versionsDeleted, markersDeleted };
+}
+
+/**
+ * Empties all S3 buckets in a CloudFormation stack
+ */
+export async function emptyStackBuckets(
+  config: EmptyBucketsConfig
+): Promise<{ buckets: BucketInfo[]; results: Array<{ bucket: string; versionsDeleted: number; markersDeleted: number }> }> {
+  const region = config.region || process.env['AWS_REGION'] || 'us-east-1';
+  const profile = config.profile || process.env['AWS_PROFILE'] || 'hepe-admin-mfa';
+  const dryRun = config.dryRun ?? false;
+
+  // Get stack info to resolve stack name
+  const stackInfo = await getStackInfo(config);
+  const stackName = stackInfo.stackName;
+
+  console.log(`Finding S3 buckets in stack: ${stackName}`);
+  console.log(`Region: ${region}, Profile: ${profile}`);
+  if (dryRun) {
+    console.log('⚠️  DRY RUN MODE - No buckets will be emptied');
+  }
+  console.log('');
+
+  // List all S3 buckets in the stack
+  const buckets = await listStackBuckets(stackName, region, profile);
+
+  if (buckets.length === 0) {
+    console.log('No S3 buckets found in stack.');
+    return { buckets: [], results: [] };
+  }
+
+  console.log(`Found ${buckets.length} S3 bucket(s):`);
+  for (const bucket of buckets) {
+    console.log(`  - ${bucket.bucketName} (${bucket.logicalId})`);
+  }
+  console.log('');
+
+  // Empty each bucket
+  const results: Array<{ bucket: string; versionsDeleted: number; markersDeleted: number }> = [];
+
+  for (const bucket of buckets) {
+    try {
+      const result = await emptyBucket(bucket.bucketName, region, profile, dryRun);
+      results.push({
+        bucket: bucket.bucketName,
+        versionsDeleted: result.versionsDeleted,
+        markersDeleted: result.markersDeleted,
+      });
+      console.log(
+        `  ✅ Completed: ${result.versionsDeleted} versions, ${result.markersDeleted} markers`
+      );
+    } catch (error) {
+      console.error(`  ❌ Failed to empty bucket ${bucket.bucketName}:`, error);
+      results.push({
+        bucket: bucket.bucketName,
+        versionsDeleted: 0,
+        markersDeleted: 0,
+      });
+    }
+    console.log('');
+  }
+
+  return { buckets, results };
+}
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-s3-empty/tsconfig.json ====
+{
+  "extends": "../../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "compilerOptions": {
+    "esModuleInterop": true
+  }
+}
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-s3-empty/tsconfig.lib.json ====
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "lib": ["ES2020"],
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "../../../dist/out-tsc",
+    "rootDir": ".",
+    "types": ["node"],
+    "moduleResolution": "bundler"
+  },
+  "include": ["src/**/*.ts", "bin/**/*.ts"],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-s3-empty/tsconfig.spec.json ====
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/out-tsc",
+    "module": "commonjs",
+    "types": ["jest", "node"]
+  },
+  "include": [
+    "jest.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.d.ts"
+  ]
+}
+
 
 
 
@@ -6794,6 +7374,387 @@ if (require.main === module) {
 
 
 
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-stack-events/bin/get-stack-events.ts ====
+#!/usr/bin/env node
+
+import { getStackEvents, getFailedStackEvents, formatStackEvents } from '../src/lib/stack-events';
+
+async function main() {
+  const appPath = process.env['APP_PATH'];
+  const stackName = process.env['STACK_NAME'];
+  const domain = process.env['DOMAIN'];
+  const region = process.env['AWS_REGION'];
+  const profile = process.env['AWS_PROFILE'];
+  const maxResults = process.env['MAX_RESULTS'] ? parseInt(process.env['MAX_RESULTS'], 10) : undefined;
+  const failedOnly = process.env['FAILED_ONLY'] === '1' || process.env['FAILED_ONLY'] === 'true';
+
+  try {
+    const events = failedOnly
+      ? await getFailedStackEvents({
+          appPath,
+          stackName,
+          domain,
+          region,
+          profile,
+          maxResults,
+        })
+      : await getStackEvents({
+          appPath,
+          stackName,
+          domain,
+          region,
+          profile,
+          maxResults,
+        });
+
+    console.log(formatStackEvents(events));
+
+    if (failedOnly && events.length > 0) {
+      console.log('\n⚠️  Failed events detected. Review the reasons above.');
+      process.exit(1);
+    }
+
+    process.exit(0);
+  } catch (error) {
+    console.error('Error getting stack events:', error);
+    process.exit(1);
+  }
+}
+
+main();
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-stack-events/jest.config.ts ====
+export default {
+  displayName: 'admin-stack-events',
+  preset: '../../../jest.preset.js',
+  testEnvironment: 'node',
+  transform: {
+    '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+  },
+  moduleFileExtensions: ['ts', 'js', 'html'],
+  coverageDirectory: '../../../coverage/libs/admin/admin-stack-events',
+};
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-stack-events/package.json ====
+{
+  "name": "@mm/admin-stack-events",
+  "version": "0.0.1",
+  "type": "module"
+}
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-stack-events/project.json ====
+{
+  "name": "admin-stack-events",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/admin/admin-stack-events/src",
+  "projectType": "library",
+  "tags": ["scope:admin", "type:util", "platform:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/admin/admin-stack-events",
+        "main": "libs/admin/admin-stack-events/bin/get-stack-events.ts",
+        "tsConfig": "libs/admin/admin-stack-events/tsconfig.lib.json",
+        "assets": [],
+        "format": ["esm"],
+        "outputFileName": "get-stack-events.mjs",
+        "generatePackageJson": true,
+        "bundle": true,
+        "platform": "node",
+        "target": "node20",
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/admin/admin-stack-events/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "events": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=${APP_PATH} STACK_NAME=${STACK_NAME} DOMAIN=${DOMAIN} MAX_RESULTS=${MAX_RESULTS:-50} FAILED_ONLY=${FAILED_ONLY:-0} node dist/libs/admin/admin-stack-events/get-stack-events.mjs"
+      }
+    },
+    "events:emcnotary": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emcnotary-core node dist/libs/admin/admin-stack-events/get-stack-events.mjs"
+      }
+    },
+    "events:emcnotary:failed": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emcnotary-core FAILED_ONLY=1 node dist/libs/admin/admin-stack-events/get-stack-events.mjs"
+      }
+    },
+    "events:askdaokapra": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-askdaokapra node dist/libs/admin/admin-stack-events/get-stack-events.mjs"
+      }
+    },
+    "events:askdaokapra:failed": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-askdaokapra FAILED_ONLY=1 node dist/libs/admin/admin-stack-events/get-stack-events.mjs"
+      }
+    }
+  }
+}
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-stack-events/src/index.ts ====
+export * from './lib/stack-events';
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-stack-events/src/lib/stack-events.ts ====
+import {
+  CloudFormationClient,
+  DescribeStackEventsCommand,
+  DescribeStacksCommand,
+} from '@aws-sdk/client-cloudformation';
+import { fromIni } from '@aws-sdk/credential-providers';
+import { getStackInfo, type StackInfoConfig } from '@mm/admin-stack-info';
+
+export type StackEventsConfig = StackInfoConfig & {
+  maxResults?: number;
+  filterByResourceStatus?: string[]; // e.g., ['CREATE_FAILED', 'UPDATE_FAILED', 'DELETE_FAILED']
+};
+
+export type StackEvent = {
+  timestamp: Date;
+  resourceStatus?: string;
+  resourceType?: string;
+  logicalResourceId?: string;
+  physicalResourceId?: string;
+  resourceStatusReason?: string;
+  stackName: string;
+  eventId: string;
+};
+
+/**
+ * Gets CloudFormation stack events, optionally filtered by status
+ */
+export async function getStackEvents(
+  config: StackEventsConfig
+): Promise<StackEvent[]> {
+  const region = config.region || process.env['AWS_REGION'] || 'us-east-1';
+  const profile = config.profile || process.env['AWS_PROFILE'] || 'hepe-admin-mfa';
+  const maxResults = config.maxResults || 100;
+
+  // Get stack info to resolve stack name
+  const stackInfo = await getStackInfo(config);
+  const stackName = stackInfo.stackName;
+
+  const credentials = fromIni({ profile });
+  const cfClient = new CloudFormationClient({ region, credentials });
+
+  // First, check if stack exists and get its status
+  let stackStatus: string | undefined;
+  try {
+    const stackResp = await cfClient.send(
+      new DescribeStacksCommand({ StackName: stackName })
+    );
+    stackStatus = stackResp.Stacks?.[0]?.StackStatus;
+  } catch (error) {
+    throw new Error(`Stack ${stackName} not found or inaccessible: ${error}`);
+  }
+
+  const events: StackEvent[] = [];
+  let nextToken: string | undefined;
+
+  do {
+    const command = nextToken
+      ? new DescribeStackEventsCommand({
+          StackName: stackName,
+          NextToken: nextToken,
+        })
+      : new DescribeStackEventsCommand({ StackName: stackName });
+
+    const response = await cfClient.send(command);
+
+    if (response.StackEvents) {
+      for (const event of response.StackEvents) {
+        const stackEvent: StackEvent = {
+          timestamp: event.Timestamp || new Date(),
+          resourceStatus: event.ResourceStatus,
+          resourceType: event.ResourceType,
+          logicalResourceId: event.LogicalResourceId,
+          physicalResourceId: event.PhysicalResourceId,
+          resourceStatusReason: event.ResourceStatusReason,
+          stackName: event.StackName || stackName,
+          eventId: event.EventId || '',
+        };
+
+        // Apply filters if specified
+        if (
+          !config.filterByResourceStatus ||
+          config.filterByResourceStatus.length === 0 ||
+          (stackEvent.resourceStatus &&
+            config.filterByResourceStatus.includes(stackEvent.resourceStatus))
+        ) {
+          events.push(stackEvent);
+        }
+      }
+    }
+
+    nextToken = response.NextToken;
+  } while (nextToken && events.length < maxResults);
+
+  // Sort by timestamp (newest first)
+  events.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+  return events.slice(0, maxResults);
+}
+
+/**
+ * Gets only failed events from a stack
+ */
+export async function getFailedStackEvents(
+  config: StackEventsConfig
+): Promise<StackEvent[]> {
+  return getStackEvents({
+    ...config,
+    filterByResourceStatus: [
+      'CREATE_FAILED',
+      'UPDATE_FAILED',
+      'DELETE_FAILED',
+      'ROLLBACK_IN_PROGRESS',
+      'ROLLBACK_COMPLETE',
+      'ROLLBACK_FAILED',
+    ],
+  });
+}
+
+/**
+ * Formats stack events for console output
+ */
+export function formatStackEvents(events: StackEvent[]): string {
+  if (events.length === 0) {
+    return 'No events found.';
+  }
+
+  const lines: string[] = [];
+  lines.push('='.repeat(100));
+  lines.push(`Stack Events (${events.length} total)`);
+  lines.push('='.repeat(100));
+  lines.push('');
+
+  for (const event of events) {
+    const timestamp = event.timestamp.toISOString();
+    const status = event.resourceStatus || 'N/A';
+    const resourceType = event.resourceType || 'N/A';
+    const logicalId = event.logicalResourceId || 'N/A';
+    const reason = event.resourceStatusReason || '';
+
+    lines.push(`[${timestamp}] ${status}`);
+    lines.push(`  Resource: ${resourceType} (${logicalId})`);
+    if (event.physicalResourceId) {
+      lines.push(`  Physical ID: ${event.physicalResourceId}`);
+    }
+    if (reason) {
+      lines.push(`  Reason: ${reason}`);
+    }
+    lines.push('');
+  }
+
+  return lines.join('\n');
+}
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-stack-events/tsconfig.json ====
+{
+  "extends": "../../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "compilerOptions": {
+    "esModuleInterop": true
+  }
+}
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-stack-events/tsconfig.lib.json ====
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "lib": ["ES2020"],
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "../../../dist/out-tsc",
+    "rootDir": ".",
+    "types": ["node"],
+    "moduleResolution": "bundler"
+  },
+  "include": ["src/**/*.ts", "bin/**/*.ts"],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-stack-events/tsconfig.spec.json ====
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/out-tsc",
+    "module": "commonjs",
+    "types": ["jest", "node"]
+  },
+  "include": [
+    "jest.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.d.ts"
+  ]
+}
+
+
+
+
 ==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-stack-info/.eslintrc.json ====
 {
   "extends": ["../../../.eslintrc.json"],
@@ -7252,7 +8213,10 @@ export function resolveDomain(
     const appName = parts[parts.length - 1];
     
     // Remove "cdk-" prefix if present
-    const domainPart = appName.replace(/^cdk-/, '');
+    let domainPart = appName.replace(/^cdk-/, '');
+    
+    // Remove "-core" suffix if present (e.g., "emcnotary-core" -> "emcnotary")
+    domainPart = domainPart.replace(/-core$/, '');
     
     // Convert kebab-case to domain: "emc-notary" -> "emcnotary.com"
     // Domain mapping for known apps
@@ -7266,8 +8230,8 @@ export function resolveDomain(
   }
   
   if (stackName) {
-    // "emcnotary-com-mailserver" -> "emcnotary.com"
-    const withoutSuffix = stackName.replace(/-mailserver$/, '');
+    // "emcnotary-com-mailserver" or "emcnotary-com-mailserver-core" -> "emcnotary.com"
+    const withoutSuffix = stackName.replace(/-mailserver(-core)?$/, '');
     return withoutSuffix.replace(/-/g, '.');
   }
   
@@ -7295,7 +8259,12 @@ export function resolveStackName(
   
   const resolvedDomain = resolveDomain(appPath);
   if (resolvedDomain) {
-    return `${resolvedDomain.replace(/\./g, '-')}-mailserver`;
+    // Check if app path contains '-core' suffix (e.g., cdk-emcnotary-core)
+    // CDK core stacks use format: {domain}-mailserver-core
+    const appName = appPath?.split('/').pop() || '';
+    const isCoreStack = appName.includes('-core');
+    const suffix = isCoreStack ? '-mailserver-core' : '-mailserver';
+    return `${resolvedDomain.replace(/\./g, '-')}${suffix}`;
   }
   
   throw new Error(
@@ -7916,6 +8885,1571 @@ export async function backupUsers(
 
 
 ==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-users-backup/tsconfig.spec.json ====
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/out-tsc",
+    "types": ["vitest/globals", "vitest/importMeta", "vite/client", "node", "vitest"]
+  },
+  "include": [
+    "vite.config.ts",
+    "vite.config.mts",
+    "vitest.config.ts",
+    "vitest.config.mts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx",
+    "src/**/*.d.ts"
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/instance-provision/.eslintrc.json ====
+{
+  "extends": ["../../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*", "**/vite.config.*.timestamp*", "**/vitest.config.*.timestamp*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "ignoredFiles": [
+              "{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}",
+              "{projectRoot}/vite.config.{js,ts,mjs,mts}"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/instance-provision/bin/provision-instance.ts ====
+#!/usr/bin/env node
+
+import { provisionInstance } from '../src';
+
+async function main() {
+  const args = process.argv.slice(2);
+  const domainIndex = args.indexOf('--domain');
+  const skipSshIndex = args.indexOf('--skip-ssh');
+  const skipSesDnsIndex = args.indexOf('--skip-ses-dns');
+
+  if (domainIndex === -1 || domainIndex + 1 >= args.length) {
+    console.error('Usage: provision-instance --domain <domain> [--skip-ssh] [--skip-ses-dns]');
+    console.error('Example: provision-instance --domain emcnotary.com --skip-ssh');
+    process.exit(1);
+  }
+
+  const domain = args[domainIndex + 1];
+  const skipSsh = skipSshIndex !== -1;
+  const skipSesDns = skipSesDnsIndex !== -1;
+
+  console.log(`Provisioning instance for domain: ${domain}`);
+  console.log(`Skip SSH: ${skipSsh}`);
+  console.log(`Skip SES DNS: ${skipSesDns}`);
+  console.log('----------------------------------------');
+
+  const result = await provisionInstance({
+    domain,
+    region: process.env['AWS_REGION'] || 'us-east-1',
+    profile: process.env['AWS_PROFILE'] || 'hepe-admin-mfa',
+    skipSsh,
+    skipSesDns,
+  });
+
+  if (result.success) {
+    console.log('✅ Instance provisioning completed successfully!');
+    console.log();
+
+    if (result.sshResult) {
+      console.log('SSH Access:');
+      console.log(`  Instance: ${result.sshResult.instanceId} (${result.sshResult.instanceIp})`);
+      console.log(`  Host: ${result.sshResult.host}`);
+      console.log(`  Key file: ${result.sshResult.keyPath}`);
+      console.log();
+    }
+
+    if (result.sesDnsResult) {
+      console.log('SES DNS Records:');
+      console.log(`  Records configured: ${result.sesDnsResult.recordsConfigured}`);
+      console.log('  Please allow time for DNS propagation');
+      console.log();
+    }
+
+    if (!result.sshResult && !result.sesDnsResult) {
+      console.log('No provisioning steps were executed (both SSH and SES DNS were skipped)');
+    }
+  } else {
+    console.error('❌ Instance provisioning failed:', result.error);
+    if (result.sshResult) {
+      console.error('SSH setup may have partially succeeded:', result.sshResult);
+    }
+    process.exit(1);
+  }
+}
+
+main().catch((error) => {
+  console.error('Unexpected error:', error);
+  process.exit(1);
+});
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/instance-provision/package.json ====
+{
+  "name": "@mm/admin-instance-provision",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "tslib": "^2.3.0"
+  }
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/instance-provision/project.json ====
+{
+  "name": "instance-provision",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/admin/instance-provision/src",
+  "projectType": "library",
+  "tags": ["scope:admin", "type:util", "domain:infra"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/admin/instance-provision",
+        "main": "libs/admin/instance-provision/bin/provision-instance.ts",
+        "tsConfig": "libs/admin/instance-provision/tsconfig.lib.json",
+        "assets": [],
+        "format": ["esm"],
+        "outputFileName": "provision-instance.mjs",
+        "generatePackageJson": true,
+        "bundle": true,
+        "platform": "node",
+        "target": "node20",
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
+      }
+    },
+    "provision": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/admin/instance-provision/provision-instance.mjs"
+      }
+    },
+    "provision:emcnotary": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/admin/instance-provision/provision-instance.mjs --domain emcnotary.com"
+      }
+    },
+    "provision:emcnotary:skip-ssh": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/admin/instance-provision/provision-instance.mjs --domain emcnotary.com --skip-ssh"
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/instance-provision/README.md ====
+# instance-provision
+
+This library was generated with [Nx](https://nx.dev).
+
+## Building
+
+Run `nx build instance-provision` to build the library.
+
+## Running unit tests
+
+Run `nx test instance-provision` to execute the unit tests via [Vitest](https://vitest.dev/).
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/instance-provision/src/index.ts ====
+export { provisionInstance, type ProvisionInstanceConfig, type ProvisionResult } from './lib/instance-provision';
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/instance-provision/src/lib/instance-provision.spec.ts ====
+import { instanceProvision } from "./instance-provision";
+
+describe("instanceProvision", () => {
+  it("should work", () => {
+    expect(instanceProvision()).toEqual("instance-provision");
+  });
+});
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/instance-provision/src/lib/instance-provision.ts ====
+import { setupSshAccess } from '@mm/admin-ssh-access';
+import { setSesDnsRecords } from '@mm/admin-ses-dns';
+
+const log = (
+  level: 'info' | 'warn' | 'error',
+  msg: string,
+  meta: Record<string, unknown> = {}
+) =>
+  console.log(
+    JSON.stringify({ ts: new Date().toISOString(), level, msg, ...meta })
+  );
+
+export type ProvisionInstanceConfig = {
+  domain: string;
+  region?: string;
+  profile?: string;
+  miabAdminEmail?: string; // Defaults to admin@{domain}
+  skipSsh?: boolean;
+  skipSesDns?: boolean;
+};
+
+export type ProvisionResult = {
+  success: boolean;
+  sshResult?: {
+    host?: string;
+    keyPath?: string;
+    instanceId?: string;
+    instanceIp?: string;
+  };
+  sesDnsResult?: {
+    recordsConfigured: number;
+  };
+  error?: string;
+};
+
+/**
+ * Provisions a mailserver instance by setting up SSH access and SES DNS records
+ * Orchestrates setupSshAccess() and setSesDnsRecords()
+ */
+export async function provisionInstance(
+  config: ProvisionInstanceConfig
+): Promise<ProvisionResult> {
+  const domain = config.domain;
+  const region = config.region || process.env['AWS_REGION'] || 'us-east-1';
+  const profile = config.profile || process.env['AWS_PROFILE'] || 'hepe-admin-mfa';
+  const miabAdminEmail = config.miabAdminEmail || `admin@${domain}`;
+  const skipSsh = config.skipSsh || false;
+  const skipSesDns = config.skipSesDns || false;
+
+  log('info', 'Starting instance provisioning', {
+    domain,
+    region,
+    profile,
+    miabAdminEmail,
+    skipSsh,
+    skipSesDns,
+  });
+
+  const result: ProvisionResult = {
+    success: true,
+  };
+
+  try {
+    // Step 1: Setup SSH access (unless skipped)
+    if (!skipSsh) {
+      log('info', 'Setting up SSH access');
+      const sshResult = await setupSshAccess({
+        domain,
+        region,
+        profile,
+      });
+
+      if (!sshResult.success) {
+        const error = `SSH setup failed: ${sshResult.error}`;
+        log('error', error);
+        return {
+          success: false,
+          error,
+          sshResult: {
+            instanceId: sshResult.instanceId,
+            instanceIp: sshResult.instanceIp,
+          },
+        };
+      }
+
+      log('info', 'SSH access setup completed successfully');
+      result.sshResult = {
+        host: sshResult.host,
+        keyPath: sshResult.keyPath,
+        instanceId: sshResult.instanceId,
+        instanceIp: sshResult.instanceIp,
+      };
+    } else {
+      log('info', 'Skipping SSH setup');
+    }
+
+    // Step 2: Setup SES DNS records (unless skipped)
+    if (!skipSesDns) {
+      log('info', 'Setting up SES DNS records');
+      const sesDnsResult = await setSesDnsRecords({
+        domain,
+        region,
+        profile,
+        miabAdminEmail,
+        dryRun: false, // Always do the real work in provision
+      });
+
+      if (!sesDnsResult.success) {
+        const error = `SES DNS setup failed: ${sesDnsResult.error}`;
+        log('error', error);
+        return {
+          success: false,
+          error,
+          sshResult: result.sshResult,
+        };
+      }
+
+      log('info', 'SES DNS records setup completed successfully');
+      result.sesDnsResult = {
+        recordsConfigured: sesDnsResult.records ? 5 : 0, // DKIM x3 + MX + TXT
+      };
+    } else {
+      log('info', 'Skipping SES DNS setup');
+    }
+
+    log('info', 'Instance provisioning completed successfully', {
+      sshConfigured: !skipSsh,
+      sesDnsConfigured: !skipSesDns,
+      recordsConfigured: result.sesDnsResult?.recordsConfigured || 0,
+    });
+
+    return result;
+
+  } catch (error) {
+    const err = `Instance provisioning failed: ${String(error)}`;
+    log('error', err, { error });
+    return {
+      success: false,
+      error: err,
+      sshResult: result.sshResult,
+    };
+  }
+}
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/instance-provision/tsconfig.json ====
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "importHelpers": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/instance-provision/tsconfig.lib.json ====
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/out-tsc",
+    "declaration": true,
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "vite.config.ts",
+    "vite.config.mts",
+    "vitest.config.ts",
+    "vitest.config.mts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx"
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/instance-provision/tsconfig.spec.json ====
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/out-tsc",
+    "types": ["vitest/globals", "vitest/importMeta", "vite/client", "node", "vitest"]
+  },
+  "include": [
+    "vite.config.ts",
+    "vite.config.mts",
+    "vitest.config.ts",
+    "vitest.config.mts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx",
+    "src/**/*.d.ts"
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ses-dns/.eslintrc.json ====
+{
+  "extends": ["../../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*", "**/vite.config.*.timestamp*", "**/vitest.config.*.timestamp*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "ignoredFiles": [
+              "{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}",
+              "{projectRoot}/vite.config.{js,ts,mjs,mts}"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ses-dns/bin/set-ses-dns.ts ====
+#!/usr/bin/env node
+
+import { setSesDnsRecords } from '../src';
+
+async function main() {
+  const args = process.argv.slice(2);
+  const domainIndex = args.indexOf('--domain');
+  const dryRunIndex = args.indexOf('--dry-run');
+
+  if (domainIndex === -1 || domainIndex + 1 >= args.length) {
+    console.error('Usage: set-ses-dns --domain <domain> [--dry-run]');
+    console.error('Example: set-ses-dns --domain emcnotary.com --dry-run');
+    process.exit(1);
+  }
+
+  const domain = args[domainIndex + 1];
+  const dryRun = dryRunIndex !== -1;
+
+  console.log(`Setting SES DNS records for domain: ${domain}`);
+  if (dryRun) {
+    console.log('DRY RUN MODE - No changes will be made');
+  }
+  console.log('----------------------------------------');
+
+  const result = await setSesDnsRecords({
+    domain,
+    region: process.env['AWS_REGION'] || 'us-east-1',
+    profile: process.env['AWS_PROFILE'] || 'hepe-admin-mfa',
+    dryRun,
+  });
+
+  if (result.success) {
+    if (dryRun) {
+      console.log('✅ DRY RUN: DNS records would be set successfully!');
+      console.log('\nRecords that would be configured:');
+      if (result.records) {
+        console.log(`  ${result.records.dkim1.type}: ${result.records.dkim1.name} -> ${result.records.dkim1.value}`);
+        console.log(`  ${result.records.dkim2.type}: ${result.records.dkim2.name} -> ${result.records.dkim2.value}`);
+        console.log(`  ${result.records.dkim3.type}: ${result.records.dkim3.name} -> ${result.records.dkim3.value}`);
+        console.log(`  ${result.records.mailFromMx.type}: ${result.records.mailFromMx.name} -> ${result.records.mailFromMx.value}`);
+        console.log(`  ${result.records.mailFromTxt.type}: ${result.records.mailFromTxt.name} -> ${result.records.mailFromTxt.value}`);
+      }
+    } else {
+      console.log('✅ SES DNS records have been set successfully!');
+      console.log('Please allow time for DNS propagation and verify the SES identity status in the AWS SES Console.');
+      console.log('You can check DNS records using:');
+      if (result.records) {
+        console.log(`  dig ${result.records.dkim1.name} CNAME`);
+        console.log(`  dig ${result.records.mailFromMx.name} MX`);
+        console.log(`  dig ${result.records.mailFromTxt.name} TXT`);
+      }
+    }
+  } else {
+    console.error('❌ SES DNS setup failed:', result.error);
+    process.exit(1);
+  }
+}
+
+main().catch((error) => {
+  console.error('Unexpected error:', error);
+  process.exit(1);
+});
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ses-dns/package.json ====
+{
+  "name": "@mm/admin-ses-dns",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "tslib": "^2.3.0"
+  }
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ses-dns/project.json ====
+{
+  "name": "ses-dns",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/admin/ses-dns/src",
+  "projectType": "library",
+  "tags": ["scope:admin", "type:util", "domain:dns"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/admin/ses-dns",
+        "main": "libs/admin/ses-dns/bin/set-ses-dns.ts",
+        "tsConfig": "libs/admin/ses-dns/tsconfig.lib.json",
+        "assets": [],
+        "format": ["esm"],
+        "outputFileName": "set-ses-dns.mjs",
+        "generatePackageJson": true,
+        "bundle": true,
+        "platform": "node",
+        "target": "node20",
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
+      }
+    },
+    "set-dns": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/admin/ses-dns/set-ses-dns.mjs"
+      }
+    },
+    "set-dns:emcnotary": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/admin/ses-dns/set-ses-dns.mjs --domain emcnotary.com"
+      }
+    },
+    "set-dns:emcnotary:dry-run": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/admin/ses-dns/set-ses-dns.mjs --domain emcnotary.com --dry-run"
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ses-dns/README.md ====
+# ses-dns
+
+This library was generated with [Nx](https://nx.dev).
+
+## Building
+
+Run `nx build ses-dns` to build the library.
+
+## Running unit tests
+
+Run `nx test ses-dns` to execute the unit tests via [Vitest](https://vitest.dev/).
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ses-dns/src/index.ts ====
+export { setSesDnsRecords, type SetSesDnsRecordsConfig, type SesDnsResult } from './lib/ses-dns';
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ses-dns/src/lib/ses-dns.spec.ts ====
+import { sesDns } from "./ses-dns";
+
+describe("sesDns", () => {
+  it("should work", () => {
+    expect(sesDns()).toEqual("ses-dns");
+  });
+});
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ses-dns/src/lib/ses-dns.ts ====
+import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-cloudformation';
+import { EC2Client, DescribeInstancesCommand } from '@aws-sdk/client-ec2';
+import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+import { execSync } from 'child_process';
+import { homedir } from 'os';
+import { join } from 'path';
+import { readFileSync } from 'fs';
+
+const log = (
+  level: 'info' | 'warn' | 'error',
+  msg: string,
+  meta: Record<string, unknown> = {}
+) =>
+  console.log(
+    JSON.stringify({ ts: new Date().toISOString(), level, msg, ...meta })
+  );
+
+export type SetSesDnsRecordsConfig = {
+  domain: string;
+  region?: string;
+  profile?: string;
+  stackName?: string; // Auto-generated if not provided
+  miabAdminEmail?: string; // Defaults to admin@{domain}
+  dryRun?: boolean;
+};
+
+export type SesDnsResult = {
+  success: boolean;
+  records?: {
+    dkim1: { name: string; value: string; type: 'CNAME' };
+    dkim2: { name: string; value: string; type: 'CNAME' };
+    dkim3: { name: string; value: string; type: 'CNAME' };
+    mailFromMx: { name: string; value: string; type: 'MX' };
+    mailFromTxt: { name: string; value: string; type: 'TXT' };
+  };
+  error?: string;
+};
+
+/**
+ * Sets SES DNS records via Mail-in-a-Box admin API
+ * Ports logic from archive/administration/set-ses-dns-records.sh
+ */
+export async function setSesDnsRecords(
+  config: SetSesDnsRecordsConfig
+): Promise<SesDnsResult> {
+  const region = config.region || process.env['AWS_REGION'] || 'us-east-1';
+  const profile = config.profile || process.env['AWS_PROFILE'] || 'hepe-admin-mfa';
+  const domain = config.domain;
+  const stackName = config.stackName || `${domain.replace(/\./g, '-')}-mailserver-core`;
+  const miabAdminEmail = config.miabAdminEmail || `admin@${domain}`;
+  const dryRun = config.dryRun || false;
+
+  log('info', 'Setting SES DNS records', {
+    domain,
+    stackName,
+    region,
+    profile,
+    miabAdminEmail,
+    dryRun,
+  });
+
+  const cfClient = new CloudFormationClient({ region });
+  const ec2Client = new EC2Client({ region });
+  const ssmClient = new SSMClient({ region });
+
+  try {
+    // Get core stack outputs for SES DNS records
+    const coreStackResp = await cfClient.send(
+      new DescribeStacksCommand({
+        StackName: stackName,
+      })
+    );
+
+    const coreStack = coreStackResp.Stacks?.[0];
+    if (!coreStack?.Outputs) {
+      const error = `Could not retrieve core stack outputs for ${stackName}`;
+      log('error', error);
+      return { success: false, error };
+    }
+
+    // Extract SES DNS records from core stack outputs
+    const outputs = coreStack.Outputs.reduce((acc, output) => {
+      acc[output.OutputKey!] = output.OutputValue!;
+      return acc;
+    }, {} as Record<string, string>);
+
+    const dkimName1 = outputs['DkimDNSTokenName1'];
+    const dkimValue1 = outputs['DkimDNSTokenValue1'];
+    const dkimName2 = outputs['DkimDNSTokenName2'];
+    const dkimValue2 = outputs['DkimDNSTokenValue2'];
+    const dkimName3 = outputs['DkimDNSTokenName3'];
+    const dkimValue3 = outputs['DkimDNSTokenValue3'];
+    const mailFromDomain = outputs['MailFromDomain'];
+    const mailFromMx = outputs['MailFromMXRecord'];
+    const mailFromTxt = outputs['MailFromTXTRecord'];
+
+    if (!dkimName1 || !dkimValue1 || !dkimName2 || !dkimValue2 || !dkimName3 || !dkimValue3 ||
+        !mailFromDomain || !mailFromMx || !mailFromTxt) {
+      const error = 'Missing required SES DNS record outputs from core stack';
+      log('error', error);
+      return { success: false, error };
+    }
+
+    const records = {
+      dkim1: { name: dkimName1, value: dkimValue1, type: 'CNAME' as const },
+      dkim2: { name: dkimName2, value: dkimValue2, type: 'CNAME' as const },
+      dkim3: { name: dkimName3, value: dkimValue3, type: 'CNAME' as const },
+      mailFromMx: { name: mailFromDomain, value: mailFromMx, type: 'MX' as const },
+      mailFromTxt: { name: mailFromDomain, value: mailFromTxt, type: 'TXT' as const },
+    };
+
+    log('info', 'Retrieved SES DNS records', {
+      dkim1: `${dkimName1} -> ${dkimValue1}`,
+      dkim2: `${dkimName2} -> ${dkimValue2}`,
+      dkim3: `${dkimName3} -> ${dkimValue3}`,
+      mailFrom: `${mailFromDomain} MX:${mailFromMx} TXT:${mailFromTxt}`,
+    });
+
+    if (dryRun) {
+      log('info', 'DRY RUN: Would set the following DNS records via MIAB API');
+      console.log('\nDNS Records to be set:');
+      console.log(`  CNAME: ${dkimName1} -> ${dkimValue1}`);
+      console.log(`  CNAME: ${dkimName2} -> ${dkimValue2}`);
+      console.log(`  CNAME: ${dkimName3} -> ${dkimValue3}`);
+      console.log(`  MX: ${mailFromDomain} -> ${mailFromMx}`);
+      console.log(`  TXT: ${mailFromDomain} -> ${mailFromTxt}`);
+      return { success: true, records };
+    }
+
+    // Get instance stack outputs for instance details
+    const instanceStackName = stackName.replace('-core', '-instance');
+    const instanceStackResp = await cfClient.send(
+      new DescribeStacksCommand({
+        StackName: instanceStackName,
+      })
+    );
+
+    const instanceStack = instanceStackResp.Stacks?.[0];
+    if (!instanceStack?.Outputs) {
+      const error = `Could not retrieve instance stack outputs for ${instanceStackName}`;
+      log('error', error);
+      return { success: false, error };
+    }
+
+    const instanceOutputs = instanceStack.Outputs.reduce((acc, output) => {
+      acc[output.OutputKey!] = output.OutputValue!;
+      return acc;
+    }, {} as Record<string, string>);
+
+    const instanceId = instanceOutputs['RestorePrefix']; // This is actually the instance ID
+    const instanceIp = instanceOutputs['PublicIp'] || instanceOutputs['ElasticIPAddress'];
+
+    if (!instanceId) {
+      const error = 'Could not find instance ID in instance stack outputs';
+      log('error', error);
+      return { success: false, error };
+    }
+
+    // Get instance IP if not in outputs
+    let finalInstanceIp = instanceIp;
+    if (!finalInstanceIp) {
+      const instanceResp = await ec2Client.send(
+        new DescribeInstancesCommand({
+          InstanceIds: [instanceId],
+        })
+      );
+
+      const instance = instanceResp.Reservations?.[0]?.Instances?.[0];
+      finalInstanceIp = instance?.PublicIpAddress;
+    }
+
+    if (!finalInstanceIp) {
+      const error = 'Could not determine instance public IP';
+      log('error', error);
+      return { success: false, error };
+    }
+
+    // Get instance key pair name
+    const instanceResp = await ec2Client.send(
+      new DescribeInstancesCommand({
+        InstanceIds: [instanceId],
+      })
+    );
+
+    const instance = instanceResp.Reservations?.[0]?.Instances?.[0];
+    const keyName = instance?.KeyName;
+
+    if (!keyName) {
+      const error = 'Could not determine instance key pair name';
+      log('error', error);
+      return { success: false, error };
+    }
+
+    // Get KeyPairId from instance stack outputs
+    const keyPairId = instanceOutputs['KeyPairId'];
+
+    if (!keyPairId) {
+      const error = 'Could not retrieve KeyPairId from instance stack outputs';
+      log('error', error);
+      return { success: false, error };
+    }
+
+    // Get admin password from SSM
+    const adminPasswordParam = await ssmClient.send(
+      new GetParameterCommand({
+        Name: `/MailInABoxAdminPassword-${instanceStackName}`,
+        WithDecryption: true,
+      })
+    );
+
+    const adminPassword = adminPasswordParam.Parameter?.Value;
+    if (!adminPassword) {
+      const error = 'Could not retrieve Mail-in-a-Box admin password from SSM';
+      log('error', error);
+      return { success: false, error };
+    }
+
+    // Get private key from SSM
+    const privateKeyParam = await ssmClient.send(
+      new GetParameterCommand({
+        Name: `/ec2/keypair/${keyPairId}`,
+        WithDecryption: true,
+      })
+    );
+
+    const privateKey = privateKeyParam.Parameter?.Value;
+    if (!privateKey) {
+      const error = 'Could not retrieve private key from SSM';
+      log('error', error);
+      return { success: false, error };
+    }
+
+    // Write private key to temp file
+    const tempKeyFile = `/tmp/ssh-key-${Date.now()}.pem`;
+    execSync(`echo "${privateKey}" > "${tempKeyFile}"`, { stdio: 'inherit' });
+    execSync(`chmod 400 "${tempKeyFile}"`, { stdio: 'inherit' });
+
+    try {
+      // Create script to set DNS records via MIAB API
+      const scriptContent = `
+#!/bin/bash
+set -e
+
+# Mail-in-a-Box API endpoint
+MIAB_HOST="https://box.${domain}"
+ADMIN_EMAIL="${miabAdminEmail}"
+ADMIN_PASSWORD="${adminPassword}"
+
+# Function to make API call
+set_dns_record() {
+    local type=\$1
+    local name=\$2
+    local value=\$3
+    local method=\$4  # PUT or POST
+
+    # Normalize qname by removing trailing domain if present
+    local normalized_name=\${name%.$domain}
+
+    echo "Setting \$type record: \$name -> \$value"
+
+    # Make the API call
+    response=\$(curl -s -w "%{http_code}" -o /tmp/curl_response \\
+         -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" \\
+         -X "\${method}" \\
+         -d "value=\$value" \\
+         -H "Content-Type: application/x-www-form-urlencoded" \\
+         "\${MIAB_HOST}/admin/dns/custom/\${normalized_name}/\${type}")
+
+    http_code=\${response##* }
+    response_body=\$(cat /tmp/curl_response)
+    rm -f /tmp/curl_response
+
+    if [ "\$http_code" != "200" ]; then
+        echo "Error: Failed to set \$type record for \$name (HTTP \$http_code)"
+        echo "Response: \$response_body"
+        exit 1
+    fi
+
+    echo "Successfully set \$type record for \$name"
+}
+
+# First, delete any existing records for these domains
+echo "Cleaning up existing records..."
+curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${dkimName1%.$domain}/CNAME" || true
+curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${dkimName2%.$domain}/CNAME" || true
+curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${dkimName3%.$domain}/CNAME" || true
+curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${mailFromDomain%.$domain}/MX" || true
+curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${mailFromDomain%.$domain}/TXT" || true
+
+# Set DKIM CNAME records using PUT (single value)
+set_dns_record "CNAME" "${dkimName1}" "${dkimValue1}" "PUT"
+set_dns_record "CNAME" "${dkimName2}" "${dkimValue2}" "PUT"
+set_dns_record "CNAME" "${dkimName3}" "${dkimValue3}" "PUT"
+
+# Set MAIL FROM MX record (strip priority for Mail-in-a-Box API)
+set_dns_record "MX" "${mailFromDomain}" "${mailFromMx##* }" "PUT"
+
+# Set MAIL FROM TXT record using POST to preserve any existing SPF records
+set_dns_record "TXT" "${mailFromDomain}" "${mailFromTxt}" "POST"
+
+echo "DNS records set successfully!"
+`.trim();
+
+      // Write script to temp file
+      const scriptFile = `/tmp/set-dns-records-${Date.now()}.sh`;
+      execSync(`echo "${scriptContent}" > "${scriptFile}"`, { stdio: 'inherit' });
+      execSync(`chmod +x "${scriptFile}"`, { stdio: 'inherit' });
+
+      // Copy script to instance
+      log('info', 'Copying DNS setup script to instance', { instanceIp: finalInstanceIp });
+      execSync(`scp -i "${tempKeyFile}" -o StrictHostKeyChecking=no "${scriptFile}" "ubuntu@${finalInstanceIp}:~/set-dns-records.sh"`, {
+        stdio: 'inherit'
+      });
+
+      // Execute DNS setup script
+      log('info', 'Executing DNS setup script on instance');
+      execSync(`ssh -i "${tempKeyFile}" -o StrictHostKeyChecking=no "ubuntu@${finalInstanceIp}" "~/set-dns-records.sh"`, {
+        stdio: 'inherit'
+      });
+
+      // Clean up temp files
+      execSync(`rm -f "${tempKeyFile}" "${scriptFile}"`, { stdio: 'inherit' });
+
+      log('info', 'SES DNS records set successfully via Mail-in-a-Box API');
+      return { success: true, records };
+
+    } catch (error) {
+      // Clean up temp files on error
+      execSync(`rm -f "${tempKeyFile}"`, { stdio: 'inherit' });
+      throw error;
+    }
+
+  } catch (error) {
+    const err = `SES DNS setup failed: ${String(error)}`;
+    log('error', err, { error });
+    return { success: false, error: err };
+  }
+}
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ses-dns/tsconfig.json ====
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "importHelpers": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ses-dns/tsconfig.lib.json ====
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/out-tsc",
+    "declaration": true,
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "vite.config.ts",
+    "vite.config.mts",
+    "vitest.config.ts",
+    "vitest.config.mts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx"
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ses-dns/tsconfig.spec.json ====
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/out-tsc",
+    "types": ["vitest/globals", "vitest/importMeta", "vite/client", "node", "vitest"]
+  },
+  "include": [
+    "vite.config.ts",
+    "vite.config.mts",
+    "vitest.config.ts",
+    "vitest.config.mts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx",
+    "src/**/*.d.ts"
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ssh-access/.eslintrc.json ====
+{
+  "extends": ["../../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*", "**/vite.config.*.timestamp*", "**/vitest.config.*.timestamp*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "ignoredFiles": [
+              "{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}",
+              "{projectRoot}/vite.config.{js,ts,mjs,mts}"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ssh-access/bin/setup-ssh-access.ts ====
+#!/usr/bin/env node
+
+import { setupSshAccess } from '../src';
+
+async function main() {
+  const args = process.argv.slice(2);
+  const domainIndex = args.indexOf('--domain');
+
+  if (domainIndex === -1 || domainIndex + 1 >= args.length) {
+    console.error('Usage: setup-ssh-access --domain <domain>');
+    console.error('Example: setup-ssh-access --domain emcnotary.com');
+    process.exit(1);
+  }
+
+  const domain = args[domainIndex + 1];
+
+  console.log(`Setting up SSH access for domain: ${domain}`);
+  console.log('----------------------------------------');
+
+  const result = await setupSshAccess({
+    domain,
+    region: process.env['AWS_REGION'] || 'us-east-1',
+    profile: process.env['AWS_PROFILE'] || 'hepe-admin-mfa',
+  });
+
+  if (result.success) {
+    console.log('✅ SSH access has been set up successfully!');
+    console.log();
+    console.log('Instance details:');
+    console.log(`  Instance ID: ${result.instanceId}`);
+    console.log(`  Instance IP: ${result.instanceIp}`);
+    console.log(`  Host: ${result.host}`);
+    console.log(`  Key file: ${result.keyPath}`);
+    console.log();
+    console.log('To connect to your instance:');
+    console.log(`ssh -i ${result.keyPath} ${result.host}`);
+    console.log();
+    console.log('Or add to ~/.ssh/config:');
+    console.log(`Host ${domain}`);
+    console.log(`    HostName ${result.instanceIp}`);
+    console.log(`    User ubuntu`);
+    console.log(`    IdentityFile ${result.keyPath}`);
+    console.log(`    StrictHostKeyChecking no`);
+    console.log();
+    console.log(`Then: ssh ${domain}`);
+  } else {
+    console.error('❌ SSH setup failed:', result.error);
+    process.exit(1);
+  }
+}
+
+main().catch((error) => {
+  console.error('Unexpected error:', error);
+  process.exit(1);
+});
+
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ssh-access/package.json ====
+{
+  "name": "@mm/admin-ssh-access",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "tslib": "^2.3.0"
+  }
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ssh-access/project.json ====
+{
+  "name": "ssh-access",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/admin/ssh-access/src",
+  "projectType": "library",
+  "tags": ["scope:admin", "type:util", "domain:infra"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/admin/ssh-access",
+        "main": "libs/admin/ssh-access/bin/setup-ssh-access.ts",
+        "tsConfig": "libs/admin/ssh-access/tsconfig.lib.json",
+        "assets": [],
+        "format": ["esm"],
+        "outputFileName": "setup-ssh-access.mjs",
+        "generatePackageJson": true,
+        "bundle": true,
+        "platform": "node",
+        "target": "node20",
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
+      }
+    },
+    "setup": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/admin/ssh-access/setup-ssh-access.mjs"
+      }
+    },
+    "setup:emcnotary": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/admin/ssh-access/setup-ssh-access.mjs --domain emcnotary.com"
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ssh-access/README.md ====
+# ssh-access
+
+This library was generated with [Nx](https://nx.dev).
+
+## Building
+
+Run `nx build ssh-access` to build the library.
+
+## Running unit tests
+
+Run `nx test ssh-access` to execute the unit tests via [Vitest](https://vitest.dev/).
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ssh-access/src/index.ts ====
+export { setupSshAccess, type SetupSshAccessConfig, type SshAccessResult } from './lib/ssh-access';
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ssh-access/src/lib/ssh-access.spec.ts ====
+import { sshAccess } from "./ssh-access";
+
+describe("sshAccess", () => {
+  it("should work", () => {
+    expect(sshAccess()).toEqual("ssh-access");
+  });
+});
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ssh-access/src/lib/ssh-access.ts ====
+import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-cloudformation';
+import { EC2Client, DescribeInstancesCommand } from '@aws-sdk/client-ec2';
+import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+import { execSync } from 'child_process';
+import { existsSync, mkdirSync, chmodSync } from 'fs';
+import { homedir } from 'os';
+import { join } from 'path';
+
+const log = (
+  level: 'info' | 'warn' | 'error',
+  msg: string,
+  meta: Record<string, unknown> = {}
+) =>
+  console.log(
+    JSON.stringify({ ts: new Date().toISOString(), level, msg, ...meta })
+  );
+
+export type SetupSshAccessConfig = {
+  domain: string;
+  region?: string;
+  profile?: string;
+  stackName?: string; // Auto-generated if not provided
+};
+
+export type SshAccessResult = {
+  success: boolean;
+  host?: string;
+  keyPath?: string;
+  instanceId?: string;
+  instanceIp?: string;
+  error?: string;
+};
+
+/**
+ * Sets up SSH access for a mailserver instance
+ * Ports logic from archive/administration/setup-ssh-access.sh
+ */
+export async function setupSshAccess(
+  config: SetupSshAccessConfig
+): Promise<SshAccessResult> {
+  const region = config.region || process.env['AWS_REGION'] || 'us-east-1';
+  const profile = config.profile || process.env['AWS_PROFILE'] || 'hepe-admin-mfa';
+  const domain = config.domain;
+  const stackName = config.stackName || `${domain.replace(/\./g, '-')}-mailserver-instance`;
+
+  log('info', 'Setting up SSH access', {
+    domain,
+    stackName,
+    region,
+    profile,
+  });
+
+  const cfClient = new CloudFormationClient({ region });
+  const ec2Client = new EC2Client({ region });
+  const ssmClient = new SSMClient({ region });
+
+  try {
+    // Get stack outputs
+    const stackResp = await cfClient.send(
+      new DescribeStacksCommand({
+        StackName: stackName,
+      })
+    );
+
+    const stack = stackResp.Stacks?.[0];
+    if (!stack?.Outputs) {
+      const error = `Could not retrieve stack outputs for ${stackName}`;
+      log('error', error);
+      return { success: false, error };
+    }
+
+    // Extract outputs
+    const outputs = stack.Outputs.reduce((acc, output) => {
+      acc[output.OutputKey!] = output.OutputValue!;
+      return acc;
+    }, {} as Record<string, string>);
+
+    const keyPairId = outputs['KeyPairId'];
+    const instanceId = outputs['RestorePrefix']; // This is actually the instance ID
+    const instanceIp = outputs['PublicIp'] || outputs['ElasticIPAddress'];
+
+    if (!keyPairId || !instanceId) {
+      const error = 'Missing required outputs: KeyPairId or RestorePrefix (InstanceId)';
+      log('error', error);
+      return { success: false, error };
+    }
+
+    // Get instance details if IP not in outputs
+    let finalInstanceIp = instanceIp;
+    if (!finalInstanceIp) {
+      const instanceResp = await ec2Client.send(
+        new DescribeInstancesCommand({
+          InstanceIds: [instanceId],
+        })
+      );
+
+      const instance = instanceResp.Reservations?.[0]?.Instances?.[0];
+      finalInstanceIp = instance?.PublicIpAddress;
+    }
+
+    if (!finalInstanceIp) {
+      const error = 'Could not determine instance public IP';
+      log('error', error);
+      return { success: false, error };
+    }
+
+    // Get instance key name
+    const instanceResp = await ec2Client.send(
+      new DescribeInstancesCommand({
+        InstanceIds: [instanceId],
+      })
+    );
+
+    const instance = instanceResp.Reservations?.[0]?.Instances?.[0];
+    const keyName = instance?.KeyName;
+
+    if (!keyName) {
+      const error = 'Could not determine instance key pair name';
+      log('error', error);
+      return { success: false, error };
+    }
+
+    log('info', 'Found instance details', {
+      instanceId,
+      instanceIp: finalInstanceIp,
+      keyName,
+      keyPairId,
+    });
+
+    // Ensure SSH directory exists
+    const sshDir = join(homedir(), '.ssh');
+    if (!existsSync(sshDir)) {
+      mkdirSync(sshDir, { recursive: true });
+    }
+
+    // Check if key file exists, retrieve from SSM if needed
+    const keyFile = join(sshDir, `${keyName}.pem`);
+
+    if (!existsSync(keyFile)) {
+      log('info', 'Retrieving private key from SSM', { keyPairId });
+
+      const ssmResp = await ssmClient.send(
+        new GetParameterCommand({
+          Name: `/ec2/keypair/${keyPairId}`,
+          WithDecryption: true,
+        })
+      );
+
+      const privateKey = ssmResp.Parameter?.Value;
+      if (!privateKey) {
+        const error = 'Could not retrieve private key from SSM';
+        log('error', error);
+        return { success: false, error };
+      }
+
+      // Write key file
+      execSync(`echo "${privateKey}" > "${keyFile}"`, { stdio: 'inherit' });
+
+      log('info', 'Private key saved', { keyFile });
+    }
+
+    // Set correct permissions
+    chmodSync(keyFile, 0o400);
+
+    // Verify key format
+    try {
+      execSync(`ssh-keygen -l -f "${keyFile}" > /dev/null 2>&1`, { stdio: 'inherit' });
+    } catch (error) {
+      const err = `Key file is not in valid format: ${String(error)}`;
+      log('error', err);
+      return { success: false, error: err };
+    }
+
+    // Add to known_hosts if not present
+    const knownHostsFile = join(sshDir, 'known_hosts');
+    try {
+      execSync(`ssh-keyscan -H "${finalInstanceIp}" >> "${knownHostsFile}" 2>/dev/null || true`, {
+        stdio: 'inherit'
+      });
+    } catch (error) {
+      log('warn', 'Could not update known_hosts', { error: String(error) });
+    }
+
+    log('info', 'SSH access setup complete', {
+      host: `ubuntu@${finalInstanceIp}`,
+      keyPath: keyFile,
+    });
+
+    return {
+      success: true,
+      host: `ubuntu@${finalInstanceIp}`,
+      keyPath: keyFile,
+      instanceId,
+      instanceIp: finalInstanceIp,
+    };
+
+  } catch (error) {
+    const err = `SSH setup failed: ${String(error)}`;
+    log('error', err, { error });
+    return { success: false, error: err };
+  }
+}
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ssh-access/tsconfig.json ====
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "importHelpers": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ssh-access/tsconfig.lib.json ====
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/out-tsc",
+    "declaration": true,
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "vite.config.ts",
+    "vite.config.mts",
+    "vitest.config.ts",
+    "vitest.config.mts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx"
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/ssh-access/tsconfig.spec.json ====
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {

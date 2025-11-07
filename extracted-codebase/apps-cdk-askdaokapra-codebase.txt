@@ -1,5 +1,5 @@
 # apps-cdk-askdaokapra Codebase
-# Generated on: Thu Nov  6 23:02:40 EST 2025
+# Generated on: Fri Nov  7 13:35:35 EST 2025
 # Source: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/cdk-askdaokapra
 # 
 # This file contains all source code files from the apps-cdk-askdaokapra component.
@@ -163,8 +163,9 @@ app.synth();
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../dist/out-tsc",
+    "outDir": "../../dist/out-tsc",
     "module": "commonjs",
+    "moduleResolution": "node",
     "types": ["node"]
   },
   "include": ["src/**/*.ts"]
@@ -175,7 +176,7 @@ app.synth();
 
 ==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/cdk-askdaokapra/tsconfig.json ====
 {
-  "extends": "../tsconfig.base.json",
+  "extends": "../../tsconfig.base.json",
   "files": [],
   "include": [],
   "references": [

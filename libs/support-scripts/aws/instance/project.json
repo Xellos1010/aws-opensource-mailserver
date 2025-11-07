@@ -1,0 +1,53 @@
+{
+  "name": "support-scripts-aws-instance",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/support-scripts/aws/instance/src",
+  "projectType": "library",
+  "tags": ["scope:support", "type:util", "platform:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/support-scripts/aws/instance",
+        "main": "libs/support-scripts/aws/instance/bin/setup-instance.ts",
+        "tsConfig": "libs/support-scripts/aws/instance/tsconfig.lib.json",
+        "assets": [],
+        "format": ["esm"],
+        "outputFileName": "setup-instance.mjs",
+        "bundle": true,
+        "platform": "node",
+        "target": "node20",
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
+      }
+    },
+    "provision": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/support-scripts/aws/instance/setup-instance.mjs"
+      }
+    },
+    "provision:emcnotary": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/support-scripts/aws/instance/setup-instance.mjs"
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

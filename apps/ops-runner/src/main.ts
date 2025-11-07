@@ -20,8 +20,17 @@ Commands:
   kms:enable|kms:disable|kms:status
   ssl:check <hostname> [port]
   ssl:provision <domain1> [domain2 ...]
+  stack:core:deploy [domain]        # Deploy core stack (default: emcnotary.com)
+  stack:instance:deploy [domain]   # Deploy instance stack (default: emcnotary.com)
+  stack:core:destroy [domain]      # Destroy core stack (default: emcnotary.com)
+  stack:instance:destroy [domain]   # Destroy instance stack (default: emcnotary.com)
+  stack:core:diff [domain]          # Show core stack diff (default: emcnotary.com)
+  stack:instance:diff [domain]      # Show instance stack diff (default: emcnotary.com)
+  admin:instance:provision <domain> # Provision instance (SSH + SES DNS)
+  instance:bootstrap [domain]       # Bootstrap MIAB via SSM (default: emcnotary.com)
 
 Env:
+  FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 required for stack operations
   See .env.example for all required variables.
 `);
     process.exit(0);
@@ -133,6 +142,155 @@ Env:
       });
       console.log('Provisioning requested for:', domains.join(', '));
       console.log('Result:', JSON.stringify(result, null, 2));
+      break;
+    }
+
+    case 'stack:core:deploy': {
+      const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
+      if (!domain) throw new Error('stack:core:deploy requires a domain argument or DOMAIN env var');
+
+      if (process.env.FEATURE_CDK_EMCNOTARY_STACKS_ENABLED !== '1') {
+        throw new Error('FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 is required for stack operations');
+      }
+
+      console.log(`Deploying core stack for domain: ${domain}`);
+
+      // Use execSync to run the Nx target
+      const { execSync } = await import('child_process');
+      execSync(`pnpm nx run cdk-emcnotary-core:deploy`, {
+        stdio: 'inherit',
+        env: { ...process.env, DOMAIN: domain }
+      });
+
+      console.log('✅ Core stack deployed successfully');
+      break;
+    }
+
+    case 'stack:instance:deploy': {
+      const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
+      if (!domain) throw new Error('stack:instance:deploy requires a domain argument or DOMAIN env var');
+
+      if (process.env.FEATURE_CDK_EMCNOTARY_STACKS_ENABLED !== '1') {
+        throw new Error('FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 is required for stack operations');
+      }
+
+      console.log(`Deploying instance stack for domain: ${domain}`);
+
+      // Use execSync to run the Nx target
+      const { execSync } = await import('child_process');
+      execSync(`pnpm nx run cdk-emcnotary-instance:deploy`, {
+        stdio: 'inherit',
+        env: { ...process.env, DOMAIN: domain }
+      });
+
+      console.log('✅ Instance stack deployed successfully');
+      break;
+    }
+
+    case 'stack:core:destroy': {
+      const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
+      if (!domain) throw new Error('stack:core:destroy requires a domain argument or DOMAIN env var');
+
+      if (process.env.FEATURE_CDK_EMCNOTARY_STACKS_ENABLED !== '1') {
+        throw new Error('FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 is required for stack operations');
+      }
+
+      console.log(`⚠️  Destroying core stack for domain: ${domain}`);
+      console.log('This will delete all resources including S3 buckets (after emptying).');
+
+      const { execSync } = await import('child_process');
+      execSync(`pnpm nx run cdk-emcnotary-core:destroy`, {
+        stdio: 'inherit',
+        env: { ...process.env, DOMAIN: domain }
+      });
+
+      console.log('✅ Core stack destroyed successfully');
+      break;
+    }
+
+    case 'stack:instance:destroy': {
+      const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
+      if (!domain) throw new Error('stack:instance:destroy requires a domain argument or DOMAIN env var');
+
+      if (process.env.FEATURE_CDK_EMCNOTARY_STACKS_ENABLED !== '1') {
+        throw new Error('FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 is required for stack operations');
+      }
+
+      console.log(`⚠️  Destroying instance stack for domain: ${domain}`);
+      console.log('This will terminate the EC2 instance and delete associated resources.');
+
+      const { execSync } = await import('child_process');
+      execSync(`pnpm nx run cdk-emcnotary-instance:destroy`, {
+        stdio: 'inherit',
+        env: { ...process.env, DOMAIN: domain }
+      });
+
+      console.log('✅ Instance stack destroyed successfully');
+      break;
+    }
+
+    case 'stack:core:diff': {
+      const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
+      if (!domain) throw new Error('stack:core:diff requires a domain argument or DOMAIN env var');
+
+      console.log(`Showing diff for core stack: ${domain}`);
+
+      const { execSync } = await import('child_process');
+      execSync(`pnpm nx run cdk-emcnotary-core:diff`, {
+        stdio: 'inherit',
+        env: { ...process.env, DOMAIN: domain }
+      });
+      break;
+    }
+
+    case 'stack:instance:diff': {
+      const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
+      if (!domain) throw new Error('stack:instance:diff requires a domain argument or DOMAIN env var');
+
+      console.log(`Showing diff for instance stack: ${domain}`);
+
+      const { execSync } = await import('child_process');
+      execSync(`pnpm nx run cdk-emcnotary-instance:diff`, {
+        stdio: 'inherit',
+        env: { ...process.env, DOMAIN: domain }
+      });
+      break;
+    }
+
+    case 'admin:instance:provision': {
+      const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
+      if (!domain) throw new Error('admin:instance:provision requires a domain argument or DOMAIN env var');
+
+      console.log(`Provisioning instance for domain: ${domain}`);
+
+      // Use execSync to run the Nx target
+      const { execSync } = await import('child_process');
+      execSync(`pnpm nx run admin-instance:provision -- --domain=${domain}`, {
+        stdio: 'inherit',
+        env: { ...process.env, DOMAIN: domain }
+      });
+
+      console.log('✅ Instance provisioning completed successfully');
+      break;
+    }
+
+    case 'instance:bootstrap': {
+      const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
+      if (!domain) throw new Error('instance:bootstrap requires a domain argument or DOMAIN env var');
+
+      if (process.env.FEATURE_INSTANCE_BOOTSTRAP_ENABLED === '0') {
+        throw new Error('FEATURE_INSTANCE_BOOTSTRAP_ENABLED=0 - Bootstrap is disabled');
+      }
+
+      console.log(`Bootstrapping instance for domain: ${domain}`);
+
+      const { execSync } = await import('child_process');
+      execSync(`pnpm nx run ops-runner:instance:bootstrap`, {
+        stdio: 'inherit',
+        env: { ...process.env, DOMAIN: domain }
+      });
+
+      console.log('✅ Instance bootstrap completed successfully');
       break;
     }
 

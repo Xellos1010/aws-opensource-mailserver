@@ -1,5 +1,5 @@
 # apps-cdk-emc-notary Codebase
-# Generated on: Thu Nov  6 23:02:40 EST 2025
+# Generated on: Fri Nov  7 13:35:35 EST 2025
 # Source: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/cdk-emc-notary
 # 
 # This file contains all source code files from the apps-cdk-emc-notary component.
@@ -161,10 +161,11 @@ app.synth();
 
 ==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/cdk-emc-notary/tsconfig.app.json ====
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../dist/out-tsc",
-    "module": "commonjs",
+    "outDir": "../../dist/out-tsc",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "types": ["node"]
   },
   "include": ["src/**/*.ts"]

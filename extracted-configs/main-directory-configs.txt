@@ -1,5 +1,5 @@
 # main-directory Configuration Files
-# Generated on: Thu Nov  6 23:02:40 EST 2025
+# Generated on: Fri Nov  7 13:35:35 EST 2025
 # Source: /Users/evanmccall/Projects/aws-opensource-mailserver
 # 
 # This file contains all configuration files from the main-directory component.
@@ -85,7 +85,7 @@
 
 ==== FILE: apps/cdk-askdaokapra/tsconfig.json ====
 {
-  "extends": "../tsconfig.base.json",
+  "extends": "../../tsconfig.base.json",
   "files": [],
   "include": [],
   "references": [
@@ -115,6 +115,78 @@
     "esModuleInterop": true
   }
 }
+
+
+
+==== FILE: apps/cdk-emcnotary-core/tsconfig.json ====
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ]
+}
+
+
+
+
+==== FILE: apps/cdk-emcnotary-instance/tsconfig.json ====
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ]
+}
+
+
+
+
+==== FILE: apps/cdk-mailservers-backups/tsconfig.json ====
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ]
+}
+
 
 
 
@@ -282,6 +354,9 @@
 .env.local
 .env.production
 
+# Local AWS/CDK configuration (contains sensitive account info)
+.aws-config.local.json
+
 # IDE and editor files
 .vscode/
 .idea/
@@ -306,6 +381,266 @@ Thumbs.db
 .github/instructions/nx.instructions.md
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
+
+data/godaddy/api-keys/*
+
+
+==== FILE: apps/cdk-emcnotary-core/README.md ====
+# EMC Notary Core Stack
+
+Core infrastructure stack for EMC Notary mailserver. This stack contains shared resources that are deployed once and rarely changed.
+
+## Resources
+
+- **SES**: Domain identity with DKIM signing enabled (no Route53 hosted zone - uses domain name directly)
+- **S3 Buckets**: Backup and Nextcloud buckets with encryption and versioning
+- **SNS**: Alarms topic for CloudWatch notifications
+- **CloudWatch**: Log group for syslog, agent configuration
+- **Lambda**: SES SMTP credentials generator function
+- **SSM Parameters**: Shared values exported for instance stack consumption
+
+## SSM Parameters Created
+
+- `/emcnotary/core/domainName` - Domain name for mail server
+- `/emcnotary/core/backupBucket` - S3 Backup Bucket Name
+- `/emcnotary/core/nextcloudBucket` - S3 Nextcloud Bucket Name
+- `/emcnotary/core/alarmsTopicArn` - SNS Alarms Topic ARN
+- `/emcnotary/core/sesIdentityArn` - SES Email Identity ARN
+
+## Usage
+
+### Build
+
+```bash
+pnpm nx build cdk-emcnotary-core
+```
+
+### Synthesize CloudFormation Template
+
+```bash
+CDK_DEFAULT_ACCOUNT=<account-id> CDK_DEFAULT_REGION=us-east-1 \
+  pnpm nx run cdk-emcnotary-core:synth
+```
+
+### Deploy
+
+```bash
+CDK_DEFAULT_ACCOUNT=<account-id> CDK_DEFAULT_REGION=us-east-1 \
+  pnpm nx run cdk-emcnotary-core:deploy
+```
+
+### Diff (Preview Changes)
+
+```bash
+CDK_DEFAULT_ACCOUNT=<account-id> CDK_DEFAULT_REGION=us-east-1 \
+  pnpm nx run cdk-emcnotary-core:diff
+```
+
+### Destroy
+
+```bash
+CDK_DEFAULT_ACCOUNT=<account-id> CDK_DEFAULT_REGION=us-east-1 \
+  pnpm nx run cdk-emcnotary-core:destroy
+```
+
+## Dependencies
+
+This stack must be deployed **before** the instance stack, as the instance stack reads SSM parameters created by this stack.
+
+## Feature Flag
+
+This stack is controlled by `FEATURE_CDK_EMCNOTARY_STACKS_ENABLED` (default: `0`). Set to `1` to enable deployment.
+
+
+
+
+==== FILE: apps/cdk-emcnotary-instance/README.md ====
+# EMC Notary Instance Stack
+
+Instance infrastructure stack for EMC Notary mailserver. This stack contains EC2 instance and related compute resources.
+
+## Resources
+
+- **EC2 Instance**: t3a.small instance for Mail-in-a-Box
+- **Security Group**: Rules for SSH (22), SMTP (25), HTTPS (443), Submission (587)
+- **Elastic IP**: Static IP address for the mail server (associated via AllocationId from core stack)
+- **IAM Role**: Instance role with SSM access and SSM parameter read permissions
+- **User Data**: Bootstrap script (placeholder for Mail-in-a-Box installation)
+- **Nightly Reboot**: EventBridge rule + Lambda for automatic reboot at 03:00 ET (08:00 UTC)
+
+## Dependencies
+
+This stack **requires** the core stack to be deployed first, as it reads SSM parameters:
+- `/emcnotary/core/zoneId`
+- `/emcnotary/core/zoneName`
+- `/emcnotary/core/backupBucket`
+- `/emcnotary/core/alarmsTopicArn`
+
+## Usage
+
+### Build
+
+```bash
+pnpm nx build cdk-emcnotary-instance
+```
+
+### Synthesize CloudFormation Template
+
+```bash
+CDK_DEFAULT_ACCOUNT=<account-id> CDK_DEFAULT_REGION=us-east-1 \
+  pnpm nx run cdk-emcnotary-instance:synth
+```
+
+### Deploy
+
+```bash
+CDK_DEFAULT_ACCOUNT=<account-id> CDK_DEFAULT_REGION=us-east-1 \
+  pnpm nx run cdk-emcnotary-instance:deploy
+```
+
+### Diff (Preview Changes)
+
+```bash
+CDK_DEFAULT_ACCOUNT=<account-id> CDK_DEFAULT_REGION=us-east-1 \
+  pnpm nx run cdk-emcnotary-instance:diff
+```
+
+### Destroy
+
+```bash
+CDK_DEFAULT_ACCOUNT=<account-id> CDK_DEFAULT_REGION=us-east-1 \
+  pnpm nx run cdk-emcnotary-instance:destroy
+```
+
+## Rollback
+
+If deployment fails, you can destroy only the instance stack without affecting the core stack:
+
+```bash
+pnpm nx run cdk-emcnotary-instance:destroy
+```
+
+The core stack remains intact and can be reused for a new instance deployment.
+
+## Nightly Reboot Schedule
+
+The instance stack includes an automatic nightly reboot to clear memory issues and ensure consistent performance. The reboot occurs at **03:00 ET (08:00 UTC)** daily.
+
+### Implementation Details
+
+- **EventBridge Rule**: Cron schedule `0 8 * * ? *` (08:00 UTC)
+- **Lambda Function**: Node.js 20 runtime with `ec2:RebootInstances` permission
+- **Timezone Note**: Uses UTC for EventBridge. For strict ET observance, consider EventBridge Scheduler with timezone support in future updates.
+
+### Monitoring Reboots
+
+Reboots are logged in the Lambda function's CloudWatch logs. Check logs if reboot behavior needs investigation:
+
+```bash
+# View recent reboot logs
+aws logs filter-log-events \
+  --log-group-name '/aws/lambda/RebootMailServerInstanceFunction-emcnotary-com-mailserver-instance' \
+  --start-time $(date -v-1H +%s)000 \
+  --query 'events[*].{time:from_unixtime(timestamp/1000),message:message}' \
+  --output table
+```
+
+## Feature Flag
+
+This stack is controlled by `FEATURE_CDK_EMCNOTARY_STACKS_ENABLED` (default: `0`). Set to `1` to enable deployment.
+
+
+
+
+==== FILE: apps/cdk-mailservers-backups/README.md ====
+# Mailservers Backups Stack
+
+Central backup infrastructure stack for all mailserver deployments. This stack provides a shared S3 bucket for storing backups across all mailserver instances.
+
+## Resources
+
+- **S3 Bucket**: Central backup bucket (`mailservers-backups`) with versioning and lifecycle policies
+- **SSM Parameter**: `/mailservers/backups/bucketName` - Backup bucket name for other stacks to reference
+
+## Lifecycle Policy
+
+- Backups are kept for 90 days
+- After 30 days: Moved to Infrequent Access storage class
+- After 60 days: Moved to Glacier storage class
+- After 90 days: Deleted
+
+## Usage
+
+### Deploy Backup Stack First
+
+This stack should be deployed **before** any mailserver stacks, as they reference the backup bucket via SSM:
+
+```bash
+# Build
+pnpm nx build cdk-mailservers-backups
+
+# Deploy
+CDK_DEFAULT_ACCOUNT=<account-id> CDK_DEFAULT_REGION=us-east-1 \
+  pnpm nx run cdk-mailservers-backups:deploy
+```
+
+### Local Backup Management
+
+Backups can be managed locally using admin tools to avoid AWS write operations:
+
+```bash
+# List backups for a domain
+APP_PATH=apps/cdk-emc-notary pnpm nx run admin-backup-manager:list
+
+# Download backup locally
+BACKUP_ID=<backup-id> pnpm nx run admin-backup-manager:download
+
+# Upload local backup
+BACKUP_PATH=./local-backup.tar.gz pnpm nx run admin-backup-manager:upload
+```
+
+## Backup Structure
+
+Backups are organized by domain and type:
+
+```
+s3://mailservers-backups/
+  ├── {domain}/
+  │   ├── instance-backups/
+  │   │   └── {timestamp}-{instance-id}/
+  │   │       ├── mailboxes.tar.gz
+  │   │       ├── dns-records.json
+  │   │       └── users.json
+  │   ├── dns-backups/
+  │   │   └── {timestamp}-{hosted-zone-id}.json
+  │   └── log-exports/
+  │       └── {timestamp}-{log-group}.tar.gz
+```
+
+## SSM Parameter
+
+The backup bucket name is stored in SSM Parameter Store:
+
+- **Parameter Name**: `/mailservers/backups/bucketName`
+- **Value**: `mailservers-backups`
+- **Type**: String
+
+Other stacks can reference this parameter to get the backup bucket name.
+
+## Destroy
+
+When destroying this stack, all backups will be deleted (after 90 days per lifecycle policy). Ensure critical backups are downloaded locally before destroying:
+
+```bash
+# Download all backups before destroying
+pnpm nx run admin-backup-manager:download-all
+
+# Destroy stack
+CDK_DEFAULT_ACCOUNT=<account-id> CDK_DEFAULT_REGION=us-east-1 \
+  pnpm nx run cdk-mailservers-backups:destroy
+```
+
+
 
 
 ==== FILE: Archive/askdaokapra/README.md ====
@@ -1181,7 +1516,15 @@ KMS_KEY_ID=arn:aws:kms:us-east-1:ACCOUNT:key/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx
       "@mm/admin-dns-api": ["libs/admin/admin-dns-api/src/index.ts"],
       "@mm/admin-users-backup": ["libs/admin/admin-users-backup/src/index.ts"],
       "@mm/admin-ssl-check": ["libs/admin/admin-ssl-check/src/index.ts"],
-      "@mm/admin-ssl-provision": ["libs/admin/admin-ssl-provision/src/index.ts"]
+      "@mm/admin-ssl-provision": ["libs/admin/admin-ssl-provision/src/index.ts"],
+      "@mm/admin-s3-empty": ["libs/admin/admin-s3-empty/src/index.ts"],
+      "@mm/admin-stack-events": ["libs/admin/admin-stack-events/src/index.ts"],
+      "@mm/infra-shared-constructs": ["libs/infra/shared-constructs/src/index.ts"],
+      "@mm/infra-core-params": ["libs/infra/core-params/src/index.ts"],
+      "@mm/infra-config-loader": ["libs/infra/config-loader/src/index.ts"],
+      "@mm/admin-ssh-access": ["libs/admin/ssh-access/src/index.ts"],
+      "@mm/admin-ses-dns": ["libs/admin/ses-dns/src/index.ts"],
+      "@mm/admin-instance-provision": ["libs/admin/instance-provision/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

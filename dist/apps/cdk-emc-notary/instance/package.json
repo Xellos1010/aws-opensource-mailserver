@@ -1,0 +1,6 @@
+{
+  "name": "cdk-emcnotary-instance",
+  "version": "0.0.1",
+  "main": "./main.cjs",
+  "type": "commonjs"
+}

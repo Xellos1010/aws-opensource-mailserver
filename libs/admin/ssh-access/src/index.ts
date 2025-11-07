@@ -1,0 +1,1 @@
+export { setupSshAccess, type SetupSshAccessConfig, type SshAccessResult } from './lib/ssh-access';

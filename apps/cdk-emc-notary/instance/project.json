@@ -1,0 +1,152 @@
+{
+  "name": "cdk-emcnotary-instance",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cdk-emc-notary/instance/src",
+  "projectType": "application",
+  "tags": ["type:cdk", "domain:infra", "scope:instance"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/cdk-emc-notary/instance",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/cdk-emc-notary/instance/src/main.ts",
+        "tsConfig": "apps/cdk-emc-notary/instance/tsconfig.app.json",
+        "assets": [
+          "apps/cdk-emc-notary/instance/cdk.json"
+        ],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "external": ["aws-sdk"]
+        }
+      }
+    },
+    "synth": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk synth ${DOMAIN:+--context domain=$DOMAIN} ${INSTANCE_DNS:+--context instanceDns=$INSTANCE_DNS} ${CORE_PARAM_PREFIX:+--context coreParamPrefix=$CORE_PARAM_PREFIX}",
+        "cwd": "dist/apps/cdk-emc-notary/instance"
+      },
+      "dependsOn": ["build"]
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "if [ \"$FEATURE_CDK_EMCNOTARY_STACKS_ENABLED\" != \"1\" ]; then echo \"ERROR: FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 required for deployment\"; exit 1; fi && node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js deploy --require-approval never ${DOMAIN:+--context domain=$DOMAIN} ${INSTANCE_DNS:+--context instanceDns=$INSTANCE_DNS} ${CORE_PARAM_PREFIX:+--context coreParamPrefix=$CORE_PARAM_PREFIX}",
+        "cwd": "dist/apps/cdk-emc-notary/instance"
+      },
+      "dependsOn": ["build", "infra-config-loader:build"]
+    },
+    "diff": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk diff ${DOMAIN:+--context domain=$DOMAIN} ${INSTANCE_DNS:+--context instanceDns=$INSTANCE_DNS} ${CORE_PARAM_PREFIX:+--context coreParamPrefix=$CORE_PARAM_PREFIX}",
+        "cwd": "dist/apps/cdk-emc-notary/instance"
+      },
+      "dependsOn": ["build"]
+    },
+    "destroy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "if [ \"$FEATURE_CDK_EMCNOTARY_STACKS_ENABLED\" != \"1\" ]; then echo \"ERROR: FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 required for deployment\"; exit 1; fi && node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js destroy --force ${DOMAIN:+--context domain=$DOMAIN} ${INSTANCE_DNS:+--context instanceDns=$INSTANCE_DNS} ${CORE_PARAM_PREFIX:+--context coreParamPrefix=$CORE_PARAM_PREFIX}",
+        "cwd": "dist/apps/cdk-emc-notary/instance"
+      },
+      "dependsOn": ["build", "infra-config-loader:build"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "admin:info": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["admin-stack-info:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm nx run admin-stack-info:get"
+      },
+      "description": "Get instance stack information (outputs, instance ID, IP, etc.)"
+    },
+    "admin:events": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["admin-stack-events:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} MAX_RESULTS=${MAX_RESULTS:-50} pnpm nx run admin-stack-events:events"
+      },
+      "description": "Get recent CloudFormation stack events"
+    },
+    "admin:events:failed": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["admin-stack-events:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} FAILED_ONLY=1 pnpm nx run admin-stack-events:events"
+      },
+      "description": "Get only failed CloudFormation stack events"
+    },
+    "admin:bootstrap": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "support-scripts-aws-instance-bootstrap:build"],
+      "options": {
+        "command": "if [ \"$FEATURE_INSTANCE_BOOTSTRAP_ENABLED\" = \"0\" ]; then echo \"ERROR: FEATURE_INSTANCE_BOOTSTRAP_ENABLED=0 - Bootstrap is disabled\"; exit 1; fi && ts-node tools/instance-bootstrap.cli.ts --domain=${DOMAIN:-emcnotary.com} --region=${CDK_DEFAULT_REGION:-us-east-1} ${STACK:+--stack=$STACK} ${PROFILE:+--profile=$PROFILE} ${DRY_RUN:+--dry-run} ${RESTORE_PREFIX:+--restore-prefix=$RESTORE_PREFIX} ${REBOOT_AFTER_SETUP:+--reboot}"
+      },
+      "description": "Bootstrap Mail-in-a-Box on instance via SSM RunCommand"
+    },
+    "admin:bootstrap:dry-run": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "support-scripts-aws-instance-bootstrap:build"],
+      "options": {
+        "command": "ts-node tools/instance-bootstrap.cli.ts --domain=${DOMAIN:-emcnotary.com} --region=${CDK_DEFAULT_REGION:-us-east-1} --dry-run ${STACK:+--stack=$STACK} ${PROFILE:+--profile=$PROFILE}"
+      },
+      "description": "Dry run: Show what would be executed for bootstrap (no SSM command sent)"
+    },
+    "admin:ssh:setup": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["admin-ssh:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm nx run admin-ssh:setup"
+      },
+      "description": "Setup SSH access (fetch key from SSM, configure known_hosts)"
+    },
+    "admin:ssh:test": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["admin-ssh:build:test"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm nx run admin-ssh:test"
+      },
+      "description": "Test SSH connection to instance"
+    },
+    "admin:ses-dns": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["ses-dns:build"],
+      "options": {
+        "command": "DOMAIN=${DOMAIN:-emcnotary.com} pnpm nx run ses-dns:set-dns"
+      },
+      "description": "Set SES DNS records (DKIM, Mail-From) via Mail-in-a-Box API"
+    },
+    "admin:ses-dns:dry-run": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["ses-dns:build"],
+      "options": {
+        "command": "DOMAIN=${DOMAIN:-emcnotary.com} pnpm nx run ses-dns:set-dns -- --dry-run"
+      },
+      "description": "Dry run: Preview SES DNS records without making changes"
+    },
+    "admin:provision": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["instance-provision:build"],
+      "options": {
+        "command": "DOMAIN=${DOMAIN:-emcnotary.com} pnpm nx run instance-provision:provision"
+      },
+      "description": "Provision instance: Setup SSH access and configure SES DNS records"
+    },
+    "admin:provision:skip-ssh": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["instance-provision:build"],
+      "options": {
+        "command": "DOMAIN=${DOMAIN:-emcnotary.com} pnpm nx run instance-provision:provision -- --skip-ssh"
+      },
+      "description": "Provision instance: Configure SES DNS only (skip SSH setup)"
+    }
+  }
+}

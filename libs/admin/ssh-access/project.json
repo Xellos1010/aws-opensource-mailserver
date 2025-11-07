@@ -1,0 +1,54 @@
+{
+  "name": "ssh-access",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/admin/ssh-access/src",
+  "projectType": "library",
+  "tags": ["scope:admin", "type:util", "domain:infra"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/admin/ssh-access",
+        "main": "libs/admin/ssh-access/bin/setup-ssh-access.ts",
+        "tsConfig": "libs/admin/ssh-access/tsconfig.lib.json",
+        "assets": [],
+        "format": ["esm"],
+        "outputFileName": "setup-ssh-access.mjs",
+        "generatePackageJson": true,
+        "bundle": true,
+        "platform": "node",
+        "target": "node20",
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
+      }
+    },
+    "setup": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/admin/ssh-access/setup-ssh-access.mjs"
+      }
+    },
+    "setup:emcnotary": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/admin/ssh-access/setup-ssh-access.mjs --domain emcnotary.com"
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

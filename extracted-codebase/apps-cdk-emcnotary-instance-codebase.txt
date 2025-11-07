@@ -1,0 +1,1046 @@
+# apps-cdk-emcnotary-instance Codebase
+# Generated on: Fri Nov  7 13:35:35 EST 2025
+# Source: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/cdk-emcnotary-instance
+# 
+# This file contains all source code files from the apps-cdk-emcnotary-instance component.
+# Excludes: node_modules, .git, dist, build, cdk.out, yarn.lock, package-lock.json
+#
+# =============================================================================
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/cdk-emcnotary-instance/cdk.json ====
+{
+  "app": "node main.cjs",
+  "watch": {
+    "include": ["**"],
+    "exclude": [
+      "README.md",
+      "cdk*.json",
+      "**/*.d.ts",
+      "**/*.js",
+      "tsconfig.json",
+      "package*.json",
+      "yarn.lock",
+      "node_modules",
+      "test"
+    ]
+  },
+  "context": {
+    "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
+    "@aws-cdk/core:checkSecretUsage": true,
+    "@aws-cdk/core:target-partitions": ["aws", "aws-cn"],
+    "@aws-cdk-containers/ecs-service-extensions:enableDefaultLogDriver": true,
+    "@aws-cdk/aws-ec2:uniqueImdsv2TemplateName": true,
+    "@aws-cdk/aws-ecs:arnFormatIncludesClusterName": true,
+    "@aws-cdk/aws-iam:minimizePolicies": true,
+    "@aws-cdk/core:validateSnapshotRemovalPolicy": true,
+    "@aws-cdk/aws-codepipeline:crossAccountKeyAliasStackSafeResourceName": true,
+    "@aws-cdk/aws-s3:createDefaultLoggingPolicy": true,
+    "@aws-cdk/aws-sns-subscriptions:restrictSqsDescryption": true,
+    "@aws-cdk/aws-apigateway:disableCloudWatchRole": true,
+    "@aws-cdk/core:enablePartitionLiterals": true,
+    "@aws-cdk/aws-events:eventsTargetQueueSameAccount": true,
+    "@aws-cdk/aws-iam:standardizedServicePrincipals": true,
+    "@aws-cdk/aws-ecs:disableExplicitDeploymentControllerForCircuitBreaker": true,
+    "@aws-cdk/aws-iam:importedRoleStackSafeDefaultPolicyName": true,
+    "@aws-cdk/aws-s3:serverAccessLogsUseBucketPolicy": true,
+    "@aws-cdk/aws-route53-patters:useCertificate": true,
+    "@aws-cdk/customresources:installLatestAwsSdkDefault": false,
+    "@aws-cdk/aws-rds:databaseProxyUniqueResourceName": true,
+    "@aws-cdk/aws-codedeploy:removeAlarmsFromDeploymentGroup": true,
+    "@aws-cdk/aws-apigateway:authorizerChangeDeploymentLogicalId": true,
+    "@aws-cdk/aws-ec2:launchTemplateDefaultUserData": true,
+    "@aws-cdk/aws-secretsmanager:useAttachedSecretResourcePolicyForSecretTargetAttachments": true,
+    "@aws-cdk/aws-redshift:columnId": true,
+    "@aws-cdk/aws-stepfunctions-tasks:enableEmrServicePolicyV2": true,
+    "@aws-cdk/aws-ec2:restrictDefaultSecurityGroup": true,
+    "@aws-cdk/aws-apigateway:requestValidatorUniqueId": true,
+    "@aws-cdk/aws-kms:aliasNameRef": true,
+    "@aws-cdk/aws-autoscaling:generateLaunchTemplateInsteadOfLaunchConfig": true,
+    "@aws-cdk/core:includePrefixInUniqueNameGeneration": true,
+    "@aws-cdk/aws-opensearchservice:enableOpensearchMultiAzWithStandby": true,
+    "@aws-cdk/aws-lambda-nodejs:useLatestRuntimeVersion": true,
+    "@aws-cdk/aws-efs:denyAnonymousAccess": true,
+    "@aws-cdk/aws-ec2:ebsDefaultGp3Volume": true,
+    "@aws-cdk/aws-ecs:removeDefaultDeploymentAlarm": true
+  }
+}
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/cdk-emcnotary-instance/project.json ====
+{
+  "name": "cdk-emcnotary-instance",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cdk-emcnotary-instance/src",
+  "projectType": "application",
+  "tags": ["type:cdk", "domain:infra", "scope:instance"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/cdk-emcnotary-instance",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/cdk-emcnotary-instance/src/main.ts",
+        "tsConfig": "apps/cdk-emcnotary-instance/tsconfig.app.json",
+        "assets": [
+          "apps/cdk-emcnotary-instance/src/assets",
+          "apps/cdk-emcnotary-instance/cdk.json"
+        ],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "external": ["aws-sdk"]
+        }
+      }
+    },
+    "synth": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk synth",
+        "cwd": "dist/apps/cdk-emcnotary-instance"
+      },
+      "dependsOn": ["build"]
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "if [ \"$FEATURE_CDK_EMCNOTARY_STACKS_ENABLED\" != \"1\" ]; then echo \"ERROR: FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 required for deployment\"; exit 1; fi && node ../../../dist/libs/infra/config-loader/bin/cdk-deploy.js deploy --require-approval never",
+        "cwd": "dist/apps/cdk-emcnotary-instance"
+      },
+      "dependsOn": ["build", "infra-config-loader:build"]
+    },
+    "diff": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk diff",
+        "cwd": "dist/apps/cdk-emcnotary-instance"
+      },
+      "dependsOn": ["build"]
+    },
+    "destroy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "if [ \"$FEATURE_CDK_EMCNOTARY_STACKS_ENABLED\" != \"1\" ]; then echo \"ERROR: FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 required for deployment\"; exit 1; fi && node ../../../dist/libs/infra/config-loader/bin/cdk-deploy.js destroy --force",
+        "cwd": "dist/apps/cdk-emcnotary-instance"
+      },
+      "dependsOn": ["build", "infra-config-loader:build"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/cdk-emcnotary-instance/README.md ====
+# EMC Notary Instance Stack
+
+Instance infrastructure stack for EMC Notary mailserver. This stack contains EC2 instance and related compute resources.
+
+## Resources
+
+- **EC2 Instance**: t3a.small instance for Mail-in-a-Box
+- **Security Group**: Rules for SSH (22), SMTP (25), HTTPS (443), Submission (587)
+- **Elastic IP**: Static IP address for the mail server (associated via AllocationId from core stack)
+- **IAM Role**: Instance role with SSM access and SSM parameter read permissions
+- **User Data**: Bootstrap script (placeholder for Mail-in-a-Box installation)
+- **Nightly Reboot**: EventBridge rule + Lambda for automatic reboot at 03:00 ET (08:00 UTC)
+
+## Dependencies
+
+This stack **requires** the core stack to be deployed first, as it reads SSM parameters:
+- `/emcnotary/core/zoneId`
+- `/emcnotary/core/zoneName`
+- `/emcnotary/core/backupBucket`
+- `/emcnotary/core/alarmsTopicArn`
+
+## Usage
+
+### Build
+
+```bash
+pnpm nx build cdk-emcnotary-instance
+```
+
+### Synthesize CloudFormation Template
+
+```bash
+CDK_DEFAULT_ACCOUNT=<account-id> CDK_DEFAULT_REGION=us-east-1 \
+  pnpm nx run cdk-emcnotary-instance:synth
+```
+
+### Deploy
+
+```bash
+CDK_DEFAULT_ACCOUNT=<account-id> CDK_DEFAULT_REGION=us-east-1 \
+  pnpm nx run cdk-emcnotary-instance:deploy
+```
+
+### Diff (Preview Changes)
+
+```bash
+CDK_DEFAULT_ACCOUNT=<account-id> CDK_DEFAULT_REGION=us-east-1 \
+  pnpm nx run cdk-emcnotary-instance:diff
+```
+
+### Destroy
+
+```bash
+CDK_DEFAULT_ACCOUNT=<account-id> CDK_DEFAULT_REGION=us-east-1 \
+  pnpm nx run cdk-emcnotary-instance:destroy
+```
+
+## Rollback
+
+If deployment fails, you can destroy only the instance stack without affecting the core stack:
+
+```bash
+pnpm nx run cdk-emcnotary-instance:destroy
+```
+
+The core stack remains intact and can be reused for a new instance deployment.
+
+## Nightly Reboot Schedule
+
+The instance stack includes an automatic nightly reboot to clear memory issues and ensure consistent performance. The reboot occurs at **03:00 ET (08:00 UTC)** daily.
+
+### Implementation Details
+
+- **EventBridge Rule**: Cron schedule `0 8 * * ? *` (08:00 UTC)
+- **Lambda Function**: Node.js 20 runtime with `ec2:RebootInstances` permission
+- **Timezone Note**: Uses UTC for EventBridge. For strict ET observance, consider EventBridge Scheduler with timezone support in future updates.
+
+### Monitoring Reboots
+
+Reboots are logged in the Lambda function's CloudWatch logs. Check logs if reboot behavior needs investigation:
+
+```bash
+# View recent reboot logs
+aws logs filter-log-events \
+  --log-group-name '/aws/lambda/RebootMailServerInstanceFunction-emcnotary-com-mailserver-instance' \
+  --start-time $(date -v-1H +%s)000 \
+  --query 'events[*].{time:from_unixtime(timestamp/1000),message:message}' \
+  --output table
+```
+
+## Feature Flag
+
+This stack is controlled by `FEATURE_CDK_EMCNOTARY_STACKS_ENABLED` (default: `0`). Set to `1` to enable deployment.
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/cdk-emcnotary-instance/src/assets/userdata/miab-setup.sh ====
+#!/bin/bash -xe
+
+# Mail-in-a-Box bootstrap for EMC Notary
+
+# Reads env passed by UserData or SSM:
+
+# DOMAIN_NAME, INSTANCE_DNS, REGION, STACK_NAME, EIP_ALLOCATION_ID, SES_RELAY, SWAP_SIZE_GIB,
+
+# MAILINABOX_VERSION, MAILINABOX_CLONE_URL, RESTORE_PREFIX, ADMIN_PASSWORD(optional)
+
+LOGFILE="/var/log/mailinabox_setup.log"
+
+exec > >(tee -a "$LOGFILE" | logger -t mailinabox_setup) 2>&1
+
+echo "Starting MIAB setup for ${DOMAIN_NAME} (${INSTANCE_DNS}.${DOMAIN_NAME})"
+
+# Resolve Elastic IP from AllocationId (works even if EIP not yet attached at boot)
+
+if [[ -n "${EIP_ALLOCATION_ID}" ]]; then
+  sudo apt-get update -y
+  sudo apt-get install -y jq curl unzip
+  if ! command -v aws >/dev/null 2>&1; then
+    curl -sSL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o awscliv2.zip
+    unzip -q awscliv2.zip && sudo ./aws/install
+  fi
+  ELASTIC_IP=$(aws ec2 describe-addresses --allocation-ids "${EIP_ALLOCATION_ID}" --region "${REGION}" \
+    --query 'Addresses[0].PublicIp' --output text || true)
+fi
+
+# Fallback to current public IP if EIP not resolved yet
+PUBLIC_IP=${ELASTIC_IP:-$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)}
+PRIVATE_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
+
+export NONINTERACTIVE=1
+export DEBIAN_FRONTEND=noninteractive
+export TERM=xterm
+export SKIP_NETWORK_CHECKS=true
+export STORAGE_ROOT=/home/user-data
+export STORAGE_USER=user-data
+export PRIMARY_HOSTNAME="${INSTANCE_DNS}.${DOMAIN_NAME}"
+export DEFAULT_PRIMARY_HOSTNAME="${PRIMARY_HOSTNAME}"
+export DEFAULT_PUBLIC_IP="${PUBLIC_IP}"
+
+# Updates & prerequisites
+apt-get update
+apt-get upgrade -o DPkg::Lock::Timeout=120 -y
+apt-get install -y dialog librsync-dev python3-setuptools python3-pip python3-boto3 unzip intltool python-is-python3
+
+# CloudFormation helpers (for cfn-signal parity; harmless if not used)
+pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz || true
+
+# Stability: swap & soft caps
+if ! swapon --summary | grep -q '/swapfile'; then
+  fallocate -l "${SWAP_SIZE_GIB:-2}G" /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+fi
+sysctl -w vm.swappiness=60
+echo 'vm.swappiness=60' >> /etc/sysctl.conf
+
+for svc in php8.0-fpm rspamd spamassassin named dovecot; do
+  if systemctl list-unit-files | grep -q "^$svc"; then systemctl set-property "$svc".service MemoryMax=400M || true; fi
+done
+systemctl daemon-reload || true
+
+# Admin password
+EMAIL_ADDR="admin@${DOMAIN_NAME}"
+if [[ -z "${ADMIN_PASSWORD}" ]]; then
+  EMAIL_PW=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 16 ; echo '')
+  if [[ -z "${RESTORE_PREFIX}" ]]; then
+    aws ssm put-parameter --region "${REGION}" --overwrite \
+      --name "/MailInABoxAdminPassword-${STACK_NAME}" --type SecureString --value "$EMAIL_PW" || true
+  fi
+else
+  EMAIL_PW="${ADMIN_PASSWORD}"
+fi
+
+# User, tree, sources
+useradd -m "$STORAGE_USER" || true
+mkdir -p "$STORAGE_ROOT"
+MIAB_REPO="${MAILINABOX_CLONE_URL:-https://github.com/mail-in-a-box/mailinabox.git}"
+MIAB_TAG="${MAILINABOX_VERSION:-v64.0}"
+git clone "$MIAB_REPO" /opt/mailinabox || true
+cd /opt/mailinabox && git fetch --all && git checkout "$MIAB_TAG"
+
+# Optional restore
+if [[ -n "${RESTORE_PREFIX}" ]]; then
+  apt-get remove -y duplicity || true
+  snap install duplicity --classic || true
+  ln -sf /snap/bin/duplicity /usr/bin/duplicity
+  duplicity restore --force "s3://${DOMAIN_NAME}-backup/${RESTORE_PREFIX}" "$STORAGE_ROOT" || true
+  mkdir -p "$STORAGE_ROOT/backup"
+fi
+
+# Run MIAB installer
+cd /opt/mailinabox
+bash -x setup/start.sh 2>&1 | tee /tmp/mailinabox_debug.log
+
+# Optional SES relay wiring
+if [[ "${SES_RELAY}" == "true" ]]; then
+  SMTP_USERNAME=$(aws ssm get-parameter --region "${REGION}" --name "/smtp-username-${STACK_NAME}" --with-decryption --query Parameter.Value --output text)
+  SMTP_PASSWORD=$(aws ssm get-parameter --region "${REGION}" --name "/smtp-password-${STACK_NAME}" --with-decryption --query Parameter.Value --output text)
+  mkdir -p /home/user-data/mail
+  cat >/home/user-data/mail/config <<CFG
+[mail]
+smtp_relay_enable = true
+smtp_relay_host = email-smtp.${REGION}.amazonaws.com
+smtp_relay_port = 587
+smtp_relay_username = $SMTP_USERNAME
+smtp_relay_password = $SMTP_PASSWORD
+CFG
+  chown user-data:user-data /home/user-data/mail/config
+  chmod 640 /home/user-data/mail/config
+  postconf -e "relayhost = [email-smtp.${REGION}.amazonaws.com]:587" \
+           "smtp_sasl_auth_enable = yes" \
+           "smtp_sasl_security_options = noanonymous" \
+           "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd" \
+           "smtp_use_tls = yes" \
+           "smtp_tls_security_level = encrypt" \
+           "smtp_tls_note_starttls_offer = yes" \
+           "smtp_tls_loglevel = 2"
+  sed -i 's/^[^#].*smtp_fallback_relay=/#&/' /etc/postfix/master.cf
+  echo "[email-smtp.${REGION}.amazonaws.com]:587 $SMTP_USERNAME:$SMTP_PASSWORD" >/etc/postfix/sasl_passwd
+  chmod 600 /etc/postfix/sasl_passwd
+  postmap hash:/etc/postfix/sasl_passwd
+  chmod 600 /etc/postfix/sasl_passwd.db
+  postconf -e 'smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt'
+  mkdir -p /home/user-data/mail/dkim
+  chown -R opendkim:opendkim /home/user-data/mail/dkim
+  chmod -R 750 /home/user-data/mail/dkim
+  find /home/user-data/mail/dkim -type f -exec chmod 640 {} \;
+  chown user-data:user-data /home/user-data /home/user-data/mail
+  chmod 755 /home/user-data /home/user-data/mail
+  systemctl restart postfix || true
+  systemctl reload postfix || true
+  systemctl restart dovecot || true
+  systemctl restart opendkim || true
+  echo "127.0.0.1 ${PRIMARY_HOSTNAME}" >> /etc/hosts
+fi
+
+# DNS: use localhost resolver
+IFACE=$(ip route list | awk '/default/ {print $5; exit}')
+cat >/etc/netplan/99-custom-dns.yaml <<EOF
+network:
+  version: 2
+  ethernets:
+    ${IFACE}:
+      nameservers:
+        addresses: [127.0.0.1]
+      dhcp4-overrides:
+        use-dns: false
+EOF
+netplan apply || true
+
+# duplicity via snap (fresh install)
+apt-get remove -y duplicity || true
+rm -f /etc/apt/sources.list.d/duplicity-team-ubuntu-duplicity-release-git-jammy.list || true
+apt-get update
+snap install duplicity --classic || true
+ln -sf /snap/bin/duplicity /usr/bin/duplicity
+duplicity --version || true
+/opt/mailinabox/management/backup.py || true
+
+# Clean cloud-init sensitive files
+IID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id || echo "unknown")
+for f in /var/lib/cloud/instances/$IID/scripts/part-00* /var/lib/cloud/instances/$IID/user-data.txt* /var/lib/cloud/instances/$IID/obj.pkl; do
+  [ -e "$f" ] && rm -f "$f"
+done
+
+echo "MIAB setup complete for ${PRIMARY_HOSTNAME}"
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/cdk-emcnotary-instance/src/main.ts ====
+#!/usr/bin/env node
+
+import * as cdk from 'aws-cdk-lib';
+import { EmcNotaryInstanceStack } from './stacks/instance-stack';
+
+const app = new cdk.App();
+
+new EmcNotaryInstanceStack(app, 'emcnotary-mailserver-instance', {
+  env: {
+    account: process.env['CDK_DEFAULT_ACCOUNT'],
+    region: process.env['CDK_DEFAULT_REGION'] || 'us-east-1',
+  },
+  description:
+    'EMC Notary Mailserver – Instance stack (EC2/SG/EIP/InstanceProfile/userData)',
+});
+
+app.synth();
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/cdk-emcnotary-instance/src/stacks/instance-stack.ts ====
+import {
+  Stack,
+  StackProps,
+  CfnOutput,
+  CfnParameter,
+  Tags,
+  aws_ec2 as ec2,
+  aws_iam as iam,
+  aws_ssm as ssm,
+  aws_lambda as lambda,
+  aws_events as events,
+  aws_events_targets as targets,
+  RemovalPolicy,
+  Duration,
+} from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import { tagStack } from '@mm/infra-shared-constructs';
+import {
+  P_DOMAIN_NAME,
+  P_BACKUP_BUCKET,
+  P_NEXTCLOUD_BUCKET,
+  P_ALARMS_TOPIC,
+  P_EIP_ALLOCATION_ID,
+} from '@mm/infra-core-params';
+
+export class EmcNotaryInstanceStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
+    super(scope, id, props);
+    tagStack(this, 'emcnotary-mailserver');
+
+    // Read core info from SSM (decoupled)
+    const domainName = ssm.StringParameter.fromStringParameterAttributes(
+      this,
+      'CoreDomainName',
+      { parameterName: P_DOMAIN_NAME }
+    ).stringValue;
+
+    const backupBucket = ssm.StringParameter.fromStringParameterAttributes(
+      this,
+      'CoreBackupBucket',
+      { parameterName: P_BACKUP_BUCKET }
+    ).stringValue;
+
+    const nextcloudBucket = ssm.StringParameter.fromStringParameterAttributes(
+      this,
+      'CoreNextcloudBucket',
+      { parameterName: P_NEXTCLOUD_BUCKET }
+    ).stringValue;
+
+    const alarmsTopicArn = ssm.StringParameter.fromStringParameterAttributes(
+      this,
+      'CoreAlarmsTopic',
+      { parameterName: P_ALARMS_TOPIC }
+    ).stringValue;
+
+    const eipAllocationId = ssm.StringParameter.fromStringParameterAttributes(
+      this,
+      'CoreEipAllocationId',
+      { parameterName: P_EIP_ALLOCATION_ID }
+    ).stringValue;
+
+    // Instance parameters (matching CloudFormation template)
+    const instanceType = new CfnParameter(this, 'InstanceType', {
+      type: 'String',
+      default: 't2.micro',
+      description: 'EC2 instance type',
+    });
+
+    const instanceDns = new CfnParameter(this, 'InstanceDns', {
+      type: 'String',
+      default: 'box',
+      description: "DNS name of Instance (within the 'DomainName')",
+    });
+
+    // Additional parameters to control setup behavior (match legacy YAML intent)
+    const sesRelay = new CfnParameter(this, 'SesRelay', {
+      type: 'String',
+      default: 'true',
+      allowedValues: ['true','false']
+    });
+
+    const swapSizeGiB = new CfnParameter(this, 'SwapSizeGiB', {
+      type: 'Number',
+      default: 2
+    });
+
+    const mailInABoxVersion = new CfnParameter(this, 'MailInABoxVersion', {
+      type: 'String',
+      default: 'v64.0'
+    });
+
+    const mailInABoxCloneUrl = new CfnParameter(this, 'MailInABoxCloneUrl', {
+      type: 'String',
+      default: 'https://github.com/mail-in-a-box/mailinabox.git'
+    });
+
+    const restorePrefix = new CfnParameter(this, 'RestorePrefix', {
+      type: 'String',
+      default: ''
+    });
+
+    const adminPassword = new CfnParameter(this, 'MailInABoxAdminPassword', {
+      type: 'String',
+      default: '',
+      noEcho: true
+    });
+
+    // Network + Security Group (matching CloudFormation InstanceSecurityGroup)
+    const vpc = ec2.Vpc.fromLookup(this, 'DefaultVpc', { isDefault: true });
+
+    const sg = new ec2.SecurityGroup(this, 'InstanceSecurityGroup', {
+      vpc,
+      allowAllOutbound: true,
+      description: 'Security Group for Mail-in-a-box Instance',
+    });
+
+    // Security group rules matching CloudFormation template
+    sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(22), 'SSH');
+    sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(53), 'DNS (TCP)');
+    sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.udp(53), 'DNS (UDP)');
+    sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), 'HTTP');
+    sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(443), 'HTTPS');
+    sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(25), 'SMTP (STARTTLS)');
+    sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(143), 'IMAP (STARTTLS)');
+    sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(993), 'IMAPS');
+    sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(465), 'SMTPS');
+    sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(587), 'SMTP Submission');
+    sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(4190), 'Sieve Mail filtering');
+
+    // Key Pair (matching CloudFormation NewKeyPair)
+    const keyPair = new ec2.CfnKeyPair(this, 'NewKeyPair', {
+      keyName: `${domainName}-keypair`,
+      tags: [
+        {
+          key: 'MAILSERVER',
+          value: domainName,
+        },
+      ],
+    });
+
+    // IAM role/profile (matching CloudFormation InstanceRole and InstanceProfile)
+    const role = new iam.Role(this, 'InstanceRole', {
+      roleName: `MailInABoxInstanceRole-${this.stackName}`,
+      assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
+      description: 'IAM role for Mail-in-a-Box instance',
+    });
+
+    // S3 bucket access policies (matching CloudFormation)
+    role.addToPolicy(
+      new iam.PolicyStatement({
+        sid: 'BackupS3BucketAccessMIAB',
+        actions: ['s3:*'],
+        resources: [
+          `arn:aws:s3:::${backupBucket}/*`,
+          `arn:aws:s3:::${backupBucket}`,
+        ],
+      })
+    );
+
+    role.addToPolicy(
+      new iam.PolicyStatement({
+        sid: 'NextCloudS3Policy',
+        actions: ['s3:*'],
+        resources: [
+          `arn:aws:s3:::${nextcloudBucket}/*`,
+          `arn:aws:s3:::${nextcloudBucket}`,
+        ],
+      })
+    );
+
+    // SSM parameter access for SMTP credentials (if SES relay is enabled)
+    role.addToPolicy(
+      new iam.PolicyStatement({
+        sid: 'SsmParameterAccessSmtpCredentials',
+        actions: ['ssm:GetParameter'],
+        resources: [
+          `arn:aws:ssm:${this.region}:${this.account}:parameter/smtp-username-${this.stackName}`,
+          `arn:aws:ssm:${this.region}:${this.account}:parameter/smtp-password-${this.stackName}`,
+        ],
+      })
+    );
+
+    // SSM parameter access for core parameters
+    role.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ['ssm:GetParameter', 'ssm:GetParameters'],
+        resources: [
+          `arn:aws:ssm:${this.region}:${this.account}:parameter/emcnotary/core/*`,
+        ],
+      })
+    );
+
+    // Allow the instance to read/write the MIAB admin pw and read SES SMTP creds
+    role.addToPrincipalPolicy(new iam.PolicyStatement({
+      actions: ['ssm:GetParameter','ssm:GetParameters','ssm:PutParameter'],
+      resources: [
+        `arn:aws:ssm:${this.region}:${this.account}:parameter/smtp-username-*`,
+        `arn:aws:ssm:${this.region}:${this.account}:parameter/smtp-password-*`,
+        `arn:aws:ssm:${this.region}:${this.account}:parameter/MailInABoxAdminPassword-*`,
+      ],
+    }));
+
+    const profile = new iam.CfnInstanceProfile(this, 'InstanceProfile', {
+      instanceProfileName: `MailInABoxInstanceProfile-${this.stackName}`,
+      roles: [role.roleName],
+    });
+
+    // EC2 Instance (matching CloudFormation EC2Instance)
+    // Note: Using Ubuntu AMI from SSM parameter (matching CloudFormation InstanceAMI)
+    const ami = ec2.MachineImage.fromSsmParameter(
+      '/aws/service/canonical/ubuntu/server/jammy/stable/current/amd64/hvm/ebs-gp2/ami-id'
+    );
+
+    const instance = new ec2.Instance(this, 'EC2Instance', {
+      vpc,
+      vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
+      securityGroup: sg,
+      instanceType: new ec2.InstanceType(instanceType.valueAsString),
+      machineImage: ami,
+      role,
+      keyName: keyPair.keyName,
+      blockDevices: [
+        {
+          deviceName: '/dev/sda1',
+          volume: ec2.BlockDeviceVolume.ebs(8, {
+            volumeType: ec2.EbsDeviceVolumeType.GP2,
+            deleteOnTermination: true,
+            encrypted: true,
+          }),
+        },
+      ],
+    });
+
+    // Add tags matching CloudFormation template
+    Tags.of(instance).add('Name', `MailInABoxInstance-${this.stackName}`);
+    Tags.of(instance).add('MAILSERVER', domainName);
+
+    // EIP Association - uses existing EIP from core stack for hot-swapping capability
+    // This allows bringing up a new instance and associating it with the persistent EIP
+    new ec2.CfnEIPAssociation(this, 'InstanceEIPAssociation', {
+      allocationId: eipAllocationId,
+      instanceId: instance.instanceId,
+    });
+
+    // MIAB setup script content (inlined for simplicity)
+    const miabSetupScript = `#!/bin/bash -xe
+
+# Mail-in-a-Box bootstrap for EMC Notary
+
+# Reads env passed by UserData or SSM:
+
+# DOMAIN_NAME, INSTANCE_DNS, REGION, STACK_NAME, EIP_ALLOCATION_ID, SES_RELAY, SWAP_SIZE_GIB,
+
+# MAILINABOX_VERSION, MAILINABOX_CLONE_URL, RESTORE_PREFIX, ADMIN_PASSWORD(optional)
+
+LOGFILE="/var/log/mailinabox_setup.log"
+
+exec > >(tee -a "$LOGFILE" | logger -t mailinabox_setup) 2>&1
+
+echo "Starting MIAB setup for \${DOMAIN_NAME} (\${INSTANCE_DNS}.\${DOMAIN_NAME})"
+
+# Resolve Elastic IP from AllocationId (works even if EIP not yet attached at boot)
+
+if [[ -n "\${EIP_ALLOCATION_ID}" ]]; then
+  sudo apt-get update -y
+  sudo apt-get install -y jq curl unzip
+  if ! command -v aws >/dev/null 2>&1; then
+    curl -sSL "https://awscli.amazonaws.com/awscli-exe-linux-\$(uname -m).zip" -o awscliv2.zip
+    unzip -q awscliv2.zip && sudo ./aws/install
+  fi
+  ELASTIC_IP=\$(aws ec2 describe-addresses --allocation-ids "\${EIP_ALLOCATION_ID}" --region "\${REGION}" \\
+    --query 'Addresses[0].PublicIp' --output text || true)
+fi
+
+# Fallback to current public IP if EIP not resolved yet
+PUBLIC_IP=\${ELASTIC_IP:-\$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)}
+PRIVATE_IP=\$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
+
+export NONINTERACTIVE=1
+export DEBIAN_FRONTEND=noninteractive
+export TERM=xterm
+export SKIP_NETWORK_CHECKS=true
+export STORAGE_ROOT=/home/user-data
+export STORAGE_USER=user-data
+export PRIMARY_HOSTNAME="\${INSTANCE_DNS}.\${DOMAIN_NAME}"
+export DEFAULT_PRIMARY_HOSTNAME="\${PRIMARY_HOSTNAME}"
+export DEFAULT_PUBLIC_IP="\${PUBLIC_IP}"
+
+# Updates & prerequisites
+apt-get update
+apt-get upgrade -o DPkg::Lock::Timeout=120 -y
+apt-get install -y dialog librsync-dev python3-setuptools python3-pip python3-boto3 unzip intltool python-is-python3
+
+# CloudFormation helpers (for cfn-signal parity; harmless if not used)
+pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz || true
+
+# Stability: swap & soft caps
+if ! swapon --summary | grep -q '/swapfile'; then
+  fallocate -l "\${SWAP_SIZE_GIB:-2}G" /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+fi
+sysctl -w vm.swappiness=60
+echo 'vm.swappiness=60' >> /etc/sysctl.conf
+
+for svc in php8.0-fpm rspamd spamassassin named dovecot; do
+  if systemctl list-unit-files | grep -q "^\$svc"; then systemctl set-property "\$svc".service MemoryMax=400M || true; fi
+done
+systemctl daemon-reload || true
+
+# Admin password
+EMAIL_ADDR="admin@\${DOMAIN_NAME}"
+if [[ -z "\${ADMIN_PASSWORD}" ]]; then
+  EMAIL_PW=\$(tr -dc A-Za-z0-9 </dev/urandom | head -c 16 ; echo '')
+  if [[ -z "\${RESTORE_PREFIX}" ]]; then
+    aws ssm put-parameter --region "\${REGION}" --overwrite \\
+      --name "/MailInABoxAdminPassword-\${STACK_NAME}" --type SecureString --value "\$EMAIL_PW" || true
+  fi
+else
+  EMAIL_PW="\${ADMIN_PASSWORD}"
+fi
+
+# User, tree, sources
+useradd -m "\$STORAGE_USER" || true
+mkdir -p "\$STORAGE_ROOT"
+MIAB_REPO="\${MAILINABOX_CLONE_URL:-https://github.com/mail-in-a-box/mailinabox.git}"
+MIAB_TAG="\${MAILINABOX_VERSION:-v64.0}"
+git clone "\$MIAB_REPO" /opt/mailinabox || true
+cd /opt/mailinabox && git fetch --all && git checkout "\$MIAB_TAG"
+
+# Optional restore
+if [[ -n "\${RESTORE_PREFIX}" ]]; then
+  apt-get remove -y duplicity || true
+  snap install duplicity --classic || true
+  ln -sf /snap/bin/duplicity /usr/bin/duplicity
+  duplicity restore --force "s3://\${DOMAIN_NAME}-backup/\${RESTORE_PREFIX}" "\$STORAGE_ROOT" || true
+  mkdir -p "\$STORAGE_ROOT/backup"
+fi
+
+# Run MIAB installer
+cd /opt/mailinabox
+bash -x setup/start.sh 2>&1 | tee /tmp/mailinabox_debug.log
+
+# Optional SES relay wiring
+if [[ "\${SES_RELAY}" == "true" ]]; then
+  SMTP_USERNAME=\$(aws ssm get-parameter --region "\${REGION}" --name "/smtp-username-\${STACK_NAME}" --with-decryption --query Parameter.Value --output text)
+  SMTP_PASSWORD=\$(aws ssm get-parameter --region "\${REGION}" --name "/smtp-password-\${STACK_NAME}" --with-decryption --query Parameter.Value --output text)
+  mkdir -p /home/user-data/mail
+  cat >/home/user-data/mail/config <<CFG
+[mail]
+smtp_relay_enable = true
+smtp_relay_host = email-smtp.\${REGION}.amazonaws.com
+smtp_relay_port = 587
+smtp_relay_username = \$SMTP_USERNAME
+smtp_relay_password = \$SMTP_PASSWORD
+CFG
+  chown user-data:user-data /home/user-data/mail/config
+  chmod 640 /home/user-data/mail/config
+  postconf -e "relayhost = [email-smtp.\${REGION}.amazonaws.com]:587" \\
+           "smtp_sasl_auth_enable = yes" \\
+           "smtp_sasl_security_options = noanonymous" \\
+           "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd" \\
+           "smtp_use_tls = yes" \\
+           "smtp_tls_security_level = encrypt" \\
+           "smtp_tls_note_starttls_offer = yes" \\
+           "smtp_tls_loglevel = 2"
+  sed -i 's/^[^#].*smtp_fallback_relay=/#&/' /etc/postfix/master.cf
+  echo "[email-smtp.\${REGION}.amazonaws.com]:587 \$SMTP_USERNAME:\$SMTP_PASSWORD" >/etc/postfix/sasl_passwd
+  chmod 600 /etc/postfix/sasl_passwd
+  postmap hash:/etc/postfix/sasl_passwd
+  chmod 600 /etc/postfix/sasl_passwd.db
+  postconf -e 'smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt'
+  mkdir -p /home/user-data/mail/dkim
+  chown -R opendkim:opendkim /home/user-data/mail/dkim
+  chmod -R 750 /home/user-data/mail/dkim
+  find /home/user-data/mail/dkim -type f -exec chmod 640 {} \\;
+  chown user-data:user-data /home/user-data /home/user-data/mail
+  chmod 755 /home/user-data /home/user-data/mail
+  systemctl restart postfix || true
+  systemctl reload postfix || true
+  systemctl restart dovecot || true
+  systemctl restart opendkim || true
+  echo "127.0.0.1 \${PRIMARY_HOSTNAME}" >> /etc/hosts
+fi
+
+# DNS: use localhost resolver
+IFACE=\$(ip route list | awk '/default/ {print \$5; exit}')
+cat >/etc/netplan/99-custom-dns.yaml <<EOF
+network:
+  version: 2
+  ethernets:
+    \${IFACE}:
+      nameservers:
+        addresses: [127.0.0.1]
+      dhcp4-overrides:
+        use-dns: false
+EOF
+netplan apply || true
+
+# duplicity via snap (fresh install)
+apt-get remove -y duplicity || true
+rm -f /etc/apt/sources.list.d/duplicity-team-ubuntu-duplicity-release-git-jammy.list || true
+apt-get update
+snap install duplicity --classic || true
+ln -sf /snap/bin/duplicity /usr/bin/duplicity
+duplicity --version || true
+/opt/mailinabox/management/backup.py || true
+
+# Clean cloud-init sensitive files
+IID=\$(curl -s http://169.254.169.254/latest/meta-data/instance-id || echo "unknown")
+for f in /var/lib/cloud/instances/\$IID/scripts/part-00* /var/lib/cloud/instances/\$IID/user-data.txt* /var/lib/cloud/instances/\$IID/obj.pkl; do
+  [ -e "\$f" ] && rm -f "\$f"
+done
+
+echo "MIAB setup complete for \${PRIMARY_HOSTNAME}"
+`;
+
+    // UserData: write script then execute with env
+    instance.addUserData(
+      'set -euxo pipefail',
+      'cat > /root/miab-setup.sh << "EOF_MIAB"',
+      miabSetupScript,
+      'EOF_MIAB',
+      // env export line (kept separate for easy diffs)
+      `export DOMAIN_NAME='${domainName}'`,
+      `export INSTANCE_DNS='${instanceDns.valueAsString}'`,
+      `export REGION='${this.region}'`,
+      `export STACK_NAME='${this.stackName}'`,
+      `export EIP_ALLOCATION_ID='${eipAllocationId}'`,
+      `export SES_RELAY='${sesRelay.valueAsString}'`,
+      `export SWAP_SIZE_GIB='${swapSizeGiB.valueAsNumber}'`,
+      `export MAILINABOX_VERSION='${mailInABoxVersion.valueAsString}'`,
+      `export MAILINABOX_CLONE_URL='${mailInABoxCloneUrl.valueAsString}'`,
+      `export RESTORE_PREFIX='${restorePrefix.valueAsString}'`,
+      `export ADMIN_PASSWORD='${adminPassword.valueAsString}'`,
+      'bash -xe /root/miab-setup.sh'
+    );
+
+    // Admin Password SSM Parameter (matching CloudFormation MailInABoxAdminPasswordSsmParameter)
+    // Note: This will be created/updated by the instance user data script
+    const adminPasswordParamName = `/MailInABoxAdminPassword-${this.stackName}`;
+
+    // Export common identifiers for admin tooling
+    new CfnOutput(this, 'InstanceId', {
+      value: instance.instanceId,
+      description: 'The EC2 instance ID'
+    });
+
+    new CfnOutput(this, 'KeyPairId', {
+      value: keyPair.attrKeyPairId,
+      description: 'The ID of the EC2 Key Pair'
+    });
+
+    new CfnOutput(this, 'DomainName', {
+      value: domainName,
+      description: 'The domain name'
+    });
+
+    new CfnOutput(this, 'InstanceDnsName', {
+      value: instanceDns.valueAsString,
+      description: 'The instance DNS name'
+    });
+
+    // Outputs matching monolithic stack format
+    // Note: ElasticIPAddress is output from core stack, not instance stack
+    new CfnOutput(this, 'ElasticIPAllocationId', {
+      value: eipAllocationId,
+      description: 'The Elastic IP allocation ID (from core stack)',
+    });
+
+    new CfnOutput(this, 'InstancePublicIp', {
+      value: instance.instancePublicIp,
+      description: 'The Public IP of the Mail-in-a-box instance',
+    });
+
+    new CfnOutput(this, 'AdminPassword', {
+      value: adminPasswordParamName,
+      description: 'Name of the SSM Parameter containing the Admin Password to Mail-in-a-box Web-UI',
+    });
+
+    new CfnOutput(this, 'RestorePrefixValue', {
+      value: instance.instanceId,
+      description: 'The S3 prefix where backups are stored is set to the ID of the EC2 instance of your current deployment',
+    });
+
+    // Nightly Reboot: Lambda + EventBridge rule for 03:00 ET (08:00 UTC)
+    // This ensures the Mail-in-a-Box instance gets restarted daily to clear any memory issues
+
+    const rebootLambdaRole = new iam.Role(this, 'RebootLambdaExecutionRole', {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+      ],
+    });
+
+    // Allow the Lambda to reboot EC2 instances
+    rebootLambdaRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ['ec2:RebootInstances'],
+        resources: [`arn:aws:ec2:${this.region}:${this.account}:instance/${instance.instanceId}`],
+      })
+    );
+
+    const rebootLambda = new lambda.Function(this, 'RebootMailServerInstanceFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      code: lambda.Code.fromInline(`
+import { EC2Client, RebootInstancesCommand } from '@aws-sdk/client-ec2';
+
+const ec2Client = new EC2Client({ region: process.env.AWS_REGION });
+
+export const handler = async (event: any) => {
+  const instanceId = process.env.INSTANCE_ID;
+
+  if (!instanceId) {
+    console.error('INSTANCE_ID environment variable not set');
+    throw new Error('INSTANCE_ID environment variable not set');
+  }
+
+  console.log(\`Rebooting Mail-in-a-Box instance: \${instanceId}\`);
+
+  try {
+    await ec2Client.send(
+      new RebootInstancesCommand({
+        InstanceIds: [instanceId],
+      })
+    );
+
+    console.log(\`Successfully initiated reboot for instance: \${instanceId}\`);
+    return {
+      statusCode: 200,
+      body: \`Reboot initiated for instance \${instanceId}\`,
+    };
+  } catch (error) {
+    console.error(\`Failed to reboot instance \${instanceId}:\`, error);
+    throw error;
+  }
+};
+      `),
+      handler: 'index.handler',
+      role: rebootLambdaRole,
+      timeout: Duration.seconds(30),
+      environment: {
+        INSTANCE_ID: instance.instanceId,
+      },
+    });
+
+    // EventBridge rule for nightly reboot at 08:00 UTC (03:00 ET)
+    // Note: For strict ET observance, consider EventBridge Scheduler in the future
+    // This uses cron expression: 0 8 * * ? * (08:00 UTC daily)
+    const rebootRule = new events.Rule(this, 'NightlyRebootRule', {
+      schedule: events.Schedule.cron({
+        minute: '0',
+        hour: '8',
+        day: '*',
+        month: '*',
+        year: '*',
+      }),
+      description: 'Daily reboot of Mail-in-a-Box instance at 03:00 ET (08:00 UTC)',
+      enabled: true,
+    });
+
+    // Add Lambda as target for the rule
+    rebootRule.addTarget(new targets.LambdaFunction(rebootLambda));
+
+    // Output for visibility
+    new CfnOutput(this, 'NightlyRebootSchedule', {
+      value: '03:00 ET (08:00 UTC) daily',
+      description: 'Schedule for automatic nightly reboot of Mail-in-a-Box instance',
+    });
+  }
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/cdk-emcnotary-instance/tsconfig.app.json ====
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "module": "ESNext",
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/cdk-emcnotary-instance/tsconfig.json ====
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ]
+}
+
+
+
+

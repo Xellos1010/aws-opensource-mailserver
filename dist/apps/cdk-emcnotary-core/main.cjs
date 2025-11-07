@@ -533,7 +533,7 @@ def lambda_handler(event, context):
 // apps/cdk-emcnotary-core/src/main.ts
 var app = new cdk.App();
 var defaultDomain = "emcnotary.com";
-var domain = process.env["DOMAIN"] || defaultDomain;
+var domain = app.node.tryGetContext("domain") || process.env["DOMAIN"] || defaultDomain;
 var domainName = domain.replace(/\./g, "-");
 var stackName = `${domainName}-mailserver-core`;
 new EmcNotaryCoreStack(app, stackName, {
