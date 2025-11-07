@@ -1,1 +1,1 @@
-export * from "./lib/admin-reverse-dns";
+export * from './lib/reverse-dns';

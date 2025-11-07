@@ -19,7 +19,8 @@ function resolveDomain(appPath, stackName) {
   if (appPath) {
     const parts = appPath.split("/");
     const appName = parts[parts.length - 1];
-    const domainPart = appName.replace(/^cdk-/, "");
+    let domainPart = appName.replace(/^cdk-/, "");
+    domainPart = domainPart.replace(/-core$/, "");
     const domainMap = {
       "emc-notary": "emcnotary.com",
       "emcnotary": "emcnotary.com",
@@ -28,7 +29,7 @@ function resolveDomain(appPath, stackName) {
     return domainMap[domainPart] || `${domainPart.replace(/-/g, "")}.com`;
   }
   if (stackName) {
-    const withoutSuffix = stackName.replace(/-mailserver$/, "");
+    const withoutSuffix = stackName.replace(/-mailserver(-core)?$/, "");
     return withoutSuffix.replace(/-/g, ".");
   }
   return null;
@@ -42,7 +43,10 @@ function resolveStackName(domain, appPath, explicitStackName) {
   }
   const resolvedDomain = resolveDomain(appPath);
   if (resolvedDomain) {
-    return `${resolvedDomain.replace(/\./g, "-")}-mailserver`;
+    const appName = appPath?.split("/").pop() || "";
+    const isCoreStack = appName.includes("-core");
+    const suffix = isCoreStack ? "-mailserver-core" : "-mailserver";
+    return `${resolvedDomain.replace(/\./g, "-")}${suffix}`;
   }
   throw new Error(
     "Cannot resolve stack name. Provide domain, appPath, or explicit stackName"
