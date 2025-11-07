@@ -194,9 +194,7 @@ def lambda_handler(event, context):
                 'Reason': str(e)
             }, allocation_id)
       `),
-      environment: {
-        AWS_REGION: this.region,
-      },
+      // Note: AWS_REGION is automatically set by Lambda runtime - don't set it manually
     });
 
     // Custom resource provider for reverse DNS
