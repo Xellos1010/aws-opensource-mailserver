@@ -122,8 +122,8 @@ async function main(): Promise<void> {
     const options: BootstrapOptions = {
       domain: cliOptions.domain || process.env.DOMAIN || 'emcnotary.com',
       stackName: cliOptions.stackName || process.env.STACK,
-      region: cliOptions.region || process.env.CDK_DEFAULT_REGION || 'us-east-1',
-      profile: cliOptions.profile || process.env.PROFILE,
+      region: cliOptions.region || process.env.CDK_DEFAULT_REGION || process.env.AWS_REGION || 'us-east-1',
+      profile: cliOptions.profile || process.env.AWS_PROFILE || process.env.PROFILE,
       dryRun: cliOptions.dryRun || process.env.DRY_RUN === '1',
       restorePrefix: cliOptions.restorePrefix || process.env.RESTORE_PREFIX,
       rebootAfterSetup: cliOptions.rebootAfterSetup !== undefined
