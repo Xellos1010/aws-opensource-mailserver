@@ -1,5 +1,5 @@
 # main-directory Rules and Standards
-# Generated on: Thu Nov  6 21:40:03 EST 2025
+# Generated on: Thu Nov  6 23:02:40 EST 2025
 # Source: /Users/evanmccall/Projects/aws-opensource-mailserver
 # 
 # This file contains all rules, standards, and guidelines from the main-directory component.
