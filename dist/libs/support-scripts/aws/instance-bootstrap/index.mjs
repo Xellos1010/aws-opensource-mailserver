@@ -244,9 +244,24 @@ async function bootstrapInstance(options) {
       `${featureFlagEnv}=0 is set. Bootstrap is disabled. Set ${featureFlagEnv}=1 to enable.`
     );
   }
-  const { cf, ssm, ec2 } = createClients(region, options.profile);
   const stackName = resolveStackName(options);
   console.log(`\u{1F4CB} Resolving stack: ${stackName}`);
+  if (options.dryRun) {
+    console.log("\n\u{1F50D} DRY RUN MODE - Previewing what would be executed:\n");
+    console.log(`  Stack: ${stackName}`);
+    console.log(`  Region: ${region}`);
+    console.log(`  Domain: ${options.domain || "N/A"}`);
+    console.log(`  Profile: ${options.profile || "default"}`);
+    console.log("\n\u{1F4CB} Would perform the following steps:");
+    console.log("  1. Describe CloudFormation stack to get instance details");
+    console.log("  2. Read core parameters from SSM Parameter Store");
+    console.log("  3. Verify instance is running and accessible via SSM");
+    console.log("  4. Build environment map with configuration values");
+    console.log("  5. Send SSM RunCommand to execute MIAB setup script");
+    console.log("\n\u2705 Dry run complete - no AWS calls made, no changes");
+    return;
+  }
+  const { cf, ssm, ec2 } = createClients(region, options.profile);
   const stackInfo = await describeInstanceStack(cf, stackName);
   console.log(`\u2705 Found instance: ${stackInfo.instanceId}`);
   console.log(`   Domain: ${stackInfo.domainName}`);
