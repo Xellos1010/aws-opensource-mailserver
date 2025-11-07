@@ -10,8 +10,8 @@
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/admin/admin-dns-restore",
-        "main": "libs/admin/admin-dns-restore/bin/dns-restore.ts",
-        "outputFileName": "dns-restore.mjs",
+        "main": "libs/admin/admin-dns-restore/bin/restore-miab.ts",
+        "outputFileName": "restore-miab.mjs",
         "bundle": true,
         "platform": "node",
         "format": ["esm"],
@@ -35,7 +35,14 @@
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
       "options": {
-        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 BACKUP_FILE=Archive/backups/askdaokapra.com/dns/dns-backup-20250915-120236.json APP_PATH=apps/cdk-askdaokapra DOMAIN=askdaokapra.com DRY_RUN=0 node dist/libs/admin/admin-dns-restore/dns-restore.mjs"
+        "command": "NODE_TLS_REJECT_UNAUTHORIZED=0 AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 BACKUP_FILE=dist/backups/askdaokapra/dns/2025-09-15T12-02-36-000Z/dns-backup-20250915-120236.json APP_PATH=apps/cdk-askdaokapra DRY_RUN=0 node dist/libs/admin/admin-dns-restore/restore-miab.mjs"
+      }
+    },
+    "restore:askdaokapra:dry-run": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "NODE_TLS_REJECT_UNAUTHORIZED=0 AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 BACKUP_FILE=dist/backups/askdaokapra/dns/2025-09-15T12-02-36-000Z/dns-backup-20250915-120236.json APP_PATH=apps/cdk-askdaokapra DRY_RUN=1 node dist/libs/admin/admin-dns-restore/restore-miab.mjs"
       }
     },
     "test": {
