@@ -3,6 +3,7 @@ import {
   StackProps,
   CfnOutput,
   CfnParameter,
+  CustomResource,
   aws_s3 as s3,
   aws_sns as sns,
   aws_ssm as ssm,
@@ -10,10 +11,12 @@ import {
   aws_logs as logs,
   aws_lambda as lambda,
   aws_iam as iam,
+  aws_ec2 as ec2,
   RemovalPolicy,
   Duration,
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { Provider } from 'aws-cdk-lib/custom-resources';
 import { tagStack } from '@mm/infra-shared-constructs';
 import {
   P_DOMAIN_NAME,
@@ -21,6 +24,7 @@ import {
   P_NEXTCLOUD_BUCKET,
   P_ALARMS_TOPIC,
   P_SES_IDENTITY_ARN,
+  P_EIP_ALLOCATION_ID,
 } from '@mm/infra-core-params';
 
 export class EmcNotaryCoreStack extends Stack {
@@ -38,6 +42,178 @@ export class EmcNotaryCoreStack extends Stack {
 
     const domain = domainName.valueAsString;
 
+    // Elastic IP - persistent across instance updates for hot-swapping
+    const eip = new ec2.CfnEIP(this, 'ElasticIP', {
+      domain: 'vpc',
+      tags: [
+        {
+          key: 'MAILSERVER',
+          value: domain,
+        },
+      ],
+    });
+
+    // Reverse DNS Lambda - sets reverse DNS on EIP creation
+    const reverseDnsLambdaRole = new iam.Role(this, 'ReverseDnsLambdaExecutionRole', {
+      roleName: `ReverseDnsLambdaExecutionRole-${this.stackName}`,
+      description: 'Role assumed by Lambda to set reverse DNS on Elastic IP',
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName(
+          'service-role/AWSLambdaBasicExecutionRole'
+        ),
+      ],
+    });
+
+    reverseDnsLambdaRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ['ec2:ModifyAddressAttribute', 'ec2:DescribeAddresses'],
+        resources: ['*'], // EIP resources don't support resource-level permissions
+      })
+    );
+
+    const reverseDnsLambda = new lambda.Function(this, 'ReverseDnsLambdaFunction', {
+      functionName: `ReverseDnsLambdaFunction-${this.stackName}`,
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: 'index.lambda_handler',
+      role: reverseDnsLambdaRole,
+      timeout: Duration.seconds(30),
+      memorySize: 128,
+      code: lambda.Code.fromInline(`
+import boto3
+from botocore.exceptions import ClientError
+import cfnresponse
+import logging
+import os
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
+region = os.environ['AWS_REGION']
+ec2 = boto3.client('ec2', region_name=region)
+
+def lambda_handler(event, context):
+    log.info('Event: %s', event)
+    
+    # Handle missing properties gracefully
+    allocation_id = event.get('ResourceProperties', {}).get('AllocationId')
+    ptr_record = event.get('ResourceProperties', {}).get('PtrRecord', '')
+    
+    if not allocation_id:
+        error_msg = 'Missing AllocationId in ResourceProperties'
+        log.error(error_msg)
+        cfnresponse.send(event, context, cfnresponse.FAILED, {
+            'Reason': error_msg
+        }, 'unknown')
+        return
+    
+    request_type = event.get('RequestType', 'Unknown')
+    
+    try:
+        if request_type in ['Create', 'Update']:
+            # Set reverse DNS
+            try:
+                ec2.modify_address_attribute(
+                    AllocationId=allocation_id,
+                    DomainName=ptr_record
+                )
+                log.info('Successfully set reverse DNS: %s -> %s', allocation_id, ptr_record)
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, {
+                    'Message': f'Reverse DNS set to {ptr_record}'
+                }, allocation_id)
+            except ClientError as e:
+                error_code = e.response.get('Error', {}).get('Code', 'Unknown')
+                if error_code == 'InvalidAllocationID.NotFound':
+                    log.warning('EIP allocation not found: %s (may have been released)', allocation_id)
+                    # Still succeed - EIP may have been released already
+                    cfnresponse.send(event, context, cfnresponse.SUCCESS, {
+                        'Message': f'EIP not found (may be released): {allocation_id}'
+                    }, allocation_id)
+                else:
+                    raise
+        elif request_type == 'Delete':
+            # Clear reverse DNS on stack deletion to reset to vanilla state
+            # Always succeed on delete, even if EIP doesn't exist
+            try:
+                # First check if EIP exists
+                addresses = ec2.describe_addresses(AllocationIds=[allocation_id])
+                if not addresses.get('Addresses'):
+                    log.info('EIP allocation %s not found - already released or deleted', allocation_id)
+                    cfnresponse.send(event, context, cfnresponse.SUCCESS, {
+                        'Message': 'EIP not found - already released'
+                    }, allocation_id)
+                    return
+                
+                # Try to clear reverse DNS
+                ec2.modify_address_attribute(
+                    AllocationId=allocation_id,
+                    DomainName=''  # Empty string clears reverse DNS
+                )
+                log.info('Successfully cleared reverse DNS for allocation: %s', allocation_id)
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, {
+                    'Message': 'Reverse DNS cleared on stack deletion'
+                }, allocation_id)
+            except ClientError as e:
+                error_code = e.response.get('Error', {}).get('Code', 'Unknown')
+                # Handle various error cases gracefully
+                if error_code in ['InvalidAllocationID.NotFound', 'InvalidAddress.NotFound']:
+                    log.info('EIP allocation %s not found - already released', allocation_id)
+                    cfnresponse.send(event, context, cfnresponse.SUCCESS, {
+                        'Message': 'EIP not found - already released'
+                    }, allocation_id)
+                elif error_code == 'InvalidParameterValue':
+                    log.warning('Invalid parameter for EIP %s: %s', allocation_id, str(e))
+                    # Still succeed - EIP may be in invalid state
+                    cfnresponse.send(event, context, cfnresponse.SUCCESS, {
+                        'Message': f'EIP may be in invalid state: {str(e)}'
+                    }, allocation_id)
+                else:
+                    # For any other error, log but still succeed on delete
+                    log.warning('Could not clear reverse DNS for %s: %s', allocation_id, str(e))
+                    cfnresponse.send(event, context, cfnresponse.SUCCESS, {
+                        'Message': f'Reverse DNS clear attempted: {str(e)}'
+                    }, allocation_id)
+            except Exception as clear_err:
+                # Catch-all for any other exceptions - still succeed on delete
+                log.warning('Unexpected error clearing reverse DNS: %s', str(clear_err))
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, {
+                    'Message': f'Reverse DNS clear attempted: {str(clear_err)}'
+                }, allocation_id)
+        else:
+            cfnresponse.send(event, context, cfnresponse.FAILED, {
+                'Reason': f"Unsupported request type: {request_type}"
+            }, allocation_id)
+    except Exception as e:
+        log.error('Unexpected error in reverse DNS handler: %s', str(e))
+        # On delete, always succeed even on unexpected errors
+        if request_type == 'Delete':
+            cfnresponse.send(event, context, cfnresponse.SUCCESS, {
+                'Message': f'Delete operation completed with warning: {str(e)}'
+            }, allocation_id)
+        else:
+            cfnresponse.send(event, context, cfnresponse.FAILED, {
+                'Reason': str(e)
+            }, allocation_id)
+      `),
+      environment: {
+        AWS_REGION: this.region,
+      },
+    });
+
+    // Custom resource provider for reverse DNS
+    const reverseDnsProvider = new Provider(this, 'ReverseDnsProvider', {
+      onEventHandler: reverseDnsLambda,
+    });
+
+    // Custom resource to set reverse DNS when EIP is created
+    const ptrRecord = `box.${domain}`;
+    new CustomResource(this, 'ReverseDnsResource', {
+      serviceToken: reverseDnsProvider.serviceToken,
+      properties: {
+        AllocationId: eip.attrAllocationId,
+        PtrRecord: ptrRecord,
+      },
+    });
+
     // SES domain identity + DKIM (no Route53 hosted zone - uses domain name directly)
     const identity = new ses.EmailIdentity(this, 'SesIdentity', {
       identity: ses.Identity.domain(domain),
@@ -46,21 +222,34 @@ export class EmcNotaryCoreStack extends Stack {
     });
 
     // S3 Buckets: backup and nextcloud (matching CloudFormation template)
+    // Note: These buckets are deleted when stack is deleted - backups should be handled separately
     const backupBucket = new s3.Bucket(this, 'BackupBucket', {
       bucketName: `${domain}-backup`,
-      removalPolicy: RemovalPolicy.RETAIN,
+      removalPolicy: RemovalPolicy.DESTROY, // Delete bucket on stack deletion
       versioned: true,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
+      autoDeleteObjects: true, // Auto-delete objects when stack is deleted
     });
 
     const nextcloudBucket = new s3.Bucket(this, 'NextcloudBucket', {
       bucketName: `${domain}-nextcloud`,
-      removalPolicy: RemovalPolicy.RETAIN,
+      removalPolicy: RemovalPolicy.DESTROY, // Delete bucket on stack deletion
       versioned: true,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
+      autoDeleteObjects: true, // Auto-delete objects when stack is deleted
     });
+
+    // Get central backup bucket from mailservers-backups stack
+    // This allows backing up to a central location before deletion
+    // Can be provided via CDK context: --context centralBackupBucket=mailservers-backups
+    // Or via environment variable: CENTRAL_BACKUP_BUCKET=mailservers-backups
+    // If not provided, core stack works without it (backups handled manually)
+    const centralBackupBucket =
+      this.node.tryGetContext('centralBackupBucket') ||
+      process.env['CENTRAL_BACKUP_BUCKET'] ||
+      undefined;
 
     // SNS Alarms topic (matching CloudFormation AlertTopic)
     const alarmsTopic = new sns.Topic(this, 'AlertTopic', {
@@ -72,7 +261,7 @@ export class EmcNotaryCoreStack extends Stack {
     const syslogGroup = new logs.LogGroup(this, 'SyslogGroup', {
       logGroupName: `/ec2/syslog-${this.stackName}`,
       retention: logs.RetentionDays.ONE_WEEK,
-      removalPolicy: RemovalPolicy.DESTROY,
+      removalPolicy: RemovalPolicy.DESTROY, // Delete logs when stack is deleted
     });
 
     // CloudWatch Agent Config SSM Parameter (matching CloudFormation CWAgentConfigParam)
@@ -282,6 +471,12 @@ def lambda_handler(event, context):
       description: 'SES email identity ARN',
     });
 
+    new ssm.StringParameter(this, 'ParamEipAllocationId', {
+      parameterName: P_EIP_ALLOCATION_ID,
+      stringValue: eip.attrAllocationId,
+      description: 'Elastic IP allocation ID for mail server instance',
+    });
+
     // Outputs matching monolithic stack format
     new CfnOutput(this, 'DomainNameOutput', {
       value: domain,
@@ -351,5 +546,22 @@ def lambda_handler(event, context):
       value: 'v=spf1 include:amazonses.com ~all',
       description: 'TXT record for custom MAIL FROM domain',
     });
+
+    new CfnOutput(this, 'ElasticIPAddress', {
+      value: eip.ref,
+      description: 'The allocated Elastic IP address (persistent across instance updates)',
+    });
+
+    new CfnOutput(this, 'ElasticIPAllocationId', {
+      value: eip.attrAllocationId,
+      description: 'The Elastic IP allocation ID for associating with instances',
+    });
+
+    if (centralBackupBucket) {
+      new CfnOutput(this, 'CentralBackupBucket', {
+        value: centralBackupBucket,
+        description: 'Central backup bucket name (from mailservers-backups stack)',
+      });
+    }
   }
 }

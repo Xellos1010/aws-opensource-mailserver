@@ -16,6 +16,7 @@ import {
   P_BACKUP_BUCKET,
   P_NEXTCLOUD_BUCKET,
   P_ALARMS_TOPIC,
+  P_EIP_ALLOCATION_ID,
 } from '@mm/infra-core-params';
 
 export class EmcNotaryInstanceStack extends Stack {
@@ -46,6 +47,12 @@ export class EmcNotaryInstanceStack extends Stack {
       this,
       'CoreAlarmsTopic',
       { parameterName: P_ALARMS_TOPIC }
+    ).stringValue;
+
+    const eipAllocationId = ssm.StringParameter.fromStringParameterAttributes(
+      this,
+      'CoreEipAllocationId',
+      { parameterName: P_EIP_ALLOCATION_ID }
     ).stringValue;
 
     // Instance parameters (matching CloudFormation template)
@@ -151,17 +158,6 @@ export class EmcNotaryInstanceStack extends Stack {
       roles: [role.roleName],
     });
 
-    // Elastic IP (matching CloudFormation ElasticIP)
-    const eip = new ec2.CfnEIP(this, 'ElasticIP', {
-      domain: 'vpc',
-      tags: [
-        {
-          key: 'MAILSERVER',
-          value: domainName,
-        },
-      ],
-    });
-
     // EC2 Instance (matching CloudFormation EC2Instance)
     // Note: Using Ubuntu AMI from SSM parameter (matching CloudFormation InstanceAMI)
     const ami = ec2.MachineImage.fromSsmParameter(
@@ -192,9 +188,10 @@ export class EmcNotaryInstanceStack extends Stack {
     Tags.of(instance).add('Name', `MailInABoxInstance-${this.stackName}`);
     Tags.of(instance).add('MAILSERVER', domainName);
 
-    // EIP Association (matching CloudFormation InstanceEIPAssociation)
+    // EIP Association - uses existing EIP from core stack for hot-swapping capability
+    // This allows bringing up a new instance and associating it with the persistent EIP
     new ec2.CfnEIPAssociation(this, 'InstanceEIPAssociation', {
-      eip: eip.ref,
+      allocationId: eipAllocationId,
       instanceId: instance.instanceId,
     });
 
@@ -207,7 +204,7 @@ export class EmcNotaryInstanceStack extends Stack {
       `echo "Instance DNS: ${instanceDns.valueAsString}.${domainName}"`,
       `echo "Backup bucket: ${backupBucket}"`,
       `echo "Nextcloud bucket: ${nextcloudBucket}"`,
-      `echo "Elastic IP: ${eip.ref}"`,
+      `echo "Elastic IP Allocation ID: ${eipAllocationId}"`,
       'echo "TODO: install & configure Mail-in-a-Box here"'
     );
 
@@ -216,9 +213,10 @@ export class EmcNotaryInstanceStack extends Stack {
     const adminPasswordParamName = `/MailInABoxAdminPassword-${this.stackName}`;
 
     // Outputs matching monolithic stack format
-    new CfnOutput(this, 'ElasticIPAddress', {
-      value: eip.ref,
-      description: 'The allocated Elastic IP address',
+    // Note: ElasticIPAddress is output from core stack, not instance stack
+    new CfnOutput(this, 'ElasticIPAllocationId', {
+      value: eipAllocationId,
+      description: 'The Elastic IP allocation ID (from core stack)',
     });
 
     new CfnOutput(this, 'KeyPairId', {
