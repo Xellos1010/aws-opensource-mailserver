@@ -296,9 +296,46 @@ def lambda_handler(event, context):
       value: backupBucket.bucketName,
       description: "S3 Backup Bucket Name"
     });
-    new import_aws_cdk_lib3.CfnOutput(this, "AlarmsTopicArn", {
+    new import_aws_cdk_lib3.CfnOutput(this, "AlertTopicArn", {
       value: alarmsTopic.topicArn,
-      description: "SNS Alarms Topic ARN"
+      description: "SNS Topic ARN for memory and system alerts"
+    });
+    new import_aws_cdk_lib3.CfnOutput(this, "DkimDNSTokenName1", {
+      value: identity.dkimDnsTokenName1,
+      description: "First DKIM DNS token name for SES domain verification"
+    });
+    new import_aws_cdk_lib3.CfnOutput(this, "DkimDNSTokenValue1", {
+      value: identity.dkimDnsTokenValue1,
+      description: "First DKIM DNS token value for SES domain verification"
+    });
+    new import_aws_cdk_lib3.CfnOutput(this, "DkimDNSTokenName2", {
+      value: identity.dkimDnsTokenName2,
+      description: "Second DKIM DNS token name for SES domain verification"
+    });
+    new import_aws_cdk_lib3.CfnOutput(this, "DkimDNSTokenValue2", {
+      value: identity.dkimDnsTokenValue2,
+      description: "Second DKIM DNS token value for SES domain verification"
+    });
+    new import_aws_cdk_lib3.CfnOutput(this, "DkimDNSTokenName3", {
+      value: identity.dkimDnsTokenName3,
+      description: "Third DKIM DNS token name for SES domain verification"
+    });
+    new import_aws_cdk_lib3.CfnOutput(this, "DkimDNSTokenValue3", {
+      value: identity.dkimDnsTokenValue3,
+      description: "Third DKIM DNS token value for SES domain verification"
+    });
+    const mailFromDomain = `mail.${domain2}`;
+    new import_aws_cdk_lib3.CfnOutput(this, "MailFromDomain", {
+      value: mailFromDomain,
+      description: "Custom MAIL FROM domain name"
+    });
+    new import_aws_cdk_lib3.CfnOutput(this, "MailFromMXRecord", {
+      value: `10 feedback-smtp.${this.region}.amazonses.com`,
+      description: "MX record for custom MAIL FROM domain"
+    });
+    new import_aws_cdk_lib3.CfnOutput(this, "MailFromTXTRecord", {
+      value: "v=spf1 include:amazonses.com ~all",
+      description: "TXT record for custom MAIL FROM domain"
     });
   }
 };

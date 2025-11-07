@@ -282,7 +282,7 @@ def lambda_handler(event, context):
       description: 'SES email identity ARN',
     });
 
-    // Outputs for reference
+    // Outputs matching monolithic stack format
     new CfnOutput(this, 'DomainNameOutput', {
       value: domain,
       description: 'Domain name for mail server',
@@ -298,9 +298,58 @@ def lambda_handler(event, context):
       description: 'S3 Backup Bucket Name',
     });
 
-    new CfnOutput(this, 'AlarmsTopicArn', {
+    new CfnOutput(this, 'AlertTopicArn', {
       value: alarmsTopic.topicArn,
-      description: 'SNS Alarms Topic ARN',
+      description: 'SNS Topic ARN for memory and system alerts',
+    });
+
+    // DKIM DNS tokens for SES domain verification
+    // Note: These are CloudFormation attributes from the EmailIdentity resource
+    new CfnOutput(this, 'DkimDNSTokenName1', {
+      value: identity.dkimDnsTokenName1,
+      description: 'First DKIM DNS token name for SES domain verification',
+    });
+
+    new CfnOutput(this, 'DkimDNSTokenValue1', {
+      value: identity.dkimDnsTokenValue1,
+      description: 'First DKIM DNS token value for SES domain verification',
+    });
+
+    new CfnOutput(this, 'DkimDNSTokenName2', {
+      value: identity.dkimDnsTokenName2,
+      description: 'Second DKIM DNS token name for SES domain verification',
+    });
+
+    new CfnOutput(this, 'DkimDNSTokenValue2', {
+      value: identity.dkimDnsTokenValue2,
+      description: 'Second DKIM DNS token value for SES domain verification',
+    });
+
+    new CfnOutput(this, 'DkimDNSTokenName3', {
+      value: identity.dkimDnsTokenName3,
+      description: 'Third DKIM DNS token name for SES domain verification',
+    });
+
+    new CfnOutput(this, 'DkimDNSTokenValue3', {
+      value: identity.dkimDnsTokenValue3,
+      description: 'Third DKIM DNS token value for SES domain verification',
+    });
+
+    // Mail From domain configuration
+    const mailFromDomain = `mail.${domain}`;
+    new CfnOutput(this, 'MailFromDomain', {
+      value: mailFromDomain,
+      description: 'Custom MAIL FROM domain name',
+    });
+
+    new CfnOutput(this, 'MailFromMXRecord', {
+      value: `10 feedback-smtp.${this.region}.amazonses.com`,
+      description: 'MX record for custom MAIL FROM domain',
+    });
+
+    new CfnOutput(this, 'MailFromTXTRecord', {
+      value: 'v=spf1 include:amazonses.com ~all',
+      description: 'TXT record for custom MAIL FROM domain',
     });
   }
 }
