@@ -12,13 +12,6 @@
         "outputPath": "dist/libs/admin/admin-ssh",
         "main": "libs/admin/admin-ssh/bin/setup-ssh.ts",
         "outputFileName": "setup-ssh.mjs",
-        "additionalEntryPoints": [
-          {
-            "entryName": "test-ssh",
-            "entryPath": "libs/admin/admin-ssh/bin/test-ssh.ts",
-            "outputPath": "test-ssh.mjs"
-          }
-        ],
         "bundle": true,
         "platform": "node",
         "format": ["esm"],
