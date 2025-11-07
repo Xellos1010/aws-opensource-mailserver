@@ -78,3 +78,9 @@ vite.config.*.timestamp*
 vitest.config.*.timestamp*
 
 data/godaddy/api-keys/*
+
+# Dependencies and extracted files
+node_modules/
+extracted-codebase/
+extracted-configs/
+extracted-rules/

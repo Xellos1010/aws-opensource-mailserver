@@ -88,7 +88,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["^build", "support-scripts-aws-instance-bootstrap:build"],
       "options": {
-        "command": "if [ \"$FEATURE_INSTANCE_BOOTSTRAP_ENABLED\" = \"0\" ]; then echo \"ERROR: FEATURE_INSTANCE_BOOTSTRAP_ENABLED=0 - Bootstrap is disabled\"; exit 1; fi && ts-node tools/instance-bootstrap.cli.ts --domain=${DOMAIN:-emcnotary.com} --region=${CDK_DEFAULT_REGION:-us-east-1} ${STACK:+--stack=$STACK} ${PROFILE:+--profile=$PROFILE} ${DRY_RUN:+--dry-run} ${RESTORE_PREFIX:+--restore-prefix=$RESTORE_PREFIX} ${REBOOT_AFTER_SETUP:+--reboot}"
+        "command": "pnpm exec tsx tools/instance-bootstrap.cli.ts"
       },
       "description": "Bootstrap Mail-in-a-Box on instance via SSM RunCommand"
     },
@@ -96,7 +96,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["^build", "support-scripts-aws-instance-bootstrap:build"],
       "options": {
-        "command": "ts-node tools/instance-bootstrap.cli.ts --domain=${DOMAIN:-emcnotary.com} --region=${CDK_DEFAULT_REGION:-us-east-1} --dry-run ${STACK:+--stack=$STACK} ${PROFILE:+--profile=$PROFILE}"
+        "command": "pnpm exec tsx tools/instance-bootstrap.cli.ts --dry-run"
       },
       "description": "Dry run: Show what would be executed for bootstrap (no SSM command sent)"
     },
@@ -120,7 +120,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["ses-dns:build"],
       "options": {
-        "command": "DOMAIN=${DOMAIN:-emcnotary.com} pnpm nx run ses-dns:set-dns"
+        "command": "pnpm nx run ses-dns:set-dns -- --domain ${DOMAIN:-emcnotary.com}"
       },
       "description": "Set SES DNS records (DKIM, Mail-From) via Mail-in-a-Box API"
     },
@@ -128,11 +128,11 @@
       "executor": "nx:run-commands",
       "dependsOn": ["ses-dns:build"],
       "options": {
-        "command": "DOMAIN=${DOMAIN:-emcnotary.com} pnpm nx run ses-dns:set-dns -- --dry-run"
+        "command": "pnpm nx run ses-dns:set-dns -- --domain ${DOMAIN:-emcnotary.com} --dry-run"
       },
       "description": "Dry run: Preview SES DNS records without making changes"
     },
-    "admin:provision": {
+    "admin:provision:ssh-and-ses-dns": {
       "executor": "nx:run-commands",
       "dependsOn": ["instance-provision:build"],
       "options": {
@@ -140,7 +140,7 @@
       },
       "description": "Provision instance: Setup SSH access and configure SES DNS records"
     },
-    "admin:provision:skip-ssh": {
+    "admin:provision:ses-dns-only": {
       "executor": "nx:run-commands",
       "dependsOn": ["instance-provision:build"],
       "options": {

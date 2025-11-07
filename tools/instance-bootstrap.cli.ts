@@ -118,9 +118,9 @@ async function main(): Promise<void> {
     // Parse CLI args
     const cliOptions = parseArgs();
 
-    // Merge with environment variables
+    // Merge with environment variables and defaults
     const options: BootstrapOptions = {
-      domain: cliOptions.domain || process.env.DOMAIN,
+      domain: cliOptions.domain || process.env.DOMAIN || 'emcnotary.com',
       stackName: cliOptions.stackName || process.env.STACK,
       region: cliOptions.region || process.env.CDK_DEFAULT_REGION || 'us-east-1',
       profile: cliOptions.profile || process.env.PROFILE,

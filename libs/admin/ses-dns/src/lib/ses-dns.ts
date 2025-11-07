@@ -59,6 +59,35 @@ export async function setSesDnsRecords(
     dryRun,
   });
 
+  // Early dry-run check - skip AWS calls if dry-run
+  if (dryRun) {
+    log('info', 'DRY RUN: Would set the following DNS records via MIAB API');
+    console.log('\n🔍 DRY RUN MODE - Previewing what would be executed:\n');
+    console.log(`  Domain: ${domain}`);
+    console.log(`  Stack: ${stackName}`);
+    console.log(`  Region: ${region}`);
+    console.log(`  Profile: ${profile}`);
+    console.log('\n📋 Would perform the following steps:');
+    console.log('  1. Get SES DNS records from CloudFormation stack outputs');
+    console.log('  2. Get instance details and SSH key from SSM');
+    console.log('  3. Connect to instance via SSH');
+    console.log('  4. Set DNS records via Mail-in-a-Box API:');
+    console.log('     - 3 DKIM CNAME records');
+    console.log('     - 1 Mail-From MX record');
+    console.log('     - 1 Mail-From TXT record');
+    console.log('\n✅ Dry run complete - no AWS calls made, no changes');
+    return {
+      success: true,
+      records: {
+        dkim1: { name: 'dkim1._domainkey', value: 'dkim1.example.com.dkim.amazonses.com', type: 'CNAME' as const },
+        dkim2: { name: 'dkim2._domainkey', value: 'dkim2.example.com.dkim.amazonses.com', type: 'CNAME' as const },
+        dkim3: { name: 'dkim3._domainkey', value: 'dkim3.example.com.dkim.amazonses.com', type: 'CNAME' as const },
+        mailFromMx: { name: 'mail', value: '10 feedback-smtp.us-east-1.amazonses.com', type: 'MX' as const },
+        mailFromTxt: { name: 'mail', value: 'v=spf1 include:amazonses.com ~all', type: 'TXT' as const },
+      },
+    };
+  }
+
   const cfClient = new CloudFormationClient({ region });
   const ec2Client = new EC2Client({ region });
   const ssmClient = new SSMClient({ region });
@@ -157,7 +186,7 @@ export async function setSesDnsRecords(
     }
 
     // Get instance IP if not in outputs
-    let finalInstanceIp = instanceIp;
+    let finalInstanceIp: string | undefined = instanceIp;
     if (!finalInstanceIp) {
       const instanceResp = await ec2Client.send(
         new DescribeInstancesCommand({
@@ -166,7 +195,7 @@ export async function setSesDnsRecords(
       );
 
       const instance = instanceResp.Reservations?.[0]?.Instances?.[0];
-      finalInstanceIp = instance?.PublicIpAddress;
+      finalInstanceIp = instance?.PublicIpAddress ?? undefined;
     }
 
     if (!finalInstanceIp) {
@@ -174,6 +203,9 @@ export async function setSesDnsRecords(
       log('error', error);
       return { success: false, error };
     }
+
+    // TypeScript now knows finalInstanceIp is string after the check above
+    const instanceIpString = finalInstanceIp;
 
     // Get instance key pair name
     const instanceResp = await ec2Client.send(
@@ -235,6 +267,20 @@ export async function setSesDnsRecords(
     execSync(`echo "${privateKey}" > "${tempKeyFile}"`, { stdio: 'inherit' });
     execSync(`chmod 400 "${tempKeyFile}"`, { stdio: 'inherit' });
 
+    // Normalize DNS names by removing trailing domain if present
+    const normalizeDnsName = (name: string): string => {
+      const suffix = `.${domain}`;
+      return name.endsWith(suffix) ? name.slice(0, -suffix.length) : name;
+    };
+
+    const normalizedDkimName1 = normalizeDnsName(dkimName1);
+    const normalizedDkimName2 = normalizeDnsName(dkimName2);
+    const normalizedDkimName3 = normalizeDnsName(dkimName3);
+    const normalizedMailFromDomain = normalizeDnsName(mailFromDomain);
+
+    // Strip priority from MX record (format: "10 mail.example.com" -> "mail.example.com")
+    const mailFromMxValue = mailFromMx.split(/\s+/).slice(1).join(' ') || mailFromMx;
+
     try {
       // Create script to set DNS records via MIAB API
       const scriptContent = `
@@ -253,9 +299,6 @@ set_dns_record() {
     local value=\$3
     local method=\$4  # PUT or POST
 
-    # Normalize qname by removing trailing domain if present
-    local normalized_name=\${name%.$domain}
-
     echo "Setting \$type record: \$name -> \$value"
 
     # Make the API call
@@ -264,7 +307,7 @@ set_dns_record() {
          -X "\${method}" \\
          -d "value=\$value" \\
          -H "Content-Type: application/x-www-form-urlencoded" \\
-         "\${MIAB_HOST}/admin/dns/custom/\${normalized_name}/\${type}")
+         "\${MIAB_HOST}/admin/dns/custom/\${name}/\${type}")
 
     http_code=\${response##* }
     response_body=\$(cat /tmp/curl_response)
@@ -281,22 +324,22 @@ set_dns_record() {
 
 # First, delete any existing records for these domains
 echo "Cleaning up existing records..."
-curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${dkimName1%.$domain}/CNAME" || true
-curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${dkimName2%.$domain}/CNAME" || true
-curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${dkimName3%.$domain}/CNAME" || true
-curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${mailFromDomain%.$domain}/MX" || true
-curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${mailFromDomain%.$domain}/TXT" || true
+curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${normalizedDkimName1}/CNAME" || true
+curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${normalizedDkimName2}/CNAME" || true
+curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${normalizedDkimName3}/CNAME" || true
+curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${normalizedMailFromDomain}/MX" || true
+curl -s -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X DELETE "\${MIAB_HOST}/admin/dns/custom/${normalizedMailFromDomain}/TXT" || true
 
 # Set DKIM CNAME records using PUT (single value)
-set_dns_record "CNAME" "${dkimName1}" "${dkimValue1}" "PUT"
-set_dns_record "CNAME" "${dkimName2}" "${dkimValue2}" "PUT"
-set_dns_record "CNAME" "${dkimName3}" "${dkimValue3}" "PUT"
+set_dns_record "CNAME" "${normalizedDkimName1}" "${dkimValue1}" "PUT"
+set_dns_record "CNAME" "${normalizedDkimName2}" "${dkimValue2}" "PUT"
+set_dns_record "CNAME" "${normalizedDkimName3}" "${dkimValue3}" "PUT"
 
-# Set MAIL FROM MX record (strip priority for Mail-in-a-Box API)
-set_dns_record "MX" "${mailFromDomain}" "${mailFromMx##* }" "PUT"
+# Set MAIL FROM MX record (priority already stripped)
+set_dns_record "MX" "${normalizedMailFromDomain}" "${mailFromMxValue}" "PUT"
 
 # Set MAIL FROM TXT record using POST to preserve any existing SPF records
-set_dns_record "TXT" "${mailFromDomain}" "${mailFromTxt}" "POST"
+set_dns_record "TXT" "${normalizedMailFromDomain}" "${mailFromTxt}" "POST"
 
 echo "DNS records set successfully!"
 `.trim();
@@ -307,14 +350,14 @@ echo "DNS records set successfully!"
       execSync(`chmod +x "${scriptFile}"`, { stdio: 'inherit' });
 
       // Copy script to instance
-      log('info', 'Copying DNS setup script to instance', { instanceIp: finalInstanceIp });
-      execSync(`scp -i "${tempKeyFile}" -o StrictHostKeyChecking=no "${scriptFile}" "ubuntu@${finalInstanceIp}:~/set-dns-records.sh"`, {
+      log('info', 'Copying DNS setup script to instance', { instanceIp: instanceIpString });
+      execSync(`scp -i "${tempKeyFile}" -o StrictHostKeyChecking=no "${scriptFile}" "ubuntu@${instanceIpString}:~/set-dns-records.sh"`, {
         stdio: 'inherit'
       });
 
       // Execute DNS setup script
       log('info', 'Executing DNS setup script on instance');
-      execSync(`ssh -i "${tempKeyFile}" -o StrictHostKeyChecking=no "ubuntu@${finalInstanceIp}" "~/set-dns-records.sh"`, {
+      execSync(`ssh -i "${tempKeyFile}" -o StrictHostKeyChecking=no "ubuntu@${instanceIpString}" "~/set-dns-records.sh"`, {
         stdio: 'inherit'
       });
 
