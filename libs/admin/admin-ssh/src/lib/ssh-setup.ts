@@ -98,15 +98,26 @@ export async function setupSshKey(
     fs.writeFileSync(keyFilePath, ssmResp.Parameter.Value, { mode: 0o400 });
     log('info', 'SSH key retrieved and saved', { keyFilePath });
 
-    // Verify key format
+    // Verify key format (matching bash script: exits on invalid format)
     try {
       execSync(`ssh-keygen -l -f "${keyFilePath}"`, { stdio: 'ignore' });
       log('info', 'SSH key format verified', { keyFilePath });
     } catch (err) {
-      const errorMsg = `SSH key format verification failed: ${err}`;
-      log('error', errorMsg);
+      const errorMsg = `Key file is not in a valid format. Please delete the key file and try again: rm ${keyFilePath}`;
+      log('error', errorMsg, { error: String(err) });
       errors.push(errorMsg);
-      // Don't fail - key might still work
+      // Remove invalid key file (matching bash script behavior)
+      try {
+        fs.unlinkSync(keyFilePath);
+        log('info', 'Removed invalid key file', { keyFilePath });
+      } catch (unlinkErr) {
+        log('warn', 'Could not remove invalid key file', { error: String(unlinkErr) });
+      }
+      return {
+        keyFilePath,
+        success: false,
+        errors,
+      };
     }
   } catch (err) {
     const errorMsg = `Failed to retrieve SSH key from SSM: ${err}`;
@@ -165,39 +176,65 @@ export async function setupSshKey(
 
 /**
  * Sets up SSH access for a stack using stack info
+ * Follows the same flow as setup-ssh-access.sh:
+ * 1. Get KeyPairId from stack outputs
+ * 2. Get instance ID from RestorePrefix output
+ * 3. Get instance public IP and key name from EC2
+ * 4. Retrieve key from SSM Parameter Store
+ * 5. Store key with proper permissions
+ * 6. Verify key format
+ * 7. Update known_hosts
+ * 8. Generate SSH config entry
  */
 export async function setupSshForStack(stackInfo: {
   keyPairId?: string;
   instanceKeyName?: string;
   instancePublicIp?: string;
+  instanceId?: string;
   domain: string;
   stackName?: string;
   region?: string;
   profile?: string;
 }): Promise<SshSetupResult> {
+  // Validate required fields (matching bash script error handling)
   if (!stackInfo.keyPairId) {
-    throw new Error('KeyPairId not found in stack info');
+    throw new Error('KeyPairId not found in stack info. Could not retrieve KeyPairId from stack outputs.');
+  }
+
+  if (!stackInfo.instanceId) {
+    throw new Error('Instance ID not found in stack info. Could not find EC2 instance ID in the stack outputs.');
   }
 
   if (!stackInfo.instancePublicIp) {
-    throw new Error('Instance public IP not found in stack info');
+    throw new Error('Instance public IP not found in stack info. Could not get instance IP address.');
   }
 
-  // Derive key name if not provided
+  // Instance key name is required (bash script exits if not found)
+  // If not available from EC2, we'll derive it but log a warning
   let instanceKeyName = stackInfo.instanceKeyName;
   if (!instanceKeyName) {
-    // Try to derive from stack name or domain
+    // Try to derive from stack name or domain (fallback behavior)
     if (stackInfo.stackName) {
-      // Extract key name from stack name (e.g., "emcnotary-com-mailserver" -> "emcnotary-com-mailserver-keypair")
+      // Extract key name from stack name (e.g., "emcnotary-com-mailserver" -> "emcnotary-com-keypair")
       instanceKeyName = `${stackInfo.stackName.replace(/-mailserver$/, '')}-keypair`;
     } else {
       // Fallback: use domain-based naming
       instanceKeyName = `${stackInfo.domain.replace(/\./g, '-')}-keypair`;
     }
-    log('warn', 'Instance key name not found, using derived name', {
+    log('warn', 'Instance key name not found in EC2, using derived name', {
+      instanceId: stackInfo.instanceId,
       derivedKeyName: instanceKeyName,
     });
   }
+
+  log('info', 'SSH setup configuration', {
+    stackName: stackInfo.stackName,
+    domain: stackInfo.domain,
+    instanceId: stackInfo.instanceId,
+    instanceIp: stackInfo.instancePublicIp,
+    keyPairId: stackInfo.keyPairId,
+    instanceKeyName,
+  });
 
   return setupSshKey({
     keyPairId: stackInfo.keyPairId,

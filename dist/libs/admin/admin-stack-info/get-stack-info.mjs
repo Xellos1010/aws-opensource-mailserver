@@ -22,7 +22,8 @@ function resolveDomain(appPath, stackName) {
     const domainPart = appName.replace(/^cdk-/, "");
     const domainMap = {
       "emc-notary": "emcnotary.com",
-      "emcnotary": "emcnotary.com"
+      "emcnotary": "emcnotary.com",
+      "askdaokapra": "askdaokapra.com"
     };
     return domainMap[domainPart] || `${domainPart.replace(/-/g, "")}.com`;
   }

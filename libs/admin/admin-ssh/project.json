@@ -12,6 +12,13 @@
         "outputPath": "dist/libs/admin/admin-ssh",
         "main": "libs/admin/admin-ssh/bin/setup-ssh.ts",
         "outputFileName": "setup-ssh.mjs",
+        "additionalEntryPoints": [
+          {
+            "entryName": "test-ssh",
+            "entryPath": "libs/admin/admin-ssh/bin/test-ssh.ts",
+            "outputPath": "test-ssh.mjs"
+          }
+        ],
         "bundle": true,
         "platform": "node",
         "format": ["esm"],
@@ -38,14 +45,54 @@
         "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emc-notary node dist/libs/admin/admin-ssh/setup-ssh.mjs"
       }
     },
-    "setup:apps:cdk-emc-notary": {
+    "setup:askdaokapra": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
       "options": {
-        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emc-notary node dist/libs/admin/admin-ssh/setup-ssh.mjs"
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-askdaokapra node dist/libs/admin/admin-ssh/setup-ssh.mjs"
+      }
+    },
+    "build:test": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/admin/admin-ssh",
+        "main": "libs/admin/admin-ssh/bin/test-ssh.ts",
+        "outputFileName": "test-ssh.mjs",
+        "bundle": true,
+        "platform": "node",
+        "format": ["esm"],
+        "target": "node20",
+        "tsConfig": "libs/admin/admin-ssh/tsconfig.lib.json",
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
       }
     },
     "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build:test"],
+      "options": {
+        "command": "node dist/libs/admin/admin-ssh/test-ssh.mjs"
+      }
+    },
+    "test:emcnotary": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build:test"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emc-notary node dist/libs/admin/admin-ssh/test-ssh.mjs"
+      }
+    },
+    "test:askdaokapra": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build:test"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-askdaokapra node dist/libs/admin/admin-ssh/test-ssh.mjs"
+      }
+    },
+    "test:unit": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
