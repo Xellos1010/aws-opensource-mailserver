@@ -96,7 +96,7 @@ export function getCdkEnvVars(): Record<string, string> {
   };
 
   if (config.cdk.defaultAccount) {
-    env.CDK_DEFAULT_ACCOUNT = config.cdk.defaultAccount;
+    env['CDK_DEFAULT_ACCOUNT'] = config.cdk.defaultAccount;
   }
 
   return env;

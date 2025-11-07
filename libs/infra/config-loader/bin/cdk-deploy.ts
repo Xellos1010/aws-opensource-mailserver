@@ -32,10 +32,10 @@ function main() {
   const fullCommand = `cdk ${cdkCommand} ${cdkArgs.join(' ')}`.trim();
 
   console.log('Loading deployment configuration...');
-  console.log(`AWS Profile: ${envVars.AWS_PROFILE}`);
-  console.log(`AWS Region: ${envVars.AWS_REGION}`);
-  if (envVars.CDK_DEFAULT_ACCOUNT) {
-    console.log(`CDK Account: ${envVars.CDK_DEFAULT_ACCOUNT}`);
+  console.log(`AWS Profile: ${envVars['AWS_PROFILE']}`);
+  console.log(`AWS Region: ${envVars['AWS_REGION']}`);
+  if (envVars['CDK_DEFAULT_ACCOUNT']) {
+    console.log(`CDK Account: ${envVars['CDK_DEFAULT_ACCOUNT']}`);
   }
   console.log(`\nExecuting: ${fullCommand}\n`);
 
