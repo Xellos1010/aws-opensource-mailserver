@@ -1,8 +1,0 @@
-# tools Configuration Files
-# Generated on: Fri Nov  7 13:35:35 EST 2025
-# Source: /Users/evanmccall/Projects/aws-opensource-mailserver/tools
-# 
-# This file contains all configuration files from the tools component.
-#
-# =============================================================================
-
