@@ -18,6 +18,8 @@ Commands:
   mail:backup
   ec2:restart|ec2:stop|ec2:start|ec2:type <instanceType>
   kms:enable|kms:disable|kms:status
+  ssl:check <hostname> [port]
+  ssl:provision <domain1> [domain2 ...]
 
 Env:
   See .env.example for all required variables.
@@ -104,6 +106,47 @@ Env:
       if (cmd === 'kms:status') console.log(await kmsModule.rotationStatus(keyId));
 
       console.log('OK:', cmd, keyId);
+      break;
+    }
+
+    case 'ssl:check': {
+      const sslCheckModule = await import(
+        '../../libs/admin/admin-ssl-check/src/lib/check'
+      );
+      const hostname = args[0];
+      if (!hostname) {
+        throw new Error('ssl:check requires a hostname');
+      }
+      const portArg = args[1];
+      const options = portArg ? { port: parseInt(portArg, 10) } : {};
+      const result = await sslCheckModule.checkCertificate(hostname, options);
+      console.log(sslCheckModule.formatCertCheckResult(result));
+      process.exit(result.isValid ? 0 : 1);
+      break;
+    }
+
+    case 'ssl:provision': {
+      const sslProvisionModule = await import(
+        '../../libs/admin/admin-ssl-provision/src/lib/provision'
+      );
+      const domains =
+        args.length > 0
+          ? args
+          : process.env.SSL_DOMAINS?.split(',').filter(Boolean) || [];
+      if (domains.length === 0) {
+        throw new Error(
+          'ssl:provision requires domains as arguments or SSL_DOMAINS env var'
+        );
+      }
+      const result = await sslProvisionModule.provisionCertificate({
+        domains,
+        email: process.env.ACME_EMAIL,
+        challengeType:
+          (process.env.ACME_CHALLENGE_TYPE as 'http-01' | 'dns-01') ||
+          'http-01',
+      });
+      console.log('Provisioning requested for:', domains.join(', '));
+      console.log('Result:', JSON.stringify(result, null, 2));
       break;
     }
 

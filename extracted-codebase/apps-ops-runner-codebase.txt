@@ -1,0 +1,232 @@
+# apps-ops-runner Codebase
+# Generated on: Thu Nov  6 21:40:03 EST 2025
+# Source: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/ops-runner
+# 
+# This file contains all source code files from the apps-ops-runner component.
+# Excludes: node_modules, .git, dist, build, cdk.out, yarn.lock, package-lock.json
+#
+# =============================================================================
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/ops-runner/project.json ====
+{
+  "name": "ops-runner",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/ops-runner/src",
+  "projectType": "application",
+  "tags": ["type:tool", "scope:ops"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/ops-runner",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/ops-runner/src/main.ts",
+        "outputFileName": "ops.js",
+        "tsConfig": "apps/ops-runner/tsconfig.app.json",
+        "external": [],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "logLevel": "silent"
+        },
+        "skipTypeCheck": true
+      }
+    },
+    "run": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/apps/ops-runner/ops.js"
+      }
+    },
+    "prune-lockfile": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "executor": "@nx/js:prune-lockfile",
+      "outputs": [
+        "{workspaceRoot}/dist/apps/ops-runner/package.json",
+        "{workspaceRoot}/dist/apps/ops-runner/pnpm-lock.yaml"
+      ],
+      "options": {
+        "buildTarget": "ops-runner:build"
+      }
+    },
+    "copy-workspace-modules": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "outputs": ["{workspaceRoot}/dist/apps/ops-runner/workspace_modules"],
+      "executor": "@nx/js:copy-workspace-modules",
+      "options": {
+        "buildTarget": "ops-runner:build"
+      }
+    },
+    "prune": {
+      "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
+      "executor": "nx:noop"
+    }
+  }
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/ops-runner/src/assets/.gitkeep (skipped, mime=inode/x-empty) ====
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/ops-runner/src/main.ts ====
+#!/usr/bin/env node
+
+function need(k: string): string {
+  const v = process.env[k];
+  if (!v) throw new Error(`Missing ${k}`);
+  return v;
+}
+
+async function run(): Promise<void> {
+  const [, , cmd, ...args] = process.argv;
+
+  if (!cmd || ['-h', '--help', 'help'].includes(cmd)) {
+    console.log(`ops <command>
+
+Commands:
+  auth:mfa
+  dns:backup
+  mail:backup
+  ec2:restart|ec2:stop|ec2:start|ec2:type <instanceType>
+  kms:enable|kms:disable|kms:status
+
+Env:
+  See .env.example for all required variables.
+`);
+    process.exit(0);
+  }
+
+  switch (cmd) {
+    case 'auth:mfa': {
+      // call the TS-ported mfa task
+      const mfaModule = await import(
+        '../../libs/support-scripts/aws/authentication/src/lib/mfa-user'
+      );
+      await mfaModule.main();
+      break;
+    }
+
+    case 'dns:backup': {
+      const dnsModule = await import(
+        '../../libs/admin/admin-dns-backup/src/lib/backup'
+      );
+      const outDir = await dnsModule.backupDns({
+        bucket: process.env.DNS_BACKUP_BUCKET,
+        prefix: process.env.DNS_BACKUP_PREFIX,
+      });
+      console.log('DNS backup →', outDir);
+      break;
+    }
+
+    case 'mail:backup': {
+      const mailModule = await import(
+        '../../libs/admin/admin-mail-backup/src/lib/backup'
+      );
+      const r = await mailModule.backupMailbox({
+        host: need('MAIL_HOST'),
+        port: Number(process.env.MAIL_PORT ?? 993),
+        secure: process.env.MAIL_SECURE
+          ? process.env.MAIL_SECURE === '1'
+          : true,
+        user: need('MAIL_USER'),
+        pass: need('MAIL_PASS'),
+        s3Bucket: process.env.MAIL_BACKUP_BUCKET,
+        s3Prefix: process.env.MAIL_BACKUP_PREFIX,
+        includeMailboxes: process.env.MAIL_INCLUDE?.split(',').filter(Boolean),
+        excludeMailboxes: process.env.MAIL_EXCLUDE?.split(',').filter(Boolean),
+      });
+      console.log('Mail backup complete:', r);
+      break;
+    }
+
+    case 'ec2:restart':
+    case 'ec2:stop':
+    case 'ec2:start':
+    case 'ec2:type': {
+      const ec2Module = await import(
+        '../../libs/admin/admin-ec2/src/lib/ec2'
+      );
+      const id = process.env.INSTANCE_ID;
+      if (!id) throw new Error('INSTANCE_ID is required');
+
+      if (cmd === 'ec2:restart') await ec2Module.restart(id);
+      if (cmd === 'ec2:stop') await ec2Module.stop(id);
+      if (cmd === 'ec2:start') await ec2Module.start(id);
+      if (cmd === 'ec2:type') {
+        const itype = args[0] || process.env.INSTANCE_TYPE;
+        if (!itype) throw new Error('INSTANCE_TYPE (or arg) required');
+        await ec2Module.changeType(id, itype);
+      }
+
+      console.log('OK:', cmd, id, args.join(' '));
+      break;
+    }
+
+    case 'kms:enable':
+    case 'kms:disable':
+    case 'kms:status': {
+      const kmsModule = await import(
+        '../../libs/admin/admin-kms/src/lib/kms'
+      );
+      const keyId = need('KMS_KEY_ID');
+
+      if (cmd === 'kms:enable') await kmsModule.enableRotation(keyId);
+      if (cmd === 'kms:disable') await kmsModule.disableRotation(keyId);
+      if (cmd === 'kms:status') console.log(await kmsModule.rotationStatus(keyId));
+
+      console.log('OK:', cmd, keyId);
+      break;
+    }
+
+    default:
+      throw new Error(`Unknown command: ${cmd}`);
+  }
+}
+
+run().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/ops-runner/tsconfig.app.json ====
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"]
+}
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/apps/ops-runner/tsconfig.json ====
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "outDir": "../../dist/out-tsc",
+    "types": ["node"],
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}
+
+
+
+

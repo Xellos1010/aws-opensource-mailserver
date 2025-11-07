@@ -1,0 +1,603 @@
+# libs-support-scripts Codebase
+# Generated on: Thu Nov  6 21:40:06 EST 2025
+# Source: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts
+# 
+# This file contains all source code files from the libs-support-scripts component.
+# Excludes: node_modules, .git, dist, build, cdk.out, yarn.lock, package-lock.json
+#
+# =============================================================================
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/authentication/bin/mfa-user.ts ====
+#!/usr/bin/env node
+
+import { main } from '../src/lib/mfa-user';
+
+main().catch((err) => {
+  console.error('Error:', err.message);
+  process.exit(1);
+});
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/authentication/jest.config.ts ====
+export default {
+  displayName: "authentication",
+  preset: "../../../../jest.preset.js",
+  testEnvironment: "node",
+  transform: {
+    "^.+\\.[tj]s$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.spec.json" }],
+  },
+  moduleFileExtensions: ["ts", "js", "html"],
+  coverageDirectory: "../../../../coverage/libs/support-scripts/aws/authentication",
+};
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/authentication/package.json ====
+{
+  "name": "authentication",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "tslib": "^2.3.0"
+  }
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/authentication/project.json ====
+{
+  "name": "authentication",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/support-scripts/aws/authentication/src",
+  "projectType": "library",
+  "tags": ["type:script", "scope:aws", "domain:auth"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/support-scripts/aws/authentication",
+        "main": "libs/support-scripts/aws/authentication/bin/mfa-user.ts",
+        "outputFileName": "mfa-user.mjs",
+        "platform": "node",
+        "bundle": true,
+        "format": ["esm"],
+        "target": "node20",
+        "tsConfig": "libs/support-scripts/aws/authentication/tsconfig.lib.json",
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
+      }
+    },
+    "mfa": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node dist/libs/support-scripts/aws/authentication/mfa-user.mjs"
+      },
+      "dependsOn": ["build"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/support-scripts/aws/authentication/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/authentication/README.md ====
+# MFA Authentication
+
+TypeScript port of `mfa-user.sh` for cross-platform MFA authentication.
+
+## Usage
+
+### Manual (Local Development)
+
+```bash
+# Enable feature flag
+export FEATURE_NX_SCRIPTS_ENABLED=1
+
+# Run MFA authentication
+pnpm nx run authentication:mfa
+
+# Or use the alias
+pnpm nx run authentication:mfa
+```
+
+### Environment Variables
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `MFA_DEVICE_ARN` | AWS MFA device ARN | No | `arn:aws:iam::413988044972:mfa/Evans-Phone` |
+| `SOURCE_PROFILE` | AWS CLI profile with long-term credentials | No | `hepe-admin` |
+| `TARGET_PROFILE` | AWS CLI profile for temporary credentials | No | `hepe-admin-mfa` |
+| `DURATION_SECONDS` | Session duration in seconds | No | `43200` (12 hours) |
+| `DRY_RUN` | Skip writing credentials file | No | `0` |
+| `FEATURE_NX_SCRIPTS_ENABLED` | Enable Nx script execution | No | `0` (disabled) |
+| `AWS_REGION` | AWS region for STS calls | No | `us-east-1` |
+
+## CI/CD
+
+**Note**: This script is interactive and requires manual MFA code entry. It is **NOT executed in CI/CD pipelines**.
+
+For GitHub Actions and other CI/CD systems, use **AWS OIDC role assumption** instead:
+
+```yaml
+- name: Configure AWS (OIDC)
+  uses: aws-actions/configure-aws-credentials@v4
+  with:
+    role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+    aws-region: ${{ secrets.AWS_REGION }}
+```
+
+See `.github/workflows/` for examples of OIDC-based AWS authentication in CI.
+
+## Testing
+
+This script is tested manually by developers on their local machines. No automated E2E tests are provided as MFA requires interactive input.
+
+## Related
+
+- Original bash script: `archive/mfa-user.sh`
+- AWS STS Documentation: https://docs.aws.amazon.com/STS/latest/APIReference/API_GetSessionToken.html
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/authentication/src/index.ts ====
+export * from './lib/mfa-user';
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/authentication/src/lib/authentication.spec.ts ====
+import { authentication } from "./authentication";
+
+describe("authentication", () => {
+  it("should work", () => {
+    expect(authentication()).toEqual("authentication");
+  });
+});
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/authentication/src/lib/authentication.ts ====
+export function authentication(): string {
+  return "authentication";
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/authentication/src/lib/mfa-user.spec.ts ====
+import { STSClient, GetSessionTokenCommand } from '@aws-sdk/client-sts';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { main } from './mfa-user';
+
+// Mock AWS SDK
+jest.mock('@aws-sdk/client-sts');
+jest.mock('@aws-sdk/credential-providers', () => ({
+  fromIni: jest.fn(() => ({
+    accessKeyId: 'test-key',
+    secretAccessKey: 'test-secret',
+  })),
+}));
+
+// Mock readline
+jest.mock('node:readline', () => ({
+  createInterface: jest.fn(() => ({
+    question: jest.fn((prompt: string, callback: (answer: string) => void) => {
+      callback('123456');
+    }),
+    close: jest.fn(),
+  })),
+}));
+
+// Mock fs
+jest.mock('node:fs');
+jest.mock('node:os', () => ({
+  homedir: jest.fn(() => '/tmp'),
+}));
+
+describe('mfa-user', () => {
+  const mockSend = jest.fn();
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env = { ...originalEnv };
+    (STSClient as jest.MockedClass<typeof STSClient>).mockImplementation(
+      () =>
+        ({
+          send: mockSend,
+        }) as unknown as STSClient
+    );
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  describe('getSession', () => {
+    it('should get session token with valid MFA code', async () => {
+      const mockCredentials = {
+        Credentials: {
+          AccessKeyId: 'AKIAIOSFODNN7EXAMPLE',
+          SecretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+          SessionToken: 'test-session-token',
+          Expiration: new Date('2024-12-31T23:59:59Z'),
+        },
+      };
+
+      mockSend.mockResolvedValue(mockCredentials);
+
+      // Mock fs.existsSync and readFileSync
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (fs.readFileSync as jest.Mock).mockReturnValue('[default]\naws_access_key_id=test');
+      (fs.mkdirSync as jest.Mock).mockReturnValue(undefined);
+      (fs.writeFileSync as jest.Mock).mockReturnValue(undefined);
+
+      process.env.MFA_DEVICE_ARN = 'arn:aws:iam::123456789012:mfa/test';
+      process.env.SOURCE_PROFILE = 'test-profile';
+      process.env.TARGET_PROFILE = 'test-profile-mfa';
+      process.env.DRY_RUN = '1';
+      process.env.FEATURE_NX_SCRIPTS_ENABLED = '1';
+
+      await main();
+
+      expect(mockSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          input: expect.objectContaining({
+            SerialNumber: 'arn:aws:iam::123456789012:mfa/test',
+            TokenCode: '123456',
+            DurationSeconds: 43200,
+          }),
+        })
+      );
+    });
+
+    it('should throw error for invalid MFA code format', async () => {
+      const { createInterface } = require('node:readline');
+      createInterface.mockReturnValue({
+        question: jest.fn((prompt: string, callback: (answer: string) => void) => {
+          callback('invalid');
+        }),
+        close: jest.fn(),
+      });
+
+      process.env.FEATURE_NX_SCRIPTS_ENABLED = '1';
+
+      await expect(main()).rejects.toThrow('MFA code must be 6 digits');
+    });
+
+    it('should handle dry run mode', async () => {
+      const mockCredentials = {
+        Credentials: {
+          AccessKeyId: 'AKIAIOSFODNN7EXAMPLE',
+          SecretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+          SessionToken: 'test-session-token',
+          Expiration: new Date('2024-12-31T23:59:59Z'),
+        },
+      };
+
+      mockSend.mockResolvedValue(mockCredentials);
+      (fs.existsSync as jest.Mock).mockReturnValue(false);
+
+      process.env.DRY_RUN = '1';
+      process.env.FEATURE_NX_SCRIPTS_ENABLED = '1';
+
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+      await main();
+
+      expect(fs.writeFileSync).not.toHaveBeenCalled();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('DRY_RUN: would write temporary credentials')
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should update credentials file in non-dry-run mode', async () => {
+      const mockCredentials = {
+        Credentials: {
+          AccessKeyId: 'AKIAIOSFODNN7EXAMPLE',
+          SecretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+          SessionToken: 'test-session-token',
+          Expiration: new Date('2024-12-31T23:59:59Z'),
+        },
+      };
+
+      mockSend.mockResolvedValue(mockCredentials);
+      (fs.existsSync as jest.Mock).mockReturnValue(false);
+      (fs.mkdirSync as jest.Mock).mockReturnValue(undefined);
+      (fs.writeFileSync as jest.Mock).mockReturnValue(undefined);
+
+      process.env.DRY_RUN = '0';
+      process.env.TARGET_PROFILE = 'test-profile-mfa';
+      process.env.FEATURE_NX_SCRIPTS_ENABLED = '1';
+
+      await main();
+
+      expect(fs.writeFileSync).toHaveBeenCalled();
+      const writeCall = (fs.writeFileSync as jest.Mock).mock.calls[0];
+      expect(writeCall[0]).toContain('.aws/credentials');
+      expect(writeCall[2]).toEqual({ mode: 0o600 });
+    });
+
+    it('should warn when feature flag is not enabled', async () => {
+      const mockCredentials = {
+        Credentials: {
+          AccessKeyId: 'AKIAIOSFODNN7EXAMPLE',
+          SecretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+          SessionToken: 'test-session-token',
+        },
+      };
+
+      mockSend.mockResolvedValue(mockCredentials);
+      (fs.existsSync as jest.Mock).mockReturnValue(false);
+      process.env.FEATURE_NX_SCRIPTS_ENABLED = '0';
+      process.env.DRY_RUN = '1';
+
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+      await main();
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Nx scripts feature flag not enabled')
+      );
+
+      consoleSpy.mockRestore();
+    });
+  });
+});
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/authentication/src/lib/mfa-user.ts ====
+import { STSClient, GetSessionTokenCommand } from '@aws-sdk/client-sts';
+import { fromIni } from '@aws-sdk/credential-providers';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import * as readline from 'node:readline';
+import * as crypto from 'node:crypto';
+import { parse, stringify } from 'ini';
+
+type AuthConfig = {
+  mfaArn: string;
+  sourceProfile: string;
+  targetProfile: string;
+  durationSeconds: number;
+  dryRun?: boolean;
+  region?: string;
+};
+
+type SessionCredentials = {
+  accessKeyId: string;
+  secretAccessKey: string;
+  sessionToken: string;
+  expiration?: string;
+};
+
+const log = (
+  level: 'info' | 'warn' | 'error',
+  msg: string,
+  meta: Record<string, unknown> = {}
+): void => {
+  const rec = {
+    ts: new Date().toISOString(),
+    level,
+    msg,
+    ...meta,
+    runId: process.env.RUN_ID || crypto.randomUUID(),
+  };
+  console.log(JSON.stringify(rec));
+};
+
+async function prompt(promptText: string): Promise<string> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  const answer: string = await new Promise((res) =>
+    rl.question(promptText, res)
+  );
+  rl.close();
+  return answer.trim();
+}
+
+function loadConfig(): AuthConfig {
+  return {
+    mfaArn:
+      process.env.MFA_DEVICE_ARN ??
+      'arn:aws:iam::413988044972:mfa/Evans-Phone',
+    sourceProfile: process.env.SOURCE_PROFILE ?? 'hepe-admin',
+    targetProfile: process.env.TARGET_PROFILE ?? 'hepe-admin-mfa',
+    durationSeconds: Number(process.env.DURATION_SECONDS ?? 43200),
+    dryRun: process.env.DRY_RUN === '1',
+    region: process.env.AWS_REGION ?? 'us-east-1',
+  };
+}
+
+async function getSession(
+  cfg: AuthConfig,
+  mfaCode: string
+): Promise<SessionCredentials> {
+  const credentialsProvider = fromIni({ profile: cfg.sourceProfile });
+  const client = new STSClient({
+    region: cfg.region,
+    credentials: credentialsProvider,
+  });
+
+  const cmd = new GetSessionTokenCommand({
+    SerialNumber: cfg.mfaArn,
+    TokenCode: mfaCode,
+    DurationSeconds: cfg.durationSeconds,
+  });
+
+  const out = await client.send(cmd);
+  if (!out.Credentials) {
+    throw new Error('Failed to get session token');
+  }
+
+  return {
+    accessKeyId: out.Credentials.AccessKeyId!,
+    secretAccessKey: out.Credentials.SecretAccessKey!,
+    sessionToken: out.Credentials.SessionToken!,
+    expiration: out.Credentials.Expiration?.toISOString(),
+  };
+}
+
+function updateCredentialsFile(
+  targetProfile: string,
+  creds: {
+    accessKeyId: string;
+    secretAccessKey: string;
+    sessionToken: string;
+  }
+): void {
+  const credPath = path.join(os.homedir(), '.aws', 'credentials');
+  const src = fs.existsSync(credPath)
+    ? fs.readFileSync(credPath, 'utf-8')
+    : '';
+  const ini = src ? parse(src) : {};
+
+  ini[targetProfile] = ini[targetProfile] ?? {};
+  ini[targetProfile].aws_access_key_id = creds.accessKeyId;
+  ini[targetProfile].aws_secret_access_key = creds.secretAccessKey;
+  ini[targetProfile].aws_session_token = creds.sessionToken;
+
+  fs.mkdirSync(path.dirname(credPath), { recursive: true });
+  fs.writeFileSync(credPath, stringify(ini), { mode: 0o600 });
+}
+
+export async function main(): Promise<void> {
+  // Feature flag check
+  if (
+    process.env.FEATURE_NX_SCRIPTS_ENABLED !== '1' &&
+    process.env.FEATURE_NX_SCRIPTS_ENABLED !== 'true'
+  ) {
+    log(
+      'warn',
+      'Nx scripts feature flag not enabled. Set FEATURE_NX_SCRIPTS_ENABLED=1 to use.',
+      { featureFlag: 'FEATURE_NX_SCRIPTS_ENABLED' }
+    );
+    // Don't exit - allow manual override for testing
+  }
+
+  const cfg = loadConfig();
+  log('info', 'Starting MFA auth', {
+    sourceProfile: cfg.sourceProfile,
+    targetProfile: cfg.targetProfile,
+    duration: cfg.durationSeconds,
+    dryRun: !!cfg.dryRun,
+  });
+
+  const code = await prompt(`Enter MFA code for ${cfg.sourceProfile}: `);
+  if (!/^\d{6}$/.test(code)) {
+    throw new Error('MFA code must be 6 digits');
+  }
+
+  const session = await getSession(cfg, code);
+
+  if (cfg.dryRun) {
+    log('info', 'DRY_RUN: would write temporary credentials', {
+      targetProfile: cfg.targetProfile,
+      expires: session.expiration,
+    });
+  } else {
+    updateCredentialsFile(cfg.targetProfile, session);
+    log('info', 'Temporary credentials written to credentials file', {
+      targetProfile: cfg.targetProfile,
+      expires: session.expiration,
+    });
+  }
+
+  // Export current-process env (useful if invoked directly)
+  process.env.AWS_ACCESS_KEY_ID = session.accessKeyId;
+  process.env.AWS_SECRET_ACCESS_KEY = session.secretAccessKey;
+  process.env.AWS_SESSION_TOKEN = session.sessionToken;
+
+  log('info', 'Temporary credentials ready', {
+    targetProfile: cfg.targetProfile,
+    note: `Use --profile ${cfg.targetProfile}`,
+    expires: session.expiration,
+  });
+
+  console.log(
+    `\nTemporary credentials set for profile '${cfg.targetProfile}' (valid for ${Math.floor(cfg.durationSeconds / 3600)} hours)`
+  );
+  console.log(`Original credentials in '${cfg.sourceProfile}' remain unchanged`);
+  console.log(`Use AWS commands with: aws ... --profile ${cfg.targetProfile}`);
+  console.log('Environment variables are also set for the current session');
+}
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/authentication/tsconfig.json ====
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs"
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/authentication/tsconfig.lib.json ====
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../../dist/out-tsc",
+    "declaration": true,
+    "types": ["node"],
+    "module": "ESNext",
+    "moduleResolution": "bundler"
+  },
+  "include": ["src/**/*.ts", "bin/**/*.ts"],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/support-scripts/aws/authentication/tsconfig.spec.json ====
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../../dist/out-tsc",
+    "module": "commonjs",
+    "moduleResolution": "node10",
+    "types": ["jest", "node"]
+  },
+  "include": ["jest.config.ts", "src/**/*.test.ts", "src/**/*.spec.ts", "src/**/*.d.ts"]
+}
+
+
+

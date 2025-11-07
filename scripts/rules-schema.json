@@ -1,0 +1,337 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mind-mobility-monorepo/rules-schema.json",
+  "title": "Rules and Standards Schema",
+  "description": "JSON schema for defining rules, standards, and guidelines for the Freshsales Intake Guard application",
+  "type": "object",
+  "properties": {
+    "rules": {
+      "type": "array",
+      "description": "Array of rule definitions",
+      "items": {
+        "$ref": "#/$defs/rule"
+      },
+      "minItems": 1
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Metadata for the rules collection",
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "Version of the rules schema",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "description": "ISO 8601 timestamp of last update",
+          "format": "date-time"
+        },
+        "generatedBy": {
+          "type": "string",
+          "description": "Tool or process that generated this rules file"
+        },
+        "component": {
+          "type": "string",
+          "description": "Component these rules apply to",
+          "enum": ["main-directory", "freshsales-app", "shared-package", "types-package", "tools", "development"]
+        }
+      },
+      "required": ["version", "component"]
+    }
+  },
+  "required": ["rules"],
+  "$defs": {
+    "rule": {
+      "type": "object",
+      "description": "Individual rule definition",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the rule (lowercase alphanumeric with hyphens)",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "minLength": 3,
+          "maxLength": 50
+        },
+        "title": {
+          "type": "string",
+          "description": "Human-readable title of the rule",
+          "minLength": 5,
+          "maxLength": 100
+        },
+        "description": {
+          "type": "string",
+          "description": "Brief description of the rule",
+          "minLength": 10,
+          "maxLength": 500
+        },
+        "content": {
+          "type": "array",
+          "description": "Structured content sections for the rule",
+          "items": {
+            "$ref": "#/$defs/contentSection"
+          },
+          "minItems": 1
+        },
+        "category": {
+          "type": "string",
+          "description": "Category the rule belongs to",
+          "enum": [
+            "architecture",
+            "coding-standards",
+            "security",
+            "performance",
+            "testing",
+            "documentation",
+            "deployment",
+            "monitoring",
+            "accessibility",
+            "development-workflow",
+            "freshworks-integration",
+            "typescript",
+            "react",
+            "node",
+            "database",
+            "api",
+            "ui-ux",
+            "error-handling",
+            "logging",
+            "configuration"
+          ]
+        },
+        "priority": {
+          "type": "string",
+          "description": "Priority level of the rule",
+          "enum": ["critical", "high", "medium", "low"],
+          "default": "medium"
+        },
+        "justification": {
+          "type": "string",
+          "description": "Why this rule is important",
+          "minLength": 10
+        },
+        "examples": {
+          "type": "array",
+          "description": "Code examples demonstrating the rule",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "Title of the example"
+              },
+              "language": {
+                "type": "string",
+                "description": "Programming language of the example",
+                "enum": ["typescript", "javascript", "json", "bash", "yaml", "markdown", "sql"]
+              },
+              "code": {
+                "type": "string",
+                "description": "The example code",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of what the example demonstrates"
+              }
+            },
+            "required": ["code"]
+          }
+        },
+        "relatedRules": {
+          "type": "array",
+          "description": "IDs of related rules",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "description": "Tags for categorization and search",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          }
+        },
+        "fileMetadata": {
+          "type": "object",
+          "description": "Metadata for file generation",
+          "properties": {
+            "filename": {
+              "type": "string",
+              "description": "Target filename (lowercase alphanumeric with hyphens)",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*\\.(md|mdc)$"
+            },
+            "frontmatter": {
+              "type": "object",
+              "description": "YAML frontmatter for MDC files",
+              "properties": {
+                "alwaysApply": {
+                  "type": "boolean",
+                  "description": "Whether this rule should always be applied",
+                  "default": true
+                },
+                "globs": {
+                  "type": "array",
+                  "description": "File patterns this rule applies to",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Short description for the frontmatter"
+                }
+              }
+            }
+          }
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the rule",
+          "enum": ["active", "deprecated", "draft", "proposed"],
+          "default": "active"
+        },
+        "lastReviewed": {
+          "type": "string",
+          "description": "ISO 8601 timestamp of last review",
+          "format": "date-time"
+        },
+        "reviewCycle": {
+          "type": "string",
+          "description": "How often this rule should be reviewed",
+          "enum": ["quarterly", "semi-annually", "annually", "as-needed"],
+          "default": "quarterly"
+        }
+      },
+      "required": ["id", "title", "description", "category", "justification"]
+    },
+    "contentSection": {
+      "type": "object",
+      "description": "A content section within a rule",
+      "properties": {
+        "heading": {
+          "type": "string",
+          "description": "Section heading",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "level": {
+          "type": "integer",
+          "description": "Heading level (1-6, where 1 is #, 2 is ##, etc.)",
+          "minimum": 1,
+          "maximum": 6,
+          "default": 2
+        },
+        "content": {
+          "type": "array",
+          "description": "Content blocks within this section",
+          "items": {
+            "$ref": "#/$defs/contentBlock"
+          },
+          "minItems": 1
+        }
+      },
+      "required": ["heading", "content"]
+    },
+    "contentBlock": {
+      "type": "object",
+      "description": "A content block (paragraph, list, code, etc.)",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Type of content block",
+          "enum": ["paragraph", "list", "code", "note", "warning", "tip", "example"]
+        },
+        "text": {
+          "type": "string",
+          "description": "Text content for paragraphs and simple blocks"
+        },
+        "items": {
+          "type": "array",
+          "description": "List items for list blocks",
+          "items": {
+            "type": "string"
+          }
+        },
+        "code": {
+          "type": "string",
+          "description": "Code content for code blocks"
+        },
+        "language": {
+          "type": "string",
+          "description": "Programming language for syntax highlighting",
+          "enum": ["typescript", "javascript", "python", "bash", "json", "yaml", "sql", "xml", "html", "css", "markdown", "text"]
+        },
+        "caption": {
+          "type": "string",
+          "description": "Optional caption for code blocks and examples"
+        },
+        "references": {
+          "type": "array",
+          "description": "Content references or citations",
+          "items": {
+            "$ref": "#/$defs/contentReference"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "paragraph" } }
+          },
+          "then": {
+            "required": ["text"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "list" } }
+          },
+          "then": {
+            "required": ["items"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "code" } }
+          },
+          "then": {
+            "required": ["code", "language"]
+          }
+        }
+      ]
+    },
+    "contentReference": {
+      "type": "object",
+      "description": "A reference or citation within content",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Type of reference",
+          "enum": ["citation", "link", "cross-reference", "external"]
+        },
+        "identifier": {
+          "type": "string",
+          "description": "Reference identifier (e.g., 'oaicite:1', 'index=8')"
+        },
+        "url": {
+          "type": "string",
+          "description": "URL for external links",
+          "format": "uri"
+        },
+        "text": {
+          "type": "string",
+          "description": "Display text for the reference"
+        },
+        "index": {
+          "type": "integer",
+          "description": "Index number for ordered references",
+          "minimum": 1
+        }
+      },
+      "required": ["type"]
+    }
+  }
+}
