@@ -23,7 +23,11 @@
       "admin-kms": ["libs/admin/admin-kms/src/index.ts"],
       "@mm/admin-stack-info": ["libs/admin/admin-stack-info/src/index.ts"],
       "@mm/admin-backup-bridge": ["libs/admin/admin-backup-bridge/src/index.ts"],
-      "@mm/admin-ssh": ["libs/admin/admin-ssh/src/index.ts"]
+      "@mm/admin-ssh": ["libs/admin/admin-ssh/src/index.ts"],
+      "@mm/admin-dns-restore": ["libs/admin/admin-dns-restore/src/index.ts"],
+      "@mm/admin-credentials": ["libs/admin/admin-credentials/src/index.ts"],
+      "@mm/admin-reverse-dns": ["libs/admin/admin-reverse-dns/src/index.ts"],
+      "@mm/admin-dns-api": ["libs/admin/admin-dns-api/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

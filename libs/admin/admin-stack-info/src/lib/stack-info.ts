@@ -228,6 +228,23 @@ export async function getStackInfo(
   
   // Get admin password from SSM if not in outputs
   let adminPassword = outputs.AdminPassword;
+  
+  // If AdminPassword output is just the parameter name, fetch the actual value
+  if (adminPassword && adminPassword.startsWith('/MailInABoxAdminPassword-')) {
+    try {
+      const ssmResp = await ssmClient.send(
+        new GetParameterCommand({
+          Name: adminPassword,
+          WithDecryption: true,
+        })
+      );
+      adminPassword = ssmResp.Parameter?.Value;
+    } catch (err) {
+      // Ignore errors - try fallback
+    }
+  }
+  
+  // If still no password, try fetching from SSM using stack name
   if (!adminPassword) {
     try {
       const ssmParamName = `/MailInABoxAdminPassword-${stackName}`;

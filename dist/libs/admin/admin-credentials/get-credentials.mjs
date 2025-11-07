@@ -174,76 +174,92 @@ var init_stack_info = __esm({
   }
 });
 
-// libs/admin/admin-stack-info/bin/get-stack-info.ts
-var require_get_stack_info = __commonJS({
-  "libs/admin/admin-stack-info/bin/get-stack-info.ts"() {
+// libs/admin/admin-stack-info/src/index.ts
+var init_src = __esm({
+  "libs/admin/admin-stack-info/src/index.ts"() {
+    "use strict";
     init_stack_info();
-    var log = (level, msg, meta = {}) => console.log(
+  }
+});
+
+// libs/admin/admin-credentials/src/lib/credentials.ts
+async function getAdminCredentials(config) {
+  let stackInfo;
+  if (config.appPath) {
+    stackInfo = await getStackInfoFromApp(config.appPath, {
+      region: config.region,
+      profile: config.profile
+    });
+  } else {
+    stackInfo = await getStackInfo({
+      stackName: config.stackName,
+      domain: config.domain,
+      region: config.region,
+      profile: config.profile
+    });
+  }
+  if (!stackInfo.adminPassword) {
+    throw new Error(
+      `Admin password not found for stack ${stackInfo.stackName}. Check SSM parameter: /MailInABoxAdminPassword-${stackInfo.stackName}`
+    );
+  }
+  const email = `admin@${stackInfo.domain}`;
+  const adminUrl = `https://${stackInfo.domain}/admin`;
+  log("info", "Retrieved admin credentials", {
+    domain: stackInfo.domain,
+    stackName: stackInfo.stackName,
+    hasPassword: !!stackInfo.adminPassword
+  });
+  return {
+    email,
+    password: stackInfo.adminPassword,
+    domain: stackInfo.domain,
+    adminUrl
+  };
+}
+var log;
+var init_credentials = __esm({
+  "libs/admin/admin-credentials/src/lib/credentials.ts"() {
+    "use strict";
+    init_src();
+    log = (level, msg, meta = {}) => console.log(
       JSON.stringify({ ts: (/* @__PURE__ */ new Date()).toISOString(), level, msg, ...meta })
     );
+  }
+});
+
+// libs/admin/admin-credentials/bin/get-credentials.ts
+var require_get_credentials = __commonJS({
+  "libs/admin/admin-credentials/bin/get-credentials.ts"() {
+    init_credentials();
     async function main() {
       const appPath = process.env["APP_PATH"];
       const stackName = process.env["STACK_NAME"];
       const domain = process.env["DOMAIN"];
-      const outputFormat = process.env["OUTPUT_FORMAT"] || "json";
-      log("info", "Retrieving stack information", {
-        appPath,
-        stackName,
-        domain,
-        outputFormat
-      });
+      const outputFormat = process.env["OUTPUT_FORMAT"] || "human";
       try {
-        let stackInfo;
-        if (appPath) {
-          stackInfo = await getStackInfoFromApp(appPath, {
-            region: process.env["AWS_REGION"],
-            profile: process.env["AWS_PROFILE"]
-          });
-        } else {
-          stackInfo = await getStackInfo({
-            stackName,
-            domain,
-            region: process.env["AWS_REGION"],
-            profile: process.env["AWS_PROFILE"]
-          });
-        }
+        const credentials = await getAdminCredentials({
+          appPath,
+          stackName,
+          domain,
+          region: process.env["AWS_REGION"],
+          profile: process.env["AWS_PROFILE"]
+        });
         if (outputFormat === "json") {
-          console.log(JSON.stringify(stackInfo, null, 2));
+          console.log(JSON.stringify(credentials, null, 2));
         } else {
-          console.log("\n=== Stack Information ===");
-          console.log(`Stack Name: ${stackInfo.stackName}`);
-          console.log(`Domain: ${stackInfo.domain}`);
-          console.log(`Region: ${stackInfo.region}`);
-          if (stackInfo.instanceId) {
-            console.log(`Instance ID: ${stackInfo.instanceId}`);
-          }
-          if (stackInfo.instancePublicIp) {
-            console.log(`Instance IP: ${stackInfo.instancePublicIp}`);
-          }
-          if (stackInfo.instanceKeyName) {
-            console.log(`Instance Key Name: ${stackInfo.instanceKeyName}`);
-          }
-          if (stackInfo.keyPairId) {
-            console.log(`Key Pair ID: ${stackInfo.keyPairId}`);
-          }
-          if (stackInfo.hostedZoneId) {
-            console.log(`Hosted Zone ID: ${stackInfo.hostedZoneId}`);
-          }
-          if (stackInfo.adminPassword) {
-            console.log(`Admin Password: ${stackInfo.adminPassword.substring(0, 8)}...`);
-          }
-          console.log("\n=== Stack Outputs ===");
-          Object.entries(stackInfo.outputs).forEach(([key, value]) => {
-            console.log(`${key}: ${value}`);
-          });
+          console.log("\nAdmin credentials for Mail-in-a-Box:");
+          console.log(`Username: ${credentials.email}`);
+          console.log(`Password: ${credentials.password}`);
+          console.log(`
+You can access the admin interface at: ${credentials.adminUrl}`);
         }
       } catch (err) {
-        log("error", "Failed to get stack info", { error: String(err) });
-        console.error("\nError:", err);
+        console.error("\nError:", err instanceof Error ? err.message : String(err));
         process.exit(1);
       }
     }
     main();
   }
 });
-export default require_get_stack_info();
+export default require_get_credentials();
