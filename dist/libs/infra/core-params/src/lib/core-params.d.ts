@@ -13,3 +13,5 @@ export declare const P_NEXTCLOUD_BUCKET = "/emcnotary/core/nextcloudBucket";
 export declare const P_ALARMS_TOPIC = "/emcnotary/core/alarmsTopicArn";
 /** SES Email Identity ARN */
 export declare const P_SES_IDENTITY_ARN = "/emcnotary/core/sesIdentityArn";
+/** Elastic IP Allocation ID */
+export declare const P_EIP_ALLOCATION_ID = "/emcnotary/core/eipAllocationId";

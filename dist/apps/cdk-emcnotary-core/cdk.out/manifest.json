@@ -23,7 +23,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::413988044972:role/cdk-hnb659fds-deploy-role-413988044972-us-east-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::413988044972:role/cdk-hnb659fds-cfn-exec-role-413988044972-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-413988044972-us-east-1/9ea21111f0e00fd1d96bccabc7085278d3d12713dcf5368955294b5d9fa4da90.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-413988044972-us-east-1/492af9fa29038031643c5639e449cb68ed5e4f1fe5244d05440839625d016fb9.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -64,6 +64,54 @@
             "data": "DomainName"
           }
         ],
+        "/emcnotary-com-mailserver-core/ElasticIP": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ElasticIP"
+          }
+        ],
+        "/emcnotary-com-mailserver-core/ReverseDnsLambdaExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ReverseDnsLambdaExecutionRole24482790"
+          }
+        ],
+        "/emcnotary-com-mailserver-core/ReverseDnsLambdaExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ReverseDnsLambdaExecutionRoleDefaultPolicyA8E030E0"
+          }
+        ],
+        "/emcnotary-com-mailserver-core/ReverseDnsLambdaFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ReverseDnsLambdaFunction42EDFB93"
+          }
+        ],
+        "/emcnotary-com-mailserver-core/ReverseDnsProvider/framework-onEvent/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ReverseDnsProviderframeworkonEventServiceRoleB287359D"
+          }
+        ],
+        "/emcnotary-com-mailserver-core/ReverseDnsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ReverseDnsProviderframeworkonEventServiceRoleDefaultPolicy15AD33F7"
+          }
+        ],
+        "/emcnotary-com-mailserver-core/ReverseDnsProvider/framework-onEvent/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ReverseDnsProviderframeworkonEventBC9E56F8"
+          }
+        ],
+        "/emcnotary-com-mailserver-core/ReverseDnsResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ReverseDnsResource"
+          }
+        ],
         "/emcnotary-com-mailserver-core/SesIdentity/Resource": [
           {
             "type": "aws:cdk:logicalId",
@@ -76,10 +124,52 @@
             "data": "BackupBucket26B8E51C"
           }
         ],
+        "/emcnotary-com-mailserver-core/BackupBucket/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackupBucketPolicy8C403F71"
+          }
+        ],
+        "/emcnotary-com-mailserver-core/BackupBucket/AutoDeleteObjectsCustomResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackupBucketAutoDeleteObjectsCustomResourceD2F511C5"
+          }
+        ],
+        "/emcnotary-com-mailserver-core/Custom::S3AutoDeleteObjectsCustomResourceProvider": [
+          {
+            "type": "aws:cdk:is-custom-resource-handler-customResourceProvider",
+            "data": true
+          }
+        ],
+        "/emcnotary-com-mailserver-core/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+          }
+        ],
+        "/emcnotary-com-mailserver-core/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F"
+          }
+        ],
         "/emcnotary-com-mailserver-core/NextcloudBucket/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "NextcloudBucket8B0187A4"
+          }
+        ],
+        "/emcnotary-com-mailserver-core/NextcloudBucket/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NextcloudBucketPolicyC1A2253E"
+          }
+        ],
+        "/emcnotary-com-mailserver-core/NextcloudBucket/AutoDeleteObjectsCustomResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "NextcloudBucketAutoDeleteObjectsCustomResource795E5BD2"
           }
         ],
         "/emcnotary-com-mailserver-core/AlertTopic/Resource": [
@@ -146,6 +236,12 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "ParamSesIdentityArn6B9B9953"
+          }
+        ],
+        "/emcnotary-com-mailserver-core/ParamEipAllocationId/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ParamEipAllocationIdA6DDEDEE"
           }
         ],
         "/emcnotary-com-mailserver-core/DomainNameOutput": [
@@ -224,6 +320,18 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "MailFromTXTRecord"
+          }
+        ],
+        "/emcnotary-com-mailserver-core/ElasticIPAddress": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ElasticIPAddress"
+          }
+        ],
+        "/emcnotary-com-mailserver-core/ElasticIPAllocationId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ElasticIPAllocationId"
           }
         ],
         "/emcnotary-com-mailserver-core/CDKMetadata/Default": [

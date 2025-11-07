@@ -13,4 +13,6 @@ export const P_NEXTCLOUD_BUCKET = `${CORE_PARAM_PREFIX}/nextcloudBucket`;
 export const P_ALARMS_TOPIC = `${CORE_PARAM_PREFIX}/alarmsTopicArn`;
 /** SES Email Identity ARN */
 export const P_SES_IDENTITY_ARN = `${CORE_PARAM_PREFIX}/sesIdentityArn`;
+/** Elastic IP Allocation ID */
+export const P_EIP_ALLOCATION_ID = `${CORE_PARAM_PREFIX}/eipAllocationId`;
 //# sourceMappingURL=core-params.js.map
