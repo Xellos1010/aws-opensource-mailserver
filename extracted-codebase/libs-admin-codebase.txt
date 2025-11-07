@@ -1,5 +1,5 @@
 # libs-admin Codebase
-# Generated on: Thu Nov  6 21:40:03 EST 2025
+# Generated on: Thu Nov  6 23:02:40 EST 2025
 # Source: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin
 # 
 # This file contains all source code files from the libs-admin component.
@@ -5426,6 +5426,1370 @@ export async function testSshForStack(stackInfo: {
     "src/**/*.spec.ts",
     "src/**/*.d.ts"
   ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-check/.eslintrc.json ====
+{
+  "extends": ["../../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "ignoredFiles": ["{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}"]
+          }
+        ]
+      }
+    }
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-check/jest.config.ts ====
+export default {
+  displayName: "admin-ssl-check",
+  preset: "../../../jest.preset.js",
+  testEnvironment: "node",
+  transform: {
+    "^.+\\.[tj]s$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.spec.json" }],
+  },
+  moduleFileExtensions: ["ts", "js", "html"],
+  coverageDirectory: "../../../coverage/libs/admin/admin-ssl-check",
+};
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-check/package.json ====
+{
+  "name": "@mm/admin-ssl-check",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "tslib": "^2.3.0"
+  }
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-check/project.json ====
+{
+  "name": "admin-ssl-check",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/admin/admin-ssl-check/src",
+  "projectType": "library",
+  "tags": ["type:script", "scope:admin", "domain:ssl"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/admin/admin-ssl-check",
+        "main": "libs/admin/admin-ssl-check/src/lib/check.ts",
+        "outputFileName": "ssl-check.cjs",
+        "bundle": true,
+        "platform": "node",
+        "format": ["cjs"],
+        "tsConfig": "libs/admin/admin-ssl-check/tsconfig.lib.json"
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/admin/admin-ssl-check/ssl-check.cjs"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/admin/admin-ssl-check/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-check/README.md ====
+# Admin SSL Check Library
+
+TypeScript library for checking SSL/TLS certificate status for domains. Provides certificate validation, expiry checking, and detailed status reporting.
+
+## Features
+
+- **Certificate Retrieval**: Connects to domains via TLS and retrieves certificate information
+- **Expiry Checking**: Calculates days until certificate expiration
+- **Validation**: Checks certificate validity, hostname matching, and expiration status
+- **Warning System**: Alerts when certificates expire soon (< 14 days) or hostname not in SAN
+- **Error Handling**: Gracefully handles connection failures and invalid certificates
+- **Formatted Output**: Provides human-readable certificate status reports
+
+## Usage
+
+### Nx Target
+
+```bash
+# Check certificate for a domain
+pnpm nx run admin-ssl-check:check -- github.com
+
+# Check certificate on custom port
+pnpm nx run admin-ssl-check:check -- example.com 8443
+```
+
+### Programmatic Usage
+
+```typescript
+import { checkCertificate, formatCertCheckResult } from '@mm/admin-ssl-check';
+
+// Check a certificate
+const result = await checkCertificate('example.com');
+
+// Format and display result
+console.log(formatCertCheckResult(result));
+
+// Access result properties
+if (result.isValid) {
+  console.log(`Certificate valid for ${result.daysUntilExpiry} more days`);
+} else {
+  console.error('Certificate issues:', result.errors);
+}
+```
+
+### CLI Usage
+
+```bash
+# Build the library
+pnpm nx build admin-ssl-check
+
+# Run directly
+node dist/libs/admin/admin-ssl-check/ssl-check.cjs example.com
+node dist/libs/admin/admin-ssl-check/ssl-check.cjs example.com 8443
+```
+
+## API Reference
+
+### `checkCertificate(hostname: string, options?: CheckOptions): Promise<CertCheckResult>`
+
+Checks a certificate and returns detailed status information.
+
+**Parameters:**
+- `hostname` - The hostname to check (required)
+- `options` - Optional configuration:
+  - `port` - Port number (default: 443)
+  - `timeout` - Connection timeout in milliseconds (default: 10000)
+  - `servername` - SNI servername (default: hostname)
+
+**Returns:** Promise resolving to `CertCheckResult` with:
+- `isValid` - Whether certificate is currently valid
+- `daysUntilExpiry` - Days until certificate expires
+- `expiresSoon` - Whether certificate expires in < 14 days
+- `info` - Certificate details (issuer, subject, dates, SANs)
+- `warnings` - Array of warning messages
+- `errors` - Array of error messages
+
+### `getCertInfo(hostname: string, options?: CheckOptions): Promise<CertInfo>`
+
+Retrieves raw certificate information from a TLS connection.
+
+### `formatCertCheckResult(result: CertCheckResult): string`
+
+Formats a certificate check result for console output.
+
+## Examples
+
+### Check Certificate Status
+
+```typescript
+import { checkCertificate } from '@mm/admin-ssl-check';
+
+const result = await checkCertificate('box.askdaokapra.com');
+
+if (result.expiresSoon) {
+  console.warn(`⚠️ Certificate expires in ${result.daysUntilExpiry} days`);
+}
+
+if (!result.isValid) {
+  console.error('Certificate errors:', result.errors);
+}
+```
+
+### Check Multiple Domains
+
+```typescript
+import { checkCertificate } from '@mm/admin-ssl-check';
+
+const domains = ['example.com', 'www.example.com', 'mail.example.com'];
+
+for (const domain of domains) {
+  const result = await checkCertificate(domain);
+  console.log(`${domain}: ${result.isValid ? '✓' : '✗'} (${result.daysUntilExpiry} days)`);
+}
+```
+
+### Custom Port and Timeout
+
+```typescript
+import { checkCertificate } from '@mm/admin-ssl-check';
+
+const result = await checkCertificate('internal.example.com', {
+  port: 8443,
+  timeout: 5000,
+});
+```
+
+## Integration with ops-runner
+
+The SSL check functionality is integrated into the ops-runner:
+
+```bash
+# Check certificate via ops-runner
+pnpm nx run ops-runner:run -- ssl:check github.com
+pnpm nx run ops-runner:run -- ssl:check example.com 8443
+```
+
+## Testing
+
+```bash
+# Run unit tests
+pnpm nx test admin-ssl-check
+
+# Run with coverage
+pnpm nx test admin-ssl-check --coverage
+```
+
+## Certificate Status Indicators
+
+- **✔ Certificate is valid** - Certificate is valid and not expiring soon
+- **⚠️ WARNINGS** - Certificate expires soon or hostname not in SAN
+- **❌ ERRORS** - Certificate expired or connection failed
+
+## Related Libraries
+
+- `@mm/admin-ssl-provision` - SSL certificate provisioning (scaffolded for future implementation)
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-check/src/index.ts ====
+export * from './lib/check';
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-check/src/lib/check.spec.ts ====
+import { getCertInfo, checkCertificate, formatCertCheckResult } from './check';
+import * as tls from 'node:tls';
+
+// Mock tls module
+jest.mock('node:tls', () => ({
+  connect: jest.fn(),
+}));
+
+describe('SSL Certificate Check', () => {
+  const mockSocket = {
+    getPeerCertificate: jest.fn(),
+    destroy: jest.fn(),
+    on: jest.fn(),
+    setTimeout: jest.fn(),
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (tls.connect as jest.Mock).mockImplementation((options, callback) => {
+      // Simulate successful connection
+      setTimeout(() => {
+        if (callback) callback();
+      }, 0);
+      return mockSocket;
+    });
+  });
+
+  describe('getCertInfo', () => {
+    it('should retrieve certificate information successfully', async () => {
+      const mockCert = {
+        valid_from: '2024-01-01T00:00:00.000Z',
+        valid_to: '2025-12-31T23:59:59.999Z',
+        issuer: { CN: 'Let\'s Encrypt' },
+        subject: { CN: 'example.com' },
+        subjectaltname: 'DNS:example.com, DNS:www.example.com',
+      };
+
+      mockSocket.getPeerCertificate.mockReturnValue(mockCert);
+
+      const result = await getCertInfo('example.com');
+
+      expect(result.issuer).toBe("Let's Encrypt");
+      expect(result.subject).toBe('example.com');
+      expect(result.subjectAltNames).toEqual([
+        'example.com',
+        'www.example.com',
+      ]);
+      expect(result.validFrom).toBeInstanceOf(Date);
+      expect(result.validTo).toBeInstanceOf(Date);
+      expect(mockSocket.destroy).toHaveBeenCalled();
+    });
+
+    it('should handle missing certificate', async () => {
+      mockSocket.getPeerCertificate.mockReturnValue({});
+
+      await expect(getCertInfo('example.com')).rejects.toThrow(
+        'No certificate returned'
+      );
+      expect(mockSocket.destroy).toHaveBeenCalled();
+    });
+
+    it('should handle connection errors', async () => {
+      (tls.connect as jest.Mock).mockImplementation((options, callback) => {
+        const socket = {
+          ...mockSocket,
+          on: jest.fn((event, handler) => {
+            if (event === 'error') {
+              setTimeout(() => handler(new Error('Connection failed')), 0);
+            }
+          }),
+        };
+        return socket;
+      });
+
+      await expect(getCertInfo('example.com')).rejects.toThrow(
+        'Connection failed'
+      );
+    });
+
+    it('should handle timeout', async () => {
+      (tls.connect as jest.Mock).mockImplementation((options, callback) => {
+        const socket = {
+          ...mockSocket,
+          setTimeout: jest.fn((timeout, handler) => {
+            setTimeout(() => handler(), timeout);
+          }),
+        };
+        return socket;
+      });
+
+      await expect(
+        getCertInfo('example.com', { timeout: 1 })
+      ).rejects.toThrow('Connection timeout');
+    });
+
+    it('should use custom port', async () => {
+      const mockCert = {
+        valid_from: '2024-01-01T00:00:00.000Z',
+        valid_to: '2025-12-31T23:59:59.999Z',
+        issuer: { CN: 'Test CA' },
+        subject: { CN: 'example.com' },
+        subjectaltname: 'DNS:example.com',
+      };
+
+      mockSocket.getPeerCertificate.mockReturnValue(mockCert);
+
+      await getCertInfo('example.com', { port: 8443 });
+
+      expect(tls.connect).toHaveBeenCalledWith(
+        expect.objectContaining({ port: 8443 }),
+        expect.any(Function)
+      );
+    });
+  });
+
+  describe('checkCertificate', () => {
+    it('should return valid result for good certificate', async () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 30);
+
+      const mockCert = {
+        valid_from: new Date(Date.now() - 86400000).toISOString(),
+        valid_to: futureDate.toISOString(),
+        issuer: { CN: 'Let\'s Encrypt' },
+        subject: { CN: 'example.com' },
+        subjectaltname: 'DNS:example.com',
+      };
+
+      mockSocket.getPeerCertificate.mockReturnValue(mockCert);
+
+      const result = await checkCertificate('example.com');
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+      expect(result.daysUntilExpiry).toBeGreaterThan(14);
+      expect(result.expiresSoon).toBe(false);
+    });
+
+    it('should warn for certificate expiring soon', async () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 7); // 7 days
+
+      const mockCert = {
+        valid_from: new Date(Date.now() - 86400000).toISOString(),
+        valid_to: futureDate.toISOString(),
+        issuer: { CN: 'Let\'s Encrypt' },
+        subject: { CN: 'example.com' },
+        subjectaltname: 'DNS:example.com',
+      };
+
+      mockSocket.getPeerCertificate.mockReturnValue(mockCert);
+
+      const result = await checkCertificate('example.com');
+
+      expect(result.expiresSoon).toBe(true);
+      expect(result.warnings.some((w) => w.includes('expires in'))).toBe(true);
+    });
+
+    it('should error for expired certificate', async () => {
+      const pastDate = new Date();
+      pastDate.setDate(pastDate.getDate() - 10);
+
+      const mockCert = {
+        valid_from: new Date(Date.now() - 86400000 * 100).toISOString(),
+        valid_to: pastDate.toISOString(),
+        issuer: { CN: 'Let\'s Encrypt' },
+        subject: { CN: 'example.com' },
+        subjectaltname: 'DNS:example.com',
+      };
+
+      mockSocket.getPeerCertificate.mockReturnValue(mockCert);
+
+      const result = await checkCertificate('example.com');
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors.some((e) => e.includes('expired'))).toBe(true);
+    });
+
+    it('should warn when hostname not in SAN', async () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 30);
+
+      const mockCert = {
+        valid_from: new Date(Date.now() - 86400000).toISOString(),
+        valid_to: futureDate.toISOString(),
+        issuer: { CN: 'Let\'s Encrypt' },
+        subject: { CN: 'example.com' },
+        subjectaltname: 'DNS:www.example.com',
+      };
+
+      mockSocket.getPeerCertificate.mockReturnValue(mockCert);
+
+      const result = await checkCertificate('example.com');
+
+      expect(result.warnings.some((w) => w.includes('not in SAN list'))).toBe(true);
+    });
+
+    it('should handle connection failures gracefully', async () => {
+      (tls.connect as jest.Mock).mockImplementation((options, callback) => {
+        const socket = {
+          ...mockSocket,
+          on: jest.fn((event, handler) => {
+            if (event === 'error') {
+              setTimeout(() => handler(new Error('ECONNREFUSED')), 0);
+            }
+          }),
+        };
+        return socket;
+      });
+
+      const result = await checkCertificate('nonexistent.example.com');
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0]).toContain('Failed to retrieve certificate');
+    });
+  });
+
+  describe('formatCertCheckResult', () => {
+    it('should format valid certificate result', () => {
+      const result = {
+        hostname: 'example.com',
+        port: 443,
+        isValid: true,
+        daysUntilExpiry: 30,
+        expiresSoon: false,
+        info: {
+          validFrom: new Date('2024-01-01'),
+          validTo: new Date('2025-12-31'),
+          issuer: "Let's Encrypt",
+          subject: 'example.com',
+          subjectAltNames: ['example.com'],
+        },
+        warnings: [],
+        errors: [],
+      };
+
+      const formatted = formatCertCheckResult(result);
+
+      expect(formatted).toContain('example.com');
+      expect(formatted).toContain("Let's Encrypt");
+      expect(formatted).toContain('✔ Certificate is valid');
+      expect(formatted).not.toContain('ERRORS');
+      expect(formatted).not.toContain('WARNINGS');
+    });
+
+    it('should format result with errors', () => {
+      const result = {
+        hostname: 'example.com',
+        port: 443,
+        isValid: false,
+        daysUntilExpiry: -10,
+        expiresSoon: false,
+        info: {
+          validFrom: new Date('2024-01-01'),
+          validTo: new Date('2024-01-01'),
+          issuer: 'Test CA',
+          subject: 'example.com',
+          subjectAltNames: ['example.com'],
+        },
+        warnings: [],
+        errors: ['Certificate expired'],
+      };
+
+      const formatted = formatCertCheckResult(result);
+
+      expect(formatted).toContain('❌ ERRORS');
+      expect(formatted).toContain('Certificate expired');
+    });
+
+    it('should format result with warnings', () => {
+      const result = {
+        hostname: 'example.com',
+        port: 443,
+        isValid: true,
+        daysUntilExpiry: 7,
+        expiresSoon: true,
+        info: {
+          validFrom: new Date('2024-01-01'),
+          validTo: new Date('2025-12-31'),
+          issuer: "Let's Encrypt",
+          subject: 'example.com',
+          subjectAltNames: ['www.example.com'],
+        },
+        warnings: ['Certificate expires in 7 days'],
+        errors: [],
+      };
+
+      const formatted = formatCertCheckResult(result);
+
+      expect(formatted).toContain('⚠️  WARNINGS');
+      expect(formatted).toContain('Certificate expires in 7 days');
+    });
+  });
+});
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-check/src/lib/check.ts ====
+import * as tls from 'node:tls';
+
+/**
+ * Certificate information retrieved from a TLS connection
+ */
+export type CertInfo = {
+  validFrom: Date;
+  validTo: Date;
+  issuer: string;
+  subjectAltNames: string[];
+  subject: string;
+};
+
+/**
+ * Certificate check result with status and details
+ */
+export type CertCheckResult = {
+  hostname: string;
+  port: number;
+  isValid: boolean;
+  daysUntilExpiry: number;
+  expiresSoon: boolean;
+  info: CertInfo;
+  warnings: string[];
+  errors: string[];
+};
+
+/**
+ * Options for certificate checking
+ */
+export type CheckOptions = {
+  port?: number;
+  timeout?: number;
+  servername?: string;
+};
+
+/**
+ * Retrieves certificate information from a TLS connection
+ * @param hostname - The hostname to check
+ * @param options - Optional configuration (port, timeout, servername)
+ * @returns Promise resolving to certificate information
+ * @throws Error if certificate cannot be retrieved
+ */
+export async function getCertInfo(
+  hostname: string,
+  options: CheckOptions = {}
+): Promise<CertInfo> {
+  const port = options.port ?? 443;
+  const timeout = options.timeout ?? 10000;
+  const servername = options.servername ?? hostname;
+
+  return new Promise((resolve, reject) => {
+    const socket = tls.connect(
+      { host: hostname, port, servername },
+      () => {
+        const cert = socket.getPeerCertificate(true);
+        if (!cert || Object.keys(cert).length === 0) {
+          socket.destroy();
+          reject(new Error('No certificate returned'));
+          return;
+        }
+
+        const validFrom = new Date(cert.valid_from as string);
+        const validTo = new Date(cert.valid_to as string);
+        const issuer =
+          (cert.issuer as { CN?: string })?.CN ||
+          JSON.stringify(cert.issuer);
+        const subject =
+          (cert.subject as { CN?: string })?.CN ||
+          JSON.stringify(cert.subject);
+
+        // Parse subjectAltName
+        const sanRaw = (cert.subjectaltname as string) || '';
+        const subjectAltNames = sanRaw
+          .split(', ')
+          .map((s) => s.replace(/^DNS:/, ''))
+          .filter(Boolean);
+
+        socket.destroy();
+
+        resolve({
+          validFrom,
+          validTo,
+          issuer,
+          subject,
+          subjectAltNames,
+        });
+      }
+    );
+
+    socket.on('error', (err) => {
+      socket.destroy();
+      reject(err);
+    });
+
+    socket.setTimeout(timeout, () => {
+      socket.destroy();
+      reject(new Error(`Connection timeout after ${timeout}ms`));
+    });
+  });
+}
+
+/**
+ * Checks a certificate and returns detailed status information
+ * @param hostname - The hostname to check
+ * @param options - Optional configuration
+ * @returns Promise resolving to certificate check result
+ */
+export async function checkCertificate(
+  hostname: string,
+  options: CheckOptions = {}
+): Promise<CertCheckResult> {
+  const port = options.port ?? 443;
+  const warnings: string[] = [];
+  const errors: string[] = [];
+
+  try {
+    const info = await getCertInfo(hostname, options);
+    const now = new Date();
+    const daysLeft = Math.floor(
+      (info.validTo.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    // Check if certificate is expired
+    if (info.validTo < now) {
+      errors.push(`Certificate expired on ${info.validTo.toISOString()}`);
+    }
+
+    // Check if certificate expires soon (less than 14 days)
+    if (daysLeft < 14 && daysLeft >= 0) {
+      warnings.push(
+        `Certificate expires in ${daysLeft} days — consider renewal`
+      );
+    }
+
+    // Check if hostname is in SAN list
+    const hostnameLower = hostname.toLowerCase();
+    const sanLower = info.subjectAltNames.map((s) => s.toLowerCase());
+    if (!sanLower.includes(hostnameLower)) {
+      warnings.push(
+        `Hostname ${hostname} not in SAN list: ${info.subjectAltNames.join(', ')}`
+      );
+    }
+
+    // Check if certificate is valid for current time
+    if (info.validFrom > now) {
+      warnings.push(
+        `Certificate not yet valid (valid from ${info.validFrom.toISOString()})`
+      );
+    }
+
+    return {
+      hostname,
+      port,
+      isValid: errors.length === 0 && info.validTo >= now,
+      daysUntilExpiry: daysLeft,
+      expiresSoon: daysLeft < 14 && daysLeft >= 0,
+      info,
+      warnings,
+      errors,
+    };
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : String(error);
+    errors.push(`Failed to retrieve certificate: ${errorMessage}`);
+
+    return {
+      hostname,
+      port,
+      isValid: false,
+      daysUntilExpiry: -1,
+      expiresSoon: false,
+      info: {
+        validFrom: new Date(),
+        validTo: new Date(),
+        issuer: 'unknown',
+        subject: 'unknown',
+        subjectAltNames: [],
+      },
+      warnings,
+      errors,
+    };
+  }
+}
+
+/**
+ * Formats certificate check result for console output
+ * @param result - The certificate check result
+ * @returns Formatted string for display
+ */
+export function formatCertCheckResult(result: CertCheckResult): string {
+  const lines: string[] = [];
+  lines.push(`\nCertificate Status for ${result.hostname}:${result.port}`);
+  lines.push('─'.repeat(50));
+
+  if (result.errors.length > 0) {
+    lines.push('❌ ERRORS:');
+    result.errors.forEach((err) => lines.push(`   ${err}`));
+  }
+
+  if (result.warnings.length > 0) {
+    lines.push('⚠️  WARNINGS:');
+    result.warnings.forEach((warn) => lines.push(`   ${warn}`));
+  }
+
+  if (result.isValid && result.errors.length === 0) {
+    lines.push('✔ Certificate is valid');
+  }
+
+  lines.push(`\nIssuer: ${result.info.issuer}`);
+  lines.push(`Subject: ${result.info.subject}`);
+  lines.push(`Valid from: ${result.info.validFrom.toISOString()}`);
+  lines.push(`Valid to:   ${result.info.validTo.toISOString()}`);
+
+  if (result.daysUntilExpiry >= 0) {
+    lines.push(`Days until expiry: ${result.daysUntilExpiry}`);
+  } else if (result.daysUntilExpiry < 0 && result.info.validTo < new Date()) {
+    lines.push(`Certificate expired ${Math.abs(result.daysUntilExpiry)} days ago`);
+  }
+
+  if (result.info.subjectAltNames.length > 0) {
+    lines.push(`Subject Alternative Names: ${result.info.subjectAltNames.join(', ')}`);
+  }
+
+  return lines.join('\n');
+}
+
+/**
+ * CLI entry point for certificate checking
+ */
+if (require.main === module) {
+  const hostname = process.argv[2];
+  const portArg = process.argv[3];
+
+  if (!hostname) {
+    console.error('Usage: ssl-check <hostname> [port]');
+    process.exit(1);
+  }
+
+  const options: CheckOptions = {};
+  if (portArg) {
+    const port = parseInt(portArg, 10);
+    if (isNaN(port)) {
+      console.error(`Invalid port: ${portArg}`);
+      process.exit(1);
+    }
+    options.port = port;
+  }
+
+  checkCertificate(hostname, options)
+    .then((result) => {
+      console.log(formatCertCheckResult(result));
+      process.exit(result.isValid ? 0 : 1);
+    })
+    .catch((err) => {
+      console.error('Error:', err instanceof Error ? err.message : String(err));
+      process.exit(2);
+    });
+}
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-check/tsconfig.json ====
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "importHelpers": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-check/tsconfig.lib.json ====
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/out-tsc",
+    "declaration": true,
+    "types": ["node"],
+    "module": "ESNext",
+    "moduleResolution": "bundler"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-check/tsconfig.spec.json ====
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/out-tsc",
+    "module": "commonjs",
+    "moduleResolution": "node10",
+    "types": ["jest", "node"]
+  },
+  "include": ["jest.config.ts", "src/**/*.test.ts", "src/**/*.spec.ts", "src/**/*.d.ts"]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-provision/.eslintrc.json ====
+{
+  "extends": ["../../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "ignoredFiles": ["{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}"]
+          }
+        ]
+      }
+    }
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-provision/jest.config.ts ====
+export default {
+  displayName: "admin-ssl-provision",
+  preset: "../../../jest.preset.js",
+  testEnvironment: "node",
+  transform: {
+    "^.+\\.[tj]s$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.spec.json" }],
+  },
+  moduleFileExtensions: ["ts", "js", "html"],
+  coverageDirectory: "../../../coverage/libs/admin/admin-ssl-provision",
+};
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-provision/package.json ====
+{
+  "name": "@mm/admin-ssl-provision",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "tslib": "^2.3.0"
+  }
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-provision/project.json ====
+{
+  "name": "admin-ssl-provision",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/admin/admin-ssl-provision/src",
+  "projectType": "library",
+  "tags": ["type:script", "scope:admin", "domain:ssl"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/admin/admin-ssl-provision",
+        "main": "libs/admin/admin-ssl-provision/src/lib/provision.ts",
+        "outputFileName": "ssl-provision.cjs",
+        "bundle": true,
+        "platform": "node",
+        "format": ["cjs"],
+        "tsConfig": "libs/admin/admin-ssl-provision/tsconfig.lib.json"
+      }
+    },
+    "provision": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/libs/admin/admin-ssl-provision/ssl-provision.cjs"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/admin/admin-ssl-provision/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-provision/README.md ====
+# Admin SSL Provision Library
+
+TypeScript library for provisioning SSL certificates using ACME (Let's Encrypt) protocol. This library is currently scaffolded and will be fully implemented when the EMC-Notary mail server is brought up.
+
+## Status
+
+⚠️ **Scaffolded Implementation** - This library provides the structure and API for certificate provisioning but does not yet perform actual ACME certificate requests. Full implementation will be added when the EMC-Notary server is ready.
+
+## Planned Features
+
+- **Domain Detection**: Automatically detect domains without valid certificates
+- **ACME Integration**: Use Let's Encrypt (or other ACME providers) to provision certificates
+- **Challenge Support**: Support both HTTP-01 and DNS-01 challenge types
+- **Certificate Deployment**: Deploy certificates to server (place in path, update configuration)
+- **Service Restart**: Automatically restart web/mail services after certificate deployment
+- **Status Tracking**: Record certificate status and expiration dates
+
+## Usage
+
+### Nx Target
+
+```bash
+# Provision certificates for domains
+pnpm nx run admin-ssl-provision:provision -- example.com www.example.com
+
+# Using environment variables
+SSL_DOMAINS=example.com,www.example.com pnpm nx run admin-ssl-provision:provision
+```
+
+### Programmatic Usage
+
+```typescript
+import { provisionCertificate } from '@mm/admin-ssl-provision';
+
+// Provision certificates
+const result = await provisionCertificate({
+  domains: ['example.com', 'www.example.com'],
+  email: 'admin@example.com',
+  challengeType: 'dns-01',
+  certPath: '/etc/ssl/certs',
+  restartServices: true,
+});
+
+console.log('Provisioned:', result.certificates);
+```
+
+### CLI Usage
+
+```bash
+# Build the library
+pnpm nx build admin-ssl-provision
+
+# Run directly
+node dist/libs/admin/admin-ssl-provision/ssl-provision.cjs example.com www.example.com
+```
+
+## API Reference
+
+### `provisionCertificate(options: ProvisionOptions): Promise<ProvisionResult>`
+
+Provisions SSL certificates for the given domains using ACME.
+
+**Parameters:**
+- `options.domains` - Array of domains to provision certificates for (required)
+- `options.email` - Email address for ACME registration (optional)
+- `options.acmeServer` - ACME server URL (defaults to Let's Encrypt production)
+- `options.challengeType` - Challenge type: 'http-01' or 'dns-01' (default: 'http-01')
+- `options.certPath` - Path to store certificates (optional)
+- `options.restartServices` - Whether to restart services after provisioning (default: false)
+
+**Returns:** Promise resolving to `ProvisionResult` with:
+- `success` - Whether provisioning was successful
+- `domains` - List of domains processed
+- `certificates` - Array of certificate results with status and expiration
+
+### `checkDomainsNeedingCertificates(domains: string[]): Promise<string[]>`
+
+Checks which domains need certificate provisioning by using the SSL check library.
+
+### `deployCertificate(domain: string, certPath: string, targetPath: string): Promise<void>`
+
+Deploys a certificate to the server and updates configuration.
+
+## Integration with ops-runner
+
+The SSL provision functionality is integrated into the ops-runner:
+
+```bash
+# Provision certificates via ops-runner
+pnpm nx run ops-runner:run -- ssl:provision example.com www.example.com
+
+# Using environment variables
+SSL_DOMAINS=example.com,www.example.com pnpm nx run ops-runner:run -- ssl:provision
+ACME_EMAIL=admin@example.com ACME_CHALLENGE_TYPE=dns-01 pnpm nx run ops-runner:run -- ssl:provision example.com
+```
+
+## Environment Variables
+
+- `SSL_DOMAINS` - Comma-separated list of domains to provision (used when no args provided)
+- `ACME_EMAIL` - Email address for ACME registration
+- `ACME_CHALLENGE_TYPE` - Challenge type: 'http-01' or 'dns-01' (default: 'http-01')
+
+## Implementation Plan
+
+When implementing the full ACME functionality, consider:
+
+1. **ACME Client Library**: Use `acme-client` npm package or shell out to `certbot`/`lego`
+2. **Challenge Handling**: 
+   - HTTP-01: Place challenge files in web server root
+   - DNS-01: Create TXT records via DNS API
+3. **Certificate Storage**: Store certificates in standard locations (e.g., `/etc/ssl/certs`)
+4. **Configuration Updates**: Update nginx/apache and mail server configs
+5. **Service Management**: Restart services after certificate deployment
+6. **Monitoring**: Track certificate expiration and auto-renewal
+
+## Related Libraries
+
+- `@mm/admin-ssl-check` - SSL certificate status checking
+- `@mm/admin-dns-api` - DNS API for DNS-01 challenge automation
+
+## Testing
+
+```bash
+# Run unit tests (when implemented)
+pnpm nx test admin-ssl-provision
+```
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-provision/src/index.ts ====
+export * from './lib/provision';
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-provision/src/lib/provision.ts ====
+/**
+ * SSL Certificate Provisioning Library
+ *
+ * This library provides functionality for provisioning SSL certificates
+ * using ACME (Let's Encrypt) protocol. This is scaffolded for future
+ * implementation when the EMC-Notary mail server is brought up.
+ *
+ * Planned features:
+ * - Detect domains without valid certificates
+ * - Use ACME (Let's Encrypt) to provision certificates automatically
+ * - Deploy certificates to server (place in path, update configuration)
+ * - Restart services after certificate deployment
+ * - Record status in system
+ */
+
+/**
+ * Options for certificate provisioning
+ */
+export type ProvisionOptions = {
+  /**
+   * Domains to provision certificates for
+   */
+  domains: string[];
+  /**
+   * Email address for ACME registration
+   */
+  email?: string;
+  /**
+   * ACME server URL (defaults to Let's Encrypt production)
+   */
+  acmeServer?: string;
+  /**
+   * Challenge type (http-01 or dns-01)
+   */
+  challengeType?: 'http-01' | 'dns-01';
+  /**
+   * Path to store certificates
+   */
+  certPath?: string;
+  /**
+   * Whether to restart services after provisioning
+   */
+  restartServices?: boolean;
+};
+
+/**
+ * Provision result
+ */
+export type ProvisionResult = {
+  success: boolean;
+  domains: string[];
+  certificates: Array<{
+    domain: string;
+    status: 'issued' | 'failed' | 'skipped';
+    expiresAt?: Date;
+    error?: string;
+  }>;
+};
+
+/**
+ * Provisions SSL certificates for the given domains using ACME
+ *
+ * @param options - Provisioning options
+ * @returns Promise resolving to provision result
+ *
+ * @example
+ * ```typescript
+ * const result = await provisionCertificate({
+ *   domains: ['example.com', 'www.example.com'],
+ *   email: 'admin@example.com',
+ *   challengeType: 'dns-01'
+ * });
+ * ```
+ */
+export async function provisionCertificate(
+  options: ProvisionOptions
+): Promise<ProvisionResult> {
+  // TODO: Implement ACME certificate provisioning
+  // This will use libraries like acme-client or shell out to certbot/lego
+  // For now, return a scaffolded response
+
+  console.log('SSL Certificate Provisioning (Scaffolded)');
+  console.log('Domains:', options.domains.join(', '));
+  console.log('Email:', options.email || 'not specified');
+  console.log('Challenge Type:', options.challengeType || 'http-01');
+  console.log('\n⚠️  This is a scaffolded implementation.');
+  console.log('   Full implementation will be added when EMC-Notary server is ready.\n');
+
+  return {
+    success: false,
+    domains: options.domains,
+    certificates: options.domains.map((domain) => ({
+      domain,
+      status: 'skipped' as const,
+      error: 'Not yet implemented',
+    })),
+  };
+}
+
+/**
+ * Checks which domains need certificate provisioning
+ *
+ * @param domains - Domains to check
+ * @returns Promise resolving to list of domains that need certificates
+ */
+export async function checkDomainsNeedingCertificates(
+  domains: string[]
+): Promise<string[]> {
+  // TODO: Use checkCertificate from admin-ssl-check to determine
+  // which domains need new certificates
+  console.log('Checking domains for certificate provisioning...');
+  console.log('Domains:', domains.join(', '));
+  console.log('\n⚠️  This is a scaffolded implementation.\n');
+
+  return [];
+}
+
+/**
+ * Deploys a certificate to the server
+ *
+ * @param domain - Domain name
+ * @param certPath - Path to certificate files
+ * @param targetPath - Target path on server
+ * @returns Promise resolving when deployment is complete
+ */
+export async function deployCertificate(
+  domain: string,
+  certPath: string,
+  targetPath: string
+): Promise<void> {
+  // TODO: Implement certificate deployment
+  // - Copy certificate files to target path
+  // - Update web server configuration (nginx/apache)
+  // - Update mail server configuration
+  // - Restart services if needed
+
+  console.log(`Deploying certificate for ${domain}`);
+  console.log(`From: ${certPath}`);
+  console.log(`To: ${targetPath}`);
+  console.log('\n⚠️  This is a scaffolded implementation.\n');
+}
+
+/**
+ * CLI entry point for certificate provisioning
+ */
+if (require.main === module) {
+  const domains = process.argv.slice(2);
+
+  if (domains.length === 0) {
+    console.error('Usage: ssl-provision <domain1> [domain2 ...]');
+    process.exit(1);
+  }
+
+  provisionCertificate({
+    domains,
+    email: process.env['ACME_EMAIL'],
+    challengeType: (process.env['ACME_CHALLENGE_TYPE'] as 'http-01' | 'dns-01') || 'http-01',
+  })
+    .then((result) => {
+      console.log('Provision result:', JSON.stringify(result, null, 2));
+      // Exit with 0 for scaffolded implementation (not an error, just not implemented yet)
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error('Error:', err instanceof Error ? err.message : String(err));
+      process.exit(2);
+    });
+}
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-provision/tsconfig.json ====
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "importHelpers": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-provision/tsconfig.lib.json ====
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/out-tsc",
+    "declaration": true,
+    "types": ["node"],
+    "module": "ESNext",
+    "moduleResolution": "bundler"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/libs/admin/admin-ssl-provision/tsconfig.spec.json ====
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/out-tsc",
+    "module": "commonjs",
+    "moduleResolution": "node10",
+    "types": ["jest", "node"]
+  },
+  "include": ["jest.config.ts", "src/**/*.test.ts", "src/**/*.spec.ts", "src/**/*.d.ts"]
 }
 
 

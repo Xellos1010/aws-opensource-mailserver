@@ -1,5 +1,5 @@
 # Root Directory Files
-# Generated on: Thu Nov  6 21:40:06 EST 2025
+# Generated on: Thu Nov  6 23:02:44 EST 2025
 # Source: /Users/evanmccall/Projects/aws-opensource-mailserver
 #
 # This file contains specific configuration files from the root directory.
@@ -288,7 +288,9 @@ vitest.config.*.timestamp*
       "@mm/admin-credentials": ["libs/admin/admin-credentials/src/index.ts"],
       "@mm/admin-reverse-dns": ["libs/admin/admin-reverse-dns/src/index.ts"],
       "@mm/admin-dns-api": ["libs/admin/admin-dns-api/src/index.ts"],
-      "@mm/admin-users-backup": ["libs/admin/admin-users-backup/src/index.ts"]
+      "@mm/admin-users-backup": ["libs/admin/admin-users-backup/src/index.ts"],
+      "@mm/admin-ssl-check": ["libs/admin/admin-ssl-check/src/index.ts"],
+      "@mm/admin-ssl-provision": ["libs/admin/admin-ssl-provision/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

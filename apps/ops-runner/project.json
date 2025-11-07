@@ -56,6 +56,13 @@
     "prune": {
       "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
       "executor": "nx:noop"
+    },
+    "cfn:outputs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node dist/apps/ops-runner/src/commands/cfn-outputs.js"
+      },
+      "dependsOn": ["build"]
     }
   }
 }
