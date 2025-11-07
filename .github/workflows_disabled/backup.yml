@@ -1,0 +1,69 @@
+name: Nightly Backups
+
+on:
+  schedule:
+    - cron: '15 2 * * *' # 02:15 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  dns-mail-backups:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Configure AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # DNS backup → S3 and artifact
+      - name: DNS backup
+        run: pnpm nx run admin-dns-backup:backup
+        env:
+          DNS_BACKUP_BUCKET: ${{ secrets.DNS_BACKUP_BUCKET }}
+          DNS_BACKUP_PREFIX: backups/dns/
+
+      - name: Upload DNS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dns-backup
+          path: dist/backups/dns/**
+
+      # Mail backup → S3 (or artifacts if bucket not set)
+      - name: Mail backup
+        run: pnpm nx run admin-mail-backup:backup
+        env:
+          MAIL_HOST: ${{ secrets.MAIL_HOST }}
+          MAIL_PORT: ${{ secrets.MAIL_PORT }}
+          MAIL_SECURE: ${{ secrets.MAIL_SECURE }}
+          MAIL_USER: ${{ secrets.MAIL_USER }}
+          MAIL_PASS: ${{ secrets.MAIL_PASS }}
+          MAIL_BACKUP_BUCKET: ${{ secrets.MAIL_BACKUP_BUCKET }}
+          MAIL_BACKUP_PREFIX: backups/mail/
+
+      - name: Upload mail tarball
+        if: ${{ !secrets.MAIL_BACKUP_BUCKET }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: mail-backup
+          path: dist/backups/mail/**/*.tar.gz
+

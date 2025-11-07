@@ -1,0 +1,300 @@
+# Root Directory Files
+# Generated on: Thu Nov  6 23:02:44 EST 2025
+# Source: /Users/evanmccall/Projects/aws-opensource-mailserver
+#
+# This file contains specific configuration files from the root directory.
+#
+# =============================================================================
+
+==== FILE: .gitignore ====
+# Logs
+./logs
+
+# Master codebase file
+./master-codebase.txt
+
+# Mailbox backups and sensitive email data
+**/Mail-box-backups/
+**/mailbox*/
+**/*.mbox
+**/*.mbox/
+
+# Private keys and certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+**/*_opensource_mailservers.pem
+**/*-mailservers.pem
+
+# Mobile configuration files (may contain sensitive data)
+*.mobileconfig
+
+# IP address files
+**/ec2_ipaddress.txt
+
+# Temporary and backup files
+**/backup*/
+**/temp*/
+**/tmp*/
+
+# AWS credentials and sensitive config
+**/.aws/
+**/credentials
+**/config
+
+# SSH keys and known hosts
+**/.ssh/
+**/known_hosts
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.nx/installation
+.nx/cache
+.nx/workspace-data
+
+
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+vite.config.*.timestamp*
+vitest.config.*.timestamp*
+
+
+==== FILE: .nvmrc ====
+20.18.1
+
+
+
+
+==== FILE: nx.json ====
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "installation": {
+    "version": "22.0.2"
+  },
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+      "outputs": ["{options.outputPath}"]
+    },
+    "test": {
+      "cache": true,
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
+    },
+    "lint": {
+      "cache": true
+    },
+    "@nx/js:tsc": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
+    },
+    "@nx/esbuild:esbuild": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
+    }
+  },
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": [
+      "default",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/.eslintrc.json",
+      "!{projectRoot}/eslint.config.js",
+      "!{projectRoot}/jest.config.[jt]s",
+      "!{projectRoot}/src/test-setup.[jt]s",
+      "!{projectRoot}/test-setup.[jt]s"
+    ],
+    "sharedGlobals": [
+      "{workspaceRoot}/tsconfig.base.json",
+      "{workspaceRoot}/nx.json",
+      "{workspaceRoot}/.nxignore"
+    ]
+  },
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "nx/tasks-runners/default",
+      "options": {
+        "cacheableOperations": ["build", "test", "lint"]
+      }
+    }
+  },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
+  "affected": {
+    "defaultBase": "main"
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    },
+    {
+      "plugin": "@nx/jest/plugin",
+      "options": {
+        "targetName": "test"
+      }
+    },
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "testTargetName": "test",
+        "serveTargetName": "serve",
+        "devTargetName": "dev",
+        "previewTargetName": "preview",
+        "serveStaticTargetName": "serve-static",
+        "typecheckTargetName": "typecheck",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
+    }
+  ]
+}
+
+
+
+==== FILE: package.json ====
+{
+  "name": "aws-opensource-mailserver",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AWS Open Source Mail Server Infrastructure",
+  "scripts": {
+    "format": "nx format:write",
+    "format:check": "nx format:check"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@9.12.2",
+  "devDependencies": {
+    "@aws-sdk/client-cloudformation": "^3.925.0",
+    "@aws-sdk/client-ec2": "^3.925.0",
+    "@aws-sdk/client-kms": "^3.925.0",
+    "@aws-sdk/client-route-53": "^3.925.0",
+    "@aws-sdk/client-s3": "^3.925.0",
+    "@aws-sdk/client-ssm": "^3.925.0",
+    "@aws-sdk/lib-storage": "^3.925.0",
+    "@nx/esbuild": "^22.0.2",
+    "@nx/eslint": "^22.0.2",
+    "@nx/eslint-plugin": "^22.0.2",
+    "@nx/jest": "^22.0.2",
+    "@nx/js": "^22.0.2",
+    "@nx/node": "^22.0.2",
+    "@nx/vite": "22.0.2",
+    "@nx/web": "22.0.2",
+    "@nx/workspace": "^22.0.2",
+    "@swc-node/register": "~1.9.1",
+    "@swc/core": "~1.5.7",
+    "@swc/helpers": "~0.5.11",
+    "@types/jest": "^29.5.12",
+    "@types/node": "20.19.9",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@vitest/coverage-v8": "^3.0.5",
+    "@vitest/ui": "^3.0.0",
+    "aws-cdk": "^2.150.0",
+    "aws-cdk-lib": "^2.150.0",
+    "constructs": "^10.3.0",
+    "esbuild": "^0.19.2",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "imapflow": "^1.1.1",
+    "jest": "^29.7.0",
+    "jest-environment-node": "^29.7.0",
+    "jest-util": "^29.7.0",
+    "jiti": "2.4.2",
+    "jsonc-eslint-parser": "^2.1.0",
+    "nx": "^22.0.2",
+    "prettier": "^3.3.3",
+    "tar": "^7.5.2",
+    "ts-jest": "^29.1.5",
+    "ts-node": "10.9.1",
+    "tslib": "^2.3.0",
+    "typescript": "^5.5.4",
+    "vite": "^7.0.0",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sts": "^3.654.0",
+    "@aws-sdk/credential-providers": "^3.654.0",
+    "ini": "^4.1.1"
+  }
+}
+
+
+
+==== FILE: tsconfig.base.json ====
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "bundler",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "authentication": ["libs/support-scripts/aws/authentication/src/index.ts"],
+      "admin": ["libs/admin/src/index.ts"],
+      "admin-dns-backup": ["libs/admin/admin-dns-backup/src/index.ts"],
+      "admin-mail-backup": ["libs/admin/admin-mail-backup/src/index.ts"],
+      "admin-ec2": ["libs/admin/admin-ec2/src/index.ts"],
+      "admin-kms": ["libs/admin/admin-kms/src/index.ts"],
+      "@mm/admin-stack-info": ["libs/admin/admin-stack-info/src/index.ts"],
+      "@mm/admin-backup-bridge": ["libs/admin/admin-backup-bridge/src/index.ts"],
+      "@mm/admin-ssh": ["libs/admin/admin-ssh/src/index.ts"],
+      "@mm/admin-dns-restore": ["libs/admin/admin-dns-restore/src/index.ts"],
+      "@mm/admin-credentials": ["libs/admin/admin-credentials/src/index.ts"],
+      "@mm/admin-reverse-dns": ["libs/admin/admin-reverse-dns/src/index.ts"],
+      "@mm/admin-dns-api": ["libs/admin/admin-dns-api/src/index.ts"],
+      "@mm/admin-users-backup": ["libs/admin/admin-users-backup/src/index.ts"],
+      "@mm/admin-ssl-check": ["libs/admin/admin-ssl-check/src/index.ts"],
+      "@mm/admin-ssl-provision": ["libs/admin/admin-ssl-provision/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}
+
+
+

@@ -1,0 +1,66 @@
+{
+  "name": "cdk-emcnotary-core",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cdk-emcnotary-core/src",
+  "projectType": "application",
+  "tags": ["type:cdk", "domain:infra", "scope:core"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/cdk-emcnotary-core",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/cdk-emcnotary-core/src/main.ts",
+        "tsConfig": "apps/cdk-emcnotary-core/tsconfig.app.json",
+        "assets": [
+          "apps/cdk-emcnotary-core/src/assets",
+          "apps/cdk-emcnotary-core/cdk.json"
+        ],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "external": ["aws-sdk"]
+        }
+      }
+    },
+    "synth": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk synth",
+        "cwd": "dist/apps/cdk-emcnotary-core"
+      },
+      "dependsOn": ["build"]
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk deploy --require-approval never",
+        "cwd": "dist/apps/cdk-emcnotary-core"
+      },
+      "dependsOn": ["build"]
+    },
+    "diff": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk diff",
+        "cwd": "dist/apps/cdk-emcnotary-core"
+      },
+      "dependsOn": ["build"]
+    },
+    "destroy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk destroy --force",
+        "cwd": "dist/apps/cdk-emcnotary-core"
+      },
+      "dependsOn": ["build"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
+

@@ -1,0 +1,39 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "bundler",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "authentication": ["libs/support-scripts/aws/authentication/src/index.ts"],
+      "admin": ["libs/admin/src/index.ts"],
+      "admin-dns-backup": ["libs/admin/admin-dns-backup/src/index.ts"],
+      "admin-mail-backup": ["libs/admin/admin-mail-backup/src/index.ts"],
+      "admin-ec2": ["libs/admin/admin-ec2/src/index.ts"],
+      "admin-kms": ["libs/admin/admin-kms/src/index.ts"],
+      "@mm/admin-stack-info": ["libs/admin/admin-stack-info/src/index.ts"],
+      "@mm/admin-backup-bridge": ["libs/admin/admin-backup-bridge/src/index.ts"],
+      "@mm/admin-ssh": ["libs/admin/admin-ssh/src/index.ts"],
+      "@mm/admin-dns-restore": ["libs/admin/admin-dns-restore/src/index.ts"],
+      "@mm/admin-credentials": ["libs/admin/admin-credentials/src/index.ts"],
+      "@mm/admin-reverse-dns": ["libs/admin/admin-reverse-dns/src/index.ts"],
+      "@mm/admin-dns-api": ["libs/admin/admin-dns-api/src/index.ts"],
+      "@mm/admin-users-backup": ["libs/admin/admin-users-backup/src/index.ts"],
+      "@mm/admin-ssl-check": ["libs/admin/admin-ssl-check/src/index.ts"],
+      "@mm/admin-ssl-provision": ["libs/admin/admin-ssl-provision/src/index.ts"],
+      "@mm/infra-shared-constructs": ["libs/infra/shared-constructs/src/index.ts"],
+      "@mm/infra-core-params": ["libs/infra/core-params/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

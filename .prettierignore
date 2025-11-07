@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+.nx
+*.log
+*.md
+*.yaml
+*.yml
+*.sh
+*.py
+
