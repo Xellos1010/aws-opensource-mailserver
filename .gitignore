@@ -49,6 +49,9 @@
 .env.local
 .env.production
 
+# Local AWS/CDK configuration (contains sensitive account info)
+.aws-config.local.json
+
 # IDE and editor files
 .vscode/
 .idea/

@@ -1,0 +1,11 @@
+{
+  "aws": {
+    "profile": "hepe-admin-mfa",
+    "region": "us-east-1",
+    "accountId": "YOUR_AWS_ACCOUNT_ID"
+  },
+  "cdk": {
+    "defaultAccount": "YOUR_AWS_ACCOUNT_ID",
+    "defaultRegion": "us-east-1"
+  }
+}

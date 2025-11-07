@@ -32,7 +32,8 @@
       "@mm/admin-ssl-check": ["libs/admin/admin-ssl-check/src/index.ts"],
       "@mm/admin-ssl-provision": ["libs/admin/admin-ssl-provision/src/index.ts"],
       "@mm/infra-shared-constructs": ["libs/infra/shared-constructs/src/index.ts"],
-      "@mm/infra-core-params": ["libs/infra/core-params/src/index.ts"]
+      "@mm/infra-core-params": ["libs/infra/core-params/src/index.ts"],
+      "@mm/infra-config-loader": ["libs/infra/config-loader/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

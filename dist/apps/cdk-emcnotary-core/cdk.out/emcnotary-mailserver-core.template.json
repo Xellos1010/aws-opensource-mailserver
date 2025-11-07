@@ -1,5 +1,5 @@
 {
- "Description": "EMC Notary Mailserver – Core stack (Route53/SES/S3/SNS/CloudWatch/SSM params)",
+ "Description": "EMC Notary Mailserver – Core stack (SES/S3/SNS/CloudWatch/SSM params)",
  "Parameters": {
   "DomainName": {
    "Type": "String",
@@ -290,8 +290,30 @@
        ],
        "Effect": "Allow",
        "Resource": [
-        "arn:aws:ssm:us-east-1:123456789012:parameter/smtp-password-emcnotary-mailserver-core",
-        "arn:aws:ssm:us-east-1:123456789012:parameter/smtp-username-emcnotary-mailserver-core"
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:aws:ssm:us-east-1:",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":parameter/smtp-password-emcnotary-mailserver-core"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:aws:ssm:us-east-1:",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":parameter/smtp-username-emcnotary-mailserver-core"
+          ]
+         ]
+        }
        ]
       }
      ],
@@ -317,7 +339,9 @@
     "Environment": {
      "Variables": {
       "STACK_NAME": "emcnotary-mailserver-core",
-      "AWS_ACCOUNT_ID": "123456789012"
+      "AWS_ACCOUNT_ID": {
+       "Ref": "AWS::AccountId"
+      }
      }
     },
     "FunctionName": "SMTPCredentialsLambdaFunction-emcnotary-mailserver-core",
@@ -445,7 +469,11 @@
      "Fn::Join": [
       "",
       [
-       "arn:aws:ses:us-east-1:123456789012:identity/",
+       "arn:aws:ses:us-east-1:",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":identity/",
        {
         "Ref": "SesIdentity3ED17C37"
        }
@@ -480,7 +508,11 @@
     "Fn::Join": [
      "",
      [
-      "arn:aws:ses:us-east-1:123456789012:identity/",
+      "arn:aws:ses:us-east-1:",
+      {
+       "Ref": "AWS::AccountId"
+      },
+      ":identity/",
       {
        "Ref": "SesIdentity3ED17C37"
       }
