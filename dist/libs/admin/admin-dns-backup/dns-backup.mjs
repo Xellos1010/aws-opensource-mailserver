@@ -24,7 +24,8 @@ async function backupDns(cfg = {}) {
   const zones = zonesResp.HostedZones?.filter(
     (z) => !cfg.zones || cfg.zones.includes(z.Id.replace("/hostedzone/", ""))
   ) ?? [];
-  const outDir = path.resolve("dist/backups/dns", stamp);
+  const domainName = cfg.domain ? cfg.domain.replace(/\./g, "-") : void 0;
+  const outDir = cfg.outputDir || (domainName ? path.resolve("dist/backups", domainName, "dns", stamp) : path.resolve("dist/backups/dns", stamp));
   fs.mkdirSync(outDir, { recursive: true });
   for (const z of zones) {
     const zoneId = z.Id.replace("/hostedzone/", "");
@@ -71,7 +72,8 @@ function resolveDomain(appPath, stackName) {
     const domainPart = appName.replace(/^cdk-/, "");
     const domainMap = {
       "emc-notary": "emcnotary.com",
-      "emcnotary": "emcnotary.com"
+      "emcnotary": "emcnotary.com",
+      "askdaokapra": "askdaokapra.com"
     };
     return domainMap[domainPart] || `${domainPart.replace(/-/g, "")}.com`;
   }
@@ -175,6 +177,18 @@ async function getStackInfo(config) {
     }
   }
   let adminPassword = outputs.AdminPassword;
+  if (adminPassword && adminPassword.startsWith("/MailInABoxAdminPassword-")) {
+    try {
+      const ssmResp = await ssmClient.send(
+        new GetParameterCommand({
+          Name: adminPassword,
+          WithDecryption: true
+        })
+      );
+      adminPassword = ssmResp.Parameter?.Value;
+    } catch (err) {
+    }
+  }
   if (!adminPassword) {
     try {
       const ssmParamName = `/MailInABoxAdminPassword-${stackName}`;
@@ -224,8 +238,9 @@ var require_dns_backup = __commonJS({
     async function main() {
       const appPath = process.env.APP_PATH;
       const stackName = process.env.STACK_NAME;
-      const domain = process.env.DOMAIN;
+      const domainEnv = process.env.DOMAIN;
       let hostedZoneId;
+      let domain;
       if (appPath) {
         try {
           const stackInfo = await getStackInfoFromApp(appPath, {
@@ -233,6 +248,7 @@ var require_dns_backup = __commonJS({
             profile: process.env.AWS_PROFILE
           });
           hostedZoneId = stackInfo.hostedZoneId;
+          domain = stackInfo.domain;
           console.log(`Using stack: ${stackInfo.stackName} (${stackInfo.domain})`);
           if (hostedZoneId) {
             console.log(`Found hosted zone: ${hostedZoneId}`);
@@ -240,15 +256,16 @@ var require_dns_backup = __commonJS({
         } catch (err) {
           console.warn(`Could not get stack info from app path: ${err}`);
         }
-      } else if (stackName || domain) {
+      } else if (stackName || domainEnv) {
         try {
           const stackInfo = await getStackInfo({
             stackName,
-            domain,
+            domain: domainEnv,
             region: process.env.AWS_REGION,
             profile: process.env.AWS_PROFILE
           });
           hostedZoneId = stackInfo.hostedZoneId;
+          domain = stackInfo.domain;
           console.log(`Using stack: ${stackInfo.stackName} (${stackInfo.domain})`);
           if (hostedZoneId) {
             console.log(`Found hosted zone: ${hostedZoneId}`);
@@ -261,7 +278,9 @@ var require_dns_backup = __commonJS({
       await backupDns({
         bucket: process.env.DNS_BACKUP_BUCKET,
         prefix: process.env.DNS_BACKUP_PREFIX,
-        zones: zoneIds
+        zones: zoneIds,
+        domain: domain || domainEnv,
+        outputDir: process.env.OUTPUT_DIR
       }).then((dir) => console.log(`DNS backup written to ${dir}`)).catch((e) => {
         console.error(e);
         process.exit(1);

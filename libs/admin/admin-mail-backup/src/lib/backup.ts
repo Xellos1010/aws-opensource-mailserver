@@ -18,6 +18,8 @@ type Cfg = {
   s3Prefix?: string;
   includeMailboxes?: string[];
   excludeMailboxes?: string[];
+  domain?: string; // domain name for organizing backups (e.g., "askdaokapra.com")
+  outputDir?: string; // optional custom output directory
 };
 
 const log = (
@@ -104,7 +106,14 @@ async function uploadTarToS3(
 export async function backupMailbox(cfg: Cfg) {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   const runId = crypto.randomUUID();
-  const workDir = path.resolve('dist/backups/mail', `${stamp}-${runId}`);
+  
+  // Use domain-based directory structure if domain is provided
+  // Format: dist/backups/{domain-name}/mail/{timestamp}-{runId}
+  const domainName = cfg.domain ? cfg.domain.replace(/\./g, '-') : undefined;
+  const workDir = cfg.outputDir || 
+    (domainName
+      ? path.resolve('dist/backups', domainName, 'mail', `${stamp}-${runId}`)
+      : path.resolve('dist/backups/mail', `${stamp}-${runId}`));
   fs.mkdirSync(workDir, { recursive: true });
 
   const client = new ImapFlow({

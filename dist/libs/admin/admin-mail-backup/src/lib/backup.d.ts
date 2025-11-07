@@ -8,6 +8,8 @@ type Cfg = {
     s3Prefix?: string;
     includeMailboxes?: string[];
     excludeMailboxes?: string[];
+    domain?: string;
+    outputDir?: string;
 };
 export declare function backupMailbox(cfg: Cfg): Promise<{
     outDir: string;
