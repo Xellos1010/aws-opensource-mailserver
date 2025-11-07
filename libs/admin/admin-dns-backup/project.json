@@ -31,6 +31,13 @@
         "command": "node dist/libs/admin/admin-dns-backup/dns-backup.mjs"
       }
     },
+    "backup:askdaokapra": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-askdaokapra node dist/libs/admin/admin-dns-backup/dns-backup.mjs"
+      }
+    },
     "backup:emcnotary": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
