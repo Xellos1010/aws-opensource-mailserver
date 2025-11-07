@@ -84,21 +84,21 @@
       },
       "description": "Get only failed CloudFormation stack events"
     },
-    "admin:bootstrap": {
+    "admin:bootstrap-miab-ec2-instance": {
       "executor": "nx:run-commands",
       "dependsOn": ["^build", "support-scripts-aws-instance-bootstrap:build"],
       "options": {
         "command": "pnpm exec tsx tools/instance-bootstrap.cli.ts"
       },
-      "description": "Bootstrap Mail-in-a-Box on instance via SSM RunCommand"
+      "description": "Bootstrap Mail-in-a-Box (MIAB) to EC2 instance via SSM RunCommand"
     },
-    "admin:bootstrap:dry-run": {
+    "admin:bootstrap-miab-ec2-instance:dry-run": {
       "executor": "nx:run-commands",
       "dependsOn": ["^build", "support-scripts-aws-instance-bootstrap:build"],
       "options": {
         "command": "pnpm exec tsx tools/instance-bootstrap.cli.ts --dry-run"
       },
-      "description": "Dry run: Show what would be executed for bootstrap (no SSM command sent)"
+      "description": "Dry run: Preview bootstrap of Mail-in-a-Box (MIAB) to EC2 instance (no SSM command sent)"
     },
     "admin:ssh:setup": {
       "executor": "nx:run-commands",
