@@ -310,7 +310,7 @@ new EmcNotaryCoreStack(app, "emcnotary-mailserver-core", {
     account: process.env["CDK_DEFAULT_ACCOUNT"],
     region: process.env["CDK_DEFAULT_REGION"] || "us-east-1"
   },
-  description: "EMC Notary Mailserver \u2013 Core stack (Route53/SES/S3/SNS/CloudWatch/SSM params)"
+  description: "EMC Notary Mailserver \u2013 Core stack (SES/S3/SNS/CloudWatch/SSM params)"
 });
 app.synth();
 //# sourceMappingURL=main.cjs.map
