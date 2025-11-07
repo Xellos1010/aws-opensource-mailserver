@@ -76,3 +76,5 @@ Thumbs.db
 .github/instructions/nx.instructions.md
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
+
+data/godaddy/api-keys/*
