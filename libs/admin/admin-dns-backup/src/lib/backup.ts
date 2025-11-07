@@ -57,15 +57,3 @@ export async function backupDns(cfg: Cfg = {}) {
   return outDir;
 }
 
-if (require.main === module) {
-  backupDns({
-    bucket: process.env.DNS_BACKUP_BUCKET,
-    prefix: process.env.DNS_BACKUP_PREFIX,
-  })
-    .then((dir) => console.log(`DNS backup written to ${dir}`))
-    .catch((e) => {
-      console.error(e);
-      process.exit(1);
-    });
-}
-

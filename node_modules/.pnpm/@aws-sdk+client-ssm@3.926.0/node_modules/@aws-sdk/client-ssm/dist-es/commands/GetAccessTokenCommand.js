@@ -1,0 +1,23 @@
+import { getEndpointPlugin } from "@smithy/middleware-endpoint";
+import { getSerdePlugin } from "@smithy/middleware-serde";
+import { Command as $Command } from "@smithy/smithy-client";
+import { commonParams } from "../endpoint/EndpointParameters";
+import { GetAccessTokenResponseFilterSensitiveLog, } from "../models/models_1";
+import { de_GetAccessTokenCommand, se_GetAccessTokenCommand } from "../protocols/Aws_json1_1";
+export { $Command };
+export class GetAccessTokenCommand extends $Command
+    .classBuilder()
+    .ep(commonParams)
+    .m(function (Command, cs, config, o) {
+    return [
+        getSerdePlugin(config, this.serialize, this.deserialize),
+        getEndpointPlugin(config, Command.getEndpointParameterInstructions()),
+    ];
+})
+    .s("AmazonSSM", "GetAccessToken", {})
+    .n("SSMClient", "GetAccessTokenCommand")
+    .f(void 0, GetAccessTokenResponseFilterSensitiveLog)
+    .ser(se_GetAccessTokenCommand)
+    .de(de_GetAccessTokenCommand)
+    .build() {
+}

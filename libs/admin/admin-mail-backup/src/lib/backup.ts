@@ -53,12 +53,14 @@ async function dumpMailbox(
         date: msg.envelope?.date,
         raw: (msg.source as Buffer).toString('base64'),
       }) + '\n';
-    if (!write.write(line)) await new Promise((r) => write.once('drain', r));
+    if (!write.write(line)) {
+      await new Promise<void>((resolve) => write.once('drain', () => resolve()));
+    }
     count++;
   }
 
   write.end();
-  await new Promise((r) => write.on('close', r));
+  await new Promise<void>((resolve) => write.on('close', () => resolve()));
 
   log('info', 'mailbox dumped', {
     mailbox: mailboxPath,
@@ -122,7 +124,8 @@ export async function backupMailbox(cfg: Cfg) {
   await client.connect();
 
   const selected: string[] = [];
-  for await (const mbox of client.list()) {
+  const mailboxes = await client.list();
+  for (const mbox of mailboxes) {
     const name = mbox.path;
     if (cfg.includeMailboxes && !cfg.includeMailboxes.includes(name)) continue;
     if (cfg.excludeMailboxes && cfg.excludeMailboxes.includes(name)) continue;
@@ -147,39 +150,12 @@ export async function backupMailbox(cfg: Cfg) {
       tarPath,
       cfg.s3Bucket,
       key,
-      process.env.AWS_REGION
+      process.env['AWS_REGION']
     );
     log('info', 'uploaded to s3', { s3Uri });
     return { outDir: workDir, tarPath, s3Uri };
   }
 
   return { outDir: workDir, tarPath };
-}
-
-if (require.main === module) {
-  const need = (k: string) => {
-    const v = process.env[k];
-    if (!v) throw new Error(`Missing ${k}`);
-    return v;
-  };
-
-  backupMailbox({
-    host: need('MAIL_HOST'),
-    port: Number(process.env.MAIL_PORT ?? 993),
-    secure: process.env.MAIL_SECURE
-      ? process.env.MAIL_SECURE === '1'
-      : true,
-    user: need('MAIL_USER'),
-    pass: need('MAIL_PASS'),
-    s3Bucket: process.env.MAIL_BACKUP_BUCKET,
-    s3Prefix: process.env.MAIL_BACKUP_PREFIX,
-    includeMailboxes: process.env.MAIL_INCLUDE?.split(',').filter(Boolean),
-    excludeMailboxes: process.env.MAIL_EXCLUDE?.split(',').filter(Boolean),
-  })
-    .then((r) => log('info', 'backup complete', r))
-    .catch((e) => {
-      log('error', e.message);
-      process.exit(1);
-    });
 }
 
