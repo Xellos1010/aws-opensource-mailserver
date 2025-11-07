@@ -30,17 +30,13 @@ Env:
   switch (cmd) {
     case 'auth:mfa': {
       // call the TS-ported mfa task
-      const mfaModule = await import(
-        '../../libs/support-scripts/aws/authentication/src/lib/mfa-user'
-      );
+      const mfaModule = await import('authentication');
       await mfaModule.main();
       break;
     }
 
     case 'dns:backup': {
-      const dnsModule = await import(
-        '../../libs/admin/admin-dns-backup/src/lib/backup'
-      );
+      const dnsModule = await import('admin-dns-backup');
       const outDir = await dnsModule.backupDns({
         bucket: process.env.DNS_BACKUP_BUCKET,
         prefix: process.env.DNS_BACKUP_PREFIX,
@@ -50,9 +46,7 @@ Env:
     }
 
     case 'mail:backup': {
-      const mailModule = await import(
-        '../../libs/admin/admin-mail-backup/src/lib/backup'
-      );
+      const mailModule = await import('admin-mail-backup');
       const r = await mailModule.backupMailbox({
         host: need('MAIL_HOST'),
         port: Number(process.env.MAIL_PORT ?? 993),
@@ -74,9 +68,7 @@ Env:
     case 'ec2:stop':
     case 'ec2:start':
     case 'ec2:type': {
-      const ec2Module = await import(
-        '../../libs/admin/admin-ec2/src/lib/ec2'
-      );
+      const ec2Module = await import('admin-ec2');
       const id = process.env.INSTANCE_ID;
       if (!id) throw new Error('INSTANCE_ID is required');
 
@@ -96,9 +88,7 @@ Env:
     case 'kms:enable':
     case 'kms:disable':
     case 'kms:status': {
-      const kmsModule = await import(
-        '../../libs/admin/admin-kms/src/lib/kms'
-      );
+      const kmsModule = await import('admin-kms');
       const keyId = need('KMS_KEY_ID');
 
       if (cmd === 'kms:enable') await kmsModule.enableRotation(keyId);
@@ -110,9 +100,7 @@ Env:
     }
 
     case 'ssl:check': {
-      const sslCheckModule = await import(
-        '../../libs/admin/admin-ssl-check/src/lib/check'
-      );
+      const sslCheckModule = await import('@mm/admin-ssl-check');
       const hostname = args[0];
       if (!hostname) {
         throw new Error('ssl:check requires a hostname');
@@ -126,9 +114,7 @@ Env:
     }
 
     case 'ssl:provision': {
-      const sslProvisionModule = await import(
-        '../../libs/admin/admin-ssl-provision/src/lib/provision'
-      );
+      const sslProvisionModule = await import('@mm/admin-ssl-provision');
       const domains =
         args.length > 0
           ? args
