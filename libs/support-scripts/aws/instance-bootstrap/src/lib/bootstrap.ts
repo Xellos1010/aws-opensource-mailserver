@@ -425,12 +425,29 @@ export async function bootstrapInstance(
     );
   }
 
-  // Create AWS clients
-  const { cf, ssm, ec2 } = createClients(region, options.profile);
-
-  // Resolve stack name
+  // Resolve stack name (doesn't require AWS)
   const stackName = resolveStackName(options);
   console.log(`📋 Resolving stack: ${stackName}`);
+
+  // Early dry-run check - skip AWS calls if dry-run
+  if (options.dryRun) {
+    console.log('\n🔍 DRY RUN MODE - Previewing what would be executed:\n');
+    console.log(`  Stack: ${stackName}`);
+    console.log(`  Region: ${region}`);
+    console.log(`  Domain: ${options.domain || 'N/A'}`);
+    console.log(`  Profile: ${options.profile || 'default'}`);
+    console.log('\n📋 Would perform the following steps:');
+    console.log('  1. Describe CloudFormation stack to get instance details');
+    console.log('  2. Read core parameters from SSM Parameter Store');
+    console.log('  3. Verify instance is running and accessible via SSM');
+    console.log('  4. Build environment map with configuration values');
+    console.log('  5. Send SSM RunCommand to execute MIAB setup script');
+    console.log('\n✅ Dry run complete - no AWS calls made, no changes');
+    return;
+  }
+
+  // Create AWS clients (only if not dry-run)
+  const { cf, ssm, ec2 } = createClients(region, options.profile);
 
   // Describe instance stack
   const stackInfo = await describeInstanceStack(cf, stackName);
