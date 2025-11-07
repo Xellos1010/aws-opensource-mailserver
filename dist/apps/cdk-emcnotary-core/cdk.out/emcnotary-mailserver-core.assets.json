@@ -1,0 +1,21 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "00ae4ee9fca7adcaac61e4d58dba2c95ead818577a2071b20df2a8927cd75b37": {
+      "displayName": "emcnotary-mailserver-core Template",
+      "source": {
+        "path": "emcnotary-mailserver-core.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "123456789012-us-east-1-4e2a59b3": {
+          "bucketName": "cdk-hnb659fds-assets-123456789012-us-east-1",
+          "objectKey": "00ae4ee9fca7adcaac61e4d58dba2c95ead818577a2071b20df2a8927cd75b37.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::123456789012:role/cdk-hnb659fds-file-publishing-role-123456789012-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

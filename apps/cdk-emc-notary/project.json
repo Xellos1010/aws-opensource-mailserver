@@ -1,0 +1,46 @@
+{
+  "name": "cdk-emc-notary",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cdk-emc-notary/src",
+  "projectType": "application",
+  "tags": ["type:cdk", "scope:infra", "domain:emc-notary"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/cdk-emc-notary",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/cdk-emc-notary/src/main.ts",
+        "tsConfig": "apps/cdk-emc-notary/tsconfig.app.json",
+        "assets": ["apps/cdk-emc-notary/src/assets"],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "external": ["aws-sdk"]
+        }
+      }
+    },
+    "synth": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk synth",
+        "cwd": "dist/apps/cdk-emc-notary"
+      },
+      "dependsOn": ["build"]
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk deploy --require-approval never",
+        "cwd": "dist/apps/cdk-emc-notary"
+      },
+      "dependsOn": ["build"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

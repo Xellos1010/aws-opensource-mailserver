@@ -64,3 +64,12 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+.nx/installation
+.nx/cache
+.nx/workspace-data
+
+
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+vite.config.*.timestamp*
+vitest.config.*.timestamp*

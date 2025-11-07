@@ -1,0 +1,27 @@
+# tools-aliases Codebase
+# Generated on: Thu Nov  6 23:02:43 EST 2025
+# Source: /Users/evanmccall/Projects/aws-opensource-mailserver/tools/aliases
+# 
+# This file contains all source code files from the tools-aliases component.
+# Excludes: node_modules, .git, dist, build, cdk.out, yarn.lock, package-lock.json
+#
+# =============================================================================
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/tools/aliases/authentication/project.json ====
+{
+  "name": "authentication-alias",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "mfa": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run support-scripts-aws-authentication:mfa"
+      }
+    }
+  },
+  "tags": ["alias:authentication"]
+}
+
+
+
+
