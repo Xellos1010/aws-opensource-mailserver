@@ -1,0 +1,225 @@
+{
+  "rules": [
+    {
+      "id": "aws-cdk-2025-standards",
+      "title": "AWS CDK — 2025 Elevated Standards",
+      "description": "Enforces secure, testable, multi-account IaC with CI gates for AWS CDK deployments.",
+      "category": "architecture",
+      "priority": "high",
+      "justification": "Modern CDK practices ensure security, maintainability, and scalability across environments.",
+      "content": [
+        {
+          "heading": "Language & Tooling",
+          "level": 2,
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "**TypeScript strict** only; disallow implicit any; emit declarations for constructs. Enforce via `tsconfig` and lint rules.",
+                "Node engines pinned (>=20.x) across apps; keep uniform with root engines."
+              ],
+              "references": [
+                {
+                  "type": "citation",
+                  "index": 8
+                },
+                {
+                  "type": "citation",
+                  "index": 14
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "heading": "Project Layout",
+          "level": 2,
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "Keep **app entry** in `bin/` and constructs in `lib/`. Provide **scripts** for `synth`, `diff`, `deploy`, `destroy`.",
+                "Turn on **feature flags/context** in `cdk.json` to get modern behavior and validations. (You already carry many safety flags.)"
+              ],
+              "references": [
+                {
+                  "type": "citation",
+                  "index": 8
+                },
+                {
+                  "type": "citation",
+                  "index": 15
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "heading": "Bootstrap & Environments",
+          "level": 2,
+          "content": [
+            {
+              "type": "list",
+              "items": [
+                "Separate **accounts**: `dev`, `stage`, `prod`. Bootstrap each with a unique **qualifier** and permission boundaries.",
+                "Name stacks and assets with `{app}-{env}`; never share stateful resources across envs.",
+                "All stacks must tag: `app`, `env`, `owner`, `data-class`, `cost-center`."
+              ]
+            }
+          ]
+        },
+        {
+          "heading": "Security Baseline (fail builds on violations)",
+          "level": 2,
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "Add **cdk-nag** (AwsSolutions pack) at the **App** level:"
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "code": "import { Aspects } from 'aws-cdk-lib';\nimport { AwsSolutionsChecks } from 'cdk-nag';\n\nAspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));"
+            }
+          ]
+        }
+      ],
+      "relatedRules": ["infrastructure-security", "deployment-practices"],
+      "tags": ["aws", "cdk", "infrastructure", "security", "typescript"],
+      "fileMetadata": {
+        "filename": "aws-cdk-2025-standards.mdc",
+        "frontmatter": {
+          "alwaysApply": false,
+          "globs": [],
+          "description": "Elevated 2025 CDK standards (any repo). Enforces secure, testable, multi-account IaC with CI gates."
+        }
+      },
+      "status": "active",
+      "reviewCycle": "quarterly"
+    },
+    {
+      "id": "freshworks-api-validation",
+      "title": "Freshworks API Request Validation",
+      "description": "All API requests to Freshworks must include proper authentication headers and validate responses before processing.",
+      "category": "freshworks-integration",
+      "priority": "high",
+      "justification": "Ensures secure and reliable communication with Freshworks CRM platform, preventing data corruption and authentication failures.",
+      "content": [
+        {
+          "heading": "Authentication Requirements",
+          "level": 2,
+          "content": [
+            {
+              "type": "paragraph",
+              "text": "All Freshworks API calls must include proper authentication and error handling."
+            },
+            {
+              "type": "code",
+              "language": "typescript",
+              "caption": "Proper API Request with Authentication",
+              "code": "const response = await fetch('/api/contacts', {\n  headers: {\n    'Authorization': `Token token=${apiKey}`,\n    'Content-Type': 'application/json'\n  }\n});\n\nif (!response.ok) {\n  throw new Error(`Freshworks API error: ${response.status}`);\n}\n\nconst data = await response.json();"
+            }
+          ]
+        },
+        {
+          "heading": "Request Configuration",
+          "level": 2,
+          "content": [
+            {
+              "type": "code",
+              "language": "json",
+              "caption": "Freshworks Request Method Configuration",
+              "code": "{\n  \"fs.getContact\": {\n    \"schema\": {\n      \"method\": \"GET\",\n      \"host\": \"<%= iparam.domain %>\",\n      \"path\": \"/api/contacts/<%= contactId %>\",\n      \"headers\": {\n        \"Authorization\": \"Token token=<%= iparam.api_key %>\"\n      }\n    }\n  }\n}"
+            }
+          ]
+        }
+      ],
+      "relatedRules": ["error-handling", "api-security"],
+      "tags": ["freshworks", "api", "security", "validation"],
+      "fileMetadata": {
+        "filename": "freshworks-api-validation.mdc",
+        "frontmatter": {
+          "alwaysApply": true,
+          "globs": ["apps/freshsales-intake-guard/src/**/*"],
+          "description": "Freshworks API request validation and authentication"
+        }
+      },
+      "status": "active",
+      "reviewCycle": "quarterly"
+    },
+    {
+      "id": "typescript-strict-mode",
+      "title": "TypeScript Strict Mode Compliance",
+      "description": "All TypeScript files must use strict mode settings to ensure type safety and catch potential runtime errors at compile time.",
+      "category": "typescript",
+      "priority": "critical",
+      "justification": "TypeScript strict mode prevents common JavaScript errors and ensures type safety throughout the application.",
+      "examples": [
+        {
+          "title": "Strict TypeScript Configuration",
+          "language": "json",
+          "code": "{\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"noImplicitAny\": true,\n    \"strictNullChecks\": true,\n    \"strictFunctionTypes\": true,\n    \"noImplicitReturns\": true,\n    \"noFallthroughCasesInSwitch\": true\n  }\n}",
+          "description": "Recommended TypeScript strict mode configuration"
+        },
+        {
+          "title": "Proper Type Annotations",
+          "language": "typescript",
+          "code": "interface User {\n  id: string;\n  name: string;\n  email?: string;\n}\n\nfunction getUser(id: string): Promise<User | null> {\n  // Implementation\n  return Promise.resolve(null);\n}",
+          "description": "Shows proper type annotations and null checking"
+        }
+      ],
+      "relatedRules": ["type-safety", "coding-standards"],
+      "tags": ["typescript", "types", "strict", "safety"],
+      "fileMetadata": {
+        "filename": "typescript-strict-mode.mdc",
+        "frontmatter": {
+          "alwaysApply": true,
+          "globs": ["**/*.ts", "**/*.tsx"],
+          "description": "TypeScript strict mode requirements"
+        }
+      },
+      "status": "active",
+      "reviewCycle": "quarterly"
+    },
+    {
+      "id": "error-boundary-usage",
+      "title": "React Error Boundary Implementation",
+      "description": "All React components that render user data must be wrapped in error boundaries to prevent application crashes and provide graceful error handling.",
+      "category": "react",
+      "priority": "high",
+      "justification": "Error boundaries prevent cascading failures and provide better user experience when components fail.",
+      "examples": [
+        {
+          "title": "Error Boundary Component",
+          "language": "typescript",
+          "code": "import React, { Component, ErrorInfo, ReactNode } from 'react';\n\ninterface Props {\n  children: ReactNode;\n  fallback?: ReactNode;\n}\n\ninterface State {\n  hasError: boolean;\n}\n\nclass ErrorBoundary extends Component<Props, State> {\n  constructor(props: Props) {\n    super(props);\n    this.state = { hasError: false };\n  }\n\n  static getDerivedStateFromError(_: Error): State {\n    return { hasError: true };\n  }\n\n  componentDidCatch(error: Error, errorInfo: ErrorInfo) {\n    console.error('Error caught by boundary:', error, errorInfo);\n  }\n\n  render() {\n    if (this.state.hasError) {\n      return this.props.fallback || <div>Something went wrong.</div>;\n    }\n    return this.props.children;\n  }\n}",
+          "description": "Complete error boundary implementation"
+        },
+        {
+          "title": "Using Error Boundary",
+          "language": "typescript",
+          "code": "import ErrorBoundary from './ErrorBoundary';\n\nfunction App() {\n  return (\n    <ErrorBoundary>\n      <UserProfile />\n    </ErrorBoundary>\n  );\n}",
+          "description": "Wrapping components with error boundary"
+        }
+      ],
+      "relatedRules": ["error-handling", "user-experience"],
+      "tags": ["react", "error-handling", "boundary", "resilience"],
+      "fileMetadata": {
+        "filename": "error-boundary-usage.mdc",
+        "frontmatter": {
+          "alwaysApply": true,
+          "globs": ["**/*.tsx", "**/*.jsx"],
+          "description": "React error boundary requirements"
+        }
+      },
+      "status": "active",
+      "reviewCycle": "quarterly"
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2025-01-15T10:00:00Z",
+    "generatedBy": "generate-rules-from-json.sh",
+    "component": "freshsales-app"
+  }
+}
