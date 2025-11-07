@@ -239,7 +239,10 @@ var init_src2 = __esm({
 // libs/admin/admin-dns-restore/src/lib/restore-miab.ts
 import * as fs from "node:fs";
 function normalizeValue(value, rtype) {
-  if ((rtype === "CNAME" || rtype === "MX" || rtype === "NS") && value.endsWith(".")) {
+  if (rtype === "CNAME" && !value.endsWith(".")) {
+    return `${value}.`;
+  }
+  if ((rtype === "MX" || rtype === "NS") && value.endsWith(".")) {
     return value.slice(0, -1);
   }
   return value;
@@ -252,7 +255,7 @@ async function makeApiCall(method, path, data, baseUrl, email, password) {
   };
   const auth = Buffer.from(`${email}:${password}`).toString("base64");
   headers["Authorization"] = `Basic ${auth}`;
-  const body = data ? new URLSearchParams({ value: data }).toString() : void 0;
+  const body = data || void 0;
   try {
     const response = await fetch(url, {
       method,
@@ -299,13 +302,8 @@ async function restoreDnsFromBackup(config) {
   const errors = [];
   for (const record of backupRecords) {
     const { qname, rtype, value } = record;
-    if (qname === zone && rtype === "A") {
-      log2("warn", "Skipping root domain A record (managed by mail server)", { qname, rtype });
-      successCount++;
-      continue;
-    }
     const normalizedValue = normalizeValue(value, rtype);
-    const apiPath = `/admin/dns/custom/${qname}/${rtype}`;
+    const apiPath = `/admin/dns/custom/${qname}/${rtype.toUpperCase()}`;
     log2("info", "Restoring DNS record", {
       qname,
       rtype,
@@ -316,9 +314,10 @@ async function restoreDnsFromBackup(config) {
       successCount++;
       continue;
     }
+    const method = rtype === "A" || rtype === "CNAME" || rtype === "AAAA" ? "PUT" : "POST";
     try {
       const result = await makeApiCall(
-        "POST",
+        method,
         apiPath,
         normalizedValue,
         baseUrl,
