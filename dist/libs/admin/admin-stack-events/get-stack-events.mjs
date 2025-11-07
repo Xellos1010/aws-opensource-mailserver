@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __esm = (fn, res) => function __init() {
-  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
-};
-var __commonJS = (cb, mod) => function __require() {
-  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
-};
+
+// libs/admin/admin-stack-events/src/lib/stack-events.ts
+import {
+  CloudFormationClient as CloudFormationClient2,
+  DescribeStackEventsCommand,
+  DescribeStacksCommand as DescribeStacksCommand2
+} from "@aws-sdk/client-cloudformation";
+import { fromIni as fromIni2 } from "@aws-sdk/credential-providers";
 
 // libs/admin/admin-stack-info/src/lib/stack-info.ts
 import {
@@ -169,85 +170,130 @@ async function getStackInfo(config) {
     hostedZoneId: outputs.HostedZoneId
   };
 }
-async function getStackInfoFromApp(appPath, config) {
-  return getStackInfo({ ...config, appPath });
-}
-var init_stack_info = __esm({
-  "libs/admin/admin-stack-info/src/lib/stack-info.ts"() {
-    "use strict";
-  }
-});
 
-// libs/admin/admin-stack-info/bin/get-stack-info.ts
-var require_get_stack_info = __commonJS({
-  "libs/admin/admin-stack-info/bin/get-stack-info.ts"() {
-    init_stack_info();
-    var log = (level, msg, meta = {}) => console.log(
-      JSON.stringify({ ts: (/* @__PURE__ */ new Date()).toISOString(), level, msg, ...meta })
+// libs/admin/admin-stack-events/src/lib/stack-events.ts
+async function getStackEvents(config) {
+  const region = config.region || process.env["AWS_REGION"] || "us-east-1";
+  const profile = config.profile || process.env["AWS_PROFILE"] || "hepe-admin-mfa";
+  const maxResults = config.maxResults || 100;
+  const stackInfo = await getStackInfo(config);
+  const stackName = stackInfo.stackName;
+  const credentials = fromIni2({ profile });
+  const cfClient = new CloudFormationClient2({ region, credentials });
+  let stackStatus;
+  try {
+    const stackResp = await cfClient.send(
+      new DescribeStacksCommand2({ StackName: stackName })
     );
-    async function main() {
-      const appPath = process.env["APP_PATH"];
-      const stackName = process.env["STACK_NAME"];
-      const domain = process.env["DOMAIN"];
-      const outputFormat = process.env["OUTPUT_FORMAT"] || "json";
-      log("info", "Retrieving stack information", {
-        appPath,
-        stackName,
-        domain,
-        outputFormat
-      });
-      try {
-        let stackInfo;
-        if (appPath) {
-          stackInfo = await getStackInfoFromApp(appPath, {
-            region: process.env["AWS_REGION"],
-            profile: process.env["AWS_PROFILE"]
-          });
-        } else {
-          stackInfo = await getStackInfo({
-            stackName,
-            domain,
-            region: process.env["AWS_REGION"],
-            profile: process.env["AWS_PROFILE"]
-          });
+    stackStatus = stackResp.Stacks?.[0]?.StackStatus;
+  } catch (error) {
+    throw new Error(`Stack ${stackName} not found or inaccessible: ${error}`);
+  }
+  const events = [];
+  let nextToken;
+  do {
+    const command = nextToken ? new DescribeStackEventsCommand({
+      StackName: stackName,
+      NextToken: nextToken
+    }) : new DescribeStackEventsCommand({ StackName: stackName });
+    const response = await cfClient.send(command);
+    if (response.StackEvents) {
+      for (const event of response.StackEvents) {
+        const stackEvent = {
+          timestamp: event.Timestamp || /* @__PURE__ */ new Date(),
+          resourceStatus: event.ResourceStatus,
+          resourceType: event.ResourceType,
+          logicalResourceId: event.LogicalResourceId,
+          physicalResourceId: event.PhysicalResourceId,
+          resourceStatusReason: event.ResourceStatusReason,
+          stackName: event.StackName || stackName,
+          eventId: event.EventId || ""
+        };
+        if (!config.filterByResourceStatus || config.filterByResourceStatus.length === 0 || stackEvent.resourceStatus && config.filterByResourceStatus.includes(stackEvent.resourceStatus)) {
+          events.push(stackEvent);
         }
-        if (outputFormat === "json") {
-          console.log(JSON.stringify(stackInfo, null, 2));
-        } else {
-          console.log("\n=== Stack Information ===");
-          console.log(`Stack Name: ${stackInfo.stackName}`);
-          console.log(`Domain: ${stackInfo.domain}`);
-          console.log(`Region: ${stackInfo.region}`);
-          if (stackInfo.instanceId) {
-            console.log(`Instance ID: ${stackInfo.instanceId}`);
-          }
-          if (stackInfo.instancePublicIp) {
-            console.log(`Instance IP: ${stackInfo.instancePublicIp}`);
-          }
-          if (stackInfo.instanceKeyName) {
-            console.log(`Instance Key Name: ${stackInfo.instanceKeyName}`);
-          }
-          if (stackInfo.keyPairId) {
-            console.log(`Key Pair ID: ${stackInfo.keyPairId}`);
-          }
-          if (stackInfo.hostedZoneId) {
-            console.log(`Hosted Zone ID: ${stackInfo.hostedZoneId}`);
-          }
-          if (stackInfo.adminPassword) {
-            console.log(`Admin Password: ${stackInfo.adminPassword.substring(0, 8)}...`);
-          }
-          console.log("\n=== Stack Outputs ===");
-          Object.entries(stackInfo.outputs).forEach(([key, value]) => {
-            console.log(`${key}: ${value}`);
-          });
-        }
-      } catch (err) {
-        log("error", "Failed to get stack info", { error: String(err) });
-        console.error("\nError:", err);
-        process.exit(1);
       }
     }
-    main();
+    nextToken = response.NextToken;
+  } while (nextToken && events.length < maxResults);
+  events.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  return events.slice(0, maxResults);
+}
+async function getFailedStackEvents(config) {
+  return getStackEvents({
+    ...config,
+    filterByResourceStatus: [
+      "CREATE_FAILED",
+      "UPDATE_FAILED",
+      "DELETE_FAILED",
+      "ROLLBACK_IN_PROGRESS",
+      "ROLLBACK_COMPLETE",
+      "ROLLBACK_FAILED"
+    ]
+  });
+}
+function formatStackEvents(events) {
+  if (events.length === 0) {
+    return "No events found.";
   }
-});
-export default require_get_stack_info();
+  const lines = [];
+  lines.push("=".repeat(100));
+  lines.push(`Stack Events (${events.length} total)`);
+  lines.push("=".repeat(100));
+  lines.push("");
+  for (const event of events) {
+    const timestamp = event.timestamp.toISOString();
+    const status = event.resourceStatus || "N/A";
+    const resourceType = event.resourceType || "N/A";
+    const logicalId = event.logicalResourceId || "N/A";
+    const reason = event.resourceStatusReason || "";
+    lines.push(`[${timestamp}] ${status}`);
+    lines.push(`  Resource: ${resourceType} (${logicalId})`);
+    if (event.physicalResourceId) {
+      lines.push(`  Physical ID: ${event.physicalResourceId}`);
+    }
+    if (reason) {
+      lines.push(`  Reason: ${reason}`);
+    }
+    lines.push("");
+  }
+  return lines.join("\n");
+}
+
+// libs/admin/admin-stack-events/bin/get-stack-events.ts
+async function main() {
+  const appPath = process.env["APP_PATH"];
+  const stackName = process.env["STACK_NAME"];
+  const domain = process.env["DOMAIN"];
+  const region = process.env["AWS_REGION"];
+  const profile = process.env["AWS_PROFILE"];
+  const maxResults = process.env["MAX_RESULTS"] ? parseInt(process.env["MAX_RESULTS"], 10) : void 0;
+  const failedOnly = process.env["FAILED_ONLY"] === "1" || process.env["FAILED_ONLY"] === "true";
+  try {
+    const events = failedOnly ? await getFailedStackEvents({
+      appPath,
+      stackName,
+      domain,
+      region,
+      profile,
+      maxResults
+    }) : await getStackEvents({
+      appPath,
+      stackName,
+      domain,
+      region,
+      profile,
+      maxResults
+    });
+    console.log(formatStackEvents(events));
+    if (failedOnly && events.length > 0) {
+      console.log("\n\u26A0\uFE0F  Failed events detected. Review the reasons above.");
+      process.exit(1);
+    }
+    process.exit(0);
+  } catch (error) {
+    console.error("Error getting stack events:", error);
+    process.exit(1);
+  }
+}
+main();

@@ -64,7 +64,10 @@ export function resolveDomain(
     const appName = parts[parts.length - 1];
     
     // Remove "cdk-" prefix if present
-    const domainPart = appName.replace(/^cdk-/, '');
+    let domainPart = appName.replace(/^cdk-/, '');
+    
+    // Remove "-core" suffix if present (e.g., "emcnotary-core" -> "emcnotary")
+    domainPart = domainPart.replace(/-core$/, '');
     
     // Convert kebab-case to domain: "emc-notary" -> "emcnotary.com"
     // Domain mapping for known apps
@@ -78,8 +81,8 @@ export function resolveDomain(
   }
   
   if (stackName) {
-    // "emcnotary-com-mailserver" -> "emcnotary.com"
-    const withoutSuffix = stackName.replace(/-mailserver$/, '');
+    // "emcnotary-com-mailserver" or "emcnotary-com-mailserver-core" -> "emcnotary.com"
+    const withoutSuffix = stackName.replace(/-mailserver(-core)?$/, '');
     return withoutSuffix.replace(/-/g, '.');
   }
   
@@ -107,7 +110,12 @@ export function resolveStackName(
   
   const resolvedDomain = resolveDomain(appPath);
   if (resolvedDomain) {
-    return `${resolvedDomain.replace(/\./g, '-')}-mailserver`;
+    // Check if app path contains '-core' suffix (e.g., cdk-emcnotary-core)
+    // CDK core stacks use format: {domain}-mailserver-core
+    const appName = appPath?.split('/').pop() || '';
+    const isCoreStack = appName.includes('-core');
+    const suffix = isCoreStack ? '-mailserver-core' : '-mailserver';
+    return `${resolvedDomain.replace(/\./g, '-')}${suffix}`;
   }
   
   throw new Error(

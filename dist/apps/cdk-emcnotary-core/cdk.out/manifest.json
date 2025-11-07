@@ -1,19 +1,19 @@
 {
   "version": "48.0.0",
   "artifacts": {
-    "emcnotary-mailserver-core.assets": {
+    "emcnotary-com-mailserver-core.assets": {
       "type": "cdk:asset-manifest",
       "properties": {
-        "file": "emcnotary-mailserver-core.assets.json",
+        "file": "emcnotary-com-mailserver-core.assets.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
       }
     },
-    "emcnotary-mailserver-core": {
+    "emcnotary-com-mailserver-core": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://unknown-account/us-east-1",
+      "environment": "aws://413988044972/us-east-1",
       "properties": {
-        "templateFile": "emcnotary-mailserver-core.template.json",
+        "templateFile": "emcnotary-com-mailserver-core.template.json",
         "terminationProtection": false,
         "tags": {
           "App": "emcnotary-mailserver",
@@ -21,25 +21,25 @@
           "ManagedBy": "Nx+CDK"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/bc1a748e18d9fc436ade8938a83c0bf0e5e1396c68d74e164ae926145f4c1bf2.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::413988044972:role/cdk-hnb659fds-deploy-role-413988044972-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::413988044972:role/cdk-hnb659fds-cfn-exec-role-413988044972-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-413988044972-us-east-1/721b771018b79a67b6b83b71f7058f1043bc0d3ad06e6b3c6b94107f7919b6c7.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
-          "emcnotary-mailserver-core.assets"
+          "emcnotary-com-mailserver-core.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
+          "arn": "arn:${AWS::Partition}:iam::413988044972:role/cdk-hnb659fds-lookup-role-413988044972-us-east-1",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
       },
       "dependencies": [
-        "emcnotary-mailserver-core.assets"
+        "emcnotary-com-mailserver-core.assets"
       ],
       "metadata": {
-        "/emcnotary-mailserver-core": [
+        "/emcnotary-com-mailserver-core": [
           {
             "type": "aws:cdk:stack-tags",
             "data": [
@@ -58,140 +58,140 @@
             ]
           }
         ],
-        "/emcnotary-mailserver-core/DomainName": [
+        "/emcnotary-com-mailserver-core/DomainName": [
           {
             "type": "aws:cdk:logicalId",
             "data": "DomainName"
           }
         ],
-        "/emcnotary-mailserver-core/SesIdentity/Resource": [
+        "/emcnotary-com-mailserver-core/SesIdentity/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "SesIdentity3ED17C37"
           }
         ],
-        "/emcnotary-mailserver-core/BackupBucket/Resource": [
+        "/emcnotary-com-mailserver-core/BackupBucket/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "BackupBucket26B8E51C"
           }
         ],
-        "/emcnotary-mailserver-core/NextcloudBucket/Resource": [
+        "/emcnotary-com-mailserver-core/NextcloudBucket/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "NextcloudBucket8B0187A4"
           }
         ],
-        "/emcnotary-mailserver-core/AlertTopic/Resource": [
+        "/emcnotary-com-mailserver-core/AlertTopic/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "AlertTopic2720D535"
           }
         ],
-        "/emcnotary-mailserver-core/SyslogGroup/Resource": [
+        "/emcnotary-com-mailserver-core/SyslogGroup/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "SyslogGroup7A1B8A6E"
           }
         ],
-        "/emcnotary-mailserver-core/CWAgentConfigParam/Resource": [
+        "/emcnotary-com-mailserver-core/CWAgentConfigParam/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "CWAgentConfigParam90636BAB"
           }
         ],
-        "/emcnotary-mailserver-core/SmtpLambdaExecutionRole/Resource": [
+        "/emcnotary-com-mailserver-core/SmtpLambdaExecutionRole/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "SmtpLambdaExecutionRole0CC82604"
           }
         ],
-        "/emcnotary-mailserver-core/SmtpLambdaExecutionRole/DefaultPolicy/Resource": [
+        "/emcnotary-com-mailserver-core/SmtpLambdaExecutionRole/DefaultPolicy/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "SmtpLambdaExecutionRoleDefaultPolicyADB7C956"
           }
         ],
-        "/emcnotary-mailserver-core/SmtpLambdaFunction/Resource": [
+        "/emcnotary-com-mailserver-core/SmtpLambdaFunction/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "SmtpLambdaFunction24E62E49"
           }
         ],
-        "/emcnotary-mailserver-core/ParamDomainName/Resource": [
+        "/emcnotary-com-mailserver-core/ParamDomainName/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "ParamDomainNameF02044C6"
           }
         ],
-        "/emcnotary-mailserver-core/ParamBackupBucket/Resource": [
+        "/emcnotary-com-mailserver-core/ParamBackupBucket/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "ParamBackupBucketE7873D55"
           }
         ],
-        "/emcnotary-mailserver-core/ParamNextcloudBucket/Resource": [
+        "/emcnotary-com-mailserver-core/ParamNextcloudBucket/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "ParamNextcloudBucket57D94B52"
           }
         ],
-        "/emcnotary-mailserver-core/ParamAlarmsTopic/Resource": [
+        "/emcnotary-com-mailserver-core/ParamAlarmsTopic/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "ParamAlarmsTopicDE8897CC"
           }
         ],
-        "/emcnotary-mailserver-core/ParamSesIdentityArn/Resource": [
+        "/emcnotary-com-mailserver-core/ParamSesIdentityArn/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "ParamSesIdentityArn6B9B9953"
           }
         ],
-        "/emcnotary-mailserver-core/DomainNameOutput": [
+        "/emcnotary-com-mailserver-core/DomainNameOutput": [
           {
             "type": "aws:cdk:logicalId",
             "data": "DomainNameOutput"
           }
         ],
-        "/emcnotary-mailserver-core/SesIdentityArn": [
+        "/emcnotary-com-mailserver-core/SesIdentityArn": [
           {
             "type": "aws:cdk:logicalId",
             "data": "SesIdentityArn"
           }
         ],
-        "/emcnotary-mailserver-core/BackupBucketName": [
+        "/emcnotary-com-mailserver-core/BackupBucketName": [
           {
             "type": "aws:cdk:logicalId",
             "data": "BackupBucketName"
           }
         ],
-        "/emcnotary-mailserver-core/AlarmsTopicArn": [
+        "/emcnotary-com-mailserver-core/AlarmsTopicArn": [
           {
             "type": "aws:cdk:logicalId",
             "data": "AlarmsTopicArn"
           }
         ],
-        "/emcnotary-mailserver-core/CDKMetadata/Default": [
+        "/emcnotary-com-mailserver-core/CDKMetadata/Default": [
           {
             "type": "aws:cdk:logicalId",
             "data": "CDKMetadata"
           }
         ],
-        "/emcnotary-mailserver-core/BootstrapVersion": [
+        "/emcnotary-com-mailserver-core/BootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
             "data": "BootstrapVersion"
           }
         ],
-        "/emcnotary-mailserver-core/CheckBootstrapVersion": [
+        "/emcnotary-com-mailserver-core/CheckBootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
             "data": "CheckBootstrapVersion"
           }
         ]
       },
-      "displayName": "emcnotary-mailserver-core"
+      "displayName": "emcnotary-com-mailserver-core"
     },
     "Tree": {
       "type": "cdk:tree",
