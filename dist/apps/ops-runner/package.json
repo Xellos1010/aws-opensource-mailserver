@@ -1,6 +1,12 @@
 {
   "name": "ops-runner",
   "version": "0.0.1",
+  "dependencies": {
+    "@aws-sdk/client-sts": "3.925.0",
+    "@aws-sdk/credential-providers": "3.925.0",
+    "ini": "4.1.3"
+  },
+  "packageManager": "pnpm@9.12.2",
   "main": "./ops.cjs",
   "type": "commonjs"
 }
