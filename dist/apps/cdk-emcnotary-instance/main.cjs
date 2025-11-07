@@ -204,6 +204,7 @@ var EmcNotaryInstanceStack = class extends import_aws_cdk_lib3.Stack {
       `echo "Elastic IP: ${eip.ref}"`,
       'echo "TODO: install & configure Mail-in-a-Box here"'
     );
+    const adminPasswordParamName = `/MailInABoxAdminPassword-${this.stackName}`;
     new import_aws_cdk_lib3.CfnOutput(this, "ElasticIPAddress", {
       value: eip.ref,
       description: "The allocated Elastic IP address"
@@ -215,6 +216,14 @@ var EmcNotaryInstanceStack = class extends import_aws_cdk_lib3.Stack {
     new import_aws_cdk_lib3.CfnOutput(this, "InstancePublicIp", {
       value: instance.instancePublicIp,
       description: "The Public IP of the Mail-in-a-box instance"
+    });
+    new import_aws_cdk_lib3.CfnOutput(this, "AdminPassword", {
+      value: adminPasswordParamName,
+      description: "Name of the SSM Parameter containing the Admin Password to Mail-in-a-box Web-UI"
+    });
+    new import_aws_cdk_lib3.CfnOutput(this, "RestorePrefix", {
+      value: instance.instanceId,
+      description: "The S3 prefix where backups are stored is set to the ID of the EC2 instance of your current deployment"
     });
   }
 };

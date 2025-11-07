@@ -211,7 +211,11 @@ export class EmcNotaryInstanceStack extends Stack {
       'echo "TODO: install & configure Mail-in-a-Box here"'
     );
 
-    // Outputs (matching CloudFormation template)
+    // Admin Password SSM Parameter (matching CloudFormation MailInABoxAdminPasswordSsmParameter)
+    // Note: This will be created/updated by the instance user data script
+    const adminPasswordParamName = `/MailInABoxAdminPassword-${this.stackName}`;
+
+    // Outputs matching monolithic stack format
     new CfnOutput(this, 'ElasticIPAddress', {
       value: eip.ref,
       description: 'The allocated Elastic IP address',
@@ -225,6 +229,16 @@ export class EmcNotaryInstanceStack extends Stack {
     new CfnOutput(this, 'InstancePublicIp', {
       value: instance.instancePublicIp,
       description: 'The Public IP of the Mail-in-a-box instance',
+    });
+
+    new CfnOutput(this, 'AdminPassword', {
+      value: adminPasswordParamName,
+      description: 'Name of the SSM Parameter containing the Admin Password to Mail-in-a-box Web-UI',
+    });
+
+    new CfnOutput(this, 'RestorePrefix', {
+      value: instance.instanceId,
+      description: 'The S3 prefix where backups are stored is set to the ID of the EC2 instance of your current deployment',
     });
   }
 }
