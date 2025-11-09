@@ -16,6 +16,7 @@ import { EC2Client, DescribeInstancesCommand } from '@aws-sdk/client-ec2';
 import { fromIni } from '@aws-sdk/credential-providers';
 import * as fs from 'fs';
 import * as path from 'path';
+import { toMailserverInstanceStackName } from '@mm/infra-naming';
 
 /**
  * Options for bootstrapping an instance
@@ -105,13 +106,6 @@ async function retryWithBackoff<T>(
 }
 
 /**
- * Derive instance stack name from domain
- */
-function deriveStackName(domain: string): string {
-  return `${domain.replace(/\./g, '-')}-mailserver-instance`;
-}
-
-/**
  * Create AWS clients with optional profile
  */
 function createClients(
@@ -135,7 +129,7 @@ function createClients(
 }
 
 /**
- * Resolve target stack name from options
+ * Resolve target stack name from options using canonical naming
  */
 function resolveStackName(options: BootstrapOptions): string {
   if (options.stackName) {
@@ -146,7 +140,7 @@ function resolveStackName(options: BootstrapOptions): string {
       'Either stackName or domain must be provided in BootstrapOptions'
     );
   }
-  return deriveStackName(options.domain);
+  return toMailserverInstanceStackName(options.domain);
 }
 
 /**
@@ -163,16 +157,31 @@ async function describeInstanceStack(
   try {
     response = await retryWithBackoff(() => cf.send(command));
   } catch (error: unknown) {
-    // Handle legacy naming: emcnotary-mailserver-instance vs emcnotary-com-mailserver-instance
+    // Legacy fallback: if stack not found and legacy flag enabled, try without TLD
     const err = error as { name?: string };
-    if (err?.name === 'ValidationError' && stackName.includes('-com-mailserver-instance')) {
-      const fallbackStackName = stackName.replace('-com-mailserver-instance', '-mailserver-instance');
-      console.log(`⚠️  Stack ${stackName} not found, trying fallback: ${fallbackStackName}`);
+    const legacyFlagEnabled =
+      process.env['FEATURE_LEGACY_NAME_RESOLVE'] === '1';
+    
+    if (
+      err?.name === 'ValidationError' &&
+      legacyFlagEnabled &&
+      stackName.includes('-com-mailserver-instance')
+    ) {
+      const fallbackStackName = stackName.replace(
+        '-com-mailserver-instance',
+        '-mailserver-instance'
+      );
+      console.warn(
+        `⚠️  Stack ${stackName} not found, trying legacy fallback: ${fallbackStackName}`
+      );
       command = new DescribeStacksCommand({ StackName: fallbackStackName });
       try {
         response = await retryWithBackoff(() => cf.send(command));
         // Update stackName to the actual found stack name for consistency
         stackName = fallbackStackName;
+        console.warn(
+          `⚠️  Found legacy stack ${fallbackStackName}. Please migrate to canonical name ${stackName}`
+        );
       } catch (fallbackError) {
         throw new Error(`Stack ${stackName} or ${fallbackStackName} not found`);
       }

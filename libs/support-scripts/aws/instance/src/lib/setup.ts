@@ -2,9 +2,10 @@ import { SSMClient, SendCommandCommand } from '@aws-sdk/client-ssm';
 import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-cloudformation';
 import * as fs from 'fs';
 import * as path from 'path';
+import { toMailserverInstanceStackName } from '@mm/infra-naming';
 
 export async function runMiaBSetupForDomain(domain: string, region: string) {
-  const stackName = `${domain.replace(/\./g,'-')}-mailserver-instance`;
+  const stackName = toMailserverInstanceStackName(domain);
   const cf = new CloudFormationClient({ region });
   const ssm = new SSMClient({ region });
 

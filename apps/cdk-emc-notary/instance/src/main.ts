@@ -3,6 +3,10 @@
 import * as cdk from 'aws-cdk-lib';
 import { MailServerInstanceStack, EmcNotaryInstanceStack } from './stacks/instance-stack';
 import { DomainConfig, InstanceConfig } from '@mm/infra-instance-constructs';
+import {
+  toMailserverInstanceStackName,
+  coreParamPrefix,
+} from '@mm/infra-naming';
 
 const app = new cdk.App();
 
@@ -10,7 +14,8 @@ const app = new cdk.App();
 // Default to emcnotary.com for backward compatibility
 const domain = app.node.tryGetContext('domain') || process.env['DOMAIN'] || 'emcnotary.com';
 const instanceDns = app.node.tryGetContext('instanceDns') || process.env['INSTANCE_DNS'] || 'box';
-const coreParamPrefix = app.node.tryGetContext('coreParamPrefix') || `/emcnotary/core`;
+const coreParamPrefixValue =
+  app.node.tryGetContext('coreParamPrefix') || coreParamPrefix(domain);
 
 // Instance configuration from context
 const instanceConfig: InstanceConfig = {
@@ -24,13 +29,14 @@ const instanceConfig: InstanceConfig = {
   nightlyRebootDescription: app.node.tryGetContext('nightlyRebootDescription'),
 };
 
-// Derive stack name from domain
-const stackName = app.node.tryGetContext('stackName') || `${domain.replace(/\./g, '-')}-mailserver-instance`;
+// Derive stack name from domain using canonical naming utility
+const stackName =
+  app.node.tryGetContext('stackName') || toMailserverInstanceStackName(domain);
 
 const domainConfig: DomainConfig = {
   domainName: domain,
   instanceDns,
-  coreParamPrefix,
+  coreParamPrefix: coreParamPrefixValue,
   stackName,
 };
 

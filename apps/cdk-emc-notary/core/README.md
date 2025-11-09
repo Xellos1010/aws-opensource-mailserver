@@ -2,6 +2,14 @@
 
 Core infrastructure stack for EMC Notary mailserver. This stack contains shared resources that are deployed once and rarely changed.
 
+## Stack Naming
+
+This stack uses canonical naming via `@mm/infra-naming`:
+- **Stack Name**: `emcnotary-com-mailserver-core` (format: `{domain-tld}-mailserver-core`)
+- Stack name is automatically derived from the `DOMAIN` environment variable or CDK context
+
+See [ADR-001: Infrastructure Naming Standard](../../docs/adr/001-infra-naming-standard.md) for details.
+
 ## Resources
 
 - **SES**: Domain identity with DKIM signing enabled (no Route53 hosted zone - uses domain name directly)

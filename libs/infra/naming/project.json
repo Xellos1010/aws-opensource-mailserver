@@ -1,0 +1,31 @@
+{
+  "name": "infra-naming",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/infra/naming/src",
+  "projectType": "library",
+  "tags": ["scope:infra", "type:util", "platform:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/infra/naming",
+        "main": "libs/infra/naming/src/index.ts",
+        "tsConfig": "libs/infra/naming/tsconfig.lib.json",
+        "assets": ["libs/infra/naming/*.md"]
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
+
+

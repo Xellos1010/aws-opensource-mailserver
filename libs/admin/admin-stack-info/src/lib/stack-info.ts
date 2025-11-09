@@ -5,6 +5,11 @@ import {
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { EC2Client, DescribeInstancesCommand } from '@aws-sdk/client-ec2';
 import { fromIni } from '@aws-sdk/credential-providers';
+import {
+  toMailserverCoreStackName,
+  toMailserverInstanceStackName,
+  parseDomainFromMailserverStack,
+} from '@mm/infra-naming';
 
 export type StackOutputs = {
   InstancePublicIp?: string;
@@ -52,7 +57,9 @@ export type StackInfoConfig = {
  * Examples:
  * - "apps/cdk-emc-notary" -> "emcnotary.com"
  * - "cdk-emc-notary" -> "emcnotary.com"
- * - "emcnotary-com-mailserver" -> "emcnotary.com"
+ * - "emcnotary-com-mailserver-core" -> "emcnotary.com"
+ * 
+ * @deprecated Prefer using parseDomainFromMailserverStack for canonical stack names
  */
 export function resolveDomain(
   appPath?: string,
@@ -90,9 +97,15 @@ export function resolveDomain(
   }
   
   if (stackName) {
-    // "emcnotary-com-mailserver" or "emcnotary-com-mailserver-core" -> "emcnotary.com"
-    const withoutSuffix = stackName.replace(/-mailserver(-core)?$/, '');
-    return withoutSuffix.replace(/-/g, '.');
+    // Try parsing as canonical stack name first
+    try {
+      return parseDomainFromMailserverStack(stackName);
+    } catch {
+      // Fallback to legacy parsing for non-canonical names
+      // "emcnotary-com-mailserver" or "emcnotary-com-mailserver-core" -> "emcnotary.com"
+      const withoutSuffix = stackName.replace(/-mailserver(-core|-instance)?$/, '');
+      return withoutSuffix.replace(/-/g, '.');
+    }
   }
   
   return null;
@@ -101,36 +114,55 @@ export function resolveDomain(
 /**
  * Resolves stack name from domain or app path
  * Examples:
- * - "emcnotary.com" -> "emcnotary-com-mailserver"
- * - "apps/cdk-emc-notary" -> "emcnotary-com-mailserver"
+ * - "emcnotary.com" + "core" -> "emcnotary-com-mailserver-core"
+ * - "emcnotary.com" + "instance" -> "emcnotary-com-mailserver-instance"
+ * - "apps/cdk-emc-notary/core" -> "emcnotary-com-mailserver-core"
+ * 
+ * @param domain - Domain name (e.g., "emcnotary.com")
+ * @param appPath - App path (e.g., "apps/cdk-emc-notary/core")
+ * @param explicitStackName - Explicit stack name (takes precedence)
+ * @param stackType - Stack type: "core" | "instance" | undefined (auto-detect from appPath)
  */
 export function resolveStackName(
   domain?: string,
   appPath?: string,
-  explicitStackName?: string
+  explicitStackName?: string,
+  stackType?: 'core' | 'instance'
 ): string {
   if (explicitStackName) {
     return explicitStackName;
   }
   
+  // Auto-detect stack type from appPath if not provided
+  if (!stackType && appPath) {
+    const pathParts = appPath.split('/');
+    const lastPart = pathParts[pathParts.length - 1] || '';
+    if (lastPart === 'core' || lastPart.includes('-core')) {
+      stackType = 'core';
+    } else if (lastPart === 'instance' || lastPart.includes('-instance')) {
+      stackType = 'instance';
+    }
+  }
+  
   if (domain) {
-    return `${domain.replace(/\./g, '-')}-mailserver`;
+    if (stackType === 'core') {
+      return toMailserverCoreStackName(domain);
+    } else if (stackType === 'instance') {
+      return toMailserverInstanceStackName(domain);
+    }
+    // Legacy: default to instance if type not specified
+    return toMailserverInstanceStackName(domain);
   }
   
   const resolvedDomain = resolveDomain(appPath);
   if (resolvedDomain) {
-    // Check if app path ends with '/core' or '/instance' (e.g., apps/cdk-emc-notary/core)
-    // or contains '-core' suffix (e.g., cdk-emcnotary-core)
-    // CDK stacks use format: {domain}-mailserver-core or {domain}-mailserver-instance
-    const pathParts = appPath?.split('/') || [];
-    const lastPart = pathParts[pathParts.length - 1] || '';
-    let suffix = '-mailserver';
-    if (lastPart === 'core' || lastPart.includes('-core')) {
-      suffix = '-mailserver-core';
-    } else if (lastPart === 'instance' || lastPart.includes('-instance')) {
-      suffix = '-mailserver-instance';
+    if (stackType === 'core') {
+      return toMailserverCoreStackName(resolvedDomain);
+    } else if (stackType === 'instance') {
+      return toMailserverInstanceStackName(resolvedDomain);
     }
-    return `${resolvedDomain.replace(/\./g, '-')}${suffix}`;
+    // Legacy: default to instance if type not specified
+    return toMailserverInstanceStackName(resolvedDomain);
   }
   
   throw new Error(
@@ -153,10 +185,29 @@ export async function getStackInfo(
     resolveDomain(config.appPath, config.stackName) ||
     'emcnotary.com'; // default fallback
   
+  // Determine stack type from appPath or stackName
+  let stackType: 'core' | 'instance' | undefined;
+  if (config.appPath) {
+    const pathParts = config.appPath.split('/');
+    const lastPart = pathParts[pathParts.length - 1] || '';
+    if (lastPart === 'core' || lastPart.includes('-core')) {
+      stackType = 'core';
+    } else if (lastPart === 'instance' || lastPart.includes('-instance')) {
+      stackType = 'instance';
+    }
+  } else if (config.stackName) {
+    if (config.stackName.includes('-mailserver-core')) {
+      stackType = 'core';
+    } else if (config.stackName.includes('-mailserver-instance')) {
+      stackType = 'instance';
+    }
+  }
+  
   let stackName = resolveStackName(
     config.domain,
     config.appPath,
-    config.stackName
+    config.stackName,
+    stackType
   );
   
   // Create AWS clients
@@ -172,19 +223,36 @@ export async function getStackInfo(
       new DescribeStacksCommand({ StackName: stackName })
     );
   } catch (err: unknown) {
-    // If stack not found and it's an instance stack with -com-, try without -com-
-    // This handles legacy naming: emcnotary-mailserver-instance vs emcnotary-com-mailserver-instance
+    // Legacy fallback: if stack not found and legacy flag enabled, try without TLD
     const error = err as { name?: string };
-    if (error?.name === 'ValidationError' && stackName.includes('-com-mailserver-instance')) {
-      const fallbackStackName = stackName.replace('-com-mailserver-instance', '-mailserver-instance');
+    const legacyFlagEnabled =
+      process.env['FEATURE_LEGACY_NAME_RESOLVE'] === '1';
+    
+    if (
+      error?.name === 'ValidationError' &&
+      legacyFlagEnabled &&
+      stackName.includes('-com-mailserver-instance')
+    ) {
+      const fallbackStackName = stackName.replace(
+        '-com-mailserver-instance',
+        '-mailserver-instance'
+      );
+      console.warn(
+        `⚠️  Stack ${stackName} not found, trying legacy fallback: ${fallbackStackName}`
+      );
       try {
         stackResp = await cfClient.send(
           new DescribeStacksCommand({ StackName: fallbackStackName })
         );
         // Update stackName to the actual found stack name
         stackName = fallbackStackName;
+        console.warn(
+          `⚠️  Found legacy stack ${fallbackStackName}. Please migrate to canonical name ${toMailserverInstanceStackName(domain)}`
+        );
       } catch (fallbackErr) {
-        throw new Error(`Stack ${stackName} or ${fallbackStackName} not found`);
+        throw new Error(
+          `Stack ${stackName} or ${fallbackStackName} not found`
+        );
       }
     } else {
       throw err;
