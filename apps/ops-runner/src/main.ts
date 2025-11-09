@@ -233,6 +233,10 @@ Env:
       const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
       if (!domain) throw new Error('stack:core:diff requires a domain argument or DOMAIN env var');
 
+      if (process.env.FEATURE_CDK_EMCNOTARY_STACKS_ENABLED !== '1') {
+        throw new Error('FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 is required for CDK operations');
+      }
+
       console.log(`Showing diff for core stack: ${domain}`);
 
       const { execSync } = await import('child_process');
@@ -246,6 +250,10 @@ Env:
     case 'stack:instance:diff': {
       const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
       if (!domain) throw new Error('stack:instance:diff requires a domain argument or DOMAIN env var');
+
+      if (process.env.FEATURE_CDK_EMCNOTARY_STACKS_ENABLED !== '1') {
+        throw new Error('FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 is required for CDK operations');
+      }
 
       console.log(`Showing diff for instance stack: ${domain}`);
 
