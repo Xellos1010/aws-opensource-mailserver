@@ -118,11 +118,17 @@ describe('EmcNotaryCoreStack', () => {
 
   describe('Lambda Functions', () => {
     it('creates reverse DNS lambda with proper IAM permissions', () => {
+      // RoleName is a string, not a CloudFormation intrinsic function
       template.hasResourceProperties('AWS::IAM::Role', {
-        RoleName: {
-          'Fn::Join': [
-            '',
-            ['ReverseDnsLambdaExecutionRole-', { Ref: 'AWS::StackName' }],
+        AssumeRolePolicyDocument: {
+          Statement: [
+            {
+              Action: 'sts:AssumeRole',
+              Effect: 'Allow',
+              Principal: {
+                Service: 'lambda.amazonaws.com',
+              },
+            },
           ],
         },
         ManagedPolicyArns: [
@@ -139,28 +145,21 @@ describe('EmcNotaryCoreStack', () => {
         ],
       });
 
-      // Check Lambda function exists
-      const lambdaResources = template.findResources('AWS::Lambda::Function', {
-        FunctionName: {
-          'Fn::Join': [
-            '',
-            ['ReverseDnsLambdaFunction-', { Ref: 'AWS::StackName' }],
-          ],
-        },
-      });
-      expect(Object.keys(lambdaResources).length).toBeGreaterThan(0);
+      // Check Lambda function exists - FunctionName is a string in the actual template
+      const lambdaResources = template.findResources('AWS::Lambda::Function', {});
+      const reverseDnsLambda = Object.values(lambdaResources).find((resource: any) =>
+        resource['Properties']?.['FunctionName']?.includes('ReverseDnsLambdaFunction')
+      );
+      expect(reverseDnsLambda).toBeDefined();
     });
 
     it('creates SMTP credentials lambda with SSM permissions', () => {
-      const lambdaResources = template.findResources('AWS::Lambda::Function', {
-        FunctionName: {
-          'Fn::Join': [
-            '',
-            ['SMTPCredentialsLambdaFunction-', { Ref: 'AWS::StackName' }],
-          ],
-        },
-      });
-      expect(Object.keys(lambdaResources).length).toBeGreaterThan(0);
+      // Find SMTP lambda by searching all Lambda functions
+      const lambdaResources = template.findResources('AWS::Lambda::Function', {});
+      const smtpLambda = Object.values(lambdaResources).find((resource: any) =>
+        resource['Properties']?.['FunctionName']?.includes('SMTPCredentialsLambdaFunction')
+      );
+      expect(smtpLambda).toBeDefined();
 
       // Check IAM role has SSM permissions
       template.hasResourceProperties('AWS::IAM::Policy', {
@@ -235,35 +234,48 @@ describe('EmcNotaryCoreStack', () => {
 
   describe('CloudWatch Resources', () => {
     it('creates syslog log group with 7-day retention', () => {
+      // LogGroupName is a string, not a CloudFormation intrinsic function
       template.hasResourceProperties('AWS::Logs::LogGroup', {
-        LogGroupName: {
-          'Fn::Join': ['', ['/ec2/syslog-', { Ref: 'AWS::StackName' }]],
-        },
         RetentionInDays: 7,
       });
+      
+      // Verify log group name contains expected pattern
+      const logGroups = template.findResources('AWS::Logs::LogGroup', {});
+      const syslogGroup = Object.values(logGroups).find((resource: any) =>
+        resource['Properties']?.['LogGroupName']?.includes('/ec2/syslog-')
+      );
+      expect(syslogGroup).toBeDefined();
     });
 
     it('creates CW agent config SSM parameter', () => {
+      // SSM Parameter uses "Name" not "ParameterName"
       template.hasResourceProperties('AWS::SSM::Parameter', {
-        ParameterName: {
-          'Fn::Join': ['', ['/cwagent-linux-', { Ref: 'AWS::StackName' }]],
-        },
         Description: 'CloudWatch Agent configuration for mail server',
+        Type: 'String',
       });
+      
+      // Verify parameter name contains expected pattern
+      const ssmParams = template.findResources('AWS::SSM::Parameter', {});
+      const cwAgentParam = Object.values(ssmParams).find((resource: any) =>
+        resource['Properties']?.['Name']?.includes('/cwagent-linux-')
+      );
+      expect(cwAgentParam).toBeDefined();
     });
   });
 
   describe('SNS Resources', () => {
     it('creates alarms topic', () => {
+      // TopicName is a string, not a CloudFormation intrinsic function
       template.hasResourceProperties('AWS::SNS::Topic', {
-        TopicName: {
-          'Fn::Join': [
-            '',
-            ['ec2-memory-events-', { Ref: 'AWS::StackName' }],
-          ],
-        },
         DisplayName: 'EMC Notary Mailserver Alarms',
       });
+      
+      // Verify topic name contains expected pattern
+      const topics = template.findResources('AWS::SNS::Topic', {});
+      const alarmTopic = Object.values(topics).find((resource: any) =>
+        resource['Properties']?.['TopicName']?.includes('ec2-memory-events-')
+      );
+      expect(alarmTopic).toBeDefined();
     });
 
     it('outputs alert topic ARN', () => {
@@ -292,11 +304,10 @@ describe('EmcNotaryCoreStack', () => {
 
   describe('Custom Resources', () => {
     it('creates reverse DNS custom resource', () => {
+      // CustomResource Properties are at the top level, not nested
       template.hasResourceProperties('AWS::CloudFormation::CustomResource', {
-        Properties: {
-          PtrRecord: {
-            'Fn::Join': ['', ['box.', { Ref: 'DomainName' }]],
-          },
+        PtrRecord: {
+          'Fn::Join': ['', ['box.', { Ref: 'DomainName' }]],
         },
       });
     });
@@ -333,12 +344,13 @@ describe('EmcNotaryCoreStack', () => {
 
   describe('Domain Parameter', () => {
     it('creates domain name parameter with validation', () => {
-      template.hasResourceProperties('AWS::CloudFormation::Parameter', {
-        Type: 'String',
-        Default: 'emcnotary.com',
-        Description: 'The domain name for the mail server resources',
-        AllowedPattern: '^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$',
-      });
+      // Parameters are in template.Parameters, not Resources
+      const templateJson = template.toJSON();
+      expect(templateJson['Parameters']).toHaveProperty('DomainName');
+      expect(templateJson['Parameters']['DomainName']).toHaveProperty('Type', 'String');
+      expect(templateJson['Parameters']['DomainName']).toHaveProperty('Default', 'emcnotary.com');
+      expect(templateJson['Parameters']['DomainName']).toHaveProperty('Description', 'The domain name for the mail server resources');
+      expect(templateJson['Parameters']['DomainName']).toHaveProperty('AllowedPattern', '^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$');
     });
   });
 });

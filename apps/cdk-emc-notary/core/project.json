@@ -63,9 +63,51 @@
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/apps/cdk-emc-notary/core"],
-      "dependsOn": ["build"],
+      "dependsOn": ["build", "^build"],
       "options": {
         "jestConfig": "apps/cdk-emc-notary/core/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "test:unit": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/cdk-emc-notary/core"],
+      "dependsOn": ["build", "^build"],
+      "options": {
+        "jestConfig": "apps/cdk-emc-notary/core/jest.config.ts",
+        "testPathPattern": "src/__tests__",
+        "testPathIgnorePatterns": ["__it__", "tests/e2e"],
+        "passWithNoTests": true
+      }
+    },
+    "test:integration": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/cdk-emc-notary/core"],
+      "dependsOn": ["build", "^build"],
+      "options": {
+        "jestConfig": "apps/cdk-emc-notary/core/jest.config.ts",
+        "testPathPattern": "src/__it__",
+        "testPathIgnorePatterns": ["__tests__", "tests/e2e"],
+        "passWithNoTests": true
+      }
+    },
+    "test:e2e": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/cdk-emc-notary/core"],
+      "dependsOn": ["build", "^build"],
+      "options": {
+        "jestConfig": "apps/cdk-emc-notary/core/jest.config.ts",
+        "testPathPattern": "tests/e2e",
+        "passWithNoTests": true
+      }
+    },
+    "test:no-deploy": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/cdk-emc-notary/core"],
+      "dependsOn": ["build", "^build"],
+      "options": {
+        "jestConfig": "apps/cdk-emc-notary/core/jest.config.ts",
+        "testPathPattern": "src/__tests__|src/__it__|build-validation|deploy-validation|destroy-validation",
         "passWithNoTests": true
       }
     },
