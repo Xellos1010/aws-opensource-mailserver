@@ -836,7 +836,9 @@ export async function bootstrapInstance(
   const miabScript = loadMiabScript();
 
   // Build SSM command
-  const commands = [
+  // Note: SSM RunCommand uses /bin/sh by default, which doesn't support pipefail
+  // We need to wrap everything in bash -c or use bash explicitly for each command
+  const scriptContent = [
     'set -euxo pipefail',
     'cat > /root/miab-setup.sh << "EOF_MIAB"',
     miabScript,
@@ -847,6 +849,11 @@ export async function bootstrapInstance(
     ),
     // Execute script
     'bash -xe /root/miab-setup.sh',
+  ].join('\n');
+  
+  // Wrap in bash -c to ensure bash is used (supports pipefail)
+  const commands = [
+    `bash -c ${JSON.stringify(scriptContent)}`,
   ];
 
   if (options.dryRun) {
