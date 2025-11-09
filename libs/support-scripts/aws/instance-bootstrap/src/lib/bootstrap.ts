@@ -609,116 +609,116 @@ export async function bootstrapInstance(
   const stackName = resolveStackName(options);
   console.log(`📋 Resolving stack: ${stackName}`);
 
-  // Create AWS clients (needed for dry-run validation)
-  const { cf, ssm, ec2 } = createClients(region, options.profile);
-
-  // Early dry-run check - validate but don't execute
+  // Early dry-run check - preview mode (doesn't require AWS credentials)
   if (options.dryRun) {
-    console.log('\n🔍 DRY RUN MODE - Validating bootstrap prerequisites:\n');
+    console.log('\n🔍 DRY RUN MODE - Previewing what would be executed:\n');
     console.log(`  Stack: ${stackName}`);
     console.log(`  Region: ${region}`);
     console.log(`  Domain: ${options.domain || 'N/A'}`);
     console.log(`  Profile: ${options.profile || 'default'}`);
+    console.log('\n📋 Would perform the following steps:');
+    console.log('  1. Describe CloudFormation stack to get instance details');
+    console.log('  2. Read core parameters from SSM Parameter Store');
+    console.log('  3. Verify instance is running and SSM agent is ready');
+    console.log('  4. Build environment map with configuration values');
+    console.log('  5. Send SSM RunCommand to execute MIAB setup script');
     
+    // Optional: Try to validate SSM agent if credentials are available
     try {
-      // Describe instance stack
-      console.log('\n📋 Step 1: Describing CloudFormation stack...');
-      const stackInfo = await describeInstanceStack(cf, stackName, ec2);
-      console.log(`✅ Found instance: ${stackInfo.instanceId}`);
-      console.log(`   Domain: ${stackInfo.domainName}`);
-      console.log(`   DNS: ${stackInfo.instanceDns}.${stackInfo.domainName}`);
+      const { cf, ssm, ec2 } = createClients(region, options.profile);
+      console.log('\n🔍 Optional validation (requires AWS credentials):');
       
-      // Read core parameters
-      console.log('\n📋 Step 2: Reading core parameters from SSM...');
-      const coreParams = await readCoreParams(ssm, stackInfo.domainName);
-      console.log(`✅ Loaded core parameters from SSM`);
-      
-      // Verify instance and SSM agent
-      console.log('\n📋 Step 3: Verifying instance and SSM agent status...');
-      const instanceIp = stackInfo.instanceDns 
-        ? `${stackInfo.instanceDns}.${stackInfo.domainName}`
-        : undefined;
-      
-      // Check SSM agent status (don't wait long in dry-run)
-      const ssmStatus = await checkSsmAgentStatus(ssm, stackInfo.instanceId);
-      if (ssmStatus.online) {
-        console.log(`✅ SSM agent is ready (PingStatus: ${ssmStatus.pingStatus})`);
-      } else {
-        console.log(`❌ SSM agent is NOT ready`);
-        if (ssmStatus.pingStatus) {
-          console.log(`   PingStatus: ${ssmStatus.pingStatus}`);
-        }
-        if (ssmStatus.error) {
-          console.log(`   Error: ${ssmStatus.error}`);
-        }
-        throw new Error(
-          `SSM agent is not ready on instance ${stackInfo.instanceId}.\n` +
-          `Bootstrap requires SSM agent to be running. Please ensure:\n` +
-          `1. Instance has AmazonSSMManagedInstanceCore IAM policy\n` +
-          `2. SSM agent is installed and running on the instance\n` +
-          `3. Instance can reach SSM endpoints (check security groups and VPC routing)`
-        );
-      }
-      
-      // Test SSH connectivity as part of dry-run (optional)
-      console.log('\n📋 Step 4: Testing SSH connectivity (optional, for troubleshooting)...');
+      // Try to check SSM agent status (non-blocking)
       try {
-        const { spawn } = await import('child_process');
-        const domain = options.domain || 'emcnotary.com';
-        const profile = options.profile || process.env.AWS_PROFILE || 'hepe-admin-mfa';
+        const stackInfo = await describeInstanceStack(cf, stackName, ec2);
+        console.log(`✅ Found instance: ${stackInfo.instanceId}`);
         
-        const sshTestProcess = spawn('pnpm', [
-          'nx',
-          'run',
-          'cdk-emcnotary-instance:admin:ssh:test',
-        ], {
-          env: {
-            ...process.env,
-            AWS_PROFILE: profile,
-            AWS_REGION: region,
-            DOMAIN: domain,
-            APP_PATH: 'apps/cdk-emc-notary/instance',
-          },
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
-        
-        let stdout = '';
-        let stderr = '';
-        
-        sshTestProcess.stdout?.on('data', (data) => {
-          stdout += data.toString();
-        });
-        
-        sshTestProcess.stderr?.on('data', (data) => {
-          stderr += data.toString();
-        });
-        
-        const exitCode = await new Promise<number>((resolve) => {
-          sshTestProcess.on('close', resolve);
-        });
-        
-        if (exitCode === 0) {
-          console.log('✅ SSH test passed');
+        const ssmStatus = await checkSsmAgentStatus(ssm, stackInfo.instanceId);
+        if (ssmStatus.online) {
+          console.log(`✅ SSM agent is ready (PingStatus: ${ssmStatus.pingStatus})`);
         } else {
-          console.log(`⚠️  SSH test failed (exit code: ${exitCode})`);
-          console.log('   Note: Bootstrap uses SSM, SSH is optional for troubleshooting');
+          console.log(`⚠️  SSM agent is NOT ready`);
+          if (ssmStatus.pingStatus) {
+            console.log(`   PingStatus: ${ssmStatus.pingStatus}`);
+          }
+          if (ssmStatus.error) {
+            console.log(`   Error: ${ssmStatus.error}`);
+          }
+          console.log('   ⚠️  Bootstrap will fail if SSM agent is not ready');
+          console.log('   Please ensure SSM agent is installed and running before bootstrap');
         }
-      } catch (error: unknown) {
-        const err = error as { message?: string };
-        console.log(`⚠️  SSH test error: ${err?.message || String(error)}`);
-        console.log('   Note: Bootstrap uses SSM, SSH is optional for troubleshooting');
+      } catch (validationError: unknown) {
+        const err = validationError as { message?: string };
+        if (err?.message?.includes('credentials') || err?.message?.includes('Could not load')) {
+          console.log('   ⚠️  AWS credentials not available - skipping validation');
+          console.log('   Dry-run preview complete (validation skipped)');
+        } else {
+          console.log(`   ⚠️  Validation warning: ${err?.message || String(validationError)}`);
+        }
       }
+    } catch (error: unknown) {
+      // Ignore credential errors in dry-run
+      const err = error as { message?: string };
+      if (!err?.message?.includes('credentials') && !err?.message?.includes('Could not load')) {
+        console.log(`   ⚠️  Validation error: ${err?.message || String(error)}`);
+      }
+    }
+    
+    // Test SSH connectivity as part of dry-run (optional)
+    console.log('\n🔐 Testing SSH connectivity (optional, for troubleshooting)...');
+    try {
+      const { spawn } = await import('child_process');
+      const domain = options.domain || 'emcnotary.com';
+      const profile = options.profile || process.env.AWS_PROFILE || 'hepe-admin-mfa';
       
-      console.log('\n✅ Dry run validation complete - all prerequisites met');
-      console.log('   Bootstrap is ready to execute (use without --dry-run to proceed)');
+      const sshTestProcess = spawn('pnpm', [
+        'nx',
+        'run',
+        'cdk-emcnotary-instance:admin:ssh:test',
+      ], {
+        env: {
+          ...process.env,
+          AWS_PROFILE: profile,
+          AWS_REGION: region,
+          DOMAIN: domain,
+          APP_PATH: 'apps/cdk-emc-notary/instance',
+        },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      
+      let stdout = '';
+      let stderr = '';
+      
+      sshTestProcess.stdout?.on('data', (data) => {
+        stdout += data.toString();
+      });
+      
+      sshTestProcess.stderr?.on('data', (data) => {
+        stderr += data.toString();
+      });
+      
+      const exitCode = await new Promise<number>((resolve) => {
+        sshTestProcess.on('close', resolve);
+      });
+      
+      if (exitCode === 0) {
+        console.log('✅ SSH test passed');
+      } else {
+        console.log(`⚠️  SSH test failed (exit code: ${exitCode})`);
+        console.log('   Note: Bootstrap uses SSM, but SSH may be needed for troubleshooting');
+      }
     } catch (error: unknown) {
       const err = error as { message?: string };
-      console.error('\n❌ Dry run validation failed:');
-      console.error(`   ${err?.message || String(error)}`);
-      throw error;
+      console.log(`⚠️  SSH test error: ${err?.message || String(error)}`);
+      console.log('   Note: Bootstrap uses SSM, but SSH may be needed for troubleshooting');
     }
+    
+    console.log('\n✅ Dry run complete - no changes made');
     return;
   }
+
+  // Create AWS clients (only if not dry-run)
+  const { cf, ssm, ec2 } = createClients(region, options.profile);
 
   // Describe instance stack (non-dry-run execution)
   const stackInfo = await describeInstanceStack(cf, stackName, ec2);
