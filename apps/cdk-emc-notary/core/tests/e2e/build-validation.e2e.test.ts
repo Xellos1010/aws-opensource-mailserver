@@ -21,7 +21,8 @@ describe('Build Operation E2E', () => {
       cwd: process.cwd(),
     });
 
-    expect(existsSync(join(distDir, 'main.js'))).toBe(true);
+    const distDir = join(process.cwd(), 'dist/apps/cdk-emc-notary/core');
+    expect(existsSync(join(distDir, 'main.cjs'))).toBe(true);
     expect(existsSync(join(distDir, 'cdk.json'))).toBe(true);
     expect(existsSync(join(distDir, 'package.json'))).toBe(true);
   });
