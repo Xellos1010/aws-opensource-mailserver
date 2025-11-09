@@ -839,6 +839,8 @@ export async function bootstrapInstance(
   // Note: SSM RunCommand uses /bin/sh by default, which doesn't support pipefail
   // We need to use bash explicitly. Use base64 encoding to avoid heredoc delimiter issues.
   const scriptWithEnv = [
+    '#!/bin/bash',
+    'set -euxo pipefail',
     // Export environment variables first
     ...Object.entries(envMap).map(
       ([key, value]) => `export ${key}='${String(value).replace(/'/g, "'\\''")}'`
@@ -851,12 +853,10 @@ export async function bootstrapInstance(
   // Encode script to base64 to avoid shell escaping issues
   const scriptBase64 = Buffer.from(scriptWithEnv).toString('base64');
   
-  // Build commands that decode and execute
+  // Build commands - wrap in bash -c to ensure bash is used
+  // SSM RunCommand executes each command separately, so we need bash for each
   const commands = [
-    'set -euxo pipefail || set -eux', // Fallback if pipefail not supported
-    `echo '${scriptBase64}' | base64 -d > /root/miab-setup.sh`,
-    'chmod +x /root/miab-setup.sh',
-    'bash -xe /root/miab-setup.sh',
+    `bash -c "echo '${scriptBase64}' | base64 -d > /root/miab-setup.sh && chmod +x /root/miab-setup.sh && bash -xe /root/miab-setup.sh"`,
   ];
 
   if (options.dryRun) {
