@@ -347,6 +347,14 @@
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/ssl-status.cli.ts"
       },
       "description": "Check SSL certificate status: Verifies SSL certificate provisioning, validity, expiration, and configuration"
+    },
+    "admin:credentials": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin-credentials:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/get-admin-credentials.cli.ts ${DOMAIN:+--domain $DOMAIN}"
+      },
+      "description": "Get admin credentials: Retrieves Mail-in-a-Box admin username and password from SSM Parameter Store"
     }
   }
 }
