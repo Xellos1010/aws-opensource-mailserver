@@ -137,10 +137,46 @@
       "dependsOn": ["build", "^build"],
       "options": {
         "jestConfig": "apps/cdk-emc-notary/instance/jest.config.ts",
-        "testPathPattern": "reboot-integration.e2e",
+        "testPathPattern": "reboot-integration",
+        "testPathIgnorePatterns": [
+          "reboot-event",
+          "bootstrap",
+          "build-validation",
+          "cdk-validation",
+          "deploy-validation",
+          "deploy-schedule-validation",
+          "deployment-smoke",
+          "destroy-validation",
+          "__tests__",
+          "__it__"
+        ],
         "passWithNoTests": true
       },
-      "description": "Run comprehensive reboot integration tests (will reboot instance multiple times)"
+      "description": "Run comprehensive reboot integration tests (will reboot instance multiple times). Uses AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa}"
+    },
+    "test:reboot-lambda-only": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/cdk-emc-notary/instance"],
+      "dependsOn": ["build", "^build"],
+      "options": {
+        "jestConfig": "apps/cdk-emc-notary/instance/jest.config.ts",
+        "testPathPattern": "reboot-integration",
+        "testNamePattern": "Test 1: Direct Lambda invocation",
+        "testPathIgnorePatterns": [
+          "reboot-event",
+          "bootstrap",
+          "build-validation",
+          "cdk-validation",
+          "deploy-validation",
+          "deploy-schedule-validation",
+          "deployment-smoke",
+          "destroy-validation",
+          "__tests__",
+          "__it__"
+        ],
+        "passWithNoTests": true
+      },
+      "description": "Run only the Lambda invocation test (Test 1) for faster debugging. Uses AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa}"
     },
     "test:deploy-validation": {
       "executor": "@nx/jest:jest",
@@ -188,7 +224,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["^build", "support-scripts-aws-instance-bootstrap:build"],
       "options": {
-        "command": "pnpm exec tsx tools/instance-bootstrap.cli.ts --dry-run"
+        "command": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/instance-bootstrap.cli.ts --dry-run"
       },
       "description": "Dry run: Preview bootstrap of Mail-in-a-Box (MIAB) to EC2 instance (no SSM command sent)"
     },
