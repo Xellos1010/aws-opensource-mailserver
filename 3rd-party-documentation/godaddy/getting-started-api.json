@@ -1,0 +1,14 @@
+{
+  "documentationName": "Getting Started API",
+  "url": "https://developer.godaddy.com/getstarted",
+  "title": "Get Started",
+  "generatedAt": "2025-11-09T04:55:40.930Z",
+  "endpointsFound": 0,
+  "endpointsExpanded": 0,
+  "endpointsExtracted": 0,
+  "endpoints": [],
+  "metadata": {
+    "source": "https://developer.godaddy.com/getstarted",
+    "xpath": "//*[@id=\"main\"]/div/div[2]"
+  }
+}

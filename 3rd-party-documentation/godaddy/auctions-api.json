@@ -1,0 +1,85 @@
+{
+  "documentationName": "Auctions API",
+  "url": "https://developer.godaddy.com/doc/endpoint/auctions",
+  "title": "Documentation: Auctions API",
+  "generatedAt": "2025-11-09T04:55:46.944Z",
+  "endpointsFound": 1,
+  "endpointsExpanded": 1,
+  "endpointsExtracted": 1,
+  "endpoints": [
+    {
+      "operationType": "POST",
+      "path": "/v1/customers/{customerId}/aftermarket/listings/bids",
+      "name": "/v1/customers/{customerId}/aftermarket/listings/bids",
+      "description": "POST/v1/customers/{customerId}/aftermarket/listings/bidsPlaces multiple bids with a single request.",
+      "tag": "Auctions",
+      "parameters": [
+        {
+          "name": "customerId",
+          "type": "string",
+          "description": "An identifier for a customer.",
+          "required": true,
+          "location": "path"
+        },
+        {
+          "name": "requestBody",
+          "type": "array",
+          "description": "An array of bids to be placed.",
+          "required": true,
+          "location": "body"
+        }
+      ],
+      "responses": [
+        {
+          "code": "200",
+          "description": "All bids placed successfully.",
+          "example": "[\n  {\n    \"listingId\": 200000,\n    \"isHighestBidder\": \"true\",\n    \"bidId\": \"e8f0a45d-53c6-49e5-a1f2-08b993960e1b\",\n    \"bidAmountUsd\": 100000000,\n    \"status\": \"SUCCESS\"\n  }\n]"
+        },
+        {
+          "code": "207",
+          "description": "Partial success.",
+          "example": "[\n  {\n    \"listingId\": 200000,\n    \"isHighestBidder\": \"true\",\n    \"bidId\": \"e8f0a45d-53c6-49e5-a1f2-08b993960e1b\",\n    \"bidAmountUsd\": 100000000,\n    \"status\": \"SUCCESS\"\n  },\n  {\n    \"listingId\": 300000,\n    \"bidAmountUsd\": 100000000,\n    \"bidFailureReason\": \"BID_MIN_NOT_MET\",\n    \"status\": \"FAILED\"\n  }\n]"
+        },
+        {
+          "code": "400",
+          "description": "Query string and/or request body are malformed",
+          "example": "{\n  \"code\": \"MALFORMED_INPUT\",\n  \"message\": \"The request was malformed\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or is invalid",
+          "example": "{\n  \"code\": \"UNABLE_TO_AUTHENTICATE\",\n  \"message\": \"Unauthorized : Could not authenticate API key/secret\"\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"MISSING_CREDENTIALS\",\n  \"message\": \"Unauthorized : Credentials must be specified\"\n}"
+        },
+        {
+          "code": "422",
+          "description": "Application-specific request error",
+          "example": "{\n  \"code\": \"DUPLICATE_BIDS\",\n  \"message\": \"Bidding request contains multiple bids for listingID 200000\"\n}"
+        },
+        {
+          "code": "429",
+          "description": "Too many requests received within interval",
+          "example": "{\n  \"code\": \"TOO_MANY_REQUESTS\",\n  \"message\": \"Too many requests received within interval\"\n}"
+        },
+        {
+          "code": "500",
+          "description": "Internal server error",
+          "example": "{\n  \"code\": \"SERVER_ERROR\",\n  \"message\": \"Internal server error\"\n}"
+        }
+      ],
+      "requestBody": {
+        "contentType": "application/json",
+        "example": "[\n  {\n    \"bidAmountUsd\": 0,\n    \"tosAccepted\": true,\n    \"listingId\": 555555\n  }\n]"
+      },
+      "expanded": true
+    }
+  ],
+  "metadata": {
+    "source": "https://developer.godaddy.com/doc/endpoint/auctions",
+    "xpath": "//*[@id=\"main\"]/div/div[2]"
+  }
+}

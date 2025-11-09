@@ -1,0 +1,85 @@
+{
+  "name": "godaddy-dns",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/admin/godaddy-dns/src",
+  "projectType": "library",
+  "tags": ["scope:admin", "type:util", "domain:dns"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/admin/godaddy-dns",
+        "main": "libs/admin/godaddy-dns/src/index.ts",
+        "tsConfig": "libs/admin/godaddy-dns/tsconfig.lib.json",
+        "assets": [],
+        "format": ["esm"],
+        "generatePackageJson": true,
+        "bundle": false,
+        "platform": "node",
+        "target": "node20"
+      }
+    },
+    "build:cli": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/admin/godaddy-dns",
+        "main": "libs/admin/godaddy-dns/bin/set-godaddy-dns.ts",
+        "outputFileName": "set-godaddy-dns.mjs",
+        "tsConfig": "libs/admin/godaddy-dns/tsconfig.lib.json",
+        "assets": [],
+        "format": ["esm"],
+        "generatePackageJson": true,
+        "bundle": true,
+        "platform": "node",
+        "target": "node20",
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "passWithNoTests": true
+      }
+    },
+    "test:integration": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "passWithNoTests": true,
+        "testPathPattern": "__it__"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "set-dns:emcnotary": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build:cli"],
+      "options": {
+        "command": "node dist/libs/admin/godaddy-dns/set-godaddy-dns.mjs --operation dns-hostnames --domain emcnotary.com --ns1-ip $NS1_IP --ns2-ip $NS2_IP"
+      }
+    },
+    "set-dns:emcnotary:dry-run": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build:cli"],
+      "options": {
+        "command": "node dist/libs/admin/godaddy-dns/set-godaddy-dns.mjs --operation dns-hostnames --domain emcnotary.com --ns1-ip $NS1_IP --ns2-ip $NS2_IP --dry-run"
+      }
+    },
+    "set-nameservers:emcnotary": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build:cli"],
+      "options": {
+        "command": "node dist/libs/admin/godaddy-dns/set-godaddy-dns.mjs --operation nameservers --domain emcnotary.com --customer-id $GODADDY_CUSTOMER_ID"
+      }
+    }
+  }
+}
+
