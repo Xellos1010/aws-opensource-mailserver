@@ -29,6 +29,9 @@ export default {
     '**/tests/**/*.e2e.test.ts',
   ],
   moduleNameMapper: {
+    '^@mm/infra-shared-constructs$': '<rootDir>/../../../libs/infra/shared-constructs/src/index.ts',
+    '^@mm/infra-core-params$': '<rootDir>/../../../libs/infra/core-params/src/index.ts',
+    '^@mm/infra-naming$': '<rootDir>/../../../libs/infra/naming/src/index.ts',
     '^@mm/(.*)$': '<rootDir>/../../../libs/$1/src/index.ts',
   },
   // Disable snapshot functionality to avoid babel dependency

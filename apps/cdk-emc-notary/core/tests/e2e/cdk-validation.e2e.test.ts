@@ -12,6 +12,9 @@ describe('CDK Synthesis E2E', () => {
       mkdirSync(join(process.cwd(), 'dist/apps/cdk-emc-notary/core'), {
         recursive: true,
       });
+      mkdirSync(join(process.cwd(), 'dist/apps/cdk-emc-notary/core/cdk.out'), {
+        recursive: true,
+      });
     } catch (error) {
       // Directory might already exist
     }
@@ -29,6 +32,12 @@ describe('CDK Synthesis E2E', () => {
 
   it('generates valid CloudFormation templates', () => {
     // Generate CloudFormation templates
+    // Ensure build has run first
+    execSync('pnpm nx build cdk-emcnotary-core', {
+      stdio: 'pipe',
+      cwd: process.cwd(),
+    });
+
     execSync('pnpm nx run cdk-emcnotary-core:synth', {
       stdio: 'pipe',
       cwd: process.cwd(),
@@ -113,7 +122,11 @@ describe('CDK Synthesis E2E', () => {
     const template = JSON.parse(readFileSync(templatePath, 'utf8'));
 
     // Validate CloudFormation template structure
-    expect(template).toHaveProperty('AWSTemplateFormatVersion');
+    // CDK v2 templates don't always include AWSTemplateFormatVersion
+    // It's implicit and defaults to '2010-09-09'
+    if ('AWSTemplateFormatVersion' in template) {
+      expect(template['AWSTemplateFormatVersion']).toBe('2010-09-09');
+    }
     expect(template).toHaveProperty('Description');
     expect(template).toHaveProperty('Parameters');
     expect(template).toHaveProperty('Resources');

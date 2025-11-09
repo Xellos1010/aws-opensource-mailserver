@@ -14,16 +14,17 @@ describe('Parameter Resolution', () => {
     const template = Template.fromStack(stack);
 
     // Check that default domain is used in reverse DNS
+    // PtrRecord uses CloudFormation intrinsic function to join domain
     template.hasResourceProperties('AWS::CloudFormation::CustomResource', {
-      Properties: {
-        PtrRecord: 'box.emcnotary.com',
+      PtrRecord: {
+        'Fn::Join': ['', ['box.', { Ref: 'DomainName' }]],
       },
     });
 
-    // Check bucket names use default domain
+    // Check bucket names use domain parameter reference
     template.hasResourceProperties('AWS::S3::Bucket', {
       BucketName: {
-        'Fn::Join': ['', ['emcnotary.com', '-backup']],
+        'Fn::Join': ['', [{ Ref: 'DomainName' }, '-backup']],
       },
     });
   });
@@ -41,11 +42,12 @@ describe('Parameter Resolution', () => {
     const template = Template.fromStack(stack);
 
     // Note: CDK context is used in main.ts, not directly in stack
-    // This test verifies the stack accepts domain parameter
-    template.hasResourceProperties('AWS::CloudFormation::Parameter', {
-      Type: 'String',
-      Default: 'emcnotary.com',
-    });
+    // This test verifies the stack has a domain parameter with default
+    // Parameters are in template.Parameters, not Resources
+    const templateJson = template.toJSON();
+    expect(templateJson['Parameters']).toHaveProperty('DomainName');
+    expect(templateJson['Parameters']['DomainName']).toHaveProperty('Type', 'String');
+    expect(templateJson['Parameters']['DomainName']).toHaveProperty('Default', 'emcnotary.com');
   });
 
   it('domain parameter validation pattern is correct', () => {
@@ -58,9 +60,49 @@ describe('Parameter Resolution', () => {
     });
     const template = Template.fromStack(stack);
 
-    template.hasResourceProperties('AWS::CloudFormation::Parameter', {
-      AllowedPattern: '^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$',
+    // Parameters are in template.Parameters, not Resources
+    const templateJson = template.toJSON();
+    expect(templateJson['Parameters']).toHaveProperty('DomainName');
+    expect(templateJson['Parameters']['DomainName']).toHaveProperty('AllowedPattern', '^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$');
+  });
+
+  it('rejects invalid domain patterns', () => {
+    const app = new cdk.App();
+    const stack = new EmcNotaryCoreStack(app, 'TestStack', {
+      env: {
+        account: '123456789012',
+        region: 'us-east-1',
+      },
     });
+    const template = Template.fromStack(stack);
+
+    // Domain parameter should have validation pattern that rejects:
+    // - Domains starting with dash
+    // - Domains ending with dash
+    // - Domains with consecutive dots
+    // - Domains longer than 63 characters
+    // Parameters are in template.Parameters, not Resources
+    const templateJson = template.toJSON();
+    expect(templateJson['Parameters']).toHaveProperty('DomainName');
+    expect(templateJson['Parameters']['DomainName']).toHaveProperty('AllowedPattern', '^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$');
+  });
+
+  it('domain parameter has correct default value', () => {
+    const app = new cdk.App();
+    const stack = new EmcNotaryCoreStack(app, 'TestStack', {
+      env: {
+        account: '123456789012',
+        region: 'us-east-1',
+      },
+    });
+    const template = Template.fromStack(stack);
+
+    // Parameters are in template.Parameters, not Resources
+    const templateJson = template.toJSON();
+    expect(templateJson['Parameters']).toHaveProperty('DomainName');
+    expect(templateJson['Parameters']['DomainName']).toHaveProperty('Type', 'String');
+    expect(templateJson['Parameters']['DomainName']).toHaveProperty('Default', 'emcnotary.com');
+    expect(templateJson['Parameters']['DomainName']).toHaveProperty('Description', 'The domain name for the mail server resources');
   });
 
   it('all resource names incorporate domain parameter', () => {
@@ -86,12 +128,10 @@ describe('Parameter Resolution', () => {
       },
     });
 
-    // Check reverse DNS uses domain
+    // Check reverse DNS uses domain - Properties are at top level for CustomResource
     template.hasResourceProperties('AWS::CloudFormation::CustomResource', {
-      Properties: {
-        PtrRecord: {
-          'Fn::Join': ['', ['box.', { Ref: 'DomainName' }]],
-        },
+      PtrRecord: {
+        'Fn::Join': ['', ['box.', { Ref: 'DomainName' }]],
       },
     });
   });

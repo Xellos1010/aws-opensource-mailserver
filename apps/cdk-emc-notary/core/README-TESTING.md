@@ -68,6 +68,47 @@ Based on comprehensive testing strategy:
 - **Integration Tests**: ≥75% coverage (cross-resource dependencies)
 - **E2E Tests**: Key deployment validation scenarios
 
+## Test Coverage Summary
+
+### ✅ Fixed Issues
+- **TypeScript Strict Mode**: Fixed index signature access violations
+- **Jest Module Resolution**: Fixed `@mm/infra-shared-constructs` module mapping
+- **CloudFormation Template Validation**: Made `AWSTemplateFormatVersion` optional (CDK v2)
+- **Parameter Tests**: Fixed CloudFormation Parameter assertions (Parameters vs Resources)
+
+### Test Suites
+
+#### Unit Tests (`src/__tests__/`)
+- ✅ `stacks/core-stack.spec.ts` - Stack resource validation
+- ✅ `main.spec.ts` - Entry point domain resolution
+
+#### Integration Tests (`src/__it__/`)
+- ✅ `resource-integration.spec.ts` - Cross-resource dependencies
+- ✅ `parameter-resolution.spec.ts` - Domain parameter handling
+
+#### E2E Tests (`tests/e2e/`)
+- ✅ `build-validation.e2e.test.ts` - Build operation validation
+- ✅ `deploy-validation.e2e.test.ts` - Deploy operation validation
+- ✅ `destroy-validation.e2e.test.ts` - Destroy operation validation
+- ⚠️ `cdk-validation.e2e.test.ts` - Requires synth (may need AWS credentials)
+- ⚠️ `deployment-smoke.e2e.test.ts` - Requires synth (may need AWS credentials)
+
+### Running Tests
+
+```bash
+# Run all tests
+pnpm nx test cdk-emcnotary-core
+
+# Run only unit and integration tests (fastest)
+pnpm nx test cdk-emcnotary-core --testPathPattern="__tests__|__it__"
+
+# Run only E2E tests
+pnpm nx test cdk-emcnotary-core --testPathPattern="e2e"
+
+# Run specific test file
+pnpm nx test cdk-emcnotary-core --testFile=main.spec.ts
+```
+
 ## Known Issues
 
 ### Babel Core Dependency (pnpm/Jest Compatibility)
