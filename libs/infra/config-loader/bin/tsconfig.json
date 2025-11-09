@@ -7,6 +7,6 @@
     "rootDir": "../..",
     "strict": true
   },
-  "include": ["cdk-deploy.ts", "../src/**/*.ts"]
+  "include": ["cdk-deploy.ts", "cdk-synth.ts", "../src/**/*.ts"]
 }
 

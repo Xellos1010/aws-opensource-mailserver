@@ -28,10 +28,10 @@
     "synth": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 cdk synth ${DOMAIN:+--context domain=$DOMAIN} ${INSTANCE_DNS:+--context instanceDns=$INSTANCE_DNS} ${CORE_PARAM_PREFIX:+--context coreParamPrefix=$CORE_PARAM_PREFIX}",
+        "command": "FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 node ../../../../dist/libs/infra/config-loader/bin/cdk-synth.js",
         "cwd": "dist/apps/cdk-emc-notary/instance"
       },
-      "dependsOn": ["build"]
+      "dependsOn": ["build", "infra-config-loader:build"]
     },
     "deploy": {
       "executor": "nx:run-commands",
@@ -128,6 +128,27 @@
       "options": {
         "jestConfig": "apps/cdk-emc-notary/instance/jest.config.ts",
         "testPathPattern": "reboot-event.e2e",
+        "passWithNoTests": true
+      }
+    },
+    "test:reboot-integration": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/cdk-emc-notary/instance"],
+      "dependsOn": ["build", "^build"],
+      "options": {
+        "jestConfig": "apps/cdk-emc-notary/instance/jest.config.ts",
+        "testPathPattern": "reboot-integration.e2e",
+        "passWithNoTests": true
+      },
+      "description": "Run comprehensive reboot integration tests (will reboot instance multiple times)"
+    },
+    "test:deploy-validation": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/cdk-emc-notary/instance"],
+      "dependsOn": ["build", "^build"],
+      "options": {
+        "jestConfig": "apps/cdk-emc-notary/instance/jest.config.ts",
+        "testPathPattern": "deploy-schedule-validation.e2e",
         "passWithNoTests": true
       }
     },
