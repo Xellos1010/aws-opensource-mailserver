@@ -332,12 +332,69 @@ async function readCoreParams(
 }
 
 /**
+ * Check SSM agent status
+ */
+async function checkSsmAgentStatus(
+  ssm: SSMClient,
+  instanceId: string
+): Promise<{ online: boolean; pingStatus?: string; error?: string }> {
+  try {
+    const describeCommand = new DescribeInstanceInformationCommand({
+      Filters: [
+        { Key: 'InstanceIds', Values: [instanceId] },
+      ],
+    });
+    
+    const ssmInfo = await ssm.send(describeCommand);
+    const instanceInfo = ssmInfo.InstanceInformationList?.[0];
+    
+    if (instanceInfo) {
+      return {
+        online: instanceInfo.PingStatus === 'Online',
+        pingStatus: instanceInfo.PingStatus,
+      };
+    }
+    
+    return { online: false, error: 'Instance not found in SSM' };
+  } catch (error: unknown) {
+    const err = error as { name?: string; message?: string };
+    return {
+      online: false,
+      error: err?.message || String(error),
+    };
+  }
+}
+
+/**
+ * Install and start SSM agent via SSH
+ */
+async function installSsmAgentViaSsh(
+  instanceId: string,
+  instanceIp: string,
+  keyPath?: string
+): Promise<void> {
+  console.log(`\n🔧 Attempting to install SSM agent via SSH...`);
+  
+  // This would require SSH access - for now, we'll provide instructions
+  // In a full implementation, this would use SSH to run commands
+  throw new Error(
+    `SSM agent is not available. Please install it manually via SSH:\n` +
+    `  ssh -i ${keyPath || '<key-file>'} ubuntu@${instanceIp}\n` +
+    `  sudo snap install amazon-ssm-agent --classic\n` +
+    `  sudo systemctl enable amazon-ssm-agent\n` +
+    `  sudo systemctl start amazon-ssm-agent\n` +
+    `Or ensure the instance has the AmazonSSMManagedInstanceCore IAM policy attached.`
+  );
+}
+
+/**
  * Verify instance is running and accessible via SSM
  */
 async function verifyInstance(
   ec2: EC2Client,
   ssm: SSMClient,
-  instanceId: string
+  instanceId: string,
+  options?: { installIfMissing?: boolean; instanceIp?: string; keyPath?: string }
 ): Promise<void> {
   const describeCommand = new DescribeInstancesCommand({
     InstanceIds: [instanceId],
@@ -357,47 +414,58 @@ async function verifyInstance(
     );
   }
 
-  // Wait for SSM agent to be ready (can take a few minutes after instance launch)
-  console.log(`⏳ Waiting for SSM agent to be ready on instance ${instanceId}...`);
+  // Check SSM agent status
+  console.log(`⏳ Checking SSM agent status on instance ${instanceId}...`);
   const maxWaitTime = 300000; // 5 minutes max
   const checkInterval = 10000; // Check every 10 seconds
   const startTime = Date.now();
+  let lastStatus: { online: boolean; pingStatus?: string; error?: string } | undefined;
   
   while (Date.now() - startTime < maxWaitTime) {
-    try {
-      // Use describe-instance-information to check SSM registration
-      const describeCommand = new DescribeInstanceInformationCommand({
-        Filters: [
-          { Key: 'InstanceIds', Values: [instanceId] },
-        ],
-      });
-      
-      const ssmInfo = await ssm.send(describeCommand);
-      const instanceInfo = ssmInfo.InstanceInformationList?.[0];
-      
-      if (instanceInfo && instanceInfo.PingStatus === 'Online') {
-        console.log(`\n✅ SSM agent is ready on instance ${instanceId} (PingStatus: ${instanceInfo.PingStatus})`);
-        return;
-      }
-      
-      // If not online yet, wait and retry
-      await sleep(checkInterval);
-      process.stdout.write('.');
-    } catch (error: unknown) {
-      const err = error as { name?: string; message?: string };
-      // If instance not found in SSM yet, keep waiting
-      if (err?.message?.includes('not found') || err?.message?.includes('InvalidInstanceId')) {
-        await sleep(checkInterval);
-        process.stdout.write('.');
-        continue;
-      }
-      // For other errors, log but continue - the actual command will fail with a clearer error
-      console.log(`\n⚠️  SSM readiness check warning: ${err?.message || String(error)}`);
-      break;
+    lastStatus = await checkSsmAgentStatus(ssm, instanceId);
+    
+    if (lastStatus.online) {
+      console.log(`\n✅ SSM agent is ready on instance ${instanceId} (PingStatus: ${lastStatus.pingStatus})`);
+      return;
     }
+    
+    // If not online yet, wait and retry
+    await sleep(checkInterval);
+    process.stdout.write('.');
   }
   
-  console.log(`\n⚠️  SSM agent may not be fully ready, but proceeding with bootstrap command...`);
+  // SSM agent is not ready after waiting
+  console.log(`\n❌ SSM agent is not ready on instance ${instanceId}`);
+  if (lastStatus?.pingStatus) {
+    console.log(`   PingStatus: ${lastStatus.pingStatus}`);
+  }
+  if (lastStatus?.error) {
+    console.log(`   Error: ${lastStatus.error}`);
+  }
+  
+  // Try to install if requested
+  if (options?.installIfMissing && options.instanceIp) {
+    try {
+      await installSsmAgentViaSsh(instanceId, options.instanceIp, options.keyPath);
+    } catch (installError) {
+      throw new Error(
+        `SSM agent is not available and installation failed: ${installError instanceof Error ? installError.message : String(installError)}\n` +
+        `Bootstrap requires SSM agent to be running. Please ensure:\n` +
+        `1. Instance has AmazonSSMManagedInstanceCore IAM policy\n` +
+        `2. SSM agent is installed and running on the instance\n` +
+        `3. Instance can reach SSM endpoints (check security groups and VPC routing)`
+      );
+    }
+  } else {
+    throw new Error(
+      `SSM agent is not ready on instance ${instanceId} after ${maxWaitTime / 1000} seconds.\n` +
+      `Bootstrap requires SSM agent to be running. Please ensure:\n` +
+      `1. Instance has AmazonSSMManagedInstanceCore IAM policy\n` +
+      `2. SSM agent is installed and running on the instance\n` +
+      `3. Instance can reach SSM endpoints (check security groups and VPC routing)\n` +
+      `Current status: ${lastStatus?.pingStatus || 'Unknown'}`
+    );
+  }
 }
 
 /**
@@ -541,90 +609,118 @@ export async function bootstrapInstance(
   const stackName = resolveStackName(options);
   console.log(`📋 Resolving stack: ${stackName}`);
 
-  // Early dry-run check - skip AWS calls if dry-run
+  // Create AWS clients (needed for dry-run validation)
+  const { cf, ssm, ec2 } = createClients(region, options.profile);
+
+  // Early dry-run check - validate but don't execute
   if (options.dryRun) {
-    console.log('\n🔍 DRY RUN MODE - Previewing what would be executed:\n');
+    console.log('\n🔍 DRY RUN MODE - Validating bootstrap prerequisites:\n');
     console.log(`  Stack: ${stackName}`);
     console.log(`  Region: ${region}`);
     console.log(`  Domain: ${options.domain || 'N/A'}`);
     console.log(`  Profile: ${options.profile || 'default'}`);
-    console.log('\n📋 Would perform the following steps:');
-    console.log('  1. Describe CloudFormation stack to get instance details');
-    console.log('  2. Read core parameters from SSM Parameter Store');
-    console.log('  3. Verify instance is running and accessible via SSM');
-    console.log('  4. Build environment map with configuration values');
-    console.log('  5. Send SSM RunCommand to execute MIAB setup script');
     
-    // Test SSH connectivity as part of dry-run
-    console.log('\n🔐 Testing SSH connectivity (required for bootstrap)...');
     try {
-      // Call SSH test via Nx task to avoid import resolution issues
-      const { spawn } = await import('child_process');
-      const { promisify } = await import('util');
+      // Describe instance stack
+      console.log('\n📋 Step 1: Describing CloudFormation stack...');
+      const stackInfo = await describeInstanceStack(cf, stackName, ec2);
+      console.log(`✅ Found instance: ${stackInfo.instanceId}`);
+      console.log(`   Domain: ${stackInfo.domainName}`);
+      console.log(`   DNS: ${stackInfo.instanceDns}.${stackInfo.domainName}`);
       
-      const domain = options.domain || 'emcnotary.com';
-      const region = options.region || 'us-east-1';
-      const profile = options.profile || process.env.AWS_PROFILE || 'hepe-admin-mfa';
+      // Read core parameters
+      console.log('\n📋 Step 2: Reading core parameters from SSM...');
+      const coreParams = await readCoreParams(ssm, stackInfo.domainName);
+      console.log(`✅ Loaded core parameters from SSM`);
       
-      // Run SSH test task
-      const sshTestProcess = spawn('pnpm', [
-        'nx',
-        'run',
-        'cdk-emcnotary-instance:admin:ssh:test',
-      ], {
-        env: {
-          ...process.env,
-          AWS_PROFILE: profile,
-          AWS_REGION: region,
-          DOMAIN: domain,
-          APP_PATH: 'apps/cdk-emc-notary/instance',
-        },
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
+      // Verify instance and SSM agent
+      console.log('\n📋 Step 3: Verifying instance and SSM agent status...');
+      const instanceIp = stackInfo.instanceDns 
+        ? `${stackInfo.instanceDns}.${stackInfo.domainName}`
+        : undefined;
       
-      let stdout = '';
-      let stderr = '';
-      
-      sshTestProcess.stdout?.on('data', (data) => {
-        stdout += data.toString();
-      });
-      
-      sshTestProcess.stderr?.on('data', (data) => {
-        stderr += data.toString();
-      });
-      
-      const exitCode = await new Promise<number>((resolve) => {
-        sshTestProcess.on('close', resolve);
-      });
-      
-      if (exitCode === 0) {
-        console.log('✅ SSH test passed');
+      // Check SSM agent status (don't wait long in dry-run)
+      const ssmStatus = await checkSsmAgentStatus(ssm, stackInfo.instanceId);
+      if (ssmStatus.online) {
+        console.log(`✅ SSM agent is ready (PingStatus: ${ssmStatus.pingStatus})`);
       } else {
-        console.log(`⚠️  SSH test failed (exit code: ${exitCode})`);
-        if (stderr) {
-          const errorLines = stderr.split('\n').filter(line => 
-            line.includes('error') || line.includes('Error') || line.includes('failed')
-          );
-          if (errorLines.length > 0) {
-            console.log(`   ${errorLines[0]}`);
-          }
+        console.log(`❌ SSM agent is NOT ready`);
+        if (ssmStatus.pingStatus) {
+          console.log(`   PingStatus: ${ssmStatus.pingStatus}`);
         }
-        console.log('   Note: Bootstrap uses SSM, but SSH may be needed for troubleshooting');
+        if (ssmStatus.error) {
+          console.log(`   Error: ${ssmStatus.error}`);
+        }
+        throw new Error(
+          `SSM agent is not ready on instance ${stackInfo.instanceId}.\n` +
+          `Bootstrap requires SSM agent to be running. Please ensure:\n` +
+          `1. Instance has AmazonSSMManagedInstanceCore IAM policy\n` +
+          `2. SSM agent is installed and running on the instance\n` +
+          `3. Instance can reach SSM endpoints (check security groups and VPC routing)`
+        );
       }
+      
+      // Test SSH connectivity as part of dry-run (optional)
+      console.log('\n📋 Step 4: Testing SSH connectivity (optional, for troubleshooting)...');
+      try {
+        const { spawn } = await import('child_process');
+        const domain = options.domain || 'emcnotary.com';
+        const profile = options.profile || process.env.AWS_PROFILE || 'hepe-admin-mfa';
+        
+        const sshTestProcess = spawn('pnpm', [
+          'nx',
+          'run',
+          'cdk-emcnotary-instance:admin:ssh:test',
+        ], {
+          env: {
+            ...process.env,
+            AWS_PROFILE: profile,
+            AWS_REGION: region,
+            DOMAIN: domain,
+            APP_PATH: 'apps/cdk-emc-notary/instance',
+          },
+          stdio: ['ignore', 'pipe', 'pipe'],
+        });
+        
+        let stdout = '';
+        let stderr = '';
+        
+        sshTestProcess.stdout?.on('data', (data) => {
+          stdout += data.toString();
+        });
+        
+        sshTestProcess.stderr?.on('data', (data) => {
+          stderr += data.toString();
+        });
+        
+        const exitCode = await new Promise<number>((resolve) => {
+          sshTestProcess.on('close', resolve);
+        });
+        
+        if (exitCode === 0) {
+          console.log('✅ SSH test passed');
+        } else {
+          console.log(`⚠️  SSH test failed (exit code: ${exitCode})`);
+          console.log('   Note: Bootstrap uses SSM, SSH is optional for troubleshooting');
+        }
+      } catch (error: unknown) {
+        const err = error as { message?: string };
+        console.log(`⚠️  SSH test error: ${err?.message || String(error)}`);
+        console.log('   Note: Bootstrap uses SSM, SSH is optional for troubleshooting');
+      }
+      
+      console.log('\n✅ Dry run validation complete - all prerequisites met');
+      console.log('   Bootstrap is ready to execute (use without --dry-run to proceed)');
     } catch (error: unknown) {
       const err = error as { message?: string };
-      console.log(`⚠️  SSH test error: ${err?.message || String(error)}`);
-      console.log('   Note: Bootstrap uses SSM, but SSH may be needed for troubleshooting');
+      console.error('\n❌ Dry run validation failed:');
+      console.error(`   ${err?.message || String(error)}`);
+      throw error;
     }
-    
-    console.log('\n✅ Dry run complete - no AWS calls made, no changes');
     return;
   }
 
-  // Create AWS clients (only if not dry-run)
-  const { cf, ssm, ec2 } = createClients(region, options.profile);
-
-  // Describe instance stack
+  // Describe instance stack (non-dry-run execution)
   const stackInfo = await describeInstanceStack(cf, stackName, ec2);
   console.log(`✅ Found instance: ${stackInfo.instanceId}`);
   console.log(`   Domain: ${stackInfo.domainName}`);
@@ -637,9 +733,20 @@ export async function bootstrapInstance(
   );
   console.log(`✅ Loaded core parameters from SSM`);
 
-  // Verify instance is running
-  await verifyInstance(ec2, ssm, stackInfo.instanceId);
-  console.log(`✅ Instance ${stackInfo.instanceId} is running and accessible`);
+  // Verify instance is running and SSM agent is ready
+  // Get instance IP for potential SSH-based SSM agent installation
+  const describeCommand = new DescribeInstancesCommand({
+    InstanceIds: [stackInfo.instanceId],
+  });
+  const instanceResponse = await retryWithBackoff(() => ec2.send(describeCommand));
+  const instance = instanceResponse.Reservations?.[0]?.Instances?.[0];
+  const instanceIp = instance?.PublicIpAddress || instance?.PrivateIpAddress;
+  
+  await verifyInstance(ec2, ssm, stackInfo.instanceId, {
+    installIfMissing: false, // Don't auto-install, fail with clear error instead
+    instanceIp,
+  });
+  console.log(`✅ Instance ${stackInfo.instanceId} is running and SSM agent is ready`);
 
   // Build environment map
   const envMap = buildEnvironmentMap(stackInfo, coreParams, options);
