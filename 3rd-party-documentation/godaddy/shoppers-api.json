@@ -1,0 +1,390 @@
+{
+  "documentationName": "Shoppers API",
+  "url": "https://developer.godaddy.com/doc/endpoint/shoppers",
+  "title": "Documentation: Shoppers API",
+  "generatedAt": "2025-11-09T04:57:45.022Z",
+  "endpointsFound": 6,
+  "endpointsExpanded": 6,
+  "endpointsExtracted": 6,
+  "endpoints": [
+    {
+      "operationType": "POST",
+      "path": "/v1/shoppers/subaccount",
+      "name": "/v1/shoppers/subaccount",
+      "description": "POST/v1/shoppers/subaccountCreate a Subaccount owned by the authenticated Reseller",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "subaccount",
+          "type": "string",
+          "description": "The subaccount to create",
+          "required": true,
+          "location": "body"
+        }
+      ],
+      "responses": [
+        {
+          "code": "200",
+          "description": "Request was successful",
+          "example": "{\n  \"customerId\": \"string\",\n  \"shopperId\": \"string\"\n}"
+        },
+        {
+          "code": "400",
+          "description": "Request was malformed",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "422",
+          "description": "subaccount does not fulfill the schema",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "429",
+          "description": "Too many requests received within interval",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"retryAfterSec\": 0\n}"
+        },
+        {
+          "code": "500",
+          "description": "Internal server error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        }
+      ],
+      "requestBody": {
+        "contentType": "application/json",
+        "example": "{\n  \"email\": \"user@example.com\",\n  \"externalId\": 0,\n  \"marketId\": \"en-US\",\n  \"nameFirst\": \"string\",\n  \"nameLast\": \"string\",\n  \"password\": \"string\"\n}"
+      },
+      "expanded": true
+    },
+    {
+      "operationType": "GET",
+      "path": "/v1/shoppers/{shopperId}",
+      "name": "/v1/shoppers/{shopperId}",
+      "description": "Notes:shopperId is not the same as customerId.  shopperId is a number of max length 10 digits (ex: 1234567890) whereas customerId is a UUIDv4 (ex: 295e3bc3-b3b9-4d95-aae5-ede41a994d13)",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "shopperId",
+          "type": "string",
+          "description": "Shopper whose details are to be retrieved",
+          "required": true,
+          "location": "path"
+        },
+        {
+          "name": "includes",
+          "type": "array[string]",
+          "description": "Additional properties to be included in the response shopper object",
+          "required": false,
+          "location": "query"
+        }
+      ],
+      "responses": [
+        {
+          "code": "200",
+          "description": "Request was successful",
+          "example": "{\n  \"customerId\": \"string\",\n  \"email\": \"user@example.com\",\n  \"externalId\": 0,\n  \"marketId\": \"en-US\",\n  \"nameFirst\": \"string\",\n  \"nameLast\": \"string\",\n  \"shopperId\": \"string\"\n}"
+        },
+        {
+          "code": "400",
+          "description": "Request was malformed",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "404",
+          "description": "Resource not found",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "429",
+          "description": "Too many requests received within interval",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"retryAfterSec\": 0\n}"
+        },
+        {
+          "code": "500",
+          "description": "Internal server error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        }
+      ],
+      "expanded": true
+    },
+    {
+      "operationType": "POST",
+      "path": "/v1/shoppers/{shopperId}",
+      "name": "/v1/shoppers/{shopperId}",
+      "description": "Notes:shopperId is not the same as customerId.  shopperId is a number of max length 10 digits (ex: 1234567890) whereas customerId is a UUIDv4 (ex: 295e3bc3-b3b9-4d95-aae5-ede41a994d13)",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "shopperId",
+          "type": "string",
+          "description": "The ID of the Shopper to update",
+          "required": true,
+          "location": "path"
+        },
+        {
+          "name": "shopper",
+          "type": "string",
+          "description": "The Shopper details to update",
+          "required": true,
+          "location": "body"
+        }
+      ],
+      "responses": [
+        {
+          "code": "200",
+          "description": "Request was successful",
+          "example": "{\n  \"customerId\": \"string\",\n  \"shopperId\": \"string\"\n}"
+        },
+        {
+          "code": "400",
+          "description": "Request was malformed",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "404",
+          "description": "Resource not found",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "422",
+          "description": "Shopper does not fulfill the schema",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "429",
+          "description": "Too many requests received within interval",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"retryAfterSec\": 0\n}"
+        },
+        {
+          "code": "500",
+          "description": "Internal server error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        }
+      ],
+      "requestBody": {
+        "contentType": "application/json",
+        "example": "{\n  \"email\": \"user@example.com\",\n  \"externalId\": 0,\n  \"marketId\": \"da-DK\",\n  \"nameFirst\": \"string\",\n  \"nameLast\": \"string\"\n}"
+      },
+      "expanded": true
+    },
+    {
+      "operationType": "DELETE",
+      "path": "/v1/shoppers/{shopperId}",
+      "name": "/v1/shoppers/{shopperId}",
+      "description": "Notes:Shopper deletion is not supported in OTEshopperId is not the same as customerId.  shopperId is a number of max length 10 digits (ex: 1234567890) whereas customerId is a UUIDv4 (ex: 295e3bc3-b3b9-4d95-aae5-ede41a994d13)",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "shopperId",
+          "type": "string",
+          "description": "The ID of the shopper to delete. Must agree with the shopper id on the token or header, if present. Note: shopperId is not the same as customerId.  shopperId is a number of max length 10 digits (ex: 1234567890) whereas customerId is a UUIDv4 (ex: 295e3bc3-b3b9-4d95-aae5-ede41a994d13)",
+          "required": true,
+          "location": "path"
+        },
+        {
+          "name": "auditClientIp",
+          "type": "string",
+          "description": "The client IP of the user who originated the request leading to this call.",
+          "required": true,
+          "location": "query"
+        }
+      ],
+      "responses": [
+        {
+          "code": "204",
+          "description": "Request was successful"
+        },
+        {
+          "code": "400",
+          "description": "Request was malformed",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "404",
+          "description": "Resource not found",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "409",
+          "description": "Active and locked shoppers cannot be deleted",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "422",
+          "description": "Shopper ID is not supplied or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "429",
+          "description": "Too many requests received within interval",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"retryAfterSec\": 0\n}"
+        },
+        {
+          "code": "500",
+          "description": "Internal server error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        }
+      ],
+      "expanded": true
+    },
+    {
+      "operationType": "GET",
+      "path": "/v1/shoppers/{shopperId}/status",
+      "name": "/v1/shoppers/{shopperId}/status",
+      "description": "Notes:shopperId is not the same as customerId. shopperId is a number of max length 10 digits (ex: 1234567890) whereas customerId is a UUIDv4 (ex: 295e3bc3-b3b9-4d95-aae5-ede41a994d13)",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "shopperId",
+          "type": "string",
+          "description": "The ID of the shopper to retrieve. Must agree with the shopper id on the token or header, if present",
+          "required": true,
+          "location": "path"
+        },
+        {
+          "name": "auditClientIp",
+          "type": "string",
+          "description": "The client IP of the user who originated the request leading to this call.",
+          "required": true,
+          "location": "query"
+        }
+      ],
+      "responses": [
+        {
+          "code": "200",
+          "description": "Request was successful",
+          "example": "{\n  \"billingState\": \"ABANDONED\"\n}"
+        },
+        {
+          "code": "400",
+          "description": "Request was malformed",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "404",
+          "description": "Resource not found",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "422",
+          "description": "Shopper ID is not supplied or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "429",
+          "description": "Too many requests received within interval",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"retryAfterSec\": 0\n}"
+        },
+        {
+          "code": "500",
+          "description": "Internal server error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        }
+      ],
+      "expanded": true
+    },
+    {
+      "operationType": "PUT",
+      "path": "/v1/shoppers/{shopperId}/factors/password",
+      "name": "/v1/shoppers/{shopperId}/factors/password",
+      "description": "Notes:Password set is only supported by API Resellers setting subaccount passwords.shopperId is not the same as customerId.  shopperId is a number of max length 10 digits (ex: 1234567890) whereas customerId is a UUIDv4 (ex: 295e3bc3-b3b9-4d95-aae5-ede41a994d13)",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "shopperId",
+          "type": "string",
+          "description": "Shopper whose password will be set",
+          "required": true,
+          "location": "path"
+        },
+        {
+          "name": "secret",
+          "type": "string",
+          "description": "The value to set the subaccount's password to",
+          "required": true,
+          "location": "body"
+        }
+      ],
+      "responses": [
+        {
+          "code": "200",
+          "description": "Request was successful",
+          "example": "{\n  \"customerId\": \"string\",\n  \"shopperId\": \"string\"\n}"
+        },
+        {
+          "code": "400",
+          "description": "Request was not successful",
+          "example": "{\n  \"type\": \"string\",\n  \"code\": \"PW_BLACK_LIST\",\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "500",
+          "description": "Internal server error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        }
+      ],
+      "requestBody": {
+        "contentType": "application/json",
+        "example": "{\n  \"secret\": \"P@55w0rd+\"\n}"
+      },
+      "expanded": true
+    }
+  ],
+  "metadata": {
+    "source": "https://developer.godaddy.com/doc/endpoint/shoppers",
+    "xpath": "//*[@id=\"main\"]/div/div[2]"
+  }
+}

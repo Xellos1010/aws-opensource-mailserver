@@ -1,0 +1,78 @@
+{
+  "documentationName": "Agreements API",
+  "url": "https://developer.godaddy.com/doc/endpoint/agreements",
+  "title": "Documentation: Agreements API",
+  "generatedAt": "2025-11-09T04:55:46.945Z",
+  "endpointsFound": 1,
+  "endpointsExpanded": 1,
+  "endpointsExtracted": 1,
+  "endpoints": [
+    {
+      "operationType": "GET",
+      "path": "/v1/agreements",
+      "name": "/v1/agreements",
+      "description": "GET/v1/agreementsRetrieve Legal Agreements for provided agreements keys",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "X-Private-Label-Id",
+          "type": "integer",
+          "description": "PrivateLabelId to operate as, if different from JWT",
+          "required": false,
+          "location": "header"
+        },
+        {
+          "name": "X-Market-Id",
+          "type": "string($bcp-47)",
+          "description": "Unique identifier of the Market used to retrieve/translate Legal Agreements",
+          "required": false,
+          "location": "header"
+        },
+        {
+          "name": "keys",
+          "type": "array[string]",
+          "description": "Keys for Agreements whose details are to be retrieved",
+          "required": true,
+          "location": "query"
+        }
+      ],
+      "responses": [
+        {
+          "code": "200",
+          "description": "Request was successful",
+          "example": "[\n  {\n    \"agreementKey\": \"string\",\n    \"content\": \"string\",\n    \"title\": \"string\",\n    \"url\": \"string\"\n  }\n]"
+        },
+        {
+          "code": "400",
+          "description": "Request was malformed",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "429",
+          "description": "Too many requests received within interval",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"retryAfterSec\": 0\n}"
+        },
+        {
+          "code": "500",
+          "description": "Internal server error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        }
+      ],
+      "expanded": true
+    }
+  ],
+  "metadata": {
+    "source": "https://developer.godaddy.com/doc/endpoint/agreements",
+    "xpath": "//*[@id=\"main\"]/div/div[2]"
+  }
+}
