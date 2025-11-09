@@ -149,10 +149,6 @@ Env:
       const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
       if (!domain) throw new Error('stack:core:deploy requires a domain argument or DOMAIN env var');
 
-      if (process.env.FEATURE_CDK_EMCNOTARY_STACKS_ENABLED !== '1') {
-        throw new Error('FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 is required for stack operations');
-      }
-
       console.log(`Deploying core stack for domain: ${domain}`);
 
       // Use execSync to run the Nx target
@@ -169,10 +165,6 @@ Env:
     case 'stack:instance:deploy': {
       const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
       if (!domain) throw new Error('stack:instance:deploy requires a domain argument or DOMAIN env var');
-
-      if (process.env.FEATURE_CDK_EMCNOTARY_STACKS_ENABLED !== '1') {
-        throw new Error('FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 is required for stack operations');
-      }
 
       console.log(`Deploying instance stack for domain: ${domain}`);
 
@@ -191,10 +183,6 @@ Env:
       const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
       if (!domain) throw new Error('stack:core:destroy requires a domain argument or DOMAIN env var');
 
-      if (process.env.FEATURE_CDK_EMCNOTARY_STACKS_ENABLED !== '1') {
-        throw new Error('FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 is required for stack operations');
-      }
-
       console.log(`⚠️  Destroying core stack for domain: ${domain}`);
       console.log('This will delete all resources including S3 buckets (after emptying).');
 
@@ -211,10 +199,6 @@ Env:
     case 'stack:instance:destroy': {
       const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
       if (!domain) throw new Error('stack:instance:destroy requires a domain argument or DOMAIN env var');
-
-      if (process.env.FEATURE_CDK_EMCNOTARY_STACKS_ENABLED !== '1') {
-        throw new Error('FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 is required for stack operations');
-      }
 
       console.log(`⚠️  Destroying instance stack for domain: ${domain}`);
       console.log('This will terminate the EC2 instance and delete associated resources.');
@@ -233,10 +217,6 @@ Env:
       const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
       if (!domain) throw new Error('stack:core:diff requires a domain argument or DOMAIN env var');
 
-      if (process.env.FEATURE_CDK_EMCNOTARY_STACKS_ENABLED !== '1') {
-        throw new Error('FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 is required for CDK operations');
-      }
-
       console.log(`Showing diff for core stack: ${domain}`);
 
       const { execSync } = await import('child_process');
@@ -250,10 +230,6 @@ Env:
     case 'stack:instance:diff': {
       const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
       if (!domain) throw new Error('stack:instance:diff requires a domain argument or DOMAIN env var');
-
-      if (process.env.FEATURE_CDK_EMCNOTARY_STACKS_ENABLED !== '1') {
-        throw new Error('FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 is required for CDK operations');
-      }
 
       console.log(`Showing diff for instance stack: ${domain}`);
 
