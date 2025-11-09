@@ -288,35 +288,119 @@ async function checkBootstrapStatus(options: StatusOptions): Promise<void> {
   }
 }
 
+/**
+ * List recent SSM commands for instance
+ */
+async function listCommands(options: StatusOptions): Promise<void> {
+  const region = options.region || process.env.AWS_REGION || 'us-east-1';
+  const profile = options.profile || process.env.AWS_PROFILE || 'hepe-admin-mfa';
+  const appPath = options.appPath || 'apps/cdk-emc-notary/instance';
+  const domain = options.domain || process.env.DOMAIN || 'emcnotary.com';
+
+  const credentials = fromIni({ profile });
+  const ssm = new SSMClient({ region, credentials });
+
+  try {
+    // Get stack info
+    const stackInfo = await getStackInfoFromApp(appPath, {
+      domain,
+      region,
+      profile,
+    });
+
+    if (!stackInfo.instanceId) {
+      throw new Error('Instance ID not found in stack outputs');
+    }
+
+    const instanceId = options.instanceId || stackInfo.instanceId;
+    const maxItems = parseInt(process.env.MAX_ITEMS || '10', 10);
+
+    console.log(`📋 Recent SSM commands for instance ${instanceId}:\n`);
+
+    const response = await ssm.send(
+      new ListCommandsCommand({
+        InstanceId: instanceId,
+        MaxResults: maxItems,
+      })
+    );
+
+    if (!response.Commands || response.Commands.length === 0) {
+      console.log('No commands found for this instance.');
+      return;
+    }
+
+    // Format as table
+    console.log(
+      'Command ID'.padEnd(40) +
+        'Status'.padEnd(12) +
+        'Document'.padEnd(25) +
+        'Requested'
+    );
+    console.log('-'.repeat(100));
+
+    for (const cmd of response.Commands) {
+      const commandId = cmd.CommandId || 'N/A';
+      const status = cmd.Status || 'Unknown';
+      const document = cmd.DocumentName || 'N/A';
+      const requested = cmd.RequestedDateTime
+        ? cmd.RequestedDateTime.toISOString().replace('T', ' ').substring(0, 19)
+        : 'N/A';
+
+      console.log(
+        commandId.substring(0, 38).padEnd(40) +
+          status.padEnd(12) +
+          document.substring(0, 23).padEnd(25) +
+          requested
+      );
+    }
+  } catch (error) {
+    console.error('\n❌ Failed to list commands:');
+    if (error instanceof Error) {
+      console.error(`   ${error.message}`);
+    } else {
+      console.error(`   ${String(error)}`);
+    }
+    process.exit(1);
+  }
+}
+
 // Parse command line arguments
 const args = process.argv.slice(2);
 const options: StatusOptions = {
   follow: args.includes('--follow') || args.includes('-f'),
 };
 
-// Parse --command-id
-const commandIdIndex = args.indexOf('--command-id');
-if (commandIdIndex !== -1 && args[commandIdIndex + 1]) {
-  options.commandId = args[commandIdIndex + 1];
-}
-
-// Parse --tail
-const tailIndex = args.indexOf('--tail');
-if (tailIndex !== -1 && args[tailIndex + 1]) {
-  options.tail = parseInt(args[tailIndex + 1], 10);
-}
-
-// Parse --instance-id
-const instanceIdIndex = args.indexOf('--instance-id');
-if (instanceIdIndex !== -1 && args[instanceIdIndex + 1]) {
-  options.instanceId = args[instanceIdIndex + 1];
-}
-
-// Run if executed directly
-if (require.main === module) {
-  checkBootstrapStatus(options).catch((error) => {
+// Check if this is a list-commands request
+if (args.includes('--list-commands') || args.includes('-l')) {
+  listCommands(options).catch((error) => {
     console.error('Unhandled error:', error);
     process.exit(1);
   });
+} else {
+  // Parse --command-id
+  const commandIdIndex = args.indexOf('--command-id');
+  if (commandIdIndex !== -1 && args[commandIdIndex + 1]) {
+    options.commandId = args[commandIdIndex + 1];
+  }
+
+  // Parse --tail
+  const tailIndex = args.indexOf('--tail');
+  if (tailIndex !== -1 && args[tailIndex + 1]) {
+    options.tail = parseInt(args[tailIndex + 1], 10);
+  }
+
+  // Parse --instance-id
+  const instanceIdIndex = args.indexOf('--instance-id');
+  if (instanceIdIndex !== -1 && args[instanceIdIndex + 1]) {
+    options.instanceId = args[instanceIdIndex + 1];
+  }
+
+  // Run if executed directly
+  if (require.main === module) {
+    checkBootstrapStatus(options).catch((error) => {
+      console.error('Unhandled error:', error);
+      process.exit(1);
+    });
+  }
 }
 

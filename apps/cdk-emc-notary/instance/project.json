@@ -318,9 +318,9 @@
     },
     "admin:bootstrap:commands": {
       "executor": "nx:run-commands",
-      "dependsOn": ["admin-stack-info:build"],
+      "dependsOn": ["^build", "admin-stack-info:build"],
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} bash -c 'INSTANCE_ID=$(pnpm nx run admin-stack-info:get --silent 2>/dev/null | grep InstanceId | cut -d: -f2 | tr -d \" \\\"'\"); if [ -n \"$INSTANCE_ID\" ]; then echo \"📋 Recent SSM commands for instance $INSTANCE_ID:\"; aws ssm list-commands --instance-id \"$INSTANCE_ID\" --max-items ${MAX_ITEMS:-10} --query \"Commands[*].{CommandId:CommandId,Status:Status,RequestedDateTime:RequestedDateTime,DocumentName:DocumentName}\" --output table --region ${AWS_REGION:-us-east-1} --profile ${AWS_PROFILE:-hepe-admin-mfa}; else echo \"❌ Could not get instance ID\"; exit 1; fi'"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/bootstrap-status.cli.ts --list-commands"
       },
       "description": "List recent SSM commands: Shows last N SSM commands for the instance (use MAX_ITEMS=20 for more)"
     }
