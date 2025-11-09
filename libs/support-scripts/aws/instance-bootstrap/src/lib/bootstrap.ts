@@ -837,23 +837,26 @@ export async function bootstrapInstance(
 
   // Build SSM command
   // Note: SSM RunCommand uses /bin/sh by default, which doesn't support pipefail
-  // We need to wrap everything in bash -c or use bash explicitly for each command
-  const scriptContent = [
-    'set -euxo pipefail',
-    'cat > /root/miab-setup.sh << "EOF_MIAB"',
-    miabScript,
-    'EOF_MIAB',
-    // Export environment variables
+  // We need to use bash explicitly. Use base64 encoding to avoid heredoc delimiter issues.
+  const scriptWithEnv = [
+    // Export environment variables first
     ...Object.entries(envMap).map(
-      ([key, value]) => `export ${key}='${value.replace(/'/g, "'\\''")}'`
+      ([key, value]) => `export ${key}='${String(value).replace(/'/g, "'\\''")}'`
     ),
-    // Execute script
-    'bash -xe /root/miab-setup.sh',
+    '',
+    // The actual MIAB script
+    miabScript,
   ].join('\n');
   
-  // Wrap in bash -c to ensure bash is used (supports pipefail)
+  // Encode script to base64 to avoid shell escaping issues
+  const scriptBase64 = Buffer.from(scriptWithEnv).toString('base64');
+  
+  // Build commands that decode and execute
   const commands = [
-    `bash -c ${JSON.stringify(scriptContent)}`,
+    'set -euxo pipefail || set -eux', // Fallback if pipefail not supported
+    `echo '${scriptBase64}' | base64 -d > /root/miab-setup.sh`,
+    'chmod +x /root/miab-setup.sh',
+    'bash -xe /root/miab-setup.sh',
   ];
 
   if (options.dryRun) {
