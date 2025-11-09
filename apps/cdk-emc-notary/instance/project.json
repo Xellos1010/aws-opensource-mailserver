@@ -302,17 +302,17 @@
     },
     "admin:bootstrap:logs": {
       "executor": "nx:run-commands",
-      "dependsOn": ["admin-ssh:build", "admin-stack-info:build"],
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build"],
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} bash -c 'STACK_INFO=$(pnpm nx run admin-stack-info:get --silent 2>/dev/null | grep -E \"(InstanceId|InstancePublicIp|InstanceKeyName)\" | head -3); INSTANCE_ID=$(echo \"$STACK_INFO\" | grep InstanceId | cut -d: -f2 | tr -d \" \"); INSTANCE_IP=$(echo \"$STACK_INFO\" | grep InstancePublicIp | cut -d: -f2 | tr -d \" \"); KEY_NAME=$(echo \"$STACK_INFO\" | grep InstanceKeyName | cut -d: -f2 | tr -d \" \" || echo \"emcnotary.com-keypair\"); KEY_PATH=\"~/.ssh/${KEY_NAME}.pem\"; if [ -n \"$INSTANCE_IP\" ] && [ -n \"$INSTANCE_ID\" ]; then echo \"📋 Viewing bootstrap logs for instance $INSTANCE_ID\"; echo \"   IP: $INSTANCE_IP\"; echo \"   Key: $KEY_PATH\"; echo \"\"; ssh -i \"$KEY_PATH\" -o StrictHostKeyChecking=no ubuntu@\"$INSTANCE_IP\" \"tail -${TAIL:-50} /var/log/mailinabox_setup.log 2>/dev/null || echo 'Log file does not exist yet'\"; else echo \"❌ Could not get instance information\"; exit 1; fi'"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/bootstrap-logs.cli.ts ${TAIL:+--tail $TAIL}"
       },
       "description": "View bootstrap logs from instance: Shows last N lines of /var/log/mailinabox_setup.log (use TAIL=100 for more lines)"
     },
     "admin:bootstrap:logs:follow": {
       "executor": "nx:run-commands",
-      "dependsOn": ["admin-ssh:build", "admin-stack-info:build"],
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build"],
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} bash -c 'STACK_INFO=$(pnpm nx run admin-stack-info:get --silent 2>/dev/null | grep -E \"(InstanceId|InstancePublicIp|InstanceKeyName)\" | head -3); INSTANCE_ID=$(echo \"$STACK_INFO\" | grep InstanceId | cut -d: -f2 | tr -d \" \"); INSTANCE_IP=$(echo \"$STACK_INFO\" | grep InstancePublicIp | cut -d: -f2 | tr -d \" \"); KEY_NAME=$(echo \"$STACK_INFO\" | grep InstanceKeyName | cut -d: -f2 | tr -d \" \" || echo \"emcnotary.com-keypair\"); KEY_PATH=\"~/.ssh/${KEY_NAME}.pem\"; if [ -n \"$INSTANCE_IP\" ] && [ -n \"$INSTANCE_ID\" ]; then echo \"📋 Following bootstrap logs for instance $INSTANCE_ID\"; echo \"   IP: $INSTANCE_IP\"; echo \"   Press Ctrl+C to stop\"; echo \"\"; ssh -i \"$KEY_PATH\" -o StrictHostKeyChecking=no ubuntu@\"$INSTANCE_IP\" \"tail -f /var/log/mailinabox_setup.log 2>/dev/null || echo 'Log file does not exist yet'\"; else echo \"❌ Could not get instance information\"; exit 1; fi'"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} FOLLOW=1 pnpm exec tsx --tsconfig tools/tsconfig.json tools/bootstrap-logs.cli.ts --follow"
       },
       "description": "Follow bootstrap logs: Stream /var/log/mailinabox_setup.log in real-time (Ctrl+C to stop)"
     },
