@@ -222,11 +222,11 @@
     },
     "admin:bootstrap-miab-ec2-instance:dry-run": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build", "support-scripts-aws-instance-bootstrap:build"],
+      "dependsOn": ["^build", "support-scripts-aws-instance-bootstrap:build", "admin:info"],
       "options": {
-        "command": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/instance-bootstrap.cli.ts --dry-run"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/instance-bootstrap.cli.ts --dry-run"
       },
-      "description": "Dry run: Preview bootstrap of Mail-in-a-Box (MIAB) to EC2 instance (no SSM command sent)"
+      "description": "Dry run: Preview bootstrap of Mail-in-a-Box (MIAB) to EC2 instance (no SSM command sent). First retrieves stack info via admin:info, then validates with AWS credentials."
     },
     "admin:ssh:setup": {
       "executor": "nx:run-commands",
@@ -275,6 +275,14 @@
         "command": "DOMAIN=${DOMAIN:-emcnotary.com} pnpm nx run instance-provision:provision -- --skip-ssh"
       },
       "description": "Provision instance: Configure SES DNS only (skip SSH setup)"
+    },
+    "admin:fix-ssm-agent": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/fix-ssm-agent.cli.ts"
+      },
+      "description": "Fix SSM agent on existing instance: Install and start SSM agent via SSH (for instances deployed before UserData fix)"
     }
   }
 }

@@ -40,7 +40,8 @@
       "@mm/infra-naming": ["libs/infra/naming/src/index.ts"],
       "@mm/admin-ssh-access": ["libs/admin/ssh-access/src/index.ts"],
       "@mm/admin-ses-dns": ["libs/admin/ses-dns/src/index.ts"],
-      "@mm/admin-instance-provision": ["libs/admin/instance-provision/src/index.ts"]
+      "@mm/admin-instance-provision": ["libs/admin/instance-provision/src/index.ts"],
+      "@mm/admin-godaddy-dns": ["libs/admin/godaddy-dns/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

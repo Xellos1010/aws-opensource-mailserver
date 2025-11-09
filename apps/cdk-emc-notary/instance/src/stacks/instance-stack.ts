@@ -106,6 +106,12 @@ export class MailServerInstanceStack extends Stack {
       '/aws/service/canonical/ubuntu/server/jammy/stable/current/amd64/hvm/ebs-gp2/ami-id'
     );
 
+    // Create IKeyPair from key name for use with Instance construct
+    // Using fromKeyPairName to avoid deprecated keyName property
+    // Note: keyName is a literal string value, so we can use it directly
+    const keyPairName = `${domainName}-keypair`;
+    const keyPairRef = ec2.KeyPair.fromKeyPairName(this, 'KeyPairRef', keyPairName);
+
     const instance = new ec2.Instance(this, 'EC2Instance', {
       vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
@@ -113,7 +119,7 @@ export class MailServerInstanceStack extends Stack {
       instanceType: new ec2.InstanceType(instanceType.valueAsString),
       machineImage: ami,
       role,
-      keyName: keyPair.keyName,
+      keyPair: keyPairRef,
       blockDevices: [
         {
           deviceName: '/dev/sda1',

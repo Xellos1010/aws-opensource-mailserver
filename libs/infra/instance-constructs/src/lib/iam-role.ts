@@ -31,6 +31,11 @@ export function createInstanceRole(
     roleName: `MailInABoxInstanceRole-${stackName}`,
     assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
     description: 'IAM role for Mail-in-a-Box instance',
+    managedPolicies: [
+      // CRITICAL: Required for SSM Session Manager and Run Command
+      // This allows the instance to register with Systems Manager and execute commands
+      iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'),
+    ],
   });
 
   // S3 bucket access policies

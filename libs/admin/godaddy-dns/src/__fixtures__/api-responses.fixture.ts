@@ -34,3 +34,4 @@ export const mockTransientErrorResponse: GoDaddyApiErrorResponse = {
   message: 'Internal server error',
 };
 
+
