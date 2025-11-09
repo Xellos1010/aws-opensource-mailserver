@@ -85,3 +85,4 @@ node_modules/
 extracted-codebase/
 extracted-configs/
 extracted-rules/
+node_modules

@@ -20,6 +20,7 @@
     "@aws-sdk/client-s3": "^3.925.0",
     "@aws-sdk/client-ssm": "^3.925.0",
     "@aws-sdk/lib-storage": "^3.925.0",
+    "@babel/core": "^7.28.5",
     "@nx/esbuild": "^22.0.2",
     "@nx/eslint": "^22.0.2",
     "@nx/eslint-plugin": "^22.0.2",
