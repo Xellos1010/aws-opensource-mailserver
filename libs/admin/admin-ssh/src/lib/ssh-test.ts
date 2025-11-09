@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import * as fs from 'node:fs';
+import { setupSshForStack } from './ssh-setup';
 
 export type SshTestConfig = {
   keyFilePath: string;
@@ -15,6 +16,7 @@ export type SshTestResult = {
   success: boolean;
   error?: string;
   duration: number;
+  isAuthError?: boolean; // True if error is due to authentication failure
 };
 
 const log = (
@@ -104,8 +106,13 @@ export async function testSshConnection(
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
+    let stderrOutput = '';
+    result.stderr?.on('data', (data) => {
+      stderrOutput += data.toString();
+    });
+
     // Wait for connection with timeout
-    const connectionPromise = new Promise<{ success: boolean; error?: string }>(
+    const connectionPromise = new Promise<{ success: boolean; error?: string; isAuthError?: boolean }>(
       (resolve) => {
         let resolved = false;
 
@@ -116,6 +123,7 @@ export async function testSshConnection(
             resolve({
               success: false,
               error: `Connection timeout after ${timeout} seconds`,
+              isAuthError: false,
             });
           }
         }, timeout * 1000);
@@ -125,11 +133,17 @@ export async function testSshConnection(
             resolved = true;
             clearTimeout(timeoutId);
             if (code === 0) {
-              resolve({ success: true });
+              resolve({ success: true, isAuthError: false });
             } else {
+              // Check if it's an authentication error
+              const isAuthError = code === 255 && (
+                stderrOutput.includes('Permission denied') ||
+                stderrOutput.includes('publickey')
+              );
               resolve({
                 success: false,
-                error: `SSH connection failed with exit code ${code}`,
+                error: `SSH connection failed with exit code ${code}${stderrOutput ? `: ${stderrOutput.trim()}` : ''}`,
+                isAuthError,
               });
             }
           }
@@ -142,6 +156,7 @@ export async function testSshConnection(
             resolve({
               success: false,
               error: `SSH command error: ${err.message}`,
+              isAuthError: false,
             });
           }
         });
@@ -162,17 +177,20 @@ export async function testSshConnection(
       return {
         success: true,
         duration,
+        isAuthError: false,
       };
     } else {
       console.log(`✗ SSH connection failed: ${result_data.error || 'Unknown error'}`);
       log('error', 'SSH connection test failed', {
         error: result_data.error,
         duration,
+        isAuthError: result_data.isAuthError,
       });
       return {
         success: false,
         error: result_data.error,
         duration,
+        isAuthError: result_data.isAuthError,
       };
     }
   } catch (err) {
@@ -184,38 +202,126 @@ export async function testSshConnection(
     console.log(`✗ SSH connection test error: ${errorMsg}`);
     log('error', 'SSH connection test error', { error: errorMsg, duration });
 
-    return {
-      success: false,
-      error: errorMsg,
-      duration,
-    };
+      return {
+        success: false,
+        error: errorMsg,
+        duration,
+        isAuthError: false,
+      };
   }
 }
 
 /**
  * Tests SSH connection using stack info
+ * Ensures SSH is set up first if key file doesn't exist or if connection fails with auth error
  */
 export async function testSshForStack(stackInfo: {
   instancePublicIp?: string;
   domain: string;
   instanceKeyName?: string;
+  keyPairId?: string;
+  instanceId?: string;
   region?: string;
   profile?: string;
+  ensureSetup?: boolean; // Default: true - ensures SSH setup if key missing or auth fails
 }): Promise<SshTestResult> {
   if (!stackInfo.instancePublicIp) {
     throw new Error('Instance public IP not found in stack info');
   }
+
+  const { ensureSetup = true } = stackInfo;
 
   // Get SSH key path
   const sshDir = path.join(os.homedir(), '.ssh');
   const instanceKeyName = stackInfo.instanceKeyName || `${stackInfo.domain.replace(/\./g, '-')}-keypair`;
   const keyFilePath = path.join(sshDir, `${instanceKeyName}.pem`);
 
-  return testSshConnection({
+  // Ensure SSH is set up if key file doesn't exist
+  if (ensureSetup && !fs.existsSync(keyFilePath)) {
+    if (!stackInfo.keyPairId || !stackInfo.instanceId) {
+      throw new Error('Cannot setup SSH: keyPairId and instanceId are required but not found in stack info');
+    }
+
+    log('info', 'SSH key file not found, setting up SSH', {
+      keyFilePath,
+      instanceKeyName,
+    });
+
+    const setupResult = await setupSshForStack({
+      keyPairId: stackInfo.keyPairId,
+      instanceKeyName,
+      instancePublicIp: stackInfo.instancePublicIp,
+      instanceId: stackInfo.instanceId,
+      domain: stackInfo.domain,
+      region: stackInfo.region,
+      profile: stackInfo.profile,
+    });
+
+    if (!setupResult.success) {
+      return {
+        success: false,
+        error: `Failed to setup SSH: ${setupResult.errors.join('; ')}`,
+        duration: 0,
+      };
+    }
+  }
+
+  // Test SSH connection
+  const testResult = await testSshConnection({
     keyFilePath,
     instanceIp: stackInfo.instancePublicIp,
     user: 'ubuntu',
     timeout: 10,
   });
+
+  // If connection failed with auth error and ensureSetup is true, try re-setting up SSH
+  if (!testResult.success && ensureSetup && testResult.isAuthError) {
+    log('warn', 'SSH connection failed with auth error, re-setting up SSH', {
+      error: testResult.error,
+    });
+
+    if (stackInfo.keyPairId && stackInfo.instanceId) {
+      // Remove existing key file to force re-download
+      if (fs.existsSync(keyFilePath)) {
+        log('info', 'Removing existing key file to force re-download', {
+          keyFilePath,
+        });
+        try {
+          fs.unlinkSync(keyFilePath);
+        } catch (err) {
+          log('warn', 'Could not remove existing key file', {
+            error: String(err),
+          });
+        }
+      }
+
+      const setupResult = await setupSshForStack({
+        keyPairId: stackInfo.keyPairId,
+        instanceKeyName,
+        instancePublicIp: stackInfo.instancePublicIp,
+        instanceId: stackInfo.instanceId,
+        domain: stackInfo.domain,
+        region: stackInfo.region,
+        profile: stackInfo.profile,
+      });
+
+      if (setupResult.success) {
+        log('info', 'SSH re-setup successful, retrying connection');
+        // Retry connection after re-setup
+        return testSshConnection({
+          keyFilePath,
+          instanceIp: stackInfo.instancePublicIp,
+          user: 'ubuntu',
+          timeout: 10,
+        });
+      } else {
+        log('error', 'SSH re-setup failed', { errors: setupResult.errors });
+      }
+    } else {
+      log('warn', 'Cannot re-setup SSH: missing keyPairId or instanceId');
+    }
+  }
+
+  return testResult;
 }
 

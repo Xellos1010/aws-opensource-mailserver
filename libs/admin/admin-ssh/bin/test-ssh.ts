@@ -61,8 +61,11 @@ async function main() {
       instancePublicIp: stackInfo.instancePublicIp,
       domain: stackInfo.domain,
       instanceKeyName: stackInfo.instanceKeyName,
+      keyPairId: stackInfo.keyPairId,
+      instanceId: stackInfo.instanceId,
       region: stackInfo.region,
       profile: process.env['AWS_PROFILE'],
+      ensureSetup: true, // Ensure SSH is set up if key missing or auth fails
     });
 
     console.log('');
