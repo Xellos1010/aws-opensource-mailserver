@@ -172,12 +172,22 @@ else
 fi
 
 cd /opt/mailinabox
-git fetch --all -q
-CURRENT_TAG=$(git describe --tags --exact-match 2>/dev/null || echo "")
+# Fetch all branches and tags
+git fetch --all --tags -q
+# Get current tag/commit
+CURRENT_TAG=$(git describe --tags --exact-match 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo "")
 
 if [ "${CURRENT_TAG}" != "${MIAB_TAG}" ]; then
   echo "Checking out Mail-in-a-Box version: ${MIAB_TAG}"
-  git checkout "${MIAB_TAG}" -q
+  # Try to checkout tag, if it doesn't exist try as branch or commit
+  git checkout "${MIAB_TAG}" -q 2>/dev/null || {
+    echo "Tag ${MIAB_TAG} not found, trying to fetch and checkout..."
+    git fetch origin tag "${MIAB_TAG}" -q 2>/dev/null || true
+    git checkout "${MIAB_TAG}" -q || {
+      echo "Warning: Could not checkout ${MIAB_TAG}, using latest commit"
+      git checkout main -q || git checkout master -q || true
+    }
+  }
 else
   echo "Already on correct version: ${MIAB_TAG}"
 fi
