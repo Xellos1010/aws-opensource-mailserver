@@ -628,24 +628,104 @@ export async function bootstrapInstance(
       const { cf, ssm, ec2 } = createClients(region, options.profile);
       console.log('\n🔍 Optional validation (requires AWS credentials):');
       
-      // Try to check SSM agent status (non-blocking)
+      // Try to check SSM agent status with retries and instance diagnostics
       try {
         const stackInfo = await describeInstanceStack(cf, stackName, ec2);
         console.log(`✅ Found instance: ${stackInfo.instanceId}`);
         
-        const ssmStatus = await checkSsmAgentStatus(ssm, stackInfo.instanceId);
-        if (ssmStatus.online) {
-          console.log(`✅ SSM agent is ready (PingStatus: ${ssmStatus.pingStatus})`);
-        } else {
-          console.log(`⚠️  SSM agent is NOT ready`);
-          if (ssmStatus.pingStatus) {
-            console.log(`   PingStatus: ${ssmStatus.pingStatus}`);
+        // Get instance details to check age and IAM role
+        const describeCommand = new DescribeInstancesCommand({
+          InstanceIds: [stackInfo.instanceId],
+        });
+        const instanceResponse = await retryWithBackoff(() => ec2.send(describeCommand));
+        const instance = instanceResponse.Reservations?.[0]?.Instances?.[0];
+        
+        if (instance) {
+          // Check instance age
+          const launchTime = instance.LaunchTime;
+          if (launchTime) {
+            const ageMinutes = Math.floor((Date.now() - launchTime.getTime()) / 60000);
+            console.log(`   Instance age: ${ageMinutes} minutes`);
+            
+            if (ageMinutes < 3) {
+              console.log(`   ⚠️  Instance is very new (< 3 minutes)`);
+              console.log(`   ⚠️  SSM agent registration typically takes 2-5 minutes after launch`);
+              console.log(`   💡 Wait a few minutes and run dry-run again, or proceed with bootstrap (it will wait)`);
+            }
           }
-          if (ssmStatus.error) {
-            console.log(`   Error: ${ssmStatus.error}`);
+          
+          // Check IAM role attachment
+          const iamProfile = instance.IamInstanceProfile;
+          if (iamProfile) {
+            console.log(`   ✅ IAM instance profile attached: ${iamProfile.Arn || 'N/A'}`);
+            const roleName = iamProfile.Arn?.split('/').pop();
+            if (roleName) {
+              console.log(`   ✅ IAM role: ${roleName}`);
+              // Check if role name suggests SSM policy should be present
+              if (roleName.includes('MailInABoxInstanceRole')) {
+                console.log(`   ✅ Role name matches expected pattern (should have AmazonSSMManagedInstanceCore)`);
+              }
+            }
+          } else {
+            console.log(`   ❌ IAM instance profile NOT attached`);
+            console.log(`   ⚠️  SSM will NOT work without IAM role with AmazonSSMManagedInstanceCore policy`);
           }
-          console.log('   ⚠️  Bootstrap will fail if SSM agent is not ready');
-          console.log('   Please ensure SSM agent is installed and running before bootstrap');
+          
+          // Check instance state
+          const state = instance.State?.Name;
+          if (state !== 'running') {
+            console.log(`   ⚠️  Instance state: ${state} (must be 'running' for SSM)`);
+          } else {
+            console.log(`   ✅ Instance state: ${state}`);
+          }
+        }
+        
+        // Try SSM agent check with short retry loop (30 seconds max for dry-run)
+        console.log(`\n⏳ Checking SSM agent status (will retry for up to 30 seconds)...`);
+        const dryRunMaxWait = 30000; // 30 seconds for dry-run
+        const checkInterval = 5000; // Check every 5 seconds
+        const startTime = Date.now();
+        let lastStatus: { online: boolean; pingStatus?: string; error?: string } | undefined;
+        let checked = false;
+        
+        while (Date.now() - startTime < dryRunMaxWait) {
+          lastStatus = await checkSsmAgentStatus(ssm, stackInfo.instanceId);
+          checked = true;
+          
+          if (lastStatus.online) {
+            console.log(`\n✅ SSM agent is ready (PingStatus: ${lastStatus.pingStatus})`);
+            console.log(`   ✅ Instance is ready for bootstrap`);
+            break;
+          }
+          
+          // If not online yet, wait and retry
+          const elapsed = Math.floor((Date.now() - startTime) / 1000);
+          process.stdout.write(`\r   Checking... (${elapsed}s elapsed)`);
+          await sleep(checkInterval);
+        }
+        
+        if (!lastStatus?.online && checked) {
+          console.log(`\n⚠️  SSM agent is NOT ready after ${dryRunMaxWait / 1000} seconds`);
+          if (lastStatus?.pingStatus) {
+            console.log(`   PingStatus: ${lastStatus.pingStatus}`);
+          }
+          if (lastStatus?.error) {
+            console.log(`   Error: ${lastStatus.error}`);
+          }
+          
+          console.log(`\n📋 Troubleshooting steps:`);
+          console.log(`   1. If instance was deployed before UserData fix, install SSM agent:`);
+          console.log(`      pnpm nx run cdk-emcnotary-instance:admin:fix-ssm-agent`);
+          console.log(`   2. If IAM role was updated after instance launch, restart SSM agent:`);
+          console.log(`      ssh to instance and run: sudo snap restart amazon-ssm-agent`);
+          console.log(`   3. Verify IAM role has AmazonSSMManagedInstanceCore managed policy`);
+          console.log(`   4. Check instance can reach SSM endpoints (outbound HTTPS on port 443)`);
+          console.log(`   5. If instance is new, wait 2-5 minutes for SSM agent to register`);
+          console.log(`   6. Check SSM agent logs: ssh to instance and run:`);
+          console.log(`      sudo journalctl -u snap.amazon-ssm-agent.amazon-ssm-agent.service -f`);
+          console.log(`   7. Verify SSM agent is running: snap services amazon-ssm-agent`);
+          console.log(`\n💡 Note: Bootstrap will wait up to 5 minutes for SSM agent in non-dry-run mode`);
+          console.log(`💡 Future deployments will automatically install SSM agent via updated UserData`);
         }
       } catch (validationError: unknown) {
         const err = validationError as { message?: string };
@@ -654,6 +734,7 @@ export async function bootstrapInstance(
           console.log('   Dry-run preview complete (validation skipped)');
         } else {
           console.log(`   ⚠️  Validation warning: ${err?.message || String(validationError)}`);
+          console.log(`   💡 This may be expected if instance was just created`);
         }
       }
     } catch (error: unknown) {

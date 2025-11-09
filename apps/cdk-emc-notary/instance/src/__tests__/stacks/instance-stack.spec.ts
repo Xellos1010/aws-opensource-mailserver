@@ -242,6 +242,34 @@ describe('MailServerInstanceStack', () => {
         expect(ssmStatement).toBeDefined();
       }
     });
+
+    it('has AmazonSSMManagedInstanceCore managed policy for SSM access', () => {
+      // Verify the IAM role has the SSM managed policy attached
+      const roles = template.findResources('AWS::IAM::Role', {});
+      const instanceRole = Object.values(roles).find((resource: any) =>
+        resource['Properties']?.['RoleName']?.includes('MailInABoxInstanceRole')
+      );
+      expect(instanceRole).toBeDefined();
+      
+      if (instanceRole) {
+        const managedPolicyArns = instanceRole['Properties']['ManagedPolicyArns'] || [];
+        const hasSsmPolicy = managedPolicyArns.some((arn: any) => {
+          // Managed policy ARN can be a string or CloudFormation intrinsic function
+          if (typeof arn === 'string') {
+            return arn.includes('AmazonSSMManagedInstanceCore');
+          }
+          // Check if it's a CloudFormation function that resolves to the SSM policy
+          if (typeof arn === 'object' && 'Fn::Join' in arn) {
+            const joinParts = arn['Fn::Join'][1];
+            return joinParts.some((part: any) => 
+              typeof part === 'string' && part.includes('AmazonSSMManagedInstanceCore')
+            );
+          }
+          return false;
+        });
+        expect(hasSsmPolicy).toBe(true);
+      }
+    });
   });
 
   describe('Key Pair', () => {

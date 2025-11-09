@@ -54,11 +54,11 @@ export function createNightlyReboot(
   const rebootLambda = new lambda.Function(scope, `${id}Function`, {
     runtime: lambda.Runtime.NODEJS_20_X,
     code: lambda.Code.fromInline(`
-import { EC2Client, RebootInstancesCommand } from '@aws-sdk/client-ec2';
+const { EC2Client, RebootInstancesCommand } = require('@aws-sdk/client-ec2');
 
 const ec2Client = new EC2Client({ region: process.env.AWS_REGION });
 
-export const handler = async (event: any) => {
+exports.handler = async (event) => {
   const instanceId = process.env.INSTANCE_ID;
 
   if (!instanceId) {
@@ -94,17 +94,46 @@ export const handler = async (event: any) => {
     },
   });
 
-  // Parse cron expression
-  const [minute, hour, day, month, year] = schedule.split(' ');
+  // Parse cron expression (EventBridge uses 6 fields: minute, hour, day-of-month, month, day-of-week, year)
+  const cronParts = schedule.split(' ');
+  if (cronParts.length !== 6) {
+    throw new Error(
+      `Invalid cron schedule format. Expected 6 fields (minute hour day-of-month month day-of-week year), got ${cronParts.length} fields: "${schedule}"`
+    );
+  }
+  const [minute, hour, dayOfMonth, month, dayOfWeek, year] = cronParts;
+
+  // CDK's Schedule.cron() doesn't allow both 'day' and 'weekDay' to be set
+  // If day-of-week is '?', use weekDay and omit day
+  // If day-of-month is '?', use day and omit weekDay
+  const cronOptions: {
+    minute: string;
+    hour: string;
+    month: string;
+    year: string;
+    day?: string;
+    weekDay?: string;
+  } = {
+    minute,
+    hour,
+    month,
+    year,
+  };
+
+  if (dayOfWeek === '?') {
+    // Use day-of-month, ignore day-of-week
+    cronOptions.day = dayOfMonth;
+  } else {
+    // Use day-of-week, ignore day-of-month
+    cronOptions.weekDay = dayOfWeek;
+    if (dayOfMonth !== '?') {
+      // If both are specified (neither is '?'), prefer weekDay for daily schedules
+      cronOptions.weekDay = dayOfWeek;
+    }
+  }
 
   const rebootRule = new events.Rule(scope, `${id}Rule`, {
-    schedule: events.Schedule.cron({
-      minute,
-      hour,
-      day,
-      month,
-      year,
-    }),
+    schedule: events.Schedule.cron(cronOptions),
     description,
     enabled: true,
   });

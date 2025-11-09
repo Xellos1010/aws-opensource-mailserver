@@ -48,3 +48,4 @@ pnpm nx test:integration godaddy-dns
 echo ""
 echo -e "${GREEN}Integration tests completed!${NC}"
 
+

@@ -82,6 +82,7 @@ data/godaddy/api-keys/*
 
 # Dependencies and extracted files
 node_modules/
+node_modules/** */
 extracted-codebase/
 extracted-configs/
 extracted-rules/
