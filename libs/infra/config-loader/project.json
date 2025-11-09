@@ -5,17 +5,18 @@
   "projectType": "library",
   "tags": ["type:util", "scope:infra", "domain:config"],
   "targets": {
-    "build": {
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "tsc -p libs/infra/config-loader/tsconfig.lib.json",
-          "tsc -p libs/infra/config-loader/bin/tsconfig.json"
-        ],
-        "parallel": false
+      "build": {
+        "executor": "nx:run-commands",
+        "options": {
+          "commands": [
+            "tsc -p libs/infra/config-loader/tsconfig.lib.json",
+            "tsc -p libs/infra/config-loader/bin/tsconfig.json",
+            "cp dist/libs/infra/config-loader/bin/config-loader/bin/cdk-synth.js dist/libs/infra/config-loader/bin/cdk-synth.js 2>/dev/null || true"
+          ],
+          "parallel": false
+        },
+        "outputs": ["{workspaceRoot}/dist/libs/infra/config-loader"]
       },
-      "outputs": ["{workspaceRoot}/dist/libs/infra/config-loader"]
-    },
     "lint": {
       "executor": "@nx/eslint:lint"
     },
