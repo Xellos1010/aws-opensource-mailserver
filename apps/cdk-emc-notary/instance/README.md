@@ -2,6 +2,14 @@
 
 Instance infrastructure stack for mail servers. This stack contains EC2 instance and related compute resources, built using shared constructs for multi-domain support.
 
+## Stack Naming
+
+This stack uses canonical naming via `@mm/infra-naming`:
+- **Stack Name**: `emcnotary-com-mailserver-instance` (format: `{domain-tld}-mailserver-instance`)
+- Stack name is automatically derived from the `DOMAIN` environment variable or CDK context
+
+See [ADR-001: Infrastructure Naming Standard](../../docs/adr/001-infra-naming-standard.md) for details.
+
 ## Architecture
 
 This stack uses **shared constructs** from `@mm/infra-instance-constructs` for:
@@ -38,11 +46,14 @@ This stack supports multiple domains through domain configuration:
 
 ```typescript
 // Example: Deploy for different domain
+import { toMailserverInstanceStackName, coreParamPrefix } from '@mm/infra-naming';
+
+const domain = 'askdaokapra.com';
 const domainConfig: DomainConfig = {
-  domainName: 'askdaokapra.com',
+  domainName: domain,
   instanceDns: 'box',
-  coreParamPrefix: '/askdaokapra/core',
-  stackName: 'askdaokapra-com-mailserver-instance',
+  coreParamPrefix: coreParamPrefix(domain), // '/askdaokapra/core'
+  stackName: toMailserverInstanceStackName(domain), // 'askdaokapra-com-mailserver-instance'
 };
 ```
 

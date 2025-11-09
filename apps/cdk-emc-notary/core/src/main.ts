@@ -2,6 +2,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { EmcNotaryCoreStack } from './stacks/core-stack';
+import { toMailserverCoreStackName } from '@mm/infra-naming';
 
 const app = new cdk.App();
 
@@ -10,10 +11,8 @@ const app = new cdk.App();
 const defaultDomain = 'emcnotary.com';
 const domain = app.node.tryGetContext('domain') || process.env['DOMAIN'] || defaultDomain;
 
-// Create stack name in format: {domain-tld}-mailserver-core
-// e.g., emcnotary.com -> emcnotary-com-mailserver-core
-const domainName = domain.replace(/\./g, '-');
-const stackName = `${domainName}-mailserver-core`;
+// Create stack name using canonical naming utility
+const stackName = toMailserverCoreStackName(domain);
 
 new EmcNotaryCoreStack(app, stackName, {
   env: {
