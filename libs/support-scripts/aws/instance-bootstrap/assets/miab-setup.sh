@@ -29,7 +29,7 @@ echo "=========================================="
 
 # Resolve Elastic IP from AllocationId (works even if EIP not yet attached)
 ELASTIC_IP=""
-if [[ -n "${EIP_ALLOCATION_ID}" ]]; then
+if [[ -n "${EIP_ALLOCATION_ID:-}" ]]; then
   echo "Resolving Elastic IP from AllocationId: ${EIP_ALLOCATION_ID}"
   
   # Ensure AWS CLI is available
@@ -136,7 +136,7 @@ if [[ -z "${ADMIN_PASSWORD:-}" ]]; then
   else
     # Generate new password
     EMAIL_PW=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 16 ; echo '')
-    if [[ -z "${RESTORE_PREFIX}" ]]; then
+    if [[ -z "${RESTORE_PREFIX:-}" ]]; then
       echo "Storing admin password in SSM..."
       aws ssm put-parameter --region "${REGION}" --overwrite \
         --name "${ADMIN_PASSWORD_PARAM}" --type SecureString --value "${EMAIL_PW}" || true
@@ -185,7 +185,7 @@ fi
 # ==========================================
 # Optional Backup Restore (idempotent)
 # ==========================================
-if [[ -n "${RESTORE_PREFIX}" ]]; then
+if [[ -n "${RESTORE_PREFIX:-}" ]]; then
   echo "Restore prefix specified: ${RESTORE_PREFIX}"
   
   # Ensure duplicity is available via snap
