@@ -8,7 +8,17 @@
 # Optional: EIP_ALLOCATION_ID, SES_IDENTITY_ARN, RESTORE_PREFIX, REBOOT_AFTER_SETUP
 
 LOGFILE="/var/log/mailinabox_setup.log"
-exec > >(tee -a "$LOGFILE" | logger -t mailinabox_setup) 2>&1
+# Setup logging - use a function to handle both file and syslog
+log_and_echo() {
+  echo "$@" | tee -a "$LOGFILE" | logger -t mailinabox_setup
+}
+
+# Redirect stdout and stderr to log file, also send to syslog via function
+exec > >(while IFS= read -r line; do echo "$line" | tee -a "$LOGFILE" | logger -t mailinabox_setup; done) 2>&1 || {
+  # Fallback if process substitution doesn't work: simple redirection
+  exec >> "$LOGFILE" 2>&1
+  logger -t mailinabox_setup "Starting Mail-in-a-Box bootstrap (fallback logging)"
+}
 
 echo "=========================================="
 echo "MIAB Bootstrap Script"

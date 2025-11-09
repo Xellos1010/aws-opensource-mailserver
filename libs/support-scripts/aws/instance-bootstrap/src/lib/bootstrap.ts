@@ -854,9 +854,9 @@ export async function bootstrapInstance(
   const scriptBase64 = Buffer.from(scriptWithEnv).toString('base64');
   
   // Build commands - wrap in bash -c to ensure bash is used
-  // SSM RunCommand executes each command separately, so we need bash for each
+  // Use printf to avoid quote escaping issues with base64 string
   const commands = [
-    `bash -c "echo '${scriptBase64}' | base64 -d > /root/miab-setup.sh && chmod +x /root/miab-setup.sh && bash -xe /root/miab-setup.sh"`,
+    `bash -c "printf '%s' '${scriptBase64}' | base64 -d > /root/miab-setup.sh && chmod +x /root/miab-setup.sh && bash -xe /root/miab-setup.sh"`,
   ];
 
   if (options.dryRun) {
