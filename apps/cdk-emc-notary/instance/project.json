@@ -216,7 +216,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["^build", "support-scripts-aws-instance-bootstrap:build"],
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx tools/instance-bootstrap.cli.ts"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/instance-bootstrap.cli.ts"
       },
       "description": "Bootstrap Mail-in-a-Box (MIAB) to EC2 instance via SSM RunCommand"
     },
