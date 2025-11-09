@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../apps/cdk-emc-notary/src/main.ts"],
-  "sourcesContent": ["#!/usr/bin/env node\n\nimport { App, Stack, StackProps, CfnOutput } from 'aws-cdk-lib';\n\nclass EmcNotaryBaseStack extends Stack {\n  constructor(app: App, id: string, p?: StackProps) {\n    super(app, id, p);\n\n    new CfnOutput(this, 'Bootstrap', { value: '{placeholder: true}' });\n  }\n}\n\nconst app = new App();\n\nnew EmcNotaryBaseStack(app, 'EmcNotaryBaseStack', {\n  env: {\n    account: process.env.CDK_DEFAULT_ACCOUNT,\n    region: process.env.CDK_DEFAULT_REGION || 'us-east-1',\n  },\n  description: 'EMC Notary Base Stack - Domain/DNS/SES/CDK scaffold',\n});\n\napp.synth();\n"],
-  "mappings": ";;;AAEA,yBAAkD;AAElD,IAAM,qBAAN,cAAiC,yBAAM;AAAA,EACrC,YAAYA,MAAU,IAAY,GAAgB;AAChD,UAAMA,MAAK,IAAI,CAAC;AAEhB,QAAI,6BAAU,MAAM,aAAa,EAAE,OAAO,sBAAsB,CAAC;AAAA,EACnE;AACF;AAEA,IAAM,MAAM,IAAI,uBAAI;AAEpB,IAAI,mBAAmB,KAAK,sBAAsB;AAAA,EAChD,KAAK;AAAA,IACH,SAAS,QAAQ,IAAI;AAAA,IACrB,QAAQ,QAAQ,IAAI,sBAAsB;AAAA,EAC5C;AAAA,EACA,aAAa;AACf,CAAC;AAED,IAAI,MAAM;",
-  "names": ["app"]
-}
