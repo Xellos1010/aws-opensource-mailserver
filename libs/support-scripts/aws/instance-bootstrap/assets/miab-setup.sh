@@ -117,7 +117,8 @@ systemctl daemon-reload || true
 EMAIL_ADDR="admin@${DOMAIN_NAME}"
 ADMIN_PASSWORD_PARAM="${ADMIN_PASSWORD_PARAM:-/MailInABoxAdminPassword-${STACK_NAME}}"
 
-if [[ -z "${ADMIN_PASSWORD}" ]]; then
+# Check if ADMIN_PASSWORD is set (handle unset variable with set -u)
+if [[ -z "${ADMIN_PASSWORD:-}" ]]; then
   # Check if password already exists in SSM
   if aws ssm get-parameter --region "${REGION}" --name "${ADMIN_PASSWORD_PARAM}" --with-decryption >/dev/null 2>&1; then
     echo "Admin password already exists in SSM (${ADMIN_PASSWORD_PARAM})"
