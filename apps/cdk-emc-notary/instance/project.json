@@ -355,6 +355,22 @@
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/get-admin-credentials.cli.ts ${DOMAIN:+--domain $DOMAIN}"
       },
       "description": "Get admin credentials: Retrieves Mail-in-a-Box admin username and password from SSM Parameter Store"
+    },
+    "admin:credentials:test": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin-credentials:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/test-admin-credentials.cli.ts ${DOMAIN:+--domain $DOMAIN}"
+      },
+      "description": "Test admin credentials: Verifies admin account exists, checks login page accessibility, and provides troubleshooting steps"
+    },
+    "admin:credentials:create": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin-credentials:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/create-admin-account.cli.ts ${EMAIL:+--email $EMAIL} ${PASSWORD:+--password $PASSWORD}"
+      },
+      "description": "Create admin account: Creates the admin@domain email account in Mail-in-a-Box if it doesn't exist (uses SSM password by default)"
     }
   }
 }
