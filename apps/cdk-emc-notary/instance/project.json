@@ -323,6 +323,14 @@
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/bootstrap-status.cli.ts --list-commands"
       },
       "description": "List recent SSM commands: Shows last N SSM commands for the instance (use MAX_ITEMS=20 for more)"
+    },
+    "admin:bootstrap:confirm": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/bootstrap-confirm.cli.ts"
+      },
+      "description": "Confirm bootstrap success: Comprehensive check of instance state against expected bootstrap outcomes"
     }
   }
 }
