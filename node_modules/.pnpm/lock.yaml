@@ -39,6 +39,9 @@ importers:
       '@aws-sdk/lib-storage':
         specifier: ^3.925.0
         version: 3.925.0(@aws-sdk/client-s3@3.925.0)
+      '@babel/core':
+        specifier: ^7.28.5
+        version: 7.28.5
       '@nx/esbuild':
         specifier: ^22.0.2
         version: 22.0.2(@babel/traverse@7.28.5)(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.5.29(@swc/helpers@0.5.17))(esbuild@0.19.12)(nx@22.0.2(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.5.29(@swc/helpers@0.5.17)))

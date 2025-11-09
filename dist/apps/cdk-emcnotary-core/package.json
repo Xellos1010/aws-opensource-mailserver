@@ -3,5 +3,8 @@
   "version": "0.0.1",
   "packageManager": "pnpm@9.12.2",
   "main": "./main.cjs",
-  "type": "commonjs"
+  "type": "commonjs",
+  "devDependencies": {
+    "@babel/core": "^7.28.5"
+  }
 }

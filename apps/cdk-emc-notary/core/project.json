@@ -60,6 +60,15 @@
     "lint": {
       "executor": "@nx/eslint:lint"
     },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/cdk-emc-notary/core"],
+      "dependsOn": ["build"],
+      "options": {
+        "jestConfig": "apps/cdk-emc-notary/core/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
     "admin:info": {
       "executor": "nx:run-commands",
       "dependsOn": ["admin-stack-info:build"],
