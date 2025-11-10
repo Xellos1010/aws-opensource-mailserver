@@ -622,6 +622,9 @@ export async function bootstrapInstance(
     console.log('  3. Verify instance is running and SSM agent is ready');
     console.log('  4. Build environment map with configuration values');
     console.log('  5. Send SSM RunCommand to execute MIAB setup script');
+    console.log('  6. MIAB script will checkout git tag (default: v73)');
+    console.log('  7. MIAB script will verify management directory exists');
+    console.log('  8. MIAB script will run idempotent setup operations');
     
     // Optional: Try to validate SSM agent if credentials are available
     try {
@@ -861,6 +864,15 @@ export async function bootstrapInstance(
 
   if (options.dryRun) {
     console.log('\n🔍 DRY RUN MODE - Would execute:\n');
+    console.log(`  Mail-in-a-Box Version: ${envMap.MAILINABOX_VERSION || 'v73'}`);
+    console.log(`  Git Repository: ${envMap.MAILINABOX_CLONE_URL || 'https://github.com/mail-in-a-box/mailinabox.git'}`);
+    console.log(`  Git Checkout Strategy:`);
+    console.log(`    1. Try exact tag: ${envMap.MAILINABOX_VERSION || 'v73'}`);
+    console.log(`    2. If not found, find latest matching major version tag`);
+    console.log(`    3. Verify management directory exists after checkout`);
+    console.log(`    4. If missing, search for any tag with management directory`);
+    console.log(`    5. Exit with error if management directory still missing`);
+    console.log('');
     console.log('Environment variables:');
     Object.entries(envMap).forEach(([key, value]) => {
       // Mask sensitive values
