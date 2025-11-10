@@ -625,6 +625,13 @@ export async function bootstrapInstance(
     console.log('  6. MIAB script will checkout git tag (default: v73)');
     console.log('  7. MIAB script will verify management directory exists');
     console.log('  8. MIAB script will run idempotent setup operations');
+    console.log('\n📋 Git Checkout Strategy (in MIAB script):');
+    console.log('    1. Try exact tag: v73 (or MAILINABOX_VERSION if set)');
+    console.log('    2. If not found, find latest matching major version tag (v73.*)');
+    console.log('    3. Verify management directory exists after checkout');
+    console.log('    4. If missing, search for any tag with management directory');
+    console.log('    5. Exit with error if management directory still missing');
+    console.log('    6. This ensures management scripts are always available');
     
     // Optional: Try to validate SSM agent if credentials are available
     try {
