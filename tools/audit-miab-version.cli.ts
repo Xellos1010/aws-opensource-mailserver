@@ -4,6 +4,7 @@ import { getStackInfoFromApp } from '@mm/admin-stack-info';
 import { getSshKeyPath } from '@mm/admin-ssh';
 import { spawn } from 'child_process';
 import * as https from 'https';
+import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 
 interface AuditOptions {
   domain?: string;
@@ -92,6 +93,38 @@ async function sshCommand(
 }
 
 /**
+ * Get Mail-in-a-Box version from SSM Parameter Store
+ */
+async function getMiabVersionFromSsm(
+  ssm: SSMClient,
+  stackName: string
+): Promise<string | null> {
+  const paramName = `/MailInABoxVersion-${stackName}`;
+  
+  try {
+    const command = new GetParameterCommand({
+      Name: paramName,
+      WithDecryption: false,
+    });
+    
+    const response = await ssm.send(command);
+    if (response.Parameter?.Value) {
+      return response.Parameter.Value;
+    }
+  } catch (error) {
+    // Parameter doesn't exist or other error - return null
+    const err = error as { name?: string };
+    if (err?.name !== 'ParameterNotFound') {
+      console.log(
+        `⚠️  Could not read SSM parameter ${paramName}: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+  
+  return null;
+}
+
+/**
  * Get latest Mail-in-a-Box release tag from GitHub API
  */
 async function getLatestMiabTag(): Promise<string> {
@@ -152,25 +185,61 @@ async function auditMiabVersion(options: AuditOptions): Promise<void> {
   console.log(`   Update: ${update ? 'YES' : 'NO (audit only)'}\n`);
 
   try {
-    // Get latest tag from GitHub
-    console.log('📋 Step 1: Fetching latest Mail-in-a-Box release from GitHub...');
-    let latestTag: string;
-    try {
-      latestTag = await getLatestMiabTag();
-      console.log(`✅ Latest release: ${latestTag}\n`);
-    } catch (error) {
-      console.log(`⚠️  Could not fetch latest tag from GitHub: ${error instanceof Error ? error.message : String(error)}`);
-      console.log(`   Using fallback: v73\n`);
-      latestTag = 'v73';
-    }
-
-    // Get stack info
-    console.log('📋 Step 2: Getting stack information...');
+    // Get stack info first (needed for SSM parameter lookup)
+    console.log('📋 Step 1: Getting stack information...');
     const stackInfo = await getStackInfoFromApp(appPath, {
       domain,
       region,
       profile,
     });
+
+    // Resolve latest tag using same priority as bootstrap:
+    // 1. Explicit override (MAILINABOX_VERSION env var)
+    // 2. SSM Parameter Store
+    // 3. GitHub API
+    // 4. Fail with error (no hardcoded fallback)
+    console.log('📋 Step 2: Resolving Mail-in-a-Box version...');
+    let latestTag: string;
+    
+    // Priority 1: Environment variable
+    if (process.env.MAILINABOX_VERSION) {
+      latestTag = process.env.MAILINABOX_VERSION;
+      console.log(`✅ Using version from MAILINABOX_VERSION env var: ${latestTag}\n`);
+    } else {
+      // Priority 2: SSM Parameter Store
+      // Note: SSM client will use AWS_PROFILE from environment if set
+      // Profile is already handled via environment variable
+      const ssm = new SSMClient({
+        region,
+      });
+      
+      const ssmVersion = await getMiabVersionFromSsm(ssm, stackInfo.stackName);
+      if (ssmVersion) {
+        latestTag = ssmVersion;
+        console.log(`✅ Using version from SSM Parameter Store: ${latestTag}\n`);
+      } else {
+        // Priority 3: GitHub API
+        try {
+          latestTag = await getLatestMiabTag();
+          console.log(`✅ Using version from GitHub API: ${latestTag}\n`);
+        } catch (error) {
+          // No fallback - fail with clear error
+          const errorMessage = `Could not determine Mail-in-a-Box version. All resolution methods failed:
+  1. Explicit override (MAILINABOX_VERSION env var): Not set
+  2. SSM Parameter Store (/MailInABoxVersion-${stackInfo.stackName}): Not found
+  3. GitHub API: ${error instanceof Error ? error.message : String(error)}
+
+To fix this, please:
+  - Set MAILINABOX_VERSION environment variable, or
+  - Set SSM parameter /MailInABoxVersion-${stackInfo.stackName} with the desired version, or
+  - Ensure GitHub API (api.github.com) is accessible
+
+Example:
+  MAILINABOX_VERSION=v73 pnpm nx run cdk-emcnotary-instance:admin:miab:audit`;
+          throw new Error(errorMessage);
+        }
+      }
+    }
 
     if (!stackInfo.instanceId) {
       throw new Error('Instance ID not found in stack outputs');
@@ -350,12 +419,27 @@ async function auditMiabVersion(options: AuditOptions): Promise<void> {
 
     if (hasManagementScripts) {
       console.log('📋 Step 7: Listing Mail-in-a-Box users...');
-      const usersResult = await sshCommand(
-        keyPath,
-        instanceIp,
-        `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && sudo -u user-data /opt/mailinabox/management/users.py list' 2>&1`,
-        { verbose }
-      );
+      
+      // Detect which script to use (cli.py for v73+, users.py for older)
+      const checkCliPy = `test -f /opt/mailinabox/management/cli.py && echo "CLI_EXISTS" || echo "NOT_FOUND"`;
+      const checkUsersPy = `test -f /opt/mailinabox/management/users.py && echo "USERS_EXISTS" || echo "NOT_FOUND"`;
+      
+      const cliCheck = await sshCommand(keyPath, instanceIp, checkCliPy, { verbose });
+      const usersCheck = await sshCommand(keyPath, instanceIp, checkUsersPy, { verbose });
+      
+      let usersCommand: string;
+      if (cliCheck.output.includes('CLI_EXISTS')) {
+        // v73+ uses cli.py
+        usersCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && sudo -u user-data /opt/mailinabox/management/cli.py user' 2>&1`;
+      } else if (usersCheck.output.includes('USERS_EXISTS')) {
+        // Older versions use users.py
+        usersCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && sudo -u user-data /opt/mailinabox/management/users.py list' 2>&1`;
+      } else {
+        console.log(`⚠️  Could not find management scripts (cli.py or users.py)\n`);
+        return;
+      }
+      
+      const usersResult = await sshCommand(keyPath, instanceIp, usersCommand, { verbose });
 
       if (usersResult.success && usersResult.output) {
         const users = usersResult.output

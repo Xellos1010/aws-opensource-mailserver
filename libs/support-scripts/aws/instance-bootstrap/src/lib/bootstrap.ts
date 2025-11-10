@@ -39,7 +39,7 @@ export interface BootstrapOptions {
   restorePrefix?: string;
   /** Whether to reboot after setup (default: false, as nightly reboot is handled by EventBridge) */
   rebootAfterSetup?: boolean;
-  /** Mail-in-a-Box version (default: auto-fetched from GitHub, fallback: "v73") */
+  /** Mail-in-a-Box version (auto-fetched from GitHub API, SSM Parameter Store, or explicit override) */
   mailInABoxVersion?: string;
 }
 
@@ -501,6 +501,40 @@ let latestTagCache: { tag: string; timestamp: number } | null = null;
 const CACHE_TTL_MS = 3600000; // 1 hour cache
 
 /**
+ * Get Mail-in-a-Box version from SSM Parameter Store
+ */
+async function getMiabVersionFromSsm(
+  ssm: SSMClient,
+  stackName: string
+): Promise<string | null> {
+  const paramName = `/MailInABoxVersion-${stackName}`;
+  
+  try {
+    const command = new GetParameterCommand({
+      Name: paramName,
+      WithDecryption: false,
+    });
+    
+    const response = await ssm.send(command);
+    if (response.Parameter?.Value) {
+      return response.Parameter.Value;
+    }
+  } catch (error) {
+    // Parameter doesn't exist or other error - return null
+    // This is expected if parameter hasn't been set
+    const err = error as { name?: string };
+    if (err?.name !== 'ParameterNotFound') {
+      // Log unexpected errors but don't fail
+      console.log(
+        `⚠️  Could not read SSM parameter ${paramName}: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+  
+  return null;
+}
+
+/**
  * Get latest Mail-in-a-Box release tag from GitHub API
  */
 async function getLatestMiabTag(): Promise<string> {
@@ -559,9 +593,15 @@ async function getLatestMiabTag(): Promise<string> {
 
 /**
  * Get Mail-in-a-Box version with automatic latest tag detection
+ * Priority: 1) Explicit override, 2) SSM Parameter Store, 3) GitHub API
+ * Fails if none are available (no hardcoded fallback)
  */
-async function getMiabVersion(options: BootstrapOptions): Promise<string> {
-  // Allow explicit override via options or environment variable
+async function getMiabVersion(
+  options: BootstrapOptions,
+  ssm?: SSMClient,
+  stackName?: string
+): Promise<string> {
+  // Priority 1: Explicit override via options or environment variable
   if (options.mailInABoxVersion) {
     return options.mailInABoxVersion;
   }
@@ -570,18 +610,37 @@ async function getMiabVersion(options: BootstrapOptions): Promise<string> {
     return process.env.MAILINABOX_VERSION;
   }
 
-  // Try to fetch latest tag from GitHub
+  // Priority 2: SSM Parameter Store (if SSM client and stack name provided)
+  if (ssm && stackName) {
+    const ssmVersion = await getMiabVersionFromSsm(ssm, stackName);
+    if (ssmVersion) {
+      console.log(`✅ Using Mail-in-a-Box version from SSM Parameter Store: ${ssmVersion}`);
+      return ssmVersion;
+    }
+  }
+
+  // Priority 3: GitHub API
   try {
     const latestTag = await getLatestMiabTag();
+    console.log(`✅ Using Mail-in-a-Box version from GitHub API: ${latestTag}`);
     return latestTag;
   } catch (error) {
-    // Fall back to hardcoded version if GitHub API fails
-    const fallbackVersion = 'v73';
-    console.log(
-      `⚠️  Could not fetch latest tag from GitHub: ${error instanceof Error ? error.message : String(error)}`
-    );
-    console.log(`   Using fallback version: ${fallbackVersion}`);
-    return fallbackVersion;
+    // No fallback - require explicit version
+    const errorMessage = `Could not determine Mail-in-a-Box version. All resolution methods failed:
+  1. Explicit override (options.mailInABoxVersion or MAILINABOX_VERSION env var): Not set
+  2. SSM Parameter Store (/MailInABoxVersion-${stackName || '<stack-name>'}): ${ssm && stackName ? 'Not found' : 'Not checked (SSM client not available)'}
+  3. GitHub API: ${error instanceof Error ? error.message : String(error)}
+
+To fix this, please:
+  - Set MAILINABOX_VERSION environment variable, or
+  - Pass --version flag to bootstrap command, or
+  - Set SSM parameter /MailInABoxVersion-${stackName || '<stack-name>'} with the desired version, or
+  - Ensure GitHub API (api.github.com) is accessible
+
+Example:
+  MAILINABOX_VERSION=v73 pnpm nx run cdk-emcnotary-instance:admin:bootstrap-miab-ec2-instance`;
+
+    throw new Error(errorMessage);
   }
 }
 
@@ -591,7 +650,8 @@ async function getMiabVersion(options: BootstrapOptions): Promise<string> {
 async function buildEnvironmentMap(
   stackInfo: StackInfo,
   coreParams: CoreParams,
-  options: BootstrapOptions
+  options: BootstrapOptions,
+  ssm?: SSMClient
 ): Promise<Record<string, string>> {
   const env: Record<string, string> = {
     DOMAIN_NAME: stackInfo.domainName,
@@ -620,8 +680,8 @@ async function buildEnvironmentMap(
   // Defaults (can be overridden)
   env.SES_RELAY = 'true';
   env.SWAP_SIZE_GIB = '2';
-  // Get Mail-in-a-Box version (auto-fetched from GitHub or fallback)
-  env.MAILINABOX_VERSION = await getMiabVersion(options);
+  // Get Mail-in-a-Box version (auto-fetched from GitHub API, SSM Parameter Store, or explicit override)
+  env.MAILINABOX_VERSION = await getMiabVersion(options, ssm, stackInfo.stackName);
   env.MAILINABOX_CLONE_URL =
     'https://github.com/mail-in-a-box/mailinabox.git';
   env.REBOOT_AFTER_SETUP = options.rebootAfterSetup ? 'true' : 'false';
@@ -811,11 +871,19 @@ export async function bootstrapInstance(
     console.log('  8. MIAB script will verify management directory exists');
     console.log('  9. MIAB script will run idempotent setup operations');
     
-    // Fetch version for dry-run display
+    // Fetch version for dry-run display (try with SSM if credentials available)
     try {
-      const version = await getMiabVersion(options);
+      let version: string;
+      try {
+        // Try to get SSM client for version resolution
+        const { ssm: dryRunSsm } = createClients(region, options.profile);
+        version = await getMiabVersion(options, dryRunSsm, stackName);
+      } catch {
+        // If SSM not available in dry-run, try without it
+        version = await getMiabVersion(options);
+      }
       console.log('\n📋 Git Checkout Strategy (in MIAB script):');
-      console.log(`    1. Try exact tag: ${version} (auto-fetched from GitHub)`);
+      console.log(`    1. Try exact tag: ${version} (resolved via version detection)`);
       console.log('    2. If not found, find latest matching major version tag');
       console.log('    3. Verify management directory exists after checkout');
       console.log('    4. If missing, search for any tag with management directory');
@@ -823,11 +891,13 @@ export async function bootstrapInstance(
       console.log('    6. This ensures management scripts are always available');
     } catch (error) {
       console.log('\n📋 Git Checkout Strategy (in MIAB script):');
-      console.log('    1. Try exact tag: v73 (fallback if GitHub API unavailable)');
+      console.log('    1. Try exact tag: <version> (must be resolved via version detection)');
       console.log('    2. If not found, find latest matching major version tag');
       console.log('    3. Verify management directory exists after checkout');
       console.log('    4. If missing, search for any tag with management directory');
       console.log('    5. Exit with error if management directory still missing');
+      console.log(`\n⚠️  Version resolution failed: ${error instanceof Error ? error.message : String(error)}`);
+      console.log('   Version must be resolved before bootstrap can proceed.');
     }
     
     // Optional: Try to validate SSM agent if credentials are available
@@ -1037,8 +1107,8 @@ export async function bootstrapInstance(
   console.log(`✅ Instance ${stackInfo.instanceId} is running and SSM agent is ready`);
 
   // Build environment map (async - fetches latest MIAB version)
-  console.log('📦 Fetching Mail-in-a-Box version...');
-  const envMap = await buildEnvironmentMap(stackInfo, coreParams, options);
+  console.log('📦 Resolving Mail-in-a-Box version...');
+  const envMap = await buildEnvironmentMap(stackInfo, coreParams, options, ssm);
   console.log(`✅ Using Mail-in-a-Box version: ${envMap.MAILINABOX_VERSION}`);
 
   // Load MIAB script
@@ -1070,10 +1140,10 @@ export async function bootstrapInstance(
 
   if (options.dryRun) {
     console.log('\n🔍 DRY RUN MODE - Would execute:\n');
-    console.log(`  Mail-in-a-Box Version: ${envMap.MAILINABOX_VERSION || 'v73'}`);
+    console.log(`  Mail-in-a-Box Version: ${envMap.MAILINABOX_VERSION || '<must be resolved>'}`);
     console.log(`  Git Repository: ${envMap.MAILINABOX_CLONE_URL || 'https://github.com/mail-in-a-box/mailinabox.git'}`);
     console.log(`  Git Checkout Strategy:`);
-    console.log(`    1. Try exact tag: ${envMap.MAILINABOX_VERSION || 'v73'}`);
+    console.log(`    1. Try exact tag: ${envMap.MAILINABOX_VERSION || '<version>'}`);
     console.log(`    2. If not found, find latest matching major version tag`);
     console.log(`    3. Verify management directory exists after checkout`);
     console.log(`    4. If missing, search for any tag with management directory`);
@@ -1123,7 +1193,7 @@ export async function bootstrapInstance(
   console.log(`📊 CloudWatch Logs: /aws/ssm/miab-bootstrap`);
   console.log(`📋 Instance: ${stackInfo.instanceId}`);
   console.log(`🌐 Domain: ${stackInfo.instanceDns}.${stackInfo.domainName}`);
-  console.log(`📦 Mail-in-a-Box Version: ${envMap.MAILINABOX_VERSION || 'v73'}`);
+  console.log(`📦 Mail-in-a-Box Version: ${envMap.MAILINABOX_VERSION}`);
   console.log(`\n⏳ Starting bootstrap process...`);
 
   // Poll for completion

@@ -31,7 +31,7 @@ interface InstanceConfig {
   instanceDns?: string;          // Instance DNS name (default: "box")
   sesRelay?: boolean;            // Enable SES relay (default: true)
   swapSizeGiB?: number;          // Swap size (default: 2)
-  mailInABoxVersion?: string;    // MIAB version (default: "v73")
+  mailInABoxVersion?: string;    // MIAB version (auto-fetched from GitHub API, SSM Parameter Store, or explicit override)
   mailInABoxCloneUrl?: string;   // MIAB repo URL
   nightlyRebootSchedule?: string; // Cron expression (default: "0 8 * * ? *")
   nightlyRebootDescription?: string; // Human-readable description

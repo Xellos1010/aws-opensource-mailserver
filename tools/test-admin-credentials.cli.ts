@@ -214,11 +214,27 @@ async function testCredentials(options: TestCredentialsOptions): Promise<void> {
 
     // Check 1: Verify admin user exists in Mail-in-a-Box
     console.log('🔍 Step 4: Checking admin user account...');
-    const userCheck = await sshCommand(
-      keyPath,
-      instanceIp,
-      `sudo -u user-data /opt/mailinabox/management/users.py list | grep -i "${credentials.email}" || echo "not found"`
-    );
+    
+    // Detect which script to use (cli.py for v73+, users.py for older)
+    const checkCliPy = `test -f /opt/mailinabox/management/cli.py && echo "CLI_EXISTS" || echo "NOT_FOUND"`;
+    const checkUsersPy = `test -f /opt/mailinabox/management/users.py && echo "USERS_EXISTS" || echo "NOT_FOUND"`;
+    
+    const cliCheck = await sshCommand(keyPath, instanceIp, checkCliPy);
+    const usersCheck = await sshCommand(keyPath, instanceIp, checkUsersPy);
+    
+    let userCheckCommand: string;
+    if (cliCheck.output.includes('CLI_EXISTS')) {
+      // v73+ uses cli.py
+      userCheckCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && sudo -u user-data /opt/mailinabox/management/cli.py user | grep -i "${credentials.email}" || echo "not found"'`;
+    } else if (usersCheck.output.includes('USERS_EXISTS')) {
+      // Older versions use users.py
+      userCheckCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && sudo -u user-data /opt/mailinabox/management/users.py list | grep -i "${credentials.email}" || echo "not found"'`;
+    } else {
+      console.log(`⚠️  Could not find management scripts (cli.py or users.py)`);
+      userCheckCommand = `echo "not found"`;
+    }
+    
+    const userCheck = await sshCommand(keyPath, instanceIp, userCheckCommand);
 
     if (userCheck.success && userCheck.output.toLowerCase().includes(credentials.email.toLowerCase())) {
       console.log(`✅ Admin user exists: ${credentials.email}`);
@@ -284,11 +300,18 @@ async function testCredentials(options: TestCredentialsOptions): Promise<void> {
 
     // Check 5: Check if admin account needs to be created manually
     console.log('🔍 Step 8: Checking if admin account exists in system...');
-    const adminExistsCheck = await sshCommand(
-      keyPath,
-      instanceIp,
-      `sudo -u user-data /opt/mailinabox/management/users.py list 2>/dev/null | head -10 || echo "error"`
-    );
+    
+    // Use the same detection logic as above
+    let adminListCommand: string;
+    if (cliCheck.output.includes('CLI_EXISTS')) {
+      adminListCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && sudo -u user-data /opt/mailinabox/management/cli.py user 2>/dev/null | head -10 || echo "error"'`;
+    } else if (usersCheck.output.includes('USERS_EXISTS')) {
+      adminListCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && sudo -u user-data /opt/mailinabox/management/users.py list 2>/dev/null | head -10 || echo "error"'`;
+    } else {
+      adminListCommand = `echo "error"`;
+    }
+    
+    const adminExistsCheck = await sshCommand(keyPath, instanceIp, adminListCommand);
 
     if (adminExistsCheck.success && adminExistsCheck.output !== 'error') {
       console.log(`📋 Current Mail-in-a-Box users:`);
@@ -318,9 +341,15 @@ async function testCredentials(options: TestCredentialsOptions): Promise<void> {
     console.log(`      https://${instanceIp}/admin\n`);
     console.log('   2. Verify the admin account was created during bootstrap:');
     console.log(`      ssh -i ${keyPath} ubuntu@${instanceIp}`);
-    console.log(`      sudo -u user-data /opt/mailinabox/management/users.py list\n`);
-    console.log('   3. If account doesn\'t exist, create it manually:');
-    console.log(`      sudo -u user-data /opt/mailinabox/management/users.py add ${credentials.email} "${credentials.password}"\n`);
+    if (cliCheck.output.includes('CLI_EXISTS')) {
+      console.log(`      sudo -u user-data /opt/mailinabox/management/cli.py user\n`);
+      console.log('   3. If account doesn\'t exist, create it manually (v73+):');
+      console.log(`      sudo -u user-data /opt/mailinabox/management/cli.py user add ${credentials.email} "${credentials.password}" admin\n`);
+    } else {
+      console.log(`      sudo -u user-data /opt/mailinabox/management/users.py list\n`);
+      console.log('   3. If account doesn\'t exist, create it manually (older version):');
+      console.log(`      sudo -u user-data /opt/mailinabox/management/users.py add ${credentials.email} "${credentials.password}"\n`);
+    }
     console.log('   4. Check Mail-in-a-Box setup logs:');
     console.log(`      tail -100 /var/log/mailinabox_setup.log\n`);
     console.log('   5. Verify DNS is configured correctly:');

@@ -174,7 +174,16 @@ mkdir -p "${STORAGE_ROOT}"
 # Mail-in-a-Box Clone/Checkout (idempotent)
 # ==========================================
 MIAB_REPO="${MAILINABOX_CLONE_URL:-https://github.com/mail-in-a-box/mailinabox.git}"
-MIAB_TAG="${MAILINABOX_VERSION:-v73}"
+MIAB_TAG="${MAILINABOX_VERSION}"
+
+# Validate that MAILINABOX_VERSION is set (required, no default)
+if [ -z "${MIAB_TAG}" ]; then
+  echo "ERROR: MAILINABOX_VERSION environment variable is not set!"
+  echo "Mail-in-a-Box version must be provided via MAILINABOX_VERSION environment variable."
+  echo "This should be set by the bootstrap script. If you see this error, it indicates"
+  echo "a problem with the bootstrap process."
+  exit 1
+fi
 
 if [ ! -d "/opt/mailinabox" ]; then
   echo "Cloning Mail-in-a-Box repository..."
