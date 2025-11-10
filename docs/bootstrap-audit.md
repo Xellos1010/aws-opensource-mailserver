@@ -313,7 +313,7 @@ cd /opt/mailinabox && git checkout $TAG
 **Bootstrap Script:**
 ```bash
 MIAB_REPO="${MAILINABOX_CLONE_URL:-https://github.com/mail-in-a-box/mailinabox.git}"
-MIAB_TAG="${MAILINABOX_VERSION:-v64.0}"
+MIAB_TAG="${MAILINABOX_VERSION}"  # Required - no default (must be resolved via version detection)
 
 if [ ! -d "/opt/mailinabox" ]; then
   git clone "${MIAB_REPO}" /opt/mailinabox

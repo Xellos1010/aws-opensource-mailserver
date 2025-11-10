@@ -129,8 +129,8 @@ async function listUsers(options: ListUsersOptions): Promise<void> {
 
     const instanceId = stackInfo.instanceId;
     const instanceIp = stackInfo.instancePublicIp;
-    const instanceDns = stackInfo.instanceDns || 'box';
-    const hostname = `${instanceDns}.${domain}`;
+    // Default to 'box' for instance DNS (common Mail-in-a-Box default)
+    const hostname = `box.${domain}`;
 
     console.log(`✅ Found instance: ${instanceId}`);
     console.log(`   IP: ${instanceIp}`);
@@ -157,20 +157,43 @@ async function listUsers(options: ListUsersOptions): Promise<void> {
     // List users
     console.log('📋 Step 3: Retrieving Mail-in-a-Box users...');
     
-    // First, verify the management script exists
+    // Check for both cli.py (v73+) and users.py (older versions)
     if (verbose) {
-      console.log('   🔍 Step 3a: Verifying management script exists...');
-    }
-    const checkScriptCommand = `test -f /opt/mailinabox/management/users.py && echo "EXISTS" || echo "NOT_FOUND"`;
-    const scriptCheck = await sshCommand(keyPath, instanceIp, checkScriptCommand, { verbose });
-    
-    if (verbose) {
-      console.log(`   📋 Script check result: ${scriptCheck.output}`);
-      console.log(`   📋 Script check exit code: ${scriptCheck.exitCode}`);
+      console.log('   🔍 Step 3a: Detecting Mail-in-a-Box version and management script...');
     }
     
-    if (scriptCheck.output.includes('NOT_FOUND')) {
-      // Check what's actually in /opt/mailinabox
+    const checkCliPy = `test -f /opt/mailinabox/management/cli.py && echo "CLI_EXISTS" || echo "NOT_FOUND"`;
+    const checkUsersPy = `test -f /opt/mailinabox/management/users.py && echo "USERS_EXISTS" || echo "NOT_FOUND"`;
+    
+    const cliCheck = await sshCommand(keyPath, instanceIp, checkCliPy, { verbose });
+    const usersCheck = await sshCommand(keyPath, instanceIp, checkUsersPy, { verbose });
+    
+    if (verbose) {
+      console.log(`   📋 cli.py check: ${cliCheck.output}`);
+      console.log(`   📋 users.py check: ${usersCheck.output}`);
+    }
+    
+    let userCommand: string;
+    let scriptType: string;
+    
+    if (cliCheck.output.includes('CLI_EXISTS')) {
+      // v73+ uses cli.py
+      scriptType = 'cli.py (v73+)';
+      if (verbose) {
+        console.log('   ✅ Detected Mail-in-a-Box v73+ (using cli.py)');
+      }
+      // For v73+, cli.py user lists all users (returns empty if none)
+      // Note: This requires API key access, which may not exist if setup isn't complete
+      userCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && sudo -u user-data /opt/mailinabox/management/cli.py user 2>&1 || echo "ERROR: Could not list users (API key may not exist or setup incomplete)"'`;
+    } else if (usersCheck.output.includes('USERS_EXISTS')) {
+      // Older versions use users.py
+      scriptType = 'users.py (older versions)';
+      if (verbose) {
+        console.log('   ✅ Detected older Mail-in-a-Box version (using users.py)');
+      }
+      userCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && sudo -u user-data /opt/mailinabox/management/users.py list' 2>&1`;
+    } else {
+      // Neither script found - provide detailed diagnostics
       if (verbose) {
         console.log('   🔍 Step 3a.1: Checking /opt/mailinabox directory structure...');
       }
@@ -227,51 +250,30 @@ async function listUsers(options: ListUsersOptions): Promise<void> {
         if (verbose && mgmtContents.output) {
           console.log(`   📋 Management directory contents:\n${mgmtContents.output.split('\n').map(l => `      ${l}`).join('\n')}`);
         }
-        
-        // Check if users.py exists but maybe with different name or location
-        const findUsersPy = await sshCommand(
-          keyPath,
-          instanceIp,
-          `find /opt/mailinabox/management -name '*user*' -type f 2>&1 | head -10`,
-          { verbose }
-        );
-        
-        if (verbose && findUsersPy.output) {
-          console.log(`   📋 Files matching '*user*': ${findUsersPy.output || 'none'}`);
-        }
       }
       
       throw new Error(
-        'Mail-in-a-Box management script not found at /opt/mailinabox/management/users.py\n' +
+        'Mail-in-a-Box management scripts not found\n' +
+        'Expected either:\n' +
+        '  - /opt/mailinabox/management/cli.py (v73+)\n' +
+        '  - /opt/mailinabox/management/users.py (older versions)\n\n' +
         'This may indicate:\n' +
         '  1. Mail-in-a-Box git checkout failed (wrong tag/branch)\n' +
-        '  2. The users.py file is missing from the checked-out branch\n' +
+        '  2. The management scripts are missing from the checked-out branch\n' +
         '  3. Mail-in-a-Box installation is incomplete\n\n' +
         `Git status: ${gitCheck.output || 'unknown'}\n` +
         `Management directory: ${mgmtDirCheck.output || 'unknown'}\n\n` +
         '💡 Try running bootstrap again to fix the git checkout:\n' +
         `   pnpm nx run cdk-emcnotary-instance:admin:bootstrap-miab-ec2-instance\n\n` +
-        '💡 Or manually fix the git checkout:\n' +
-        `   ssh -i ${keyPath} ubuntu@${instanceIp} "cd /opt/mailinabox && git fetch --all --tags && git checkout v73.0 || git checkout v72.0 || git checkout v71.0"`
+        '💡 Or manually fix the git checkout (check available tags first):\n' +
+        `   ssh -i ${keyPath} ubuntu@${instanceIp} "cd /opt/mailinabox && git fetch --all --tags && git tag -l | sort -V -r | head -5"`
       );
-    }
-    
-    // Check if we can access the script
-    if (verbose) {
-      console.log('   🔍 Step 3b: Checking script permissions...');
-    }
-    const checkPermsCommand = `ls -la /opt/mailinabox/management/users.py 2>&1`;
-    const permsCheck = await sshCommand(keyPath, instanceIp, checkPermsCommand, { verbose });
-    
-    if (verbose) {
-      console.log(`   📋 Permissions: ${permsCheck.output}`);
     }
     
     // Now try to list users
     if (verbose) {
-      console.log('   🔍 Step 3c: Executing users.py list command...');
+      console.log(`   🔍 Step 3b: Executing ${scriptType} command...`);
     }
-    const userCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && sudo -u user-data /opt/mailinabox/management/users.py list' 2>&1`;
 
     const result = await sshCommand(keyPath, instanceIp, userCommand, { verbose });
 
@@ -279,6 +281,53 @@ async function listUsers(options: ListUsersOptions): Promise<void> {
       console.log(`   📋 Command exit code: ${result.exitCode}`);
       console.log(`   📋 Command stdout length: ${result.output.length} bytes`);
       console.log(`   📋 Command stderr: ${result.error || '(none)'}`);
+    }
+
+    // Check for API key permission errors (common in v73+ before setup completes)
+    if (result.output.includes('PermissionError') || result.output.includes('api.key')) {
+      console.log('⚠️  API key permission error detected - Mail-in-a-Box setup may not be complete');
+      console.log('   This is normal if bootstrap is still running or setup hasn\'t finished\n');
+      console.log('💡 Options:');
+      console.log('   1. Wait for bootstrap to complete, then try again');
+      console.log('   2. Check if users exist via SQLite database:');
+      console.log(`      ssh -i ${keyPath} ubuntu@${instanceIp} "sudo -u user-data sqlite3 /home/user-data/mail/users.sqlite 'SELECT email FROM users;'"\n`);
+      
+      // Try SQLite as fallback
+      if (verbose) {
+        console.log('   🔍 Attempting SQLite fallback...');
+      }
+      const sqliteCommand = `bash -c 'sudo -u user-data sqlite3 /home/user-data/mail/users.sqlite "SELECT email FROM users;" 2>&1 || echo "SQLITE_ERROR"'`;
+      const sqliteResult = await sshCommand(keyPath, instanceIp, sqliteCommand, { verbose });
+      
+      if (sqliteResult.success && !sqliteResult.output.includes('SQLITE_ERROR') && sqliteResult.output.trim()) {
+        console.log('✅ Found users via SQLite database:\n');
+        const users = sqliteResult.output
+          .split('\n')
+          .filter((line) => line.trim())
+          .map((line) => line.trim());
+        
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+        users.forEach((user, index) => {
+          console.log(`   ${index + 1}. ${user}`);
+        });
+        console.log(`\n   Total: ${users.length} user(s)\n`);
+        
+        // Check for admin user
+        const adminUser = users.find((u) => u.toLowerCase().includes('admin@'));
+        if (adminUser) {
+          console.log('✅ Admin user found:', adminUser);
+        } else {
+          console.log('⚠️  Admin user not found in user list');
+          console.log('💡 Create admin account:');
+          console.log(`   pnpm nx run cdk-emcnotary-instance:admin:credentials:create\n`);
+        }
+        return;
+      } else {
+        console.log('⚠️  SQLite fallback also failed - no users found or database doesn\'t exist\n');
+        console.log('💡 This likely means Mail-in-a-Box setup hasn\'t completed yet.');
+        console.log('   Wait for bootstrap to finish, then try again.\n');
+        return;
+      }
     }
 
     if (!result.success) {
@@ -300,14 +349,15 @@ async function listUsers(options: ListUsersOptions): Promise<void> {
         `💡 Debugging steps:\n` +
         `   1. Check if Mail-in-a-Box is installed: ssh -i ${keyPath} ubuntu@${instanceIp} "test -d /opt/mailinabox && echo 'INSTALLED' || echo 'NOT_INSTALLED'"\n` +
         `   2. Check if user-data user exists: ssh -i ${keyPath} ubuntu@${instanceIp} "id user-data"\n` +
-        `   3. Try running manually: ssh -i ${keyPath} ubuntu@${instanceIp} "sudo -u user-data /opt/mailinabox/management/users.py list"\n` +
-        `   4. Check Mail-in-a-Box logs: ssh -i ${keyPath} ubuntu@${instanceIp} "tail -50 /var/log/mailinabox_setup.log"`
+        `   3. Try running manually (v73+): ssh -i ${keyPath} ubuntu@${instanceIp} "sudo -u user-data /opt/mailinabox/management/cli.py user"\n` +
+        `   4. Try running manually (older): ssh -i ${keyPath} ubuntu@${instanceIp} "sudo -u user-data /opt/mailinabox/management/users.py list"\n` +
+        `   5. Check Mail-in-a-Box logs: ssh -i ${keyPath} ubuntu@${instanceIp} "tail -50 /var/log/mailinabox_setup.log"`
       );
     }
 
     const users = result.output
       .split('\n')
-      .filter((line) => line.trim() && !line.includes('Traceback'))
+      .filter((line) => line.trim() && !line.includes('Traceback') && !line.includes('ERROR:'))
       .map((line) => line.trim());
 
     if (users.length === 0) {
@@ -345,7 +395,9 @@ async function listUsers(options: ListUsersOptions): Promise<void> {
       console.error('💡 Troubleshooting:');
       console.error('   1. Verify Mail-in-a-Box is installed and running');
       console.error('   2. Check SSH access to the instance');
-      console.error('   3. Verify the management script exists: /opt/mailinabox/management/users.py');
+      console.error('   3. Verify the management script exists:');
+      console.error('      - /opt/mailinabox/management/cli.py (v73+)');
+      console.error('      - /opt/mailinabox/management/users.py (older versions)');
       console.error('   4. Check Mail-in-a-Box logs: /var/log/mailinabox_setup.log\n');
     } else {
       console.error(`   ${String(error)}\n`);

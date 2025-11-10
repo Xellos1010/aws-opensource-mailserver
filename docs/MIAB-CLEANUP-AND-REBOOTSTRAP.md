@@ -81,7 +81,7 @@ FEATURE_INSTANCE_BOOTSTRAP_ENABLED=1 \
 
 **What this does:**
 - ✅ Clones fresh Mail-in-a-Box repository
-- ✅ Checks out correct tag (default: `v73`)
+- ✅ Checks out correct tag (auto-detected from GitHub API, SSM Parameter Store, or explicit override)
 - ✅ Installs/updates packages (if markers removed)
 - ✅ Configures Mail-in-a-Box
 - ✅ Sets up SES relay
@@ -247,6 +247,6 @@ pnpm nx run cdk-emcnotary-instance:admin:bootstrap-miab-ec2-instance
 - **Idempotent**: Bootstrap can be run multiple times safely
 - **Preserves Data**: Cleanup preserves `/home/user-data` by default
 - **Automatic Fixes**: Bootstrap script automatically fixes git permissions
-- **Version Default**: Default version is `v73` (latest stable)
+- **Version Resolution**: Version is auto-detected from GitHub API, SSM Parameter Store (`/MailInABoxVersion-{stackName}`), or explicit override (`MAILINABOX_VERSION` env var or `--version` flag). No hardcoded fallback.
 - **Management Scripts**: Bootstrap ensures management directory exists before proceeding
 

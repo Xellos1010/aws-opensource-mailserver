@@ -24,7 +24,7 @@ export interface InstanceConfig {
   sesRelay?: boolean;
   /** Swap size in GiB (default: 2) */
   swapSizeGiB?: number;
-  /** Mail-in-a-Box version (default: "v73") */
+  /** Mail-in-a-Box version (auto-fetched from GitHub API, SSM Parameter Store, or explicit override) */
   mailInABoxVersion?: string;
   /** Mail-in-a-Box clone URL */
   mailInABoxCloneUrl?: string;
