@@ -246,11 +246,24 @@ async function auditMiabVersion(options: AuditOptions): Promise<void> {
     console.log(`   Current:  ${currentTag}`);
     console.log(`   Latest:   ${latestTag}\n`);
 
-    const needsUpdate = currentTag !== latestTag && !currentTag.includes(latestTag);
+    // Check if we're on the exact tag or on main branch (which may be ahead)
+    const isExactTag = currentTag === latestTag;
+    const isOnMainBranch = branch === 'main' || branch === 'master';
+    const isAheadOfTag = currentTag.includes(latestTag) && currentTag !== latestTag;
+    
+    // Need update if: not exact tag AND (on main branch OR ahead of tag OR completely different)
+    const needsUpdate = !isExactTag && (isOnMainBranch || isAheadOfTag || currentTag !== latestTag);
+    
     if (needsUpdate) {
-      console.log(`   ⚠️  UPDATE NEEDED: Instance is not on latest version\n`);
+      if (isOnMainBranch) {
+        console.log(`   ⚠️  UPDATE NEEDED: Instance is on ${branch} branch (should be on ${latestTag} tag)\n`);
+      } else if (isAheadOfTag) {
+        console.log(`   ⚠️  UPDATE NEEDED: Instance is ahead of ${latestTag} tag\n`);
+      } else {
+        console.log(`   ⚠️  UPDATE NEEDED: Instance is not on latest version\n`);
+      }
     } else {
-      console.log(`   ✅ UP TO DATE: Instance is on latest version\n`);
+      console.log(`   ✅ UP TO DATE: Instance is on exact ${latestTag} tag\n`);
     }
 
     // Update if requested
