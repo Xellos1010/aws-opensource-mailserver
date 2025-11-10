@@ -170,9 +170,58 @@ async function listUsers(options: ListUsersOptions): Promise<void> {
     }
     
     if (scriptCheck.output.includes('NOT_FOUND')) {
+      // Check what's actually in /opt/mailinabox
+      if (verbose) {
+        console.log('   🔍 Step 3a.1: Checking /opt/mailinabox directory structure...');
+      }
+      const dirCheck = await sshCommand(
+        keyPath,
+        instanceIp,
+        `ls -la /opt/mailinabox/ 2>&1 | head -20`,
+        { verbose }
+      );
+      
+      if (verbose && dirCheck.output) {
+        console.log(`   📋 Directory contents:\n${dirCheck.output.split('\n').map(l => `      ${l}`).join('\n')}`);
+      }
+      
+      // Check git status
+      if (verbose) {
+        console.log('   🔍 Step 3a.2: Checking git status...');
+      }
+      const gitCheck = await sshCommand(
+        keyPath,
+        instanceIp,
+        `cd /opt/mailinabox && git rev-parse --abbrev-ref HEAD 2>&1 && git describe --tags 2>&1 || echo "Git info unavailable"`,
+        { verbose }
+      );
+      
+      if (verbose && gitCheck.output) {
+        console.log(`   📋 Git status: ${gitCheck.output}`);
+      }
+      
+      // Check if management directory exists at all
+      const mgmtDirCheck = await sshCommand(
+        keyPath,
+        instanceIp,
+        `test -d /opt/mailinabox/management && echo "EXISTS" || echo "NOT_FOUND"`,
+        { verbose }
+      );
+      
+      if (verbose) {
+        console.log(`   📋 Management directory: ${mgmtDirCheck.output}`);
+      }
+      
       throw new Error(
         'Mail-in-a-Box management script not found at /opt/mailinabox/management/users.py\n' +
-        'This may indicate Mail-in-a-Box is not installed or the installation is incomplete.'
+        'This may indicate:\n' +
+        '  1. Mail-in-a-Box git checkout failed (wrong tag/branch)\n' +
+        '  2. The management directory is missing from the checked-out branch\n' +
+        '  3. Mail-in-a-Box installation is incomplete\n\n' +
+        `Git status: ${gitCheck.output || 'unknown'}\n` +
+        `Management directory: ${mgmtDirCheck.output || 'unknown'}\n\n` +
+        '💡 Try running bootstrap again to fix the git checkout:\n' +
+        `   pnpm nx run cdk-emcnotary-instance:admin:bootstrap-miab-ec2-instance`
       );
     }
     
