@@ -54,6 +54,13 @@ function parseArgs(): Partial<BootstrapOptions> {
       case '--no-reboot':
         options.rebootAfterSetup = false;
         break;
+      case '--version':
+      case '--miab-version':
+        if (nextArg && !nextArg.startsWith('--')) {
+          options.mailInABoxVersion = nextArg;
+          i++;
+        }
+        break;
       case '--help':
       case '-h':
         printHelp();
@@ -85,6 +92,8 @@ Options:
   --restore-prefix PREFIX  S3 prefix for backup restoration
   --reboot                 Reboot instance after setup (default: false)
   --no-reboot              Explicitly disable reboot after setup
+  --version VERSION        Mail-in-a-Box version (e.g., "v73")
+                           Default: auto-fetched from GitHub API
   --help, -h               Show this help message
 
 Environment Variables:
@@ -93,6 +102,7 @@ Environment Variables:
   CDK_DEFAULT_REGION      Same as --region
   PROFILE                  Same as --profile
   DRY_RUN                  Same as --dry-run (set to "1")
+  MAILINABOX_VERSION       Mail-in-a-Box version (overrides auto-fetch)
   FEATURE_INSTANCE_BOOTSTRAP_ENABLED  Feature flag (default: enabled unless set to "0")
 
 Examples:

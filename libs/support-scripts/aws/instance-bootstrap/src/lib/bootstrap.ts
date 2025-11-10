@@ -16,6 +16,7 @@ import { EC2Client, DescribeInstancesCommand } from '@aws-sdk/client-ec2';
 import { fromIni } from '@aws-sdk/credential-providers';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as https from 'https';
 import { toMailserverInstanceStackName } from '@mm/infra-naming';
 
 /**
@@ -38,6 +39,8 @@ export interface BootstrapOptions {
   restorePrefix?: string;
   /** Whether to reboot after setup (default: false, as nightly reboot is handled by EventBridge) */
   rebootAfterSetup?: boolean;
+  /** Mail-in-a-Box version (default: auto-fetched from GitHub, fallback: "v73") */
+  mailInABoxVersion?: string;
 }
 
 /**
@@ -492,13 +495,104 @@ function loadMiabScript(): string {
 }
 
 /**
+ * Cache for latest MIAB tag to avoid hitting GitHub API repeatedly
+ */
+let latestTagCache: { tag: string; timestamp: number } | null = null;
+const CACHE_TTL_MS = 3600000; // 1 hour cache
+
+/**
+ * Get latest Mail-in-a-Box release tag from GitHub API
+ */
+async function getLatestMiabTag(): Promise<string> {
+  // Check cache first
+  if (latestTagCache && Date.now() - latestTagCache.timestamp < CACHE_TTL_MS) {
+    return latestTagCache.tag;
+  }
+
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'api.github.com',
+      path: '/repos/mail-in-a-box/mailinabox/releases/latest',
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mail-in-a-Box-Bootstrap-Tool',
+        'Accept': 'application/vnd.github.v3+json',
+      },
+      timeout: 5000, // 5 second timeout
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+
+      res.on('end', () => {
+        if (res.statusCode === 200) {
+          try {
+            const release = JSON.parse(data);
+            const tag = release.tag_name;
+            // Cache the result
+            latestTagCache = { tag, timestamp: Date.now() };
+            resolve(tag);
+          } catch (err) {
+            reject(new Error('Failed to parse GitHub API response'));
+          }
+        } else {
+          reject(new Error(`GitHub API returned status ${res.statusCode}`));
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      reject(err);
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('GitHub API request timed out'));
+    });
+
+    req.end();
+  });
+}
+
+/**
+ * Get Mail-in-a-Box version with automatic latest tag detection
+ */
+async function getMiabVersion(options: BootstrapOptions): Promise<string> {
+  // Allow explicit override via options or environment variable
+  if (options.mailInABoxVersion) {
+    return options.mailInABoxVersion;
+  }
+
+  if (process.env.MAILINABOX_VERSION) {
+    return process.env.MAILINABOX_VERSION;
+  }
+
+  // Try to fetch latest tag from GitHub
+  try {
+    const latestTag = await getLatestMiabTag();
+    return latestTag;
+  } catch (error) {
+    // Fall back to hardcoded version if GitHub API fails
+    const fallbackVersion = 'v73';
+    console.log(
+      `⚠️  Could not fetch latest tag from GitHub: ${error instanceof Error ? error.message : String(error)}`
+    );
+    console.log(`   Using fallback version: ${fallbackVersion}`);
+    return fallbackVersion;
+  }
+}
+
+/**
  * Build environment variables map for MIAB setup
  */
-function buildEnvironmentMap(
+async function buildEnvironmentMap(
   stackInfo: StackInfo,
   coreParams: CoreParams,
   options: BootstrapOptions
-): Record<string, string> {
+): Promise<Record<string, string>> {
   const env: Record<string, string> = {
     DOMAIN_NAME: stackInfo.domainName,
     INSTANCE_DNS: stackInfo.instanceDns,
@@ -526,7 +620,8 @@ function buildEnvironmentMap(
   // Defaults (can be overridden)
   env.SES_RELAY = 'true';
   env.SWAP_SIZE_GIB = '2';
-  env.MAILINABOX_VERSION = 'v73';
+  // Get Mail-in-a-Box version (auto-fetched from GitHub or fallback)
+  env.MAILINABOX_VERSION = await getMiabVersion(options);
   env.MAILINABOX_CLONE_URL =
     'https://github.com/mail-in-a-box/mailinabox.git';
   env.REBOOT_AFTER_SETUP = options.rebootAfterSetup ? 'true' : 'false';
@@ -709,18 +804,31 @@ export async function bootstrapInstance(
     console.log('  1. Describe CloudFormation stack to get instance details');
     console.log('  2. Read core parameters from SSM Parameter Store');
     console.log('  3. Verify instance is running and SSM agent is ready');
-    console.log('  4. Build environment map with configuration values');
-    console.log('  5. Send SSM RunCommand to execute MIAB setup script');
-    console.log('  6. MIAB script will checkout git tag (default: v73)');
-    console.log('  7. MIAB script will verify management directory exists');
-    console.log('  8. MIAB script will run idempotent setup operations');
-    console.log('\n📋 Git Checkout Strategy (in MIAB script):');
-    console.log('    1. Try exact tag: v73 (or MAILINABOX_VERSION if set)');
-    console.log('    2. If not found, find latest matching major version tag (v73.*)');
-    console.log('    3. Verify management directory exists after checkout');
-    console.log('    4. If missing, search for any tag with management directory');
-    console.log('    5. Exit with error if management directory still missing');
-    console.log('    6. This ensures management scripts are always available');
+    console.log('  4. Fetch latest Mail-in-a-Box version from GitHub API');
+    console.log('  5. Build environment map with configuration values');
+    console.log('  6. Send SSM RunCommand to execute MIAB setup script');
+    console.log('  7. MIAB script will checkout git tag (auto-detected latest)');
+    console.log('  8. MIAB script will verify management directory exists');
+    console.log('  9. MIAB script will run idempotent setup operations');
+    
+    // Fetch version for dry-run display
+    try {
+      const version = await getMiabVersion(options);
+      console.log('\n📋 Git Checkout Strategy (in MIAB script):');
+      console.log(`    1. Try exact tag: ${version} (auto-fetched from GitHub)`);
+      console.log('    2. If not found, find latest matching major version tag');
+      console.log('    3. Verify management directory exists after checkout');
+      console.log('    4. If missing, search for any tag with management directory');
+      console.log('    5. Exit with error if management directory still missing');
+      console.log('    6. This ensures management scripts are always available');
+    } catch (error) {
+      console.log('\n📋 Git Checkout Strategy (in MIAB script):');
+      console.log('    1. Try exact tag: v73 (fallback if GitHub API unavailable)');
+      console.log('    2. If not found, find latest matching major version tag');
+      console.log('    3. Verify management directory exists after checkout');
+      console.log('    4. If missing, search for any tag with management directory');
+      console.log('    5. Exit with error if management directory still missing');
+    }
     
     // Optional: Try to validate SSM agent if credentials are available
     try {
@@ -928,8 +1036,10 @@ export async function bootstrapInstance(
   });
   console.log(`✅ Instance ${stackInfo.instanceId} is running and SSM agent is ready`);
 
-  // Build environment map
-  const envMap = buildEnvironmentMap(stackInfo, coreParams, options);
+  // Build environment map (async - fetches latest MIAB version)
+  console.log('📦 Fetching Mail-in-a-Box version...');
+  const envMap = await buildEnvironmentMap(stackInfo, coreParams, options);
+  console.log(`✅ Using Mail-in-a-Box version: ${envMap.MAILINABOX_VERSION}`);
 
   // Load MIAB script
   const miabScript = loadMiabScript();
