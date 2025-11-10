@@ -192,16 +192,55 @@ CURRENT_TAG=$(git describe --tags --exact-match 2>/dev/null || git rev-parse --s
 if [ "${CURRENT_TAG}" != "${MIAB_TAG}" ]; then
   echo "Checking out Mail-in-a-Box version: ${MIAB_TAG}"
   # Try to checkout tag, if it doesn't exist try as branch or commit
-  git checkout "${MIAB_TAG}" -q 2>/dev/null || {
+  if git checkout "${MIAB_TAG}" -q 2>/dev/null; then
+    echo "Successfully checked out ${MIAB_TAG}"
+  else
     echo "Tag ${MIAB_TAG} not found, trying to fetch and checkout..."
     git fetch origin tag "${MIAB_TAG}" -q 2>/dev/null || true
-    git checkout "${MIAB_TAG}" -q || {
-      echo "Warning: Could not checkout ${MIAB_TAG}, using latest commit"
-      git checkout main -q || git checkout master -q || true
-    }
-  }
+    if git checkout "${MIAB_TAG}" -q 2>/dev/null; then
+      echo "Successfully checked out ${MIAB_TAG} after fetch"
+    else
+      echo "Warning: Could not checkout ${MIAB_TAG}, trying to find latest stable tag..."
+      # Try to find the latest v64.x tag
+      LATEST_TAG=$(git tag -l "v64.*" | sort -V | tail -1 2>/dev/null || echo "")
+      if [ -n "${LATEST_TAG}" ]; then
+        echo "Found latest v64 tag: ${LATEST_TAG}, checking out..."
+        git checkout "${LATEST_TAG}" -q 2>/dev/null || {
+          echo "Warning: Could not checkout ${LATEST_TAG}, using main branch"
+          git checkout main -q || git checkout master -q || true
+        }
+      else
+        echo "Warning: No v64 tags found, using main branch"
+        git checkout main -q || git checkout master -q || true
+      fi
+    fi
+  fi
+  
+  # Verify management directory exists after checkout
+  if [ ! -d "management" ]; then
+    echo "ERROR: management directory not found after checkout!"
+    echo "Current branch/tag: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || git describe --tags 2>/dev/null || echo 'unknown')"
+    echo "Available tags: $(git tag -l 'v64.*' | head -5 | tr '\n' ' ')"
+    echo "Trying to find a tag with management directory..."
+    # Try to find any tag that has the management directory
+    for tag in $(git tag -l "v*" | sort -V -r | head -10); do
+      if git checkout "${tag}" -q 2>/dev/null && [ -d "management" ]; then
+        echo "Found working tag: ${tag}"
+        break
+      fi
+    done
+  fi
 else
   echo "Already on correct version: ${MIAB_TAG}"
+fi
+
+# Final verification that management directory exists
+if [ ! -d "management" ]; then
+  echo "ERROR: management directory still not found!"
+  echo "This is a critical error - Mail-in-a-Box cannot function without management scripts"
+  echo "Current directory contents:"
+  ls -la | head -20
+  exit 1
 fi
 
 # ==========================================
