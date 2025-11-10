@@ -270,6 +270,14 @@ async function auditMiabVersion(options: AuditOptions): Promise<void> {
     if (needsUpdate && update) {
       console.log('📋 Step 6: Updating to latest version...');
       
+      // Fix git permissions first, then fetch all tags
+      const fixPerms = await sshCommand(
+        keyPath,
+        instanceIp,
+        `cd /opt/mailinabox && sudo chown -R root:root .git 2>/dev/null && sudo chmod -R u+rwX .git 2>/dev/null && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true`,
+        { verbose }
+      );
+
       // Fetch all tags
       const fetchResult = await sshCommand(
         keyPath,
@@ -279,7 +287,20 @@ async function auditMiabVersion(options: AuditOptions): Promise<void> {
       );
 
       if (!fetchResult.success) {
-        throw new Error(`Failed to fetch tags: ${fetchResult.error || fetchResult.output}`);
+        // Try one more time after fixing permissions
+        const retryFetch = await sshCommand(
+          keyPath,
+          instanceIp,
+          `cd /opt/mailinabox && sudo chown -R root:root .git && sudo chmod -R u+rwX .git && git fetch --all --tags -q 2>&1`,
+          { verbose }
+        );
+
+        if (!retryFetch.success) {
+          throw new Error(
+            `Failed to fetch tags after permission fix: ${retryFetch.error || retryFetch.output}\n` +
+            `💡 Try running cleanup first: pnpm nx run cdk-emcnotary-instance:admin:miab:cleanup`
+          );
+        }
       }
 
       // Checkout latest tag

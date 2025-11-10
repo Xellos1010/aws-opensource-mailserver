@@ -403,6 +403,14 @@
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} UPDATE=${UPDATE:-0} VERBOSE=${VERBOSE:-false} pnpm exec tsx --tsconfig tools/tsconfig.json tools/audit-miab-version.cli.ts ${DOMAIN:+--domain $DOMAIN} ${UPDATE:+--update} ${VERBOSE:+--verbose}"
       },
       "description": "Audit Mail-in-a-Box version: Checks current version vs latest GitHub release, verifies management scripts, and lists users (use UPDATE=1 to update to latest)"
+    },
+    "admin:miab:cleanup": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} PRESERVE_DATA=${PRESERVE_DATA:-0} VERBOSE=${VERBOSE:-false} pnpm exec tsx --tsconfig tools/tsconfig.json tools/cleanup-miab.cli.ts ${DOMAIN:+--domain $DOMAIN} ${PRESERVE_DATA:+--preserve-data} ${VERBOSE:+--verbose}"
+      },
+      "description": "Cleanup Mail-in-a-Box installation: Removes git repository and bootstrap markers to allow fresh bootstrap (use PRESERVE_DATA=1 to keep user data)"
     }
   }
 }

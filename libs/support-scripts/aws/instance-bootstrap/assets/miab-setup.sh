@@ -184,8 +184,27 @@ else
 fi
 
 cd /opt/mailinabox
+# Fix git ownership/permissions issues (common when repo was cloned as root)
+# Ensure git can access its own files
+if [ -d .git ]; then
+  # Fix ownership if needed (git operations may fail due to permission issues)
+  if ! git rev-parse --git-dir >/dev/null 2>&1; then
+    echo "Fixing git directory permissions..."
+    chown -R root:root .git 2>/dev/null || true
+    chmod -R u+rwX .git 2>/dev/null || true
+  fi
+  # Add safe directory to avoid ownership warnings
+  git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true
+fi
+
 # Fetch all branches and tags
-git fetch --all --tags -q
+git fetch --all --tags -q 2>&1 || {
+  echo "Warning: git fetch failed, trying to fix permissions and retry..."
+  chown -R root:root .git 2>/dev/null || true
+  chmod -R u+rwX .git 2>/dev/null || true
+  git fetch --all --tags -q 2>&1 || true
+}
+
 # Get current tag/commit
 CURRENT_TAG=$(git describe --tags --exact-match 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo "")
 
