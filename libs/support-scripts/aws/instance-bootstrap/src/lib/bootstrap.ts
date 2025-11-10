@@ -526,7 +526,7 @@ function buildEnvironmentMap(
   // Defaults (can be overridden)
   env.SES_RELAY = 'true';
   env.SWAP_SIZE_GIB = '2';
-  env.MAILINABOX_VERSION = 'v64.0';
+  env.MAILINABOX_VERSION = 'v73';
   env.MAILINABOX_CLONE_URL =
     'https://github.com/mail-in-a-box/mailinabox.git';
   env.REBOOT_AFTER_SETUP = options.rebootAfterSetup ? 'true' : 'false';

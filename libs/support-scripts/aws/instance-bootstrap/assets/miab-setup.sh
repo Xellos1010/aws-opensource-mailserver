@@ -174,7 +174,7 @@ mkdir -p "${STORAGE_ROOT}"
 # Mail-in-a-Box Clone/Checkout (idempotent)
 # ==========================================
 MIAB_REPO="${MAILINABOX_CLONE_URL:-https://github.com/mail-in-a-box/mailinabox.git}"
-MIAB_TAG="${MAILINABOX_VERSION:-v64.0}"
+MIAB_TAG="${MAILINABOX_VERSION:-v73}"
 
 if [ ! -d "/opt/mailinabox" ]; then
   echo "Cloning Mail-in-a-Box repository..."
