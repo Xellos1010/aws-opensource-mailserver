@@ -201,17 +201,41 @@ if [ "${CURRENT_TAG}" != "${MIAB_TAG}" ]; then
       echo "Successfully checked out ${MIAB_TAG} after fetch"
     else
       echo "Warning: Could not checkout ${MIAB_TAG}, trying to find latest stable tag..."
-      # Try to find the latest v64.x tag
-      LATEST_TAG=$(git tag -l "v64.*" | sort -V | tail -1 2>/dev/null || echo "")
+      # Extract major version (e.g., "73" from "v73")
+      MAJOR_VERSION=$(echo "${MIAB_TAG}" | sed 's/^v//' | cut -d. -f1)
+      # Try to find the latest tag matching the major version (e.g., v73.*)
+      LATEST_TAG=$(git tag -l "v${MAJOR_VERSION}.*" | sort -V | tail -1 2>/dev/null || echo "")
       if [ -n "${LATEST_TAG}" ]; then
-        echo "Found latest v64 tag: ${LATEST_TAG}, checking out..."
+        echo "Found latest v${MAJOR_VERSION} tag: ${LATEST_TAG}, checking out..."
         git checkout "${LATEST_TAG}" -q 2>/dev/null || {
-          echo "Warning: Could not checkout ${LATEST_TAG}, using main branch"
-          git checkout main -q || git checkout master -q || true
+          echo "Warning: Could not checkout ${LATEST_TAG}, trying to find any tag with management directory..."
+          # Try to find any tag that has the management directory
+          for tag in $(git tag -l "v*" | sort -V -r | head -10); do
+            if git checkout "${tag}" -q 2>/dev/null && [ -d "management" ]; then
+              echo "Found working tag: ${tag}"
+              break
+            fi
+          done
+          # If still no management directory, fall back to main
+          if [ ! -d "management" ]; then
+            echo "Warning: No tag found with management directory, using main branch"
+            git checkout main -q || git checkout master -q || true
+          fi
         }
       else
-        echo "Warning: No v64 tags found, using main branch"
-        git checkout main -q || git checkout master -q || true
+        echo "Warning: No v${MAJOR_VERSION} tags found, trying to find any tag with management directory..."
+        # Try to find any tag that has the management directory
+        for tag in $(git tag -l "v*" | sort -V -r | head -10); do
+          if git checkout "${tag}" -q 2>/dev/null && [ -d "management" ]; then
+            echo "Found working tag: ${tag}"
+            break
+          fi
+        done
+        # If still no management directory, fall back to main
+        if [ ! -d "management" ]; then
+          echo "Warning: No tag found with management directory, using main branch"
+          git checkout main -q || git checkout master -q || true
+        fi
       fi
     fi
   fi
@@ -220,7 +244,9 @@ if [ "${CURRENT_TAG}" != "${MIAB_TAG}" ]; then
   if [ ! -d "management" ]; then
     echo "ERROR: management directory not found after checkout!"
     echo "Current branch/tag: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || git describe --tags 2>/dev/null || echo 'unknown')"
-    echo "Available tags: $(git tag -l 'v64.*' | head -5 | tr '\n' ' ')"
+    # Extract major version for context
+    MAJOR_VERSION=$(echo "${MIAB_TAG}" | sed 's/^v//' | cut -d. -f1)
+    echo "Available v${MAJOR_VERSION}.* tags: $(git tag -l "v${MAJOR_VERSION}.*" | head -5 | tr '\n' ' ')"
     echo "Trying to find a tag with management directory..."
     # Try to find any tag that has the management directory
     for tag in $(git tag -l "v*" | sort -V -r | head -10); do
