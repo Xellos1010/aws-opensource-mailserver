@@ -548,6 +548,12 @@ async function pollCommandStatus(
 ): Promise<void> {
   const startTime = Date.now();
   const maxWaitMs = maxWaitSeconds * 1000;
+  let lastStatus: CommandStatus | undefined;
+  let lastOutputLength = 0;
+  let statusUpdateCount = 0;
+
+  console.log('\n📊 Monitoring bootstrap progress...');
+  console.log('   (This may take 10-30 minutes depending on instance size)\n');
 
   while (true) {
     const command = new GetCommandInvocationCommand({
@@ -557,25 +563,108 @@ async function pollCommandStatus(
 
     const response = await retryWithBackoff(() => ssm.send(command));
     const status = response.Status as CommandStatus;
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const elapsedMinutes = Math.floor(elapsed / 60);
+    const elapsedSeconds = elapsed % 60;
+
+    // Show status updates every 30 seconds or on status change
+    if (status !== lastStatus || elapsed % 30 === 0) {
+      const statusIcon = status === CommandStatus.IN_PROGRESS ? '⏳' : 
+                        status === CommandStatus.PENDING ? '⏸️' : 
+                        status === CommandStatus.SUCCESS ? '✅' : '❌';
+      console.log(`${statusIcon} Status: ${status} (${elapsedMinutes}m ${elapsedSeconds}s elapsed)`);
+      lastStatus = status;
+      statusUpdateCount++;
+    }
+
+    // Show output incrementally (new lines only)
+    if (response.StandardOutputContent) {
+      const output = response.StandardOutputContent;
+      if (output.length > lastOutputLength) {
+        const newOutput = output.slice(lastOutputLength);
+        // Only show if there's substantial new content (avoid spam)
+        if (newOutput.length > 100 || newOutput.includes('\n')) {
+          // Show last few lines of new output
+          const lines = newOutput.split('\n').filter(l => l.trim());
+          if (lines.length > 0) {
+            const recentLines = lines.slice(-3).join('\n');
+            if (recentLines.trim()) {
+              console.log(`   ${recentLines.split('\n').map(l => `   ${l}`).join('\n')}`);
+            }
+          }
+        }
+        lastOutputLength = output.length;
+      }
+    }
 
     if (status === CommandStatus.SUCCESS) {
-      console.log('✅ Bootstrap command completed successfully');
+      console.log('\n✅ Bootstrap command completed successfully');
+      if (response.StandardOutputContent) {
+        const outputLines = response.StandardOutputContent.split('\n').filter(l => l.trim());
+        if (outputLines.length > 0) {
+          console.log('\n📋 Last few lines of output:');
+          outputLines.slice(-5).forEach(line => console.log(`   ${line}`));
+        }
+      }
       return;
     }
 
     if (status === CommandStatus.FAILED || status === CommandStatus.CANCELLED) {
-      const error = response.StandardErrorContent || 'Unknown error';
+      const error = response.StandardErrorContent || response.StandardOutputContent || 'Unknown error';
+      
+      // Extract meaningful error from output
+      let errorMessage = error;
+      if (error.includes('error:')) {
+        const errorMatch = error.match(/error:[^\n]+/);
+        if (errorMatch) {
+          errorMessage = errorMatch[0];
+        }
+      }
+      
+      // Show last 20 lines of error output
+      const errorLines = error.split('\n').filter(l => l.trim());
+      const lastErrorLines = errorLines.slice(-20);
+      
+      console.error('\n❌ Bootstrap command failed!');
+      console.error(`\n📋 Error Details:`);
+      console.error(`   Status: ${status}`);
+      console.error(`   Command ID: ${commandId}`);
+      console.error(`   Instance: ${instanceId}`);
+      console.error(`   Elapsed Time: ${elapsedMinutes}m ${elapsedSeconds}s`);
+      
+      if (lastErrorLines.length > 0) {
+        console.error(`\n📋 Error Output (last ${Math.min(20, lastErrorLines.length)} lines):`);
+        lastErrorLines.forEach(line => {
+          // Filter out verbose logging noise
+          if (!line.includes('++ echo') && !line.includes('++ tee') && !line.includes('++ logger')) {
+            console.error(`   ${line}`);
+          }
+        });
+      }
+      
+      console.error(`\n💡 Troubleshooting:`);
+      console.error(`   1. Check full logs: pnpm nx run cdk-emcnotary-instance:admin:bootstrap:logs`);
+      console.error(`   2. Check status: pnpm nx run cdk-emcnotary-instance:admin:bootstrap:status`);
+      console.error(`   3. View CloudWatch: aws logs tail /aws/ssm/miab-bootstrap --follow`);
+      console.error(`   4. If git/permission errors: pnpm nx run cdk-emcnotary-instance:admin:miab:cleanup`);
+      
       throw new Error(
-        `Bootstrap command failed with status ${status}: ${error}`
+        `Bootstrap command failed with status ${status} after ${elapsedMinutes}m ${elapsedSeconds}s\n` +
+        `Error: ${errorMessage}\n` +
+        `See error output above for details.`
       );
     }
 
     if (status === CommandStatus.IN_PROGRESS || status === CommandStatus.PENDING) {
-      const elapsed = Date.now() - startTime;
       if (elapsed > maxWaitMs) {
         throw new Error(
-          `Bootstrap command timed out after ${maxWaitSeconds} seconds`
+          `Bootstrap command timed out after ${maxWaitSeconds} seconds (${Math.floor(maxWaitSeconds / 60)} minutes)`
         );
+      }
+
+      // Show progress indicator every 10 seconds
+      if (elapsed % 10 === 0 && statusUpdateCount % 2 === 0) {
+        process.stdout.write('.');
       }
 
       // Wait before polling again
@@ -920,12 +1009,20 @@ export async function bootstrapInstance(
     throw new Error('Failed to get command ID from SSM response');
   }
 
-  console.log(`📝 Command ID: ${commandId}`);
+  console.log(`\n📝 Command ID: ${commandId}`);
   console.log(`📊 CloudWatch Logs: /aws/ssm/miab-bootstrap`);
-  console.log(`⏳ Waiting for command to complete...`);
+  console.log(`📋 Instance: ${stackInfo.instanceId}`);
+  console.log(`🌐 Domain: ${stackInfo.instanceDns}.${stackInfo.domainName}`);
+  console.log(`📦 Mail-in-a-Box Version: ${envMap.MAILINABOX_VERSION || 'v73'}`);
+  console.log(`\n⏳ Starting bootstrap process...`);
 
   // Poll for completion
-  await pollCommandStatus(ssm, commandId, stackInfo.instanceId);
+  try {
+    await pollCommandStatus(ssm, commandId, stackInfo.instanceId);
+  } catch (error) {
+    // Error already logged in pollCommandStatus, just rethrow
+    throw error;
+  }
 
   console.log(`\n✅ Bootstrap completed successfully for ${stackInfo.instanceDns}.${stackInfo.domainName}`);
   console.log(`   Instance: ${stackInfo.instanceId}`);
