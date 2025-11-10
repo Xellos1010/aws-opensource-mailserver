@@ -212,16 +212,47 @@ async function listUsers(options: ListUsersOptions): Promise<void> {
         console.log(`   📋 Management directory: ${mgmtDirCheck.output}`);
       }
       
+      // If management directory exists, check what's in it
+      if (mgmtDirCheck.output.includes('EXISTS')) {
+        if (verbose) {
+          console.log('   🔍 Step 3a.3: Checking management directory contents...');
+        }
+        const mgmtContents = await sshCommand(
+          keyPath,
+          instanceIp,
+          `ls -la /opt/mailinabox/management/ 2>&1 | head -30`,
+          { verbose }
+        );
+        
+        if (verbose && mgmtContents.output) {
+          console.log(`   📋 Management directory contents:\n${mgmtContents.output.split('\n').map(l => `      ${l}`).join('\n')}`);
+        }
+        
+        // Check if users.py exists but maybe with different name or location
+        const findUsersPy = await sshCommand(
+          keyPath,
+          instanceIp,
+          `find /opt/mailinabox/management -name '*user*' -type f 2>&1 | head -10`,
+          { verbose }
+        );
+        
+        if (verbose && findUsersPy.output) {
+          console.log(`   📋 Files matching '*user*': ${findUsersPy.output || 'none'}`);
+        }
+      }
+      
       throw new Error(
         'Mail-in-a-Box management script not found at /opt/mailinabox/management/users.py\n' +
         'This may indicate:\n' +
         '  1. Mail-in-a-Box git checkout failed (wrong tag/branch)\n' +
-        '  2. The management directory is missing from the checked-out branch\n' +
+        '  2. The users.py file is missing from the checked-out branch\n' +
         '  3. Mail-in-a-Box installation is incomplete\n\n' +
         `Git status: ${gitCheck.output || 'unknown'}\n` +
         `Management directory: ${mgmtDirCheck.output || 'unknown'}\n\n` +
         '💡 Try running bootstrap again to fix the git checkout:\n' +
-        `   pnpm nx run cdk-emcnotary-instance:admin:bootstrap-miab-ec2-instance`
+        `   pnpm nx run cdk-emcnotary-instance:admin:bootstrap-miab-ec2-instance\n\n` +
+        '💡 Or manually fix the git checkout:\n' +
+        `   ssh -i ${keyPath} ubuntu@${instanceIp} "cd /opt/mailinabox && git fetch --all --tags && git checkout v73.0 || git checkout v72.0 || git checkout v71.0"`
       );
     }
     
