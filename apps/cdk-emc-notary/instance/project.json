@@ -376,9 +376,9 @@
       "executor": "nx:run-commands",
       "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build"],
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/list-miab-users.cli.ts ${DOMAIN:+--domain $DOMAIN}"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} VERBOSE=${VERBOSE:-false} pnpm exec tsx --tsconfig tools/tsconfig.json tools/list-miab-users.cli.ts ${DOMAIN:+--domain $DOMAIN} ${VERBOSE:+--verbose}"
       },
-      "description": "List Mail-in-a-Box users: Retrieves and displays all email users configured on the Mail-in-a-Box server"
+      "description": "List Mail-in-a-Box users: Retrieves and displays all email users configured on the Mail-in-a-Box server (use VERBOSE=1 for detailed debugging)"
     },
     "admin:dns:list": {
       "executor": "nx:run-commands",
