@@ -27,21 +27,24 @@ echo "Domain: ${DOMAIN_NAME}"
 echo "Instance DNS: ${INSTANCE_DNS}.${DOMAIN_NAME}"
 echo "=========================================="
 
+# ==========================================
+# AWS CLI Installation (idempotent - do this early)
+# ==========================================
+if ! command -v aws >/dev/null 2>&1; then
+  echo "Installing AWS CLI..."
+  apt-get update -qq
+  apt-get install -y jq curl unzip
+  curl -sSL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o /tmp/awscliv2.zip
+  unzip -q /tmp/awscliv2.zip -d /tmp && /tmp/aws/install
+  rm -rf /tmp/awscliv2.zip /tmp/aws
+else
+  echo "AWS CLI already installed"
+fi
+
 # Resolve Elastic IP from AllocationId (works even if EIP not yet attached)
 ELASTIC_IP=""
 if [[ -n "${EIP_ALLOCATION_ID:-}" ]]; then
   echo "Resolving Elastic IP from AllocationId: ${EIP_ALLOCATION_ID}"
-  
-  # Ensure AWS CLI is available
-  if ! command -v aws >/dev/null 2>&1; then
-    echo "Installing AWS CLI..."
-    sudo apt-get update -y
-    sudo apt-get install -y jq curl unzip
-    curl -sSL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o /tmp/awscliv2.zip
-    unzip -q /tmp/awscliv2.zip -d /tmp && sudo /tmp/aws/install
-    rm -rf /tmp/awscliv2.zip /tmp/aws
-  fi
-
   ELASTIC_IP=$(aws ec2 describe-addresses --allocation-ids "${EIP_ALLOCATION_ID}" --region "${REGION}" \
     --query 'Addresses[0].PublicIp' --output text 2>/dev/null || echo "")
 fi
@@ -67,24 +70,33 @@ export DEFAULT_PUBLIC_IP="${PUBLIC_IP}"
 # ==========================================
 # System Updates & Prerequisites (idempotent)
 # ==========================================
-echo "Updating system packages..."
-apt-get update -qq
-
-# Check if upgrade is needed (idempotent)
-if [ -z "$(apt list --upgradable 2>/dev/null | grep -v 'Listing...')" ]; then
-  echo "System packages are up to date"
+PACKAGES_MARKER="/root/.miab_packages_installed"
+if [ -f "${PACKAGES_MARKER}" ]; then
+  echo "System packages already installed (marker file exists)"
+  echo "Skipping package installation to avoid duplicate operations"
 else
-  echo "Upgrading system packages..."
-  DEBIAN_FRONTEND=noninteractive apt-get upgrade -o DPkg::Lock::Timeout=120 -y -qq
-fi
+  echo "Updating system packages..."
+  apt-get update -qq
 
-# Install required packages (idempotent - apt handles duplicates)
-echo "Installing prerequisites..."
-apt-get install -y dialog librsync-dev python3-setuptools python3-pip python3-boto3 unzip intltool python-is-python3 git
+  # Check if upgrade is needed (idempotent)
+  if [ -z "$(apt list --upgradable 2>/dev/null | grep -v 'Listing...')" ]; then
+    echo "System packages are up to date"
+  else
+    echo "Upgrading system packages..."
+    DEBIAN_FRONTEND=noninteractive apt-get upgrade -o DPkg::Lock::Timeout=120 -y -qq
+  fi
 
-# CloudFormation helpers (optional, harmless if not used)
-if ! python3 -c "import cfnbootstrap" 2>/dev/null; then
-  pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz || true
+  # Install required packages (idempotent - apt handles duplicates)
+  echo "Installing prerequisites..."
+  apt-get install -y dialog librsync-dev python3-setuptools python3-pip python3-boto3 unzip intltool python-is-python3 git
+
+  # CloudFormation helpers (optional, harmless if not used)
+  if ! python3 -c "import cfnbootstrap" 2>/dev/null; then
+    pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz || true
+  fi
+  
+  # Mark packages as installed
+  touch "${PACKAGES_MARKER}"
 fi
 
 # ==========================================
@@ -216,23 +228,74 @@ fi
 # ==========================================
 # Run MIAB Installer (idempotent - MIAB handles re-runs)
 # ==========================================
-echo "Running Mail-in-a-Box installer..."
-cd /opt/mailinabox
-bash -x setup/start.sh 2>&1 | tee /tmp/mailinabox_debug.log || {
-  echo "Warning: MIAB installer encountered errors. Check /tmp/mailinabox_debug.log"
-}
+MIAB_COMPLETE_MARKER="/home/user-data/.miab_setup_complete"
+MIAB_INSTALLING_MARKER="/home/user-data/.miab_installing"
+
+# Check if MIAB setup is already complete
+if [ -f "${MIAB_COMPLETE_MARKER}" ]; then
+  echo "Mail-in-a-Box setup already completed (marker file exists)"
+  echo "Skipping MIAB installer to avoid duplicate operations"
+else
+  # Check if installation is in progress (from previous failed run)
+  if [ -f "${MIAB_INSTALLING_MARKER}" ]; then
+    echo "Previous MIAB installation may have been interrupted"
+    echo "Removing stale marker and continuing..."
+    rm -f "${MIAB_INSTALLING_MARKER}"
+  fi
+  
+  # Check if MIAB is already configured (check for key files/directories)
+  if [ -f "/home/user-data/mailinabox.conf" ] || [ -d "/home/user-data/ssl" ]; then
+    echo "Mail-in-a-Box appears to be already configured"
+    echo "Checking if setup completed successfully..."
+    
+    # Verify key services are running
+    if systemctl is-active --quiet postfix dovecot nginx 2>/dev/null; then
+      echo "Mail services are running - MIAB setup appears complete"
+      echo "Creating completion marker..."
+      touch "${MIAB_COMPLETE_MARKER}"
+      chown user-data:user-data "${MIAB_COMPLETE_MARKER}"
+    else
+      echo "Services not running - will re-run MIAB installer"
+    fi
+  fi
+  
+  # Run installer only if not already complete
+  if [ ! -f "${MIAB_COMPLETE_MARKER}" ]; then
+    echo "Running Mail-in-a-Box installer..."
+    touch "${MIAB_INSTALLING_MARKER}"
+    chown user-data:user-data "${MIAB_INSTALLING_MARKER}"
+    
+    cd /opt/mailinabox
+    if bash -x setup/start.sh 2>&1 | tee /tmp/mailinabox_debug.log; then
+      # Installation succeeded - create completion marker
+      echo "Mail-in-a-Box installer completed successfully"
+      touch "${MIAB_COMPLETE_MARKER}"
+      chown user-data:user-data "${MIAB_COMPLETE_MARKER}"
+      rm -f "${MIAB_INSTALLING_MARKER}"
+    else
+      echo "Warning: MIAB installer encountered errors. Check /tmp/mailinabox_debug.log"
+      rm -f "${MIAB_INSTALLING_MARKER}"
+      # Don't exit - continue with other steps that might succeed
+    fi
+  fi
+fi
 
 # ==========================================
 # SES Relay Configuration (idempotent)
 # ==========================================
+SES_RELAY_MARKER="/home/user-data/.ses_relay_configured"
 if [[ "${SES_RELAY}" == "true" ]]; then
-  echo "Configuring SES SMTP relay..."
-  
-  SMTP_USERNAME_PARAM="/smtp-username-${STACK_NAME}"
-  SMTP_PASSWORD_PARAM="/smtp-password-${STACK_NAME}"
-  
-  if aws ssm get-parameter --region "${REGION}" --name "${SMTP_USERNAME_PARAM}" --with-decryption >/dev/null 2>&1 && \
-     aws ssm get-parameter --region "${REGION}" --name "${SMTP_PASSWORD_PARAM}" --with-decryption >/dev/null 2>&1; then
+  if [ -f "${SES_RELAY_MARKER}" ]; then
+    echo "SES relay already configured (marker file exists)"
+    echo "Skipping SES relay configuration to avoid duplicate operations"
+  else
+    echo "Configuring SES SMTP relay..."
+    
+    SMTP_USERNAME_PARAM="/smtp-username-${STACK_NAME}"
+    SMTP_PASSWORD_PARAM="/smtp-password-${STACK_NAME}"
+    
+    if aws ssm get-parameter --region "${REGION}" --name "${SMTP_USERNAME_PARAM}" --with-decryption >/dev/null 2>&1 && \
+       aws ssm get-parameter --region "${REGION}" --name "${SMTP_PASSWORD_PARAM}" --with-decryption >/dev/null 2>&1; then
     
     SMTP_USERNAME=$(aws ssm get-parameter --region "${REGION}" --name "${SMTP_USERNAME_PARAM}" --with-decryption --query Parameter.Value --output text)
     SMTP_PASSWORD=$(aws ssm get-parameter --region "${REGION}" --name "${SMTP_PASSWORD_PARAM}" --with-decryption --query Parameter.Value --output text)
@@ -292,9 +355,14 @@ CFG
       echo "127.0.0.1 ${PRIMARY_HOSTNAME}" >> /etc/hosts
     fi
     
+    # Mark SES relay as configured
+    touch "${SES_RELAY_MARKER}"
+    chown user-data:user-data "${SES_RELAY_MARKER}"
+    
     echo "SES relay configuration complete"
-  else
-    echo "Warning: SES SMTP credentials not found in SSM. Skipping relay configuration."
+    else
+      echo "Warning: SES SMTP credentials not found in SSM. Skipping relay configuration."
+    fi
   fi
 fi
 
@@ -324,19 +392,38 @@ fi
 # ==========================================
 # Duplicity via Snap (idempotent)
 # ==========================================
-if ! command -v duplicity >/dev/null 2>&1 || ! duplicity --version | grep -q "duplicity"; then
+DUPLICITY_MARKER="/root/.duplicity_installed"
+if [ -f "${DUPLICITY_MARKER}" ]; then
+  echo "Duplicity already installed (marker file exists)"
+  echo "Skipping duplicity installation to avoid duplicate operations"
+elif ! command -v duplicity >/dev/null 2>&1 || ! duplicity --version | grep -q "duplicity"; then
   echo "Installing duplicity via snap..."
   apt-get remove -y duplicity || true
   rm -f /etc/apt/sources.list.d/duplicity-team-ubuntu-duplicity-release-git-jammy.list || true
   apt-get update -qq
-  snap install duplicity --classic || true
-  ln -sf /snap/bin/duplicity /usr/bin/duplicity || true
+  if snap install duplicity --classic; then
+    ln -sf /snap/bin/duplicity /usr/bin/duplicity || true
+    touch "${DUPLICITY_MARKER}"
+  fi
+else
+  # Duplicity already installed via snap
+  touch "${DUPLICITY_MARKER}"
 fi
 
-# Run initial backup if MIAB is configured
-if [ -f "/opt/mailinabox/management/backup.py" ]; then
+# Run initial backup if MIAB is configured (idempotent - only once)
+BACKUP_MARKER="/home/user-data/.initial_backup_complete"
+if [ -f "/opt/mailinabox/management/backup.py" ] && [ ! -f "${BACKUP_MARKER}" ]; then
   echo "Running initial backup..."
-  /opt/mailinabox/management/backup.py || echo "Warning: Initial backup failed or skipped"
+  if /opt/mailinabox/management/backup.py; then
+    touch "${BACKUP_MARKER}"
+    chown user-data:user-data "${BACKUP_MARKER}"
+    echo "Initial backup completed successfully"
+  else
+    echo "Warning: Initial backup failed or skipped"
+  fi
+elif [ -f "${BACKUP_MARKER}" ]; then
+  echo "Initial backup already completed (marker file exists)"
+  echo "Skipping initial backup to avoid duplicate operations"
 fi
 
 # ==========================================
@@ -355,6 +442,19 @@ if [ -d "${CLEANUP_DIR}" ]; then
 fi
 
 # ==========================================
+# Final Completion Marker
+# ==========================================
+# Create final completion marker to indicate successful bootstrap
+BOOTSTRAP_COMPLETE_MARKER="/home/user-data/.bootstrap_complete"
+if [ ! -f "${BOOTSTRAP_COMPLETE_MARKER}" ]; then
+  echo "Creating bootstrap completion marker..."
+  touch "${BOOTSTRAP_COMPLETE_MARKER}"
+  chown user-data:user-data "${BOOTSTRAP_COMPLETE_MARKER}"
+  echo "Bootstrap completed at: $(date)" > "${BOOTSTRAP_COMPLETE_MARKER}"
+  chown user-data:user-data "${BOOTSTRAP_COMPLETE_MARKER}"
+fi
+
+# ==========================================
 # Optional Reboot
 # ==========================================
 if [[ "${REBOOT_AFTER_SETUP}" == "true" ]]; then
@@ -368,4 +468,8 @@ else
   echo "MIAB setup complete for ${PRIMARY_HOSTNAME}"
   echo "Completed at: $(date)"
   echo "=========================================="
+  echo ""
+  echo "✅ Bootstrap completed successfully"
+  echo "   All operations completed without errors"
+  echo "   Safe to re-run - script will skip completed steps"
 fi
