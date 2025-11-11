@@ -1,0 +1,245 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Helper stack for hepefoundation.org - Lambda function to stop and start EC2 instance daily at 6am EST
+
+Parameters:
+  MailServerStackName:
+    Type: String
+    Default: hepefoundation-org-mailserver
+    Description: Name of the mailserver CloudFormation stack to get instance ID from
+  ScheduleExpression:
+    Type: String
+    Default: 'cron(0 11 * * ? *)'
+    Description: 'EventBridge schedule expression for stop-and-start (default: 6am EST = 11am UTC)'
+  Region:
+    Type: String
+    Default: us-east-1
+    Description: AWS region where resources are deployed
+
+Resources:
+  StopStartLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub StopStartLambda-${AWS::StackName}
+      Description: Role assumed by Lambda to stop and start EC2 instance
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: StopStartLambdaExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:StopInstances
+                  - ec2:StartInstances
+                  - ec2:DescribeInstances
+                  - cloudformation:DescribeStacks
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: 'arn:aws:logs:*:*:*'
+
+  StopStartLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Stops and starts EC2 instance with state waiting
+      FunctionName: !Sub StopStartLambda-${AWS::StackName}
+      Handler: index.handler
+      MemorySize: 256
+      Role: !GetAtt StopStartLambdaExecutionRole.Arn
+      Runtime: nodejs20.x
+      Timeout: 900
+      Environment:
+        Variables:
+          MAIL_SERVER_STACK_NAME: !Ref MailServerStackName
+      Code:
+        ZipFile: |
+          const { EC2Client, StopInstancesCommand, StartInstancesCommand, DescribeInstancesCommand } = require('@aws-sdk/client-ec2');
+          const { CloudFormationClient, DescribeStacksCommand } = require('@aws-sdk/client-cloudformation');
+
+          const region = process.env.AWS_REGION || 'us-east-1';
+          const ec2Client = new EC2Client({ region });
+          const cfClient = new CloudFormationClient({ region });
+
+          async function getInstanceIdFromStack(stackName) {
+            try {
+              const response = await cfClient.send(
+                new DescribeStacksCommand({ StackName: stackName })
+              );
+              const stack = response.Stacks?.[0];
+              if (!stack || !stack.Outputs) {
+                throw new Error('Stack ' + stackName + ' not found or has no outputs');
+              }
+
+              // Try InstanceId first, then RestorePrefix (legacy)
+              const outputs = {};
+              stack.Outputs.forEach(output => {
+                outputs[output.OutputKey] = output.OutputValue;
+              });
+
+              const instanceId = outputs['InstanceId'] || outputs['RestorePrefix'];
+              if (!instanceId) {
+                throw new Error('Instance ID not found in stack outputs. Available: ' + Object.keys(outputs).join(', '));
+              }
+
+              return instanceId;
+            } catch (error) {
+              console.error('Failed to get instance ID from stack ' + stackName + ':', error);
+              throw error;
+            }
+          }
+
+          async function getInstanceState(id) {
+            const response = await ec2Client.send(
+              new DescribeInstancesCommand({ InstanceIds: [id] })
+            );
+            const instance = response.Reservations?.[0]?.Instances?.[0];
+            if (!instance) {
+              throw new Error('Instance ' + id + ' not found');
+            }
+            return instance.State?.Name || 'unknown';
+          }
+
+          async function waitForState(id, desiredState, timeoutMs = 600000) {
+            const startTime = Date.now();
+            const checkInterval = 10000; // Check every 10 seconds
+
+            console.log('Waiting for instance ' + id + ' to reach state: ' + desiredState);
+
+            while (Date.now() - startTime < timeoutMs) {
+              const currentState = await getInstanceState(id);
+
+              if (currentState === desiredState) {
+                console.log('Instance ' + id + ' is now in ' + desiredState + ' state');
+                return;
+              }
+
+              const elapsed = Math.floor((Date.now() - startTime) / 1000 / 60);
+              console.log('Current state: ' + currentState + '. Waiting... (' + elapsed + ' minutes elapsed)');
+
+              await new Promise(resolve => setTimeout(resolve, checkInterval));
+            }
+
+            throw new Error(
+              'Timeout waiting for instance ' + id + ' to reach ' + desiredState + ' state after ' + (timeoutMs / 1000 / 60) + ' minutes'
+            );
+          }
+
+          async function stopAndStart(id) {
+            console.log('Stopping and restarting instance ' + id + '...');
+
+            // Check current state
+            let currentState = await getInstanceState(id);
+            console.log('Current instance state: ' + currentState);
+
+            // Stop the instance if it's running or stopping
+            if (currentState === 'running') {
+              console.log('Stopping instance ' + id + '...');
+              await ec2Client.send(new StopInstancesCommand({ InstanceIds: [id] }));
+              await waitForState(id, 'stopped');
+            } else if (currentState === 'stopping') {
+              console.log('Instance ' + id + ' is already stopping. Waiting for stopped state...');
+              await waitForState(id, 'stopped');
+            } else if (currentState === 'stopped') {
+              console.log('Instance ' + id + ' is already stopped');
+            } else {
+              throw new Error(
+                'Cannot stop instance ' + id + ' from ' + currentState + ' state. Must be running or stopping.'
+              );
+            }
+
+            // Start the instance
+            currentState = await getInstanceState(id);
+            if (currentState === 'stopped') {
+              console.log('Starting instance ' + id + '...');
+              await ec2Client.send(new StartInstancesCommand({ InstanceIds: [id] }));
+              await waitForState(id, 'running', 900000); // 15 minutes for starting
+            } else if (currentState === 'pending') {
+              console.log('Instance ' + id + ' is already starting. Waiting for running state...');
+              await waitForState(id, 'running', 900000);
+            } else if (currentState === 'running') {
+              console.log('Instance ' + id + ' is already running');
+            } else {
+              throw new Error(
+                'Cannot start instance ' + id + ' from ' + currentState + ' state. Must be stopped or pending.'
+              );
+            }
+
+            console.log('✅ Instance ' + id + ' stop-and-start completed successfully');
+          }
+
+          exports.handler = async (event) => {
+            const stackName = process.env.MAIL_SERVER_STACK_NAME;
+
+            if (!stackName) {
+              console.error('MAIL_SERVER_STACK_NAME environment variable not set');
+              throw new Error('MAIL_SERVER_STACK_NAME environment variable not set');
+            }
+
+            try {
+              console.log('Getting instance ID from stack: ' + stackName);
+              const instanceId = await getInstanceIdFromStack(stackName);
+              console.log('Found instance ID: ' + instanceId);
+
+              await stopAndStart(instanceId);
+
+              return {
+                statusCode: 200,
+                body: JSON.stringify({
+                  message: 'Successfully completed stop-and-start for instance ' + instanceId,
+                  instanceId,
+                }),
+              };
+            } catch (error) {
+              console.error('Error in stop-and-start Lambda:', error);
+              throw error;
+            }
+          };
+
+  StopStartEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub StopStartRule-${AWS::StackName}
+      Description: Triggers stop-and-start of mail server instance daily at 6am EST
+      ScheduleExpression: !Ref ScheduleExpression
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt StopStartLambdaFunction.Arn
+          Id: StopStartLambdaTarget
+
+  StopStartLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref StopStartLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt StopStartEventRule.Arn
+
+Outputs:
+  LambdaFunctionArn:
+    Description: ARN of the stop-and-start Lambda function
+    Value: !GetAtt StopStartLambdaFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-LambdaFunctionArn'
+
+  EventRuleArn:
+    Description: ARN of the EventBridge rule
+    Value: !GetAtt StopStartEventRule.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-EventRuleArn'
+
+  ScheduleExpression:
+    Description: Schedule expression for the stop-and-start operation
+    Value: !Ref ScheduleExpression
+
