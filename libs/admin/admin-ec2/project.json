@@ -17,6 +17,25 @@
         "tsConfig": "libs/admin/admin-ec2/tsconfig.lib.json"
       }
     },
+    "build:bin": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/admin/admin-ec2",
+        "main": "libs/admin/admin-ec2/bin/stop-and-start-instance.ts",
+        "outputFileName": "stop-and-start-instance.mjs",
+        "bundle": true,
+        "platform": "node",
+        "format": ["esm"],
+        "target": "node20",
+        "tsConfig": "libs/admin/admin-ec2/tsconfig.lib.json",
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
+      }
+    },
     "restart": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
@@ -43,6 +62,27 @@
       "dependsOn": ["build"],
       "options": {
         "command": "node dist/libs/admin/admin-ec2/ec2.js type $INSTANCE_ID $INSTANCE_TYPE"
+      }
+    },
+    "stop-and-start-instance": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build:bin"],
+      "options": {
+        "command": "node dist/libs/admin/admin-ec2/stop-and-start-instance.mjs"
+      }
+    },
+    "stop-and-start-instance:emcnotary": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build:bin"],
+      "options": {
+        "command": "DOMAIN=emcnotary.com node dist/libs/admin/admin-ec2/stop-and-start-instance.mjs"
+      }
+    },
+    "stop-and-start-instance:askdaokapra": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build:bin"],
+      "options": {
+        "command": "DOMAIN=askdaokapra.com node dist/libs/admin/admin-ec2/stop-and-start-instance.mjs"
       }
     },
     "test": {
