@@ -14,7 +14,7 @@
         "format": ["cjs"],
         "bundle": true,
         "main": "apps/ops-runner/src/main.ts",
-        "outputFileName": "ops.js",
+        "outputFileName": "ops.cjs",
         "tsConfig": "apps/ops-runner/tsconfig.app.json",
         "external": [],
         "generatePackageJson": true,
@@ -76,6 +76,33 @@
         "command": "if [ \"$FEATURE_INSTANCE_BOOTSTRAP_ENABLED\" = \"0\" ]; then echo \"ERROR: FEATURE_INSTANCE_BOOTSTRAP_ENABLED=0 - Bootstrap is disabled\"; exit 1; fi && ts-node tools/instance-bootstrap.cli.ts --domain=${DOMAIN:-emcnotary.com} --region=${CDK_DEFAULT_REGION:-us-east-1} ${STACK:+--stack=$STACK} ${PROFILE:+--profile=$PROFILE} ${DRY_RUN:+--dry-run} ${RESTORE_PREFIX:+--restore-prefix=$RESTORE_PREFIX} ${REBOOT_AFTER_SETUP:+--reboot}"
       },
       "dependsOn": ["^build", "support-scripts-aws-instance-bootstrap:build"]
+    },
+    "hepe:stop-start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node dist/apps/ops-runner/ops.cjs ec2:stop-start hepefoundation.org"
+      },
+      "dependsOn": ["build"]
+    },
+    "hepe:stop": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node dist/apps/ops-runner/ops.cjs ec2:stop hepefoundation.org"
+      },
+      "dependsOn": ["build"]
+    },
+    "hepe:start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node dist/apps/ops-runner/ops.cjs ec2:start hepefoundation.org"
+      },
+      "dependsOn": ["build"]
+    },
+    "hepe:monitoring-report": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bash Archive/hepefoundation/generate-monitoring-report.sh"
+      }
     }
   }
 }

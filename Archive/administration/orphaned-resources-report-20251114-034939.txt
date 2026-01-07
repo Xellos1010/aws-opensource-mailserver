@@ -1,0 +1,1094 @@
+AWS Orphaned Resources Audit Report
+====================================
+Generated: Fri Nov 14 03:49:39 EST 2025
+Profile: hepe-admin-mfa
+Region: us-east-1
+
+This report identifies AWS resources that are NOT managed by CloudFormation stacks.
+Resources may be intentionally orphaned (e.g., manually created, from other tools).
+
+
+==========================================
+EC2 INSTANCES
+==========================================
+
+Resource Type: EC2 Instance
+Resource ID: i-0a1ff83f513575ed4
+Details: State: running, Tags: aws:cloudformation:stack-name=hepefoundation-org-mailserver,ASKDAOKAPRA=MAILSERVERS,Name=MailInABoxInstance-hepefoundation-org-mailserver,aws:cloudformation:logical-id=EC2Instance,aws:cloudformation:stack-id=arn:aws:cloudformation:us-east-1:413988044972:stack/hepefoundation-org-mailserver/3f04d310-5618-11f0-907b-0efb606bff39
+---
+
+==========================================
+CLOUDWATCH ALARMS
+==========================================
+No orphaned CloudWatch alarms found.
+
+==========================================
+LAMBDA FUNCTIONS
+==========================================
+
+Resource Type: Lambda Function
+Resource ID: UnSyncUserAccount-DEV
+Details: {"Runtime":"nodejs20.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoRegisterPin-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoRegisterPin
+Details: {"Runtime":"nodejs14.x","Timeout":5,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoAgreeToS
+Details: {"Runtime":"nodejs18.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDao-ProcessErrors-EventBus
+Details: {"Runtime":"nodejs18.x","Timeout":5,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: RegisterUserAccount-DEV
+Details: {"Runtime":"nodejs20.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoDeleteJournal-DEV
+Details: {"Runtime":"nodejs20.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: NightlyRebootMailServer-hepefoundation-org-mailserver
+Details: {"Runtime":"python3.9","Timeout":60,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoSubmitFirstName-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoInitializeDevice-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: SyncUserAccount-DEV
+Details: {"Runtime":"nodejs20.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoGetJournalEntries
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoInvokeAskQuestion
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoGetPurchaseHistory-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoKeyExchange-DEV
+Details: {"Runtime":"nodejs20.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: GenerateJWTObserverTest
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoInitializeDevice
+Details: {"Runtime":"nodejs14.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: GetAllLetters-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoVersionCheck-DEV
+Details: {"Runtime":"nodejs20.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: OneTimeSchedulePrintMessage
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: CheckTokenValidOnAwake-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDao-Process-Success-Validation-Eventbus
+Details: {"Runtime":"nodejs18.x","Timeout":5,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoValidatePin
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: ValidateEmail
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoDoesAffiliateExist-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoRecieptValidation-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: TestSecureJWTCall
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: DeleteUserAccount
+Details: {"Runtime":"nodejs20.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoValidatePin-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: LogDeeplinkRedirect-DEV
+Details: {"Runtime":"nodejs20.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoSubmitFirstName
+Details: {"Runtime":"nodejs18.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoDeleteLetter-DEV
+Details: {"Runtime":"nodejs20.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: GetSecretKey
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoCheckDeviceUUIDExists
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: SMTPCredentialsLambdaFunction-hepefoundation-org-mailserver
+Details: {"Runtime":"python3.8","Timeout":30,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoInvokeAskQuestion-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoSubmitJournalEntry
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: GenerateJWT
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoGetJournalEntries-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoRecieptValidation
+Details: {"Runtime":"nodejs18.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoProcessSuccessValidation-Eventbus-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":20,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoSetPreferredLanguage-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: TestSecureJWTCallWebAPI
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: GenerateJWTTest
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: CreateNewKey
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: tradingview-webhook
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: ValidateJWT
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: GetAllLetters
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoUserSignIn
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: RSI-nodejs
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoSubmitJournalEntry-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoInvokeGetIntroductoryLetter
+Details: {"Runtime":"nodejs18.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoRegisterDeviceUUID
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: TestScheduleConsoleLog
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoUserSignUp
+Details: {"Runtime":"nodejs14.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: MyFirstLambdaFunction
+Details: {"Runtime":"nodejs18.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoGetAccountBalance-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoRegisterAffiliate-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoInitializeDevice-STAGE
+Details: {"Runtime":"nodejs18.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoInvokeGetIntroductoryLetter-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: ProcessOpenAIRequest-EventBus-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":200,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: SyncUserAccount
+Details: {"Runtime":"nodejs20.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDao-IssueTokens-EventBus
+Details: {"Runtime":"nodejs18.x","Timeout":3,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: AskDaoAgreeToS-DEV
+Details: {"Runtime":"nodejs18.x","Timeout":10,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: OpenAIRequestHandler
+Details: {"Runtime":"nodejs14.x","Timeout":60,"Memory":128}
+---
+
+Resource Type: Lambda Function
+Resource ID: ProcessOpenAIRequest-EventBus
+Details: {"Runtime":"nodejs18.x","Timeout":60,"Memory":128}
+---
+
+==========================================
+S3 BUCKETS
+==========================================
+
+Resource Type: S3 Bucket
+Resource ID: ask-dao
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: ask-dao-kapra-addressables
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: ask-dao-testimonial-photos
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: askdaokapra-backend-artifacts
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: askdaokapra-backend-keyexchange-artifacts
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: askdaokapra-opensource-mailserver-backup
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: askdaokapra-opensource-mailserver-nextcloud
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: askdaokapra-registeraffiliate
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: aws-cloudtrail-logs-413988044972-47c0a1f5
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: bedrock-cline-setup-trail-logs-413988044972
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: billing-reports-tab
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: cf-templates-1llszl4kz6348-us-east-1
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: dao-kapra-books
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: generative-art-adk
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: hepefoundation-aws-opensource-mailserver-backup
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: hepefoundation-aws-opensource-mailserver-nextcloud
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: hepefoundation.org-backup
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: hepefoundation.org-nextcloud
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: mantisinsights
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: mind-and-mobility
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: sanando-juntos-transcriptions
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: serverless-framework-deployments-us-east-1-ab95aa2b-e8db
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: td-tradingbot-backup
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: transcribe-files-hepe
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: transcribe-files-roberto
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: translate-console-us-east-1-5f3690d1-aed2-4a8a-b13a-b0c1ac581e1
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: translations-data
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: www.askdaokapra.com
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: www.askdaokapra.es
+Details: Region: None
+---
+
+Resource Type: S3 Bucket
+Resource ID: www.selfhostedgpt.com
+Details: Region: None
+---
+
+==========================================
+SNS TOPICS
+==========================================
+No orphaned SNS topics found.
+
+==========================================
+CLOUDWATCH LOG GROUPS
+==========================================
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDao-IssueTokens-EventBus
+Details: Size: 1277 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDao-Process-Success-Validation-Eventbus
+Details: Size: 3422 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDao-ProcessErrors-EventBus
+Details: Size: 19361 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoAgreeToS
+Details: Size: 123451 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoAgreeToS-DEV
+Details: Size: 1127317 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoCheckDeviceUUIDExists
+Details: Size: 39983 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoDeleteJournal-DEV
+Details: Size: 62206 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoDeleteLetter-DEV
+Details: Size: 97396 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoDoesAffiliateExist-DEV
+Details: Size: 812578 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoGetAccountBalance-DEV
+Details: Size: 4048584 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoGetJournalEntries
+Details: Size: 483053 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoGetJournalEntries-DEV
+Details: Size: 4232689 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoGetPurchaseHistory-DEV
+Details: Size: 499073 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoInitializeDevice
+Details: Size: 999339 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoInitializeDevice-DEV
+Details: Size: 18535582 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoInitializeDevice-STAGE
+Details: Size: 0 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoInvokeAskQuestion
+Details: Size: 170097 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoInvokeAskQuestion-DEV
+Details: Size: 2251605 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoInvokeGetIntroductoryLetter
+Details: Size: 133410 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoInvokeGetIntroductoryLetter-DEV
+Details: Size: 1039745 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoKeyExchange-DEV
+Details: Size: 6771468 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoProcessSuccessValidation-Eventbus-DEV
+Details: Size: 319329 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoRecieptValidation
+Details: Size: 60809 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoRecieptValidation-DEV
+Details: Size: 2346085 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoRegisterAffiliate-DEV
+Details: Size: 105478 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoRegisterDeviceUUID
+Details: Size: 38545 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoRegisterPin
+Details: Size: 162968 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoRegisterPin-DEV
+Details: Size: 236598 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoSetPreferredLanguage-DEV
+Details: Size: 967375 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoSubmitFirstName
+Details: Size: 87893 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoSubmitFirstName-DEV
+Details: Size: 1360292 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoSubmitJournalEntry
+Details: Size: 97862 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoSubmitJournalEntry-DEV
+Details: Size: 450157 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoUserSignIn
+Details: Size: 120356 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoUserSignUp
+Details: Size: 28298 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoValidatePin
+Details: Size: 297905 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoValidatePin-DEV
+Details: Size: 1920441 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/AskDaoVersionCheck-DEV
+Details: Size: 3409049 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/CheckTokenValidOnAwake-DEV
+Details: Size: 335189 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/CreateNewKey
+Details: Size: 2504 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/DeleteUserAccount
+Details: Size: 103527 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/GenerateJWT
+Details: Size: 60334 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/GenerateJWTObserverTest
+Details: Size: 483580 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/GenerateJWTTest
+Details: Size: 9044 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/GetAllLetters
+Details: Size: 480754 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/GetAllLetters-DEV
+Details: Size: 13756707 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/GetSecretKey
+Details: Size: 34432 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/LogDeeplinkRedirect-DEV
+Details: Size: 4084834 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/NightlyRebootMailServer-askdaokapra-com-mailserver
+Details: Size: 57152 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/NightlyRebootMailServer-emcnotary-com-mailserver
+Details: Size: 116972 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/NightlyRebootMailServer-hepefoundation-org-mailserver
+Details: Size: 130978 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/OneTimeSchedulePrintMessage
+Details: Size: 40919 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/OpenAIRequestHandler
+Details: Size: 168885 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/ProcessOpenAIRequest-EventBus
+Details: Size: 607654 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/ProcessOpenAIRequest-EventBus-DEV
+Details: Size: 7404692 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/RSI-nodejs
+Details: Size: 15903 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/RegisterUserAccount-DEV
+Details: Size: 251686 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/ReverseDnsLambdaFunction-emcnotary-com-mailserver-core
+Details: Size: 3326 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/SMTPCredentialsLambdaFunction-MailServers-AskDaoKapra
+Details: Size: 4399 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/SMTPCredentialsLambdaFunction-asdaokapra-mailinabox
+Details: Size: 3471 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/SMTPCredentialsLambdaFunction-askdaokapra-com-mailserver
+Details: Size: 1948 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/SMTPCredentialsLambdaFunction-askdaokapra-mailservers
+Details: Size: 3038 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/SMTPCredentialsLambdaFunction-askdaokapra-opensource-mailservers
+Details: Size: 3244 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/SMTPCredentialsLambdaFunction-emcnotary-com-mailserver
+Details: Size: 37811 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/SMTPCredentialsLambdaFunction-emcnotary-infrastructure-test
+Details: Size: 6502 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/SMTPCredentialsLambdaFunction-generic-mailservers
+Details: Size: 3013 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/SMTPCredentialsLambdaFunction-hepefoundation-org-mailserver
+Details: Size: 1502 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/SMTPCredentialsLambdaFunction-mail-server-hepefoundationorg
+Details: Size: 35440 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/SMTPCredentialsLambdaFunction-telassistmd-com-mailserver
+Details: Size: 3548 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/StopStartLambda-hepefoundation-org-stop-start-helper
+Details: Size: 19259 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/SyncUserAccount
+Details: Size: 255063 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/SyncUserAccount-DEV
+Details: Size: 274510 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/TestScheduleConsoleLog
+Details: Size: 11635 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/TestSecureJWTCall
+Details: Size: 7517 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/TestSecureJWTCallWebAPI
+Details: Size: 32806 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/UnSyncUserAccount-DEV
+Details: Size: 133708 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/ValidateEmail
+Details: Size: 22157 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/ValidateJWT
+Details: Size: 1473 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/askdaokapra-app-base-api--HelloWorldFunctionAskDao-1pDgla4PbdIb
+Details: Size: 446 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/askdaokapra-app-base-api--HelloWorldFunctionAskDao-VMXA92u2lOVI
+Details: Size: 451 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/emcnotary-com-mailserver--CustomS3AutoDeleteObject-REzTBhxTg6IF
+Details: Size: 4241 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/emcnotary-com-mailserver--CustomS3AutoDeleteObject-aafoc9qDLJuj
+Details: Size: 2086 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/emcnotary-com-mailserver--NightlyRebootFunction23E-JS1vptWQ5rat
+Details: Size: 22808 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/emcnotary-com-mailserver--ReverseDnsProviderframew-9ugVgBg9grLi
+Details: Size: 663 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/emcnotary-com-mailserver--ReverseDnsProviderframew-vf95ZcP3m9Sy
+Details: Size: 1325 bytes
+---
+
+Resource Type: Log Group
+Resource ID: /aws/lambda/tradingview-webhook
+Details: Size: 167536 bytes
+---
+
+Resource Type: Log Group
+Resource ID: API-Gateway-Execution-Logs_2cvlkdb711/dev
+Details: Size: 4057 bytes
+---
+
+Resource Type: Log Group
+Resource ID: API-Gateway-Execution-Logs_xb8z31jg5g/dev
+Details: Size: 3402 bytes
+---
+
+==========================================
+SECURITY GROUPS
+==========================================
+
+Resource Type: Security Group
+Resource ID: sg-091d68dc00af01b2c
+Details: Name: launch-wizard-5, Description: launch-wizard-5 created 2025-04-03T02:27:40.062Z
+---
+
+Resource Type: Security Group
+Resource ID: sg-0b4beec660cfbf576
+Details: Name: launch-wizard-3, Description: launch-wizard-3 created 2025-02-04T03:37:28.339Z
+---
+
+Resource Type: Security Group
+Resource ID: sg-0c9d2a6f598ea0f45
+Details: Name: WebServerSecurityGroup-emcnotary-react-webserver, Description: Security Group for Web Server
+---
+
+Resource Type: Security Group
+Resource ID: sg-02cf768781b42dd33
+Details: Name: MailInABoxSecurityGroup-askdaokapra-com-mailserver, Description: Security Group for Mail-in-a-box Instance
+---
+
+Resource Type: Security Group
+Resource ID: sg-0097e540d0cf8427a
+Details: Name: launch-wizard-4, Description: launch-wizard-4 created 2025-02-04T04:23:10.499Z
+---
+
+Resource Type: Security Group
+Resource ID: sg-015477c8b486e2b32
+Details: Name: launch-wizard-2, Description: launch-wizard-2 created 2025-02-04T03:29:30.341Z
+---
+
+Resource Type: Security Group
+Resource ID: sg-058952eca218c8a45
+Details: Name: launch-wizard-1, Description: launch-wizard-1 created 2025-02-04T02:31:39.382Z
+---
+
+Resource Type: Security Group
+Resource ID: sg-0fe97e4f28a103923
+Details: Name: MailInABoxSecurityGroup-hepefoundation-org-mailserver, Description: Security Group for Mail-in-a-box Instance
+---
+
+==========================================
+EBS VOLUMES
+==========================================
+
+Resource Type: EBS Volume
+Resource ID: vol-06b832c3553d03d34
+Details: State: in-use, Size: 8GB, Attached: 1
+---
+
+Resource Type: EBS Volume
+Resource ID: vol-079548c128ced53f9
+Details: State: in-use, Size: 8GB, Attached: 1
+---
+
+Resource Type: EBS Volume
+Resource ID: vol-0271350b151c23fe5
+Details: State: in-use, Size: 8GB, Attached: 1
+---
+
+Resource Type: EBS Volume
+Resource ID: vol-04e02aae4cb084e83
+Details: State: in-use, Size: 8GB, Attached: 1
+---
+
+==========================================
+ELASTIC IPs
+==========================================
+
+Resource Type: Elastic IP
+Resource ID: eipalloc-0d087f649c9291bb5
+Details: IP: 3.229.143.6, Association: eipassoc-09e388b40d0f1e534
+---
+
+Resource Type: Elastic IP
+Resource ID: eipalloc-017fec2519cbe3b20
+Details: IP: 44.194.23.56, Association: eipassoc-09ae12e6b2cf03388
+---
+
+Resource Type: Elastic IP
+Resource ID: eipalloc-0f78ddc3fe7faa051
+Details: IP: 44.198.19.210, Association: eipassoc-0b8ab2f78bfbdc72a
+---
+
+Resource Type: Elastic IP
+Resource ID: eipalloc-083d823cf13c6d4d0
+Details: IP: 98.85.100.77, Association: eipassoc-08e5100a0e9512bc5
+---
+
+==========================================
+IAM ROLES (Sample - First 50)
+==========================================
+Note: IAM roles are often created by services automatically.
+Only roles with 'cloudformation' in name are checked.
+
+Resource Type: IAM Role
+Resource ID: MailInABoxInstanceRole-hepefoundation-org-mailserver
+Details: ARN: arn:aws:iam::413988044972:role/MailInABoxInstanceRole-hepefoundation-org-mailserver
+---
+
+Resource Type: IAM Role
+Resource ID: NightlyRebootLambdaRole-hepefoundation-org-mailserver
+Details: ARN: arn:aws:iam::413988044972:role/NightlyRebootLambdaRole-hepefoundation-org-mailserver
+---
+
+Resource Type: IAM Role
+Resource ID: SMTPLambdaExecutionRole-hepefoundation-org-mailserver
+Details: ARN: arn:aws:iam::413988044972:role/SMTPLambdaExecutionRole-hepefoundation-org-mailserver
+---
+
+==========================================
+SUMMARY
+==========================================
+Total Orphaned Resources: 204
+
+Breakdown:
+  EC2 Instances: 1
+  CloudWatch Alarms: 0
+  Lambda Functions: 66
+  S3 Buckets: 30
+  SNS Topics: 0
+  CloudWatch Log Groups: 88
+  Security Groups: 8
+  EBS Volumes: 4
+  Elastic IPs: 4
+  IAM Roles (filtered): 3
+
+==========================================
+End of Report
+==========================================

@@ -980,7 +980,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     DependsOn: SyslogGroup
     Properties:
-      LogGroupName: /ec2/syslog
+      LogGroupName: !Sub /ec2/syslog-${AWS::StackName}
       FilterPattern: "Out of memory"
       MetricTransformations:
         - MetricValue: "1"

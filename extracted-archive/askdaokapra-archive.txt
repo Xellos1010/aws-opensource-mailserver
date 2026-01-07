@@ -1,0 +1,1033 @@
+# askdaokapra Archive Content
+# Generated on: Wed Nov 26 02:54:03 EST 2025
+# Source: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra
+# 
+# This file contains all archive files from the askdaokapra directory.
+# Includes: *.yaml, *.yml, *.sh, *.py, *.json, *.md, *.guard, *.txt
+# Excludes: node_modules, .git, dist, build, keys/, backups/, *.pem, *.key
+#
+# =============================================================================
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/check-memory-and-stop-instance.sh ====
+#!/bin/bash
+
+# Check memory and stop instance script for askdaokapra.com
+# This script invokes the main check-memory-and-stop-instance.sh with the askdaokapra.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Checking memory and stopping instance for askdaokapra.com mailserver..."
+echo "Invoking check-memory-and-stop-instance.sh from administration folder..."
+
+# Call the main check-memory-and-stop-instance.sh script with askdaokapra.com domain
+exec "${ADMIN_DIR}/check-memory-and-stop-instance.sh" "askdaokapra.com"
+
+
+
+
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/cleanup-keys.sh ====
+#!/bin/bash
+
+# Cleanup keys script for askdaokapra.com
+# This script invokes the main cleanup-keys.sh with the askdaokapra.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Cleaning up keys for askdaokapra.com..."
+echo "Invoking cleanup-keys.sh from administration folder..."
+
+# Call the main cleanup-keys.sh script with askdaokapra.com domain
+exec "${ADMIN_DIR}/cleanup-keys.sh" "askdaokapra.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/delete-stack.sh ====
+#!/bin/bash
+
+# Delete stack script for askdaokapra.com
+# This script invokes the main delete-stack.sh with the askdaokapra.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Deleting mailserver infrastructure for askdaokapra.com..."
+echo "Invoking delete-stack.sh from administration folder..."
+
+# Call the main delete-stack.sh script with askdaokapra.com domain
+exec "${ADMIN_DIR}/delete-stack.sh" "askdaokapra.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/deploy-stack.sh ====
+#!/bin/bash
+
+# Deploy script for askdaokapra.com
+# This script invokes the main deploy-stack.sh with the askdaokapra.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Deploying mailserver infrastructure for askdaokapra.com..."
+echo "Invoking deploy-stack.sh from administration folder..."
+
+# Call the main deploy-stack.sh script with askdaokapra.com domain
+exec "${ADMIN_DIR}/deploy-stack.sh" "askdaokapra.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/describe-stack.sh ====
+#!/bin/bash
+
+# Describe stack script for askdaokapra.com
+# This script invokes the main describe-stack.sh with the askdaokapra.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Describing mailserver infrastructure for askdaokapra.com..."
+echo "Invoking describe-stack.sh from administration folder..."
+
+# Call the main describe-stack.sh script with askdaokapra.com domain
+exec "${ADMIN_DIR}/describe-stack.sh" "askdaokapra.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/download-mailboxes.sh ====
+#!/bin/bash
+
+# Exit on error
+set -e
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# File paths
+IP_FILE="${SCRIPT_DIR}/ec2_ipaddress.txt"
+KEY_FILE="${HOME}/.ssh/askdaokapra.com-keypair.pem"
+
+# Check if IP file exists
+if [ ! -f "$IP_FILE" ]; then
+    echo "Error: IP address file not found at ${IP_FILE}"
+    exit 1
+fi
+
+# Check if key file exists
+if [ ! -f "$KEY_FILE" ]; then
+    echo "Error: PEM key file not found at ${KEY_FILE}"
+    exit 1
+fi
+
+# Read IP address from file
+INSTANCE_IP=$(cat "$IP_FILE" | tr -d '\n\r' | xargs)
+
+if [ -z "$INSTANCE_IP" ]; then
+    echo "Error: Could not read IP address from ${IP_FILE}"
+    exit 1
+fi
+
+echo "Instance IP: ${INSTANCE_IP}"
+
+# Set correct permissions for the key file
+chmod 400 "$KEY_FILE"
+
+# Verify the key file format
+if ! ssh-keygen -l -f "$KEY_FILE" > /dev/null 2>&1; then
+    echo "Error: Key file is not in a valid format"
+    exit 1
+fi
+
+# Create backup directory in the same folder as this script with timestamp
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+BACKUP_DIR="${SCRIPT_DIR}/mailboxes-backup-${TIMESTAMP}"
+
+echo "Creating backup directory: ${BACKUP_DIR}"
+mkdir -p "$BACKUP_DIR"
+
+# Test SSH connection first
+echo "Testing SSH connection..."
+if ! ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no -o ConnectTimeout=10 "ubuntu@${INSTANCE_IP}" "echo 'SSH connection successful'"; then
+    echo "Error: Could not establish SSH connection to ubuntu@${INSTANCE_IP}"
+    exit 1
+fi
+
+# Check if mailboxes directory exists on remote server
+echo "Checking if mailboxes directory exists on remote server..."
+if ! ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no "ubuntu@${INSTANCE_IP}" "test -d /home/user-data/mail/mailboxes"; then
+    echo "Error: /home/user-data/mail/mailboxes directory does not exist on remote server"
+    exit 1
+fi
+
+# Create temporary script to copy mailboxes with proper permissions
+TEMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TEMP_DIR"' EXIT
+
+cat > "${TEMP_DIR}/prepare-mailboxes.sh" << 'EOF'
+#!/bin/bash
+set -e
+
+echo "Preparing mailboxes for download..." >&2
+
+# Create temporary directory for mailboxes
+TEMP_MAILBOXES="/tmp/mailboxes-download-$(date +%Y%m%d_%H%M%S)"
+sudo mkdir -p "$TEMP_MAILBOXES"
+
+# Copy mailboxes to temp directory with proper permissions
+if [ -d "/home/user-data/mail/mailboxes" ]; then
+    sudo cp -r /home/user-data/mail/mailboxes/* "$TEMP_MAILBOXES/" 2>/dev/null || true
+    sudo chown -R ubuntu:ubuntu "$TEMP_MAILBOXES"
+    sudo chmod -R 755 "$TEMP_MAILBOXES"
+    echo "Mailboxes prepared at: $TEMP_MAILBOXES" >&2
+    echo "$TEMP_MAILBOXES"
+else
+    echo "Error: /home/user-data/mail/mailboxes directory does not exist" >&2
+    exit 1
+fi
+EOF
+
+chmod +x "${TEMP_DIR}/prepare-mailboxes.sh"
+
+# Copy preparation script to server and execute
+echo "Preparing mailboxes for download on remote server..."
+scp -i "$KEY_FILE" -o StrictHostKeyChecking=no "${TEMP_DIR}/prepare-mailboxes.sh" "ubuntu@${INSTANCE_IP}:~/"
+REMOTE_TEMP_DIR=$(ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no "ubuntu@${INSTANCE_IP}" "~/prepare-mailboxes.sh" | tail -n 1 | tr -d '\n\r' | xargs)
+
+if [ -z "$REMOTE_TEMP_DIR" ]; then
+    echo "Error: Failed to prepare mailboxes on remote server"
+    exit 1
+fi
+
+echo "Remote temporary directory: ${REMOTE_TEMP_DIR}"
+
+# Download mailboxes using rsync from temporary directory
+echo "Downloading mailboxes from ubuntu@${INSTANCE_IP}:${REMOTE_TEMP_DIR}/ to ${BACKUP_DIR}/"
+echo "This may take a while depending on the size of your mailboxes..."
+
+rsync -avz --progress \
+    -e "ssh -i ${KEY_FILE} -o StrictHostKeyChecking=no" \
+    "ubuntu@${INSTANCE_IP}:${REMOTE_TEMP_DIR}/" \
+    "${BACKUP_DIR}/"
+
+RSYNC_EXIT_CODE=$?
+
+# Clean up temporary directory on remote server (non-critical)
+echo "Cleaning up temporary files on remote server..."
+if ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no -o ConnectTimeout=10 "ubuntu@${INSTANCE_IP}" "sudo rm -rf ${REMOTE_TEMP_DIR}" 2>/dev/null; then
+    echo "Remote cleanup completed successfully"
+else
+    echo "Warning: Could not clean up remote temporary directory ${REMOTE_TEMP_DIR}"
+    echo "This is not critical - the temporary files will be cleaned up automatically on reboot"
+fi
+
+if [ $RSYNC_EXIT_CODE -eq 0 ]; then
+    echo ""
+    echo "SUCCESS: Mailboxes downloaded successfully!"
+    echo "Backup location: ${BACKUP_DIR}"
+    echo "Backup completed at: $(date)"
+    
+    # Verify the backup directory exists and has content
+    if [ -d "${BACKUP_DIR}" ] && [ "$(ls -A "${BACKUP_DIR}")" ]; then
+        echo ""
+        echo "Backup verification:"
+        echo "✓ Backup directory exists and contains data"
+        
+        # Display summary of downloaded content
+        echo ""
+        echo "Backup summary:"
+        du -sh "${BACKUP_DIR}"
+        echo "Number of files/directories:"
+        find "${BACKUP_DIR}" -type f | wc -l | xargs echo "Files:"
+        find "${BACKUP_DIR}" -type d | wc -l | xargs echo "Directories:"
+        
+        echo ""
+        echo "You can find your mailboxes backup at:"
+        echo "${BACKUP_DIR}"
+    else
+        echo ""
+        echo "ERROR: Backup directory is empty or missing!"
+        echo "Expected location: ${BACKUP_DIR}"
+        exit 1
+    fi
+else
+    echo "Error: Failed to download mailboxes (rsync exit code: ${RSYNC_EXIT_CODE})"
+    exit 1
+fi 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/ec2_ipaddress.txt ====
+44.198.19.210
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/finalize-mailbox-upload.sh ====
+#!/bin/bash
+
+# Exit on error
+set -e
+
+# Default domain name
+DEFAULT_DOMAIN="askdaokapra.com"
+
+# Check if domain name was provided as first argument, otherwise use default
+DOMAIN_NAME=${1:-$DEFAULT_DOMAIN}
+
+# Validate domain name format
+if ! [[ $DOMAIN_NAME =~ ^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$ ]]; then
+    echo "Error: Invalid domain name format. Must match pattern: ^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$"
+    echo "Example: example.com"
+    exit 1
+fi
+
+# Create stack name from domain
+STACK_NAME=$(echo "${DOMAIN_NAME}" | sed 's/\./-/g')-mailserver
+REGION="us-east-1"  # Adjust if your stack is in a different region
+
+echo "Finalizing mailbox upload for domain: ${DOMAIN_NAME}"
+echo "Stack name: ${STACK_NAME}"
+echo "Region: ${REGION}"
+
+# Check if AWS CLI is installed
+if ! command -v aws &> /dev/null; then
+    echo "Error: AWS CLI is not installed"
+    exit 1
+fi
+
+# Get stack outputs
+echo "Retrieving stack outputs..."
+STACK_OUTPUTS=$(aws cloudformation describe-stacks \
+    --profile hepe-admin-mfa \
+    --region "${REGION}" \
+    --stack-name "${STACK_NAME}" \
+    --query 'Stacks[0].Outputs' \
+    --output json)
+
+if [ -z "$STACK_OUTPUTS" ]; then
+    echo "Error: Could not retrieve stack outputs for ${STACK_NAME}"
+    exit 1
+fi
+
+# Get instance information
+INSTANCE_ID=$(aws cloudformation describe-stacks \
+    --profile hepe-admin-mfa \
+    --region "${REGION}" \
+    --stack-name "${STACK_NAME}" \
+    --query 'Stacks[0].Outputs[?OutputKey==`RestorePrefix`].OutputValue' \
+    --output text)
+
+if [ -z "$INSTANCE_ID" ]; then
+    echo "Error: Could not find EC2 instance ID in the stack outputs"
+    exit 1
+fi
+
+# Get instance public IP
+INSTANCE_IP=$(aws ec2 describe-instances \
+    --profile hepe-admin-mfa \
+    --region "${REGION}" \
+    --instance-ids "${INSTANCE_ID}" \
+    --query 'Reservations[0].Instances[0].PublicIpAddress' \
+    --output text)
+
+if [ -z "$INSTANCE_IP" ]; then
+    echo "Error: Could not get instance IP address"
+    exit 1
+fi
+
+# Get instance key pair name
+INSTANCE_KEY_NAME=$(aws ec2 describe-instances \
+    --profile hepe-admin-mfa \
+    --region "${REGION}" \
+    --instance-ids "${INSTANCE_ID}" \
+    --query 'Reservations[0].Instances[0].KeyName' \
+    --output text)
+
+if [ -z "$INSTANCE_KEY_NAME" ]; then
+    echo "Error: Could not get instance key pair name"
+    exit 1
+fi
+
+echo "Instance ID: ${INSTANCE_ID}"
+echo "Instance IP: ${INSTANCE_IP}"
+echo "Key Pair: ${INSTANCE_KEY_NAME}"
+
+# Get KeyPairId from stack outputs
+KEY_PAIR_ID=$(echo "$STACK_OUTPUTS" | jq -r '.[] | select(.OutputKey=="KeyPairId") | .OutputValue')
+
+if [ -z "$KEY_PAIR_ID" ]; then
+    echo "Error: Could not retrieve KeyPairId from stack outputs"
+    exit 1
+fi
+
+# Check if key file exists and create directory if needed
+KEY_FILE="${HOME}/.ssh/${INSTANCE_KEY_NAME}.pem"
+if [ ! -f "$KEY_FILE" ]; then
+    echo "Key file not found at ${KEY_FILE}"
+    mkdir -p "${HOME}/.ssh"
+    
+    echo "Retrieving private key from SSM Parameter Store..."
+    aws ssm get-parameter \
+        --profile hepe-admin-mfa \
+        --region "${REGION}" \
+        --name "/ec2/keypair/${KEY_PAIR_ID}" \
+        --with-decryption \
+        --query 'Parameter.Value' \
+        --output text > "${KEY_FILE}"
+    
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to retrieve private key from SSM Parameter Store."
+        exit 1
+    fi
+    
+    echo "Successfully retrieved private key and saved to ${KEY_FILE}"
+fi
+
+# Set correct permissions for the key file
+chmod 400 "$KEY_FILE"
+
+# Verify the key file format
+if ! ssh-keygen -l -f "$KEY_FILE" > /dev/null 2>&1; then
+    echo "Error: Key file is not in a valid format"
+    echo "Please delete the key file and try again:"
+    echo "rm ${KEY_FILE}"
+    exit 1
+fi
+
+# Test SSH connection with retries
+echo "Testing SSH connection to server..."
+MAX_RETRIES=5
+RETRY_COUNT=0
+
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+    if ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no -o ConnectTimeout=15 "ubuntu@${INSTANCE_IP}" "echo 'SSH connection successful'" 2>/dev/null; then
+        echo "SSH connection established successfully"
+        break
+    else
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        echo "SSH connection failed (attempt $RETRY_COUNT/$MAX_RETRIES)"
+        if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+            echo "Waiting 10 seconds before retry..."
+            sleep 10
+        else
+            echo "Error: Could not establish SSH connection to ubuntu@${INSTANCE_IP} after $MAX_RETRIES attempts"
+            echo "Please check if the server is running and accessible"
+            exit 1
+        fi
+    fi
+done
+
+# Check if uploaded files exist
+echo "Checking if uploaded mailboxes exist..."
+if ! ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no "ubuntu@${INSTANCE_IP}" "test -d /tmp/mailboxes-upload && [ \"\$(ls -A /tmp/mailboxes-upload)\" ]" 2>/dev/null; then
+    echo "Error: No uploaded mailboxes found in /tmp/mailboxes-upload/"
+    echo "Please run upload-mailboxes.sh first to upload your mailboxes"
+    exit 1
+fi
+
+echo "Found uploaded mailboxes, proceeding with finalization..."
+
+# Create temporary directory for scripts
+TEMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TEMP_DIR"' EXIT
+
+# Create script to finalize the upload
+cat > "${TEMP_DIR}/finalize-upload.sh" << 'EOF'
+#!/bin/bash
+set -e
+
+echo "Finalizing mailbox upload..."
+
+# Check if upload directory exists
+if [ ! -d "/tmp/mailboxes-upload" ]; then
+    echo "Error: Upload directory /tmp/mailboxes-upload does not exist"
+    exit 1
+fi
+
+# Check if upload directory has content  
+if [ -z "$(ls -A /tmp/mailboxes-upload)" ]; then
+    echo "Error: Upload directory /tmp/mailboxes-upload is empty"
+    exit 1
+fi
+
+# Create mailboxes directory if it doesn't exist
+sudo mkdir -p /home/user-data/mail/mailboxes
+
+# Move uploaded files to proper location with correct ownership
+echo "Moving mailboxes to final location..."
+# Use find to handle hidden files and complex directory structures
+sudo find /tmp/mailboxes-upload -mindepth 1 -maxdepth 1 -exec mv {} /home/user-data/mail/mailboxes/ \;
+
+# Set correct ownership and permissions
+echo "Setting ownership and permissions..."
+sudo chown -R mail:mail /home/user-data/mail/mailboxes
+sudo chmod -R 755 /home/user-data/mail/mailboxes
+
+# Clean up temporary upload directory
+echo "Cleaning up temporary files..."
+sudo rm -rf /tmp/mailboxes-upload
+
+# Restart mail services
+echo "Restarting mail services..."
+sudo service postfix start 2>/dev/null || echo "Warning: Could not start postfix"
+sudo service dovecot start 2>/dev/null || echo "Warning: Could not start dovecot"
+
+echo "Mailbox upload finalization completed successfully!"
+echo "Mail services have been restarted."
+
+# Show summary
+echo ""
+echo "Summary:"
+echo "- Mailboxes moved to: /home/user-data/mail/mailboxes/"
+echo "- Ownership set to: mail:mail"
+echo "- Permissions set to: 755"
+echo "- Temporary files cleaned up"
+echo "- Mail services restarted"
+EOF
+
+chmod +x "${TEMP_DIR}/finalize-upload.sh"
+
+# Copy finalization script and execute
+echo "Copying finalization script to server..."
+scp -i "$KEY_FILE" -o StrictHostKeyChecking=no "${TEMP_DIR}/finalize-upload.sh" "ubuntu@${INSTANCE_IP}:~/"
+
+echo "Executing finalization script..."
+ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no "ubuntu@${INSTANCE_IP}" "~/finalize-upload.sh"
+
+echo ""
+echo "✅ Mailbox upload finalization completed successfully!"
+echo "Upload finalized at: $(date)"
+echo "Server: ubuntu@${INSTANCE_IP}"
+echo ""
+echo "Your mail server should now have all your previous mailboxes."
+echo "You can test email functionality to ensure everything is working correctly." 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/generate_ses_smtp_credentials.sh ====
+#!/bin/bash
+
+# Generate SES SMTP credentials script for askdaokapra.com
+# This script invokes the main generate_ses_smtp_credentials.py with the askdaokapra.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Generating SES SMTP credentials for askdaokapra.com..."
+echo "Invoking generate_ses_smtp_credentials.py from administration folder..."
+
+# Call the main generate_ses_smtp_credentials.py script with askdaokapra.com domain
+exec python3 "${ADMIN_DIR}/generate_ses_smtp_credentials.py" --domain "askdaokapra.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/get-admin-password.sh ====
+#!/bin/bash
+
+# Get admin password script for askdaokapra.com
+# This script invokes the main get-admin-password.sh with the askdaokapra.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Getting admin password for askdaokapra.com..."
+echo "Invoking get-admin-password.sh from administration folder..."
+
+# Call the main get-admin-password.sh script with askdaokapra.com domain
+exec "${ADMIN_DIR}/get-admin-password.sh" "askdaokapra.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/get-ses-config.sh ====
+#!/bin/bash
+
+# Get SES config script for askdaokapra.com
+# This script invokes the main get-ses-config.sh with the askdaokapra.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Getting SES configuration for askdaokapra.com..."
+echo "Invoking get-ses-config.sh from administration folder..."
+
+# Call the main get-ses-config.sh script with askdaokapra.com domain
+exec "${ADMIN_DIR}/get-ses-config.sh" "askdaokapra.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/print-ses-dns-records.sh ====
+#!/bin/bash
+
+# Print SES DNS records script for askdaokapra.com
+# This script invokes the main print-ses-dns-records.sh with the askdaokapra.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Printing SES DNS records for askdaokapra.com..."
+echo "Invoking print-ses-dns-records.sh from administration folder..."
+
+# Call the main print-ses-dns-records.sh script with askdaokapra.com domain
+exec "${ADMIN_DIR}/print-ses-dns-records.sh" "askdaokapra.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/README.md ====
+# Ask Dao Kapra Mail Server Deployment Scripts
+
+This directory contains deployment and management scripts for the [Ask Dao Kapra](https://askdaokapra.com/) mail server infrastructure. Each script is a wrapper that invokes the corresponding script from the `administration/` folder with the domain `askdaokapra.com`.
+
+## 🌟 About Ask Dao Kapra
+
+Based on [askdaokapra.com](https://askdaokapra.com/), Ask Dao Kapra is a transformative personal development platform focused on **Attention Awareness & Successful Development (A.A & S.D)**. 
+
+### Key Features:
+- **Letters with Dao Kapra** - Poetic wisdom inspired by faith and deep understanding to rescue your inner child
+- **My Journal** - Secure journaling with personal PIN protection for self-discovery
+- **Cycles** - Revolutionary coaching to identify your life patterns using clock time concepts
+- **Rewards** - Personal development tracking and achievement system
+
+### Philosophy:
+The app is inspired by the book **"Té Azul El Poder del Darte"** (The Power of Giving Yourself) and guides users to understand their life cycles by connecting past patterns with current experiences. This method helps identify deeply rooted memories and change molecular and cellular information, allowing connection and resolution of emotions that resurface in present life.
+
+**Founded by Dao Kapra**, who has been writing since age 7, this platform focuses on **Subconsciousness Emotional Intelligence** and community empowerment.
+
+## 📁 S3 Buckets
+
+This deployment will automatically create S3 buckets with the following naming pattern:
+- **Backup Bucket**: `askdaokapra.com-backup`
+- **NextCloud Bucket**: `askdaokapra.com-nextcloud`
+
+The CloudFormation template will handle all S3 bucket creation and configuration automatically.
+
+## 📋 Available Scripts
+
+### Core Deployment
+- **`deploy-stack.sh`** - Deploy the CloudFormation stack for askdaokapra.com
+- **`describe-stack.sh`** - Show current stack status and outputs
+- **`delete-stack.sh`** - Delete the CloudFormation stack
+
+### SSH Access
+- **`setup-ssh-access.sh`** - Set up SSH access to the EC2 instance
+- **`cleanup-keys.sh`** - Clean up local SSH keys and known_hosts entries
+
+### Email Configuration
+- **`get-ses-config.sh`** - Get SES configuration details
+- **`generate_ses_smtp_credentials.sh`** - Generate SMTP credentials for SES
+- **`print-ses-dns-records.sh`** - Print required DNS records for SES
+- **`set-ses-dns-records.sh`** - Configure DNS records for SES
+
+### DNS and Network
+- **`set-reverse-dns-elastic-ip.sh`** - Set reverse DNS for the Elastic IP
+- **`test-dns-api.sh`** - Test DNS API connectivity
+
+### Admin Access
+- **`get-admin-password.sh`** - Retrieve the admin password for Mail-in-a-Box
+
+## 🚀 Usage
+
+All scripts are executable and can be run directly:
+
+```bash
+# Deploy the infrastructure
+./deploy-stack.sh
+
+# Check deployment status
+./describe-stack.sh
+
+# Set up SSH access
+./setup-ssh-access.sh
+
+# Get admin password
+./get-admin-password.sh
+```
+
+## ⚙️ Prerequisites
+
+- AWS CLI configured with the `hepe-admin-mfa` profile
+- CloudFormation template `mailserver-infrastructure-mvp.yaml` in the project root
+- Python 3 for the SES credentials script
+
+## 📝 Notes
+
+- All scripts automatically use the domain `askdaokapra.com`
+- The CloudFormation stack will be named `askdaokapra-com-mailserver`
+- SSH keys and configuration files are managed locally in `~/.ssh/`
+- DNS records may need to be manually configured on your DNS server
+- Uses the `hepe-admin-mfa` AWS profile for all AWS CLI operations
+
+## 🔗 Related Links
+
+- [Ask Dao Kapra Website](https://askdaokapra.com/)
+- [HEPE Foundation](https://hepefoundation.org/) - Partner organization
+- Ask Dao Kapra focuses on personal development through subconsciousness emotional intelligence
+- Founded by Dao Kapra, also founder of HEPE Foundation
+
+## 🎯 Mission & Values
+
+**Primary Goal**: Community empowerment through innovative techniques that rekindle trust within themselves and society.
+
+**Participants** not only embark on a journey of self-development and self-healing but also become **Ambassadors of change**, spreading motivation, understanding, and love.
+
+The platform helps participants embrace the tools they need to remain grounded and secure in various life scenarios, creating a community able to share their own stories and connect with people around the world.
+
+---
+
+*"Bridging Technology, Emotions, and Communities through Attention Awareness & Successful Development"* 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/restart-ec2-instance.sh ====
+#!/bin/bash
+
+# Restart EC2 instance script for askdaokapra.com
+# This script invokes the main restart-ec2-instance.sh with the askdaokapra.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Restarting EC2 instance for askdaokapra.com mailserver..."
+echo "Invoking restart-ec2-instance.sh from administration folder..."
+
+# Call the main restart-ec2-instance.sh script with askdaokapra.com domain
+exec "${ADMIN_DIR}/restart-ec2-instance.sh" "askdaokapra.com"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/set-reverse-dns-elastic-ip.sh ====
+#!/bin/bash
+
+# Set reverse DNS for Elastic IP script for askdaokapra.com
+# This script invokes the main set-reverse-dns-elastic-ip.sh with the askdaokapra.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Setting reverse DNS for Elastic IP for askdaokapra.com..."
+echo "Invoking set-reverse-dns-elastic-ip.sh from administration folder..."
+
+# Call the main set-reverse-dns-elastic-ip.sh script with askdaokapra.com domain
+exec "${ADMIN_DIR}/set-reverse-dns-elastic-ip.sh" "askdaokapra.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/set-ses-dns-records.sh ====
+#!/bin/bash
+
+# Set SES DNS records script for askdaokapra.com
+# This script invokes the main set-ses-dns-records.sh with the askdaokapra.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Setting SES DNS records for askdaokapra.com..."
+echo "Invoking set-ses-dns-records.sh from administration folder..."
+
+# Call the main set-ses-dns-records.sh script with askdaokapra.com domain
+exec "${ADMIN_DIR}/set-ses-dns-records.sh" "askdaokapra.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/setup-ssh-access.sh ====
+#!/bin/bash
+
+# Setup SSH access script for askdaokapra.com
+# This script invokes the main setup-ssh-access.sh with the askdaokapra.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Setting up SSH access for askdaokapra.com..."
+echo "Invoking setup-ssh-access.sh from administration folder..."
+
+# Call the main setup-ssh-access.sh script with askdaokapra.com domain
+exec "${ADMIN_DIR}/setup-ssh-access.sh" "askdaokapra.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/start-instance-and-wait.sh ====
+#!/bin/bash
+
+# Start instance and wait script for askdaokapra.com
+# This script invokes the main start-instance-and-wait.sh with the askdaokapra.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Starting instance and waiting for askdaokapra.com mailserver..."
+echo "Invoking start-instance-and-wait.sh from administration folder..."
+
+# Call the main start-instance-and-wait.sh script with askdaokapra.com domain
+exec "${ADMIN_DIR}/start-instance-and-wait.sh" "askdaokapra.com"
+
+
+
+
+
+
+
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/test-dns-api.sh ====
+#!/bin/bash
+
+# Test DNS API script for askdaokapra.com
+# This script invokes the main test-dns-api.sh with the askdaokapra.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Testing DNS API for askdaokapra.com..."
+echo "Invoking test-dns-api.sh from administration folder..."
+
+# Call the main test-dns-api.sh script with askdaokapra.com domain
+exec "${ADMIN_DIR}/test-dns-api.sh" "askdaokapra.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/askdaokapra/upload-mailboxes.sh ====
+#!/bin/bash
+
+# Exit on error
+set -e
+
+# Default domain name
+DEFAULT_DOMAIN="askdaokapra.com"
+
+# Check if domain name was provided as first argument, otherwise use default
+DOMAIN_NAME=${1:-$DEFAULT_DOMAIN}
+
+# Validate domain name format
+if ! [[ $DOMAIN_NAME =~ ^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$ ]]; then
+    echo "Error: Invalid domain name format. Must match pattern: ^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$"
+    echo "Example: example.com"
+    exit 1
+fi
+
+# Create stack name from domain
+STACK_NAME=$(echo "${DOMAIN_NAME}" | sed 's/\./-/g')-mailserver
+REGION="us-east-1"  # Adjust if your stack is in a different region
+
+echo "Uploading mailboxes to new server for domain: ${DOMAIN_NAME}"
+echo "Stack name: ${STACK_NAME}"
+echo "Region: ${REGION}"
+
+# Check if AWS CLI is installed
+if ! command -v aws &> /dev/null; then
+    echo "Error: AWS CLI is not installed"
+    exit 1
+fi
+
+# Find the most recent mailboxes backup on desktop
+BACKUP_DIR=$(find "${HOME}/Desktop" -name "mailboxes-backup-*" -type d | sort -r | head -n 1)
+
+if [ -z "$BACKUP_DIR" ]; then
+    echo "Error: No mailboxes backup found on desktop"
+    echo "Please run download-mailboxes.sh first to create a backup"
+    exit 1
+fi
+
+echo "Found mailboxes backup: ${BACKUP_DIR}"
+
+# Verify backup directory contains data
+if [ ! -d "$BACKUP_DIR" ] || [ -z "$(ls -A "$BACKUP_DIR")" ]; then
+    echo "Error: Backup directory is empty or does not exist"
+    exit 1
+fi
+
+# Get stack outputs
+echo "Retrieving stack outputs..."
+STACK_OUTPUTS=$(aws cloudformation describe-stacks \
+    --profile hepe-admin-mfa \
+    --region "${REGION}" \
+    --stack-name "${STACK_NAME}" \
+    --query 'Stacks[0].Outputs' \
+    --output json)
+
+if [ -z "$STACK_OUTPUTS" ]; then
+    echo "Error: Could not retrieve stack outputs for ${STACK_NAME}"
+    exit 1
+fi
+
+# Get instance information
+INSTANCE_ID=$(aws cloudformation describe-stacks \
+    --profile hepe-admin-mfa \
+    --region "${REGION}" \
+    --stack-name "${STACK_NAME}" \
+    --query 'Stacks[0].Outputs[?OutputKey==`RestorePrefix`].OutputValue' \
+    --output text)
+
+if [ -z "$INSTANCE_ID" ]; then
+    echo "Error: Could not find EC2 instance ID in the stack outputs"
+    exit 1
+fi
+
+# Get instance public IP
+INSTANCE_IP=$(aws ec2 describe-instances \
+    --profile hepe-admin-mfa \
+    --region "${REGION}" \
+    --instance-ids "${INSTANCE_ID}" \
+    --query 'Reservations[0].Instances[0].PublicIpAddress' \
+    --output text)
+
+if [ -z "$INSTANCE_IP" ]; then
+    echo "Error: Could not get instance IP address"
+    exit 1
+fi
+
+# Get instance key pair name
+INSTANCE_KEY_NAME=$(aws ec2 describe-instances \
+    --profile hepe-admin-mfa \
+    --region "${REGION}" \
+    --instance-ids "${INSTANCE_ID}" \
+    --query 'Reservations[0].Instances[0].KeyName' \
+    --output text)
+
+if [ -z "$INSTANCE_KEY_NAME" ]; then
+    echo "Error: Could not get instance key pair name"
+    exit 1
+fi
+
+echo "Instance ID: ${INSTANCE_ID}"
+echo "Instance IP: ${INSTANCE_IP}"
+echo "Key Pair: ${INSTANCE_KEY_NAME}"
+
+# Get KeyPairId from stack outputs
+KEY_PAIR_ID=$(echo "$STACK_OUTPUTS" | jq -r '.[] | select(.OutputKey=="KeyPairId") | .OutputValue')
+
+if [ -z "$KEY_PAIR_ID" ]; then
+    echo "Error: Could not retrieve KeyPairId from stack outputs"
+    exit 1
+fi
+
+# Check if key file exists and create directory if needed
+KEY_FILE="${HOME}/.ssh/${INSTANCE_KEY_NAME}.pem"
+if [ ! -f "$KEY_FILE" ]; then
+    echo "Key file not found at ${KEY_FILE}"
+    mkdir -p "${HOME}/.ssh"
+    
+    echo "Retrieving private key from SSM Parameter Store..."
+    aws ssm get-parameter \
+        --profile hepe-admin-mfa \
+        --region "${REGION}" \
+        --name "/ec2/keypair/${KEY_PAIR_ID}" \
+        --with-decryption \
+        --query 'Parameter.Value' \
+        --output text > "${KEY_FILE}"
+    
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to retrieve private key from SSM Parameter Store."
+        exit 1
+    fi
+    
+    echo "Successfully retrieved private key and saved to ${KEY_FILE}"
+fi
+
+# Set correct permissions for the key file
+chmod 400 "$KEY_FILE"
+
+# Verify the key file format
+if ! ssh-keygen -l -f "$KEY_FILE" > /dev/null 2>&1; then
+    echo "Error: Key file is not in a valid format"
+    echo "Please delete the key file and try again:"
+    echo "rm ${KEY_FILE}"
+    exit 1
+fi
+
+# Test SSH connection
+echo "Testing SSH connection to new server..."
+if ! ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no -o ConnectTimeout=10 "ubuntu@${INSTANCE_IP}" "echo 'SSH connection successful'"; then
+    echo "Error: Could not establish SSH connection to ubuntu@${INSTANCE_IP}"
+    exit 1
+fi
+
+# Create temporary script to prepare the server
+TEMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TEMP_DIR"' EXIT
+
+cat > "${TEMP_DIR}/prepare-server.sh" << 'EOF'
+#!/bin/bash
+set -e
+
+echo "Preparing server for mailbox upload..."
+
+# Stop mail services to prevent conflicts
+sudo service postfix stop 2>/dev/null || true
+sudo service dovecot stop 2>/dev/null || true
+
+# Create backup of existing mailboxes if they exist
+if [ -d "/home/user-data/mail/mailboxes" ]; then
+    echo "Backing up existing mailboxes..."
+    sudo cp -r /home/user-data/mail/mailboxes /home/user-data/mail/mailboxes.backup.$(date +%Y%m%d_%H%M%S)
+    sudo rm -rf /home/user-data/mail/mailboxes
+fi
+
+# Create mailboxes directory with proper permissions
+sudo mkdir -p /home/user-data/mail/mailboxes
+sudo chown mail:mail /home/user-data/mail/mailboxes
+sudo chmod 755 /home/user-data/mail/mailboxes
+
+echo "Server prepared for mailbox upload"
+EOF
+
+chmod +x "${TEMP_DIR}/prepare-server.sh"
+
+# Copy preparation script to server and execute
+echo "Preparing the new server..."
+scp -i "$KEY_FILE" -o StrictHostKeyChecking=no "${TEMP_DIR}/prepare-server.sh" "ubuntu@${INSTANCE_IP}:~/"
+ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no "ubuntu@${INSTANCE_IP}" "~/prepare-server.sh"
+
+# Upload mailboxes using rsync
+echo "Uploading mailboxes from ${BACKUP_DIR} to ubuntu@${INSTANCE_IP}:/home/user-data/mail/mailboxes/"
+echo "This may take a while depending on the size of your mailboxes..."
+
+rsync -avz --progress \
+    -e "ssh -i ${KEY_FILE} -o StrictHostKeyChecking=no" \
+    "${BACKUP_DIR}/" \
+    "ubuntu@${INSTANCE_IP}:/tmp/mailboxes-upload/"
+
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to upload mailboxes"
+    exit 1
+fi
+
+# Create script to finalize the upload
+cat > "${TEMP_DIR}/finalize-upload.sh" << 'EOF'
+#!/bin/bash
+set -e
+
+echo "Finalizing mailbox upload..."
+
+# Move uploaded files to proper location with correct ownership
+# Use find to handle hidden files and complex directory structures
+sudo find /tmp/mailboxes-upload -mindepth 1 -maxdepth 1 -exec mv {} /home/user-data/mail/mailboxes/ \;
+sudo chown -R mail:mail /home/user-data/mail/mailboxes
+sudo chmod -R 755 /home/user-data/mail/mailboxes
+
+# Clean up temporary upload directory
+sudo rm -rf /tmp/mailboxes-upload
+
+# Restart mail services
+sudo service postfix start
+sudo service dovecot start
+
+echo "Mailbox upload completed successfully!"
+echo "Mail services have been restarted."
+EOF
+
+chmod +x "${TEMP_DIR}/finalize-upload.sh"
+
+# Copy finalization script and execute
+echo "Finalizing mailbox upload..."
+scp -i "$KEY_FILE" -o StrictHostKeyChecking=no "${TEMP_DIR}/finalize-upload.sh" "ubuntu@${INSTANCE_IP}:~/"
+ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no "ubuntu@${INSTANCE_IP}" "~/finalize-upload.sh"
+
+echo ""
+echo "Mailboxes uploaded successfully!"
+echo "Upload completed at: $(date)"
+echo "Source backup: ${BACKUP_DIR}"
+echo "Destination server: ubuntu@${INSTANCE_IP}"
+echo ""
+echo "The mail server should now have all your previous mailboxes."
+echo "You may want to test email functionality to ensure everything is working correctly." 
+
+
