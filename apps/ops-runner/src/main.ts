@@ -76,14 +76,45 @@ Env:
     case 'ec2:restart':
     case 'ec2:stop':
     case 'ec2:start':
+    case 'ec2:stop-start':
     case 'ec2:type': {
       const ec2Module = await import('admin-ec2');
-      const id = process.env.INSTANCE_ID;
-      if (!id) throw new Error('INSTANCE_ID is required');
+      
+      // Support domain-based instance lookup for HEPE and other domains
+      let id = process.env.INSTANCE_ID;
+      if (!id && args[0]) {
+        // If first arg is a domain, look up instance ID from stack
+        const domain = args[0];
+        if (domain.includes('.')) {
+          // It's a domain, get instance ID from CloudFormation stack
+          const { CloudFormationClient, DescribeStacksCommand } = await import('@aws-sdk/client-cloudformation');
+          const stackName = domain.replace(/\./g, '-') + '-mailserver';
+          const cfn = new CloudFormationClient({ 
+            region: process.env.AWS_REGION || 'us-east-1',
+            credentials: process.env.AWS_PROFILE ? 
+              (await import('@aws-sdk/credential-providers')).fromIni({ profile: process.env.AWS_PROFILE }) :
+              undefined
+          });
+          const stack = await cfn.send(new DescribeStacksCommand({ StackName: stackName }));
+          const instanceIdOutput = stack.Stacks?.[0]?.Outputs?.find(o => o.OutputKey === 'InstanceId');
+          if (instanceIdOutput?.OutputValue) {
+            id = instanceIdOutput.OutputValue;
+            console.log(`Found instance ID for ${domain}: ${id}`);
+          } else {
+            throw new Error(`Could not find InstanceId output in stack ${stackName}`);
+          }
+        } else {
+          // It's an instance ID
+          id = args[0];
+        }
+      }
+      
+      if (!id) throw new Error('INSTANCE_ID is required (or provide domain as first arg)');
 
       if (cmd === 'ec2:restart') await ec2Module.restart(id);
       if (cmd === 'ec2:stop') await ec2Module.stop(id);
       if (cmd === 'ec2:start') await ec2Module.start(id);
+      if (cmd === 'ec2:stop-start') await ec2Module.stopAndStart(id);
       if (cmd === 'ec2:type') {
         const itype = args[0] || process.env.INSTANCE_TYPE;
         if (!itype) throw new Error('INSTANCE_TYPE (or arg) required');

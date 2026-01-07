@@ -136,12 +136,24 @@ export async function stopAndStart(id: string): Promise<void> {
   console.log(`✅ Instance ${id} stop-and-start completed successfully`);
 }
 
-// CommonJS entry point check (only for direct execution, not ES modules)
-if (
-  typeof require !== 'undefined' &&
-  typeof module !== 'undefined' &&
-  require.main === module
-) {
+// CLI entry point - only runs when executed directly as main script
+// This check prevents execution when the module is imported/bundled
+const isMainScript = (): boolean => {
+  // In bundled code, this module is never the main entry point
+  // Only run CLI when the script's filename matches the process entry
+  if (typeof require === 'undefined' || typeof module === 'undefined') {
+    return false;
+  }
+  // Check if this is the actual main module (not imported)
+  if (require.main !== module) {
+    return false;
+  }
+  // Additional check: process.argv[1] should contain this file's name
+  const scriptPath = process.argv[1] || '';
+  return scriptPath.includes('ec2') && !scriptPath.includes('ops.');
+};
+
+if (isMainScript()) {
   const [, , cmd, id, arg] = process.argv;
   if (!cmd || !id) {
     console.error(

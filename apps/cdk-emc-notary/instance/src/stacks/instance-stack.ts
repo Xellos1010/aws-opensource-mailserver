@@ -4,8 +4,14 @@ import {
   CfnOutput,
   CfnParameter,
   Tags,
+  Duration,
   aws_ec2 as ec2,
   aws_ssm as ssm,
+  aws_cloudwatch as cw,
+  aws_cloudwatch_actions as cwa,
+  aws_sns as sns,
+  aws_lambda as lambda,
+  aws_iam as iam,
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { tagStack } from '@mm/infra-shared-constructs';
@@ -56,6 +62,9 @@ export class MailServerInstanceStack extends Stack {
       'CoreAlarmsTopic',
       { parameterName: `${domainConfig.coreParamPrefix}/alarmsTopicArn` }
     ).stringValue;
+
+    // Get SNS topic for alarm notifications
+    const alarmsTopic = sns.Topic.fromTopicArn(this, 'AlarmsTopic', alarmsTopicArn);
 
     const eipAllocationId = ssm.StringParameter.fromStringParameterAttributes(
       this,
@@ -160,6 +169,260 @@ export class MailServerInstanceStack extends Stack {
       region: this.region,
       account: this.account,
     });
+
+    // Emergency Restart Lambda - automatically restarts instance on critical failures
+    const emergencyRestartLambdaRole = new iam.Role(this, 'EmergencyRestartLambdaRole', {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+      description: 'Role for emergency instance restart Lambda',
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName(
+          'service-role/AWSLambdaBasicExecutionRole'
+        ),
+      ],
+    });
+
+    emergencyRestartLambdaRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: [
+          'ec2:StopInstances',
+          'ec2:StartInstances',
+          'ec2:DescribeInstances',
+          'ec2:DescribeInstanceStatus',
+        ],
+        resources: [`arn:aws:ec2:${this.region}:${this.account}:instance/${instance.instanceId}`],
+      })
+    );
+
+    const emergencyRestartLambda = new lambda.Function(this, 'EmergencyRestartLambda', {
+      functionName: `emergency-restart-${domainName.replace(/\./g, '-')}`,
+      runtime: lambda.Runtime.NODEJS_20_X,
+      code: lambda.Code.fromInline(`
+const { EC2Client, StopInstancesCommand, StartInstancesCommand, DescribeInstancesCommand } = require('@aws-sdk/client-ec2');
+
+const ec2Client = new EC2Client({ region: process.env.AWS_REGION });
+
+async function getInstanceState(instanceId) {
+  const response = await ec2Client.send(
+    new DescribeInstancesCommand({ InstanceIds: [instanceId] })
+  );
+  const instance = response.Reservations?.[0]?.Instances?.[0];
+  if (!instance) {
+    throw new Error(\`Instance \${instanceId} not found\`);
+  }
+  return instance.State?.Name || 'unknown';
+}
+
+async function waitForState(instanceId, desiredState, timeoutMs = 600000) {
+  const startTime = Date.now();
+  const checkInterval = 10000;
+
+  console.log(\`Waiting for instance \${instanceId} to reach state: \${desiredState}\`);
+
+  while (Date.now() - startTime < timeoutMs) {
+    const currentState = await getInstanceState(instanceId);
+    if (currentState === desiredState) {
+      console.log(\`Instance \${instanceId} is now in \${desiredState} state\`);
+      return;
+    }
+    const elapsed = Math.floor((Date.now() - startTime) / 1000 / 60);
+    console.log(\`Current state: \${currentState}. Waiting... (\${elapsed} minutes elapsed)\`);
+    await new Promise((resolve) => setTimeout(resolve, checkInterval));
+  }
+  throw new Error(\`Timeout waiting for instance \${instanceId} to reach \${desiredState} state\`);
+}
+
+async function stopAndStart(instanceId) {
+  console.log(\`Emergency restart: Stopping and restarting instance \${instanceId}...\`);
+  let currentState = await getInstanceState(instanceId);
+  console.log(\`Current instance state: \${currentState}\`);
+
+  if (currentState === 'pending') {
+    console.log(\`Instance \${instanceId} is starting. Waiting for running state...\`);
+    await waitForState(instanceId, 'running', 900000);
+    currentState = await getInstanceState(instanceId);
+  }
+
+  if (currentState === 'running') {
+    console.log(\`Stopping instance \${instanceId}...\`);
+    await ec2Client.send(new StopInstancesCommand({ InstanceIds: [instanceId] }));
+    await waitForState(instanceId, 'stopped');
+  } else if (currentState === 'stopping') {
+    console.log(\`Instance \${instanceId} is already stopping. Waiting...\`);
+    await waitForState(instanceId, 'stopped');
+  } else if (currentState === 'stopped') {
+    console.log(\`Instance \${instanceId} is already stopped\`);
+  } else {
+    throw new Error(\`Cannot stop instance \${instanceId} from \${currentState} state\`);
+  }
+
+  currentState = await getInstanceState(instanceId);
+  if (currentState === 'stopped') {
+    console.log(\`Starting instance \${instanceId}...\`);
+    await ec2Client.send(new StartInstancesCommand({ InstanceIds: [instanceId] }));
+    await waitForState(instanceId, 'running', 900000);
+  } else if (currentState === 'pending') {
+    console.log(\`Instance \${instanceId} is already starting. Waiting...\`);
+    await waitForState(instanceId, 'running', 900000);
+  } else if (currentState === 'running') {
+    console.log(\`Instance \${instanceId} is already running\`);
+  } else {
+    throw new Error(\`Cannot start instance \${instanceId} from \${currentState} state\`);
+  }
+  console.log(\`✅ Emergency restart completed successfully for instance \${instanceId}\`);
+}
+
+exports.handler = async (event) => {
+  const instanceId = process.env.INSTANCE_ID;
+  if (!instanceId) {
+    throw new Error('INSTANCE_ID environment variable not set');
+  }
+
+  const alarmName = event?.AlarmName || event?.detail?.alarmName || 'Unknown';
+  const alarmReason = event?.NewStateReason || event?.detail?.reason || 'No reason provided';
+  const triggerTime = new Date().toISOString();
+
+  console.log(\`🚨 Emergency restart triggered by alarm: \${alarmName}\`);
+  console.log(\`Reason: \${alarmReason}\`);
+  console.log(\`Trigger time: \${triggerTime}\`);
+  console.log(\`Instance ID: \${instanceId}\`);
+
+  try {
+    await stopAndStart(instanceId);
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        message: \`Emergency restart completed for instance \${instanceId}\`,
+        alarmName,
+        triggerTime,
+        instanceId,
+      }),
+    };
+  } catch (error) {
+    console.error(\`❌ Emergency restart failed:\`, error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        message: \`Emergency restart failed\`,
+        error: error.message,
+        alarmName,
+        triggerTime,
+        instanceId,
+      }),
+    };
+  }
+};
+      `),
+      handler: 'index.handler',
+      role: emergencyRestartLambdaRole,
+      timeout: Duration.minutes(20),
+      memorySize: 256,
+      environment: {
+        INSTANCE_ID: instance.instanceId,
+        DOMAIN_NAME: domainName,
+      },
+      description: 'Emergency restart Lambda - automatically restarts instance on critical failures',
+    });
+
+    // CloudWatch Alarms for instance health and resource monitoring
+    // Instance Status Check Alarm - detects when instance status check fails
+    const instanceStatusAlarm = new cw.Alarm(this, 'InstanceStatusCheckAlarm', {
+      alarmName: `InstanceStatusCheck-${instance.instanceId}`,
+      metric: new cw.Metric({
+        namespace: 'AWS/EC2',
+        metricName: 'StatusCheckFailed_Instance',
+        dimensionsMap: {
+          InstanceId: instance.instanceId,
+        },
+        period: Duration.minutes(1),
+        statistic: 'Maximum',
+      }),
+      threshold: 1,
+      evaluationPeriods: 2,
+      comparisonOperator: cw.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: cw.TreatMissingData.BREACHING,
+      alarmDescription: 'Alerts when EC2 instance status check fails (instance-level issues)',
+    });
+    instanceStatusAlarm.addAlarmAction(new cwa.SnsAction(alarmsTopic));
+    instanceStatusAlarm.addAlarmAction(new cwa.LambdaAction(emergencyRestartLambda)); // Auto-restart on failure
+
+    // System Status Check Alarm - detects when system status check fails
+    const systemStatusAlarm = new cw.Alarm(this, 'SystemStatusCheckAlarm', {
+      alarmName: `SystemStatusCheck-${instance.instanceId}`,
+      metric: new cw.Metric({
+        namespace: 'AWS/EC2',
+        metricName: 'StatusCheckFailed_System',
+        dimensionsMap: {
+          InstanceId: instance.instanceId,
+        },
+        period: Duration.minutes(1),
+        statistic: 'Maximum',
+      }),
+      threshold: 1,
+      evaluationPeriods: 2,
+      comparisonOperator: cw.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: cw.TreatMissingData.BREACHING,
+      alarmDescription: 'Alerts when EC2 system status check fails (AWS infrastructure issues)',
+    });
+    systemStatusAlarm.addAlarmAction(new cwa.SnsAction(alarmsTopic));
+    systemStatusAlarm.addAlarmAction(new cwa.LambdaAction(emergencyRestartLambda)); // Auto-restart on failure
+
+    // OOM Kill Alarm - detects when OOM killer terminates processes
+    const oomKillAlarm = new cw.Alarm(this, 'OOMKillAlarm', {
+      alarmName: `OOMKillDetected-${instance.instanceId}`,
+      metric: new cw.Metric({
+        namespace: 'EC2',
+        metricName: 'oom_kills',
+        period: Duration.minutes(1),
+        statistic: 'Sum',
+      }),
+      threshold: 0,
+      evaluationPeriods: 1,
+      comparisonOperator: cw.ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: cw.TreatMissingData.NOT_BREACHING,
+      alarmDescription: 'Alerts when Out-of-Memory killer terminates processes (indicates memory exhaustion)',
+    });
+    oomKillAlarm.addAlarmAction(new cwa.SnsAction(alarmsTopic));
+    oomKillAlarm.addAlarmAction(new cwa.LambdaAction(emergencyRestartLambda)); // Auto-restart on OOM
+
+    // Memory High Alarm - alerts when memory usage exceeds threshold
+    const memoryHighAlarm = new cw.Alarm(this, 'MemoryHighAlarm', {
+      alarmName: `MemHigh-${instance.instanceId}`,
+      metric: new cw.Metric({
+        namespace: 'CWAgent',
+        metricName: 'mem_used_percent',
+        dimensionsMap: {
+          InstanceId: instance.instanceId,
+        },
+        period: Duration.minutes(1),
+        statistic: 'Average',
+      }),
+      threshold: 85, // Alert when memory usage exceeds 85%
+      evaluationPeriods: 5, // Require 5 consecutive periods (5 minutes)
+      comparisonOperator: cw.ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: cw.TreatMissingData.NOT_BREACHING,
+      alarmDescription: 'Alerts when memory usage exceeds 85% for 5 consecutive minutes',
+    });
+    memoryHighAlarm.addAlarmAction(new cwa.SnsAction(alarmsTopic));
+
+    // Swap High Alarm - alerts when swap usage exceeds threshold
+    const swapHighAlarm = new cw.Alarm(this, 'SwapHighAlarm', {
+      alarmName: `SwapHigh-${instance.instanceId}`,
+      metric: new cw.Metric({
+        namespace: 'CWAgent',
+        metricName: 'swap_used_percent',
+        dimensionsMap: {
+          InstanceId: instance.instanceId,
+        },
+        period: Duration.minutes(1),
+        statistic: 'Average',
+      }),
+      threshold: 50, // Alert when swap usage exceeds 50%
+      evaluationPeriods: 5, // Require 5 consecutive periods (5 minutes)
+      comparisonOperator: cw.ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: cw.TreatMissingData.NOT_BREACHING,
+      alarmDescription: 'Alerts when swap usage exceeds 50% for 5 consecutive minutes',
+    });
+    swapHighAlarm.addAlarmAction(new cwa.SnsAction(alarmsTopic));
 
     // Outputs for admin tooling and bootstrap discovery
     new CfnOutput(this, 'InstanceId', {

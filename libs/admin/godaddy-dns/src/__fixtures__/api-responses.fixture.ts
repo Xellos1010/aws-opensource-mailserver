@@ -37,3 +37,18 @@ export const mockTransientErrorResponse: GoDaddyApiErrorResponse = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

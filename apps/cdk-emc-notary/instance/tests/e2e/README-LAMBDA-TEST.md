@@ -267,3 +267,18 @@ Make it executable: `chmod +x test-lambda-reboot.sh`
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

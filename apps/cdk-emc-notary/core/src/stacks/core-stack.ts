@@ -262,6 +262,17 @@ def lambda_handler(event, context):
       removalPolicy: RemovalPolicy.DESTROY, // Delete logs when stack is deleted
     });
 
+    // OOM Metric Filter - detects "Out of memory" messages in syslog
+    // This creates a CloudWatch metric that increments when OOM kills occur
+    new logs.MetricFilter(this, 'OOMMetricFilter', {
+      logGroup: syslogGroup,
+      filterPattern: logs.FilterPattern.literal('Out of memory'),
+      metricNamespace: 'EC2',
+      metricName: 'oom_kills',
+      metricValue: '1',
+      defaultValue: 0,
+    });
+
     // CloudWatch Agent Config SSM Parameter (matching CloudFormation CWAgentConfigParam)
     const cwAgentConfig = new ssm.StringParameter(this, 'CWAgentConfigParam', {
       parameterName: `/cwagent-linux-${this.stackName}`,

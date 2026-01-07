@@ -49,6 +49,48 @@
       },
       "dependsOn": ["build"]
     },
+    "emergency-monitoring-legacy:build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/cdk-emc-notary/instance-emergency-legacy",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/cdk-emc-notary/instance/src/emergency-monitoring-legacy-main.ts",
+        "tsConfig": "apps/cdk-emc-notary/instance/tsconfig.app.json",
+        "assets": ["apps/cdk-emc-notary/instance/cdk.json"],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "external": ["aws-sdk"]
+        }
+      }
+    },
+    "emergency-monitoring-legacy:synth": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk synth --app 'node dist/apps/cdk-emc-notary/instance-emergency-legacy/emergency-monitoring-legacy-main.js' ${DOMAIN:+--context domain=$DOMAIN} ${LEGACY_STACK_NAME:+--context legacyStackName=$LEGACY_STACK_NAME} ${ALARMS_TOPIC_ARN:+--context alarmsTopicArn=$ALARMS_TOPIC_ARN}",
+        "cwd": "."
+      },
+      "dependsOn": ["emergency-monitoring-legacy:build"]
+    },
+    "emergency-monitoring-legacy:deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk deploy --app 'node dist/apps/cdk-emc-notary/instance-emergency-legacy/emergency-monitoring-legacy-main.js' --require-approval never ${DOMAIN:+--context domain=$DOMAIN} ${LEGACY_STACK_NAME:+--context legacyStackName=$LEGACY_STACK_NAME} ${ALARMS_TOPIC_ARN:+--context alarmsTopicArn=$ALARMS_TOPIC_ARN}",
+        "cwd": "."
+      },
+      "dependsOn": ["emergency-monitoring-legacy:build"]
+    },
+    "emergency-monitoring-legacy:diff": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk diff --app 'node dist/apps/cdk-emc-notary/instance-emergency-legacy/emergency-monitoring-legacy-main.js' ${DOMAIN:+--context domain=$DOMAIN} ${LEGACY_STACK_NAME:+--context legacyStackName=$LEGACY_STACK_NAME} ${ALARMS_TOPIC_ARN:+--context alarmsTopicArn=$ALARMS_TOPIC_ARN}",
+        "cwd": "."
+      },
+      "dependsOn": ["emergency-monitoring-legacy:build"]
+    },
     "destroy": {
       "executor": "nx:run-commands",
       "options": {

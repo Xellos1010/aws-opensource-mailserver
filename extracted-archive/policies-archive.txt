@@ -1,0 +1,41 @@
+# policies Archive Content
+# Generated on: Wed Nov 26 02:54:04 EST 2025
+# Source: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/policies
+# 
+# This file contains all archive files from the policies directory.
+# Includes: *.yaml, *.yml, *.sh, *.py, *.json, *.md, *.guard, *.txt
+# Excludes: node_modules, .git, dist, build, keys/, backups/, *.pem, *.key
+#
+# =============================================================================
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/policies/aws-server.guard ====
+# S3 buckets must be encrypted w/ KMS, versioned, block public
+let s3s = Resources.*[ Type == "AWS::S3::Bucket" ]
+rule s3_encryption when %s3s !empty {
+  %s3s.Properties.BucketEncryption.ServerSideEncryptionConfiguration[*].ServerSideEncryptionByDefault.SSEAlgorithm == "aws:kms"
+}
+rule s3_block_public when %s3s !empty {
+  %s3s.Properties.PublicAccessBlockConfiguration.BlockPublicAcls == true
+  %s3s.Properties.PublicAccessBlockConfiguration.BlockPublicPolicy == true
+  %s3s.Properties.PublicAccessBlockConfiguration.RestrictPublicBuckets == true
+  %s3s.Properties.PublicAccessBlockConfiguration.IgnorePublicAcls == true
+}
+rule s3_versioning when %s3s !empty {
+  %s3s.Properties.VersioningConfiguration.Status == "Enabled"
+}
+
+# LogGroups must set retention >= 30
+let logs = Resources.*[ Type == "AWS::Logs::LogGroup" ]
+rule cw_retention when %logs !empty {
+  %logs.Properties.RetentionInDays >= 30
+}
+
+# SecurityGroups: no SSH from 0.0.0.0/0
+let sgs = Resources.*[ Type == "AWS::EC2::SecurityGroup" ]
+rule no_open_ssh when %sgs !empty {
+  not exists %sgs.Properties.SecurityGroupIngress[*] {
+    (CidrIp == "0.0.0.0/0" || CidrIpv6 == "::/0") && (FromPort == 22 || ToPort == 22)
+  }
+}
+
+

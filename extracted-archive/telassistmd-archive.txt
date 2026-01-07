@@ -1,0 +1,263 @@
+# telassistmd Archive Content
+# Generated on: Wed Nov 26 02:54:04 EST 2025
+# Source: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/telassistmd
+# 
+# This file contains all archive files from the telassistmd directory.
+# Includes: *.yaml, *.yml, *.sh, *.py, *.json, *.md, *.guard, *.txt
+# Excludes: node_modules, .git, dist, build, keys/, backups/, *.pem, *.key
+#
+# =============================================================================
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/telassistmd/cleanup-keys.sh ====
+#!/bin/bash
+
+# Cleanup keys script for telassistmd.com
+# This script invokes the main cleanup-keys.sh with the telassistmd.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Cleaning up keys for telassistmd.com..."
+echo "Invoking cleanup-keys.sh from administration folder..."
+
+# Call the main cleanup-keys.sh script with telassistmd.com domain
+exec "${ADMIN_DIR}/cleanup-keys.sh" "telassistmd.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/telassistmd/delete-stack.sh ====
+#!/bin/bash
+
+# Delete stack script for telassistmd.com
+# This script invokes the main delete-stack.sh with the telassistmd.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Deleting mailserver infrastructure for telassistmd.com..."
+echo "Invoking delete-stack.sh from administration folder..."
+
+# Call the main delete-stack.sh script with telassistmd.com domain
+exec "${ADMIN_DIR}/delete-stack.sh" "telassistmd.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/telassistmd/deploy-stack.sh ====
+#!/bin/bash
+
+# Deploy script for telassistmd.com
+# This script invokes the main deploy-stack.sh with the telassistmd.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Deploying mailserver infrastructure for telassistmd.com..."
+echo "Invoking deploy-stack.sh from administration folder..."
+
+# Call the main deploy-stack.sh script with telassistmd.com domain
+exec "${ADMIN_DIR}/deploy-stack.sh" "telassistmd.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/telassistmd/describe-stack.sh ====
+#!/bin/bash
+
+# Describe stack script for telassistmd.com
+# This script invokes the main describe-stack.sh with the telassistmd.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Describing mailserver infrastructure for telassistmd.com..."
+echo "Invoking describe-stack.sh from administration folder..."
+
+# Call the main describe-stack.sh script with telassistmd.com domain
+exec "${ADMIN_DIR}/describe-stack.sh" "telassistmd.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/telassistmd/generate_ses_smtp_credentials.sh ====
+#!/bin/bash
+
+# Generate SES SMTP credentials script for telassistmd.com
+# This script invokes the main generate_ses_smtp_credentials.py with the telassistmd.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Generating SES SMTP credentials for telassistmd.com..."
+echo "Invoking generate_ses_smtp_credentials.py from administration folder..."
+
+# Call the main generate_ses_smtp_credentials.py script with telassistmd.com domain
+exec python3 "${ADMIN_DIR}/generate_ses_smtp_credentials.py" --domain "telassistmd.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/telassistmd/get-admin-password.sh ====
+#!/bin/bash
+
+# Get admin password script for telassistmd.com
+# This script invokes the main get-admin-password.sh with the telassistmd.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Getting admin password for telassistmd.com..."
+echo "Invoking get-admin-password.sh from administration folder..."
+
+# Call the main get-admin-password.sh script with telassistmd.com domain
+exec "${ADMIN_DIR}/get-admin-password.sh" "telassistmd.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/telassistmd/get-ses-config.sh ====
+#!/bin/bash
+
+# Get SES config script for telassistmd.com
+# This script invokes the main get-ses-config.sh with the telassistmd.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Getting SES configuration for telassistmd.com..."
+echo "Invoking get-ses-config.sh from administration folder..."
+
+# Call the main get-ses-config.sh script with telassistmd.com domain
+exec "${ADMIN_DIR}/get-ses-config.sh" "telassistmd.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/telassistmd/print-ses-dns-records.sh ====
+#!/bin/bash
+
+# Print SES DNS records script for telassistmd.com
+# This script invokes the main print-ses-dns-records.sh with the telassistmd.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Printing SES DNS records for telassistmd.com..."
+echo "Invoking print-ses-dns-records.sh from administration folder..."
+
+# Call the main print-ses-dns-records.sh script with telassistmd.com domain
+exec "${ADMIN_DIR}/print-ses-dns-records.sh" "telassistmd.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/telassistmd/README.md ====
+# TelAssistMD Mail Server Deployment Scripts
+
+This directory contains deployment and management scripts for the TelAssistMD mail server infrastructure. Each script is a wrapper that invokes the corresponding script from the `administration/` folder with the domain `telassistmd.com`.
+
+## Available Scripts
+
+### Core Deployment
+- **`deploy-stack.sh`** - Deploy the CloudFormation stack for telassistmd.com
+- **`describe-stack.sh`** - Show current stack status and outputs
+- **`delete-stack.sh`** - Delete the CloudFormation stack
+
+### SSH Access
+- **`setup-ssh-access.sh`** - Set up SSH access to the EC2 instance
+- **`cleanup-keys.sh`** - Clean up local SSH keys and known_hosts entries
+
+### Email Configuration
+- **`get-ses-config.sh`** - Get SES configuration details
+- **`generate_ses_smtp_credentials.sh`** - Generate SMTP credentials for SES
+- **`print-ses-dns-records.sh`** - Print required DNS records for SES
+- **`set-ses-dns-records.sh`** - Configure DNS records for SES
+
+### DNS and Network
+- **`set-reverse-dns-elastic-ip.sh`** - Set reverse DNS for the Elastic IP
+- **`test-dns-api.sh`** - Test DNS API connectivity
+
+### Admin Access
+- **`get-admin-password.sh`** - Retrieve the admin password for Mail-in-a-Box
+
+## Usage
+
+All scripts are executable and can be run directly:
+
+```bash
+# Deploy the infrastructure
+./deploy-stack.sh
+
+# Check deployment status
+./describe-stack.sh
+
+# Set up SSH access
+./setup-ssh-access.sh
+
+# Get admin password
+./get-admin-password.sh
+```
+
+## Prerequisites
+
+- AWS CLI configured with the `hepe-admin-mfa` profile
+- CloudFormation template `mailserver-infrastructure-mvp.yaml` in the project root
+- Python 3 for the SES credentials script
+
+## Notes
+
+- All scripts automatically use the domain `telassistmd.com`
+- The CloudFormation stack will be named `telassistmd-com-mailserver`
+- SSH keys and configuration files are managed locally in `~/.ssh/`
+- DNS records may need to be manually configured on your DNS server 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/telassistmd/set-reverse-dns-elastic-ip.sh ====
+#!/bin/bash
+
+# Set reverse DNS for Elastic IP script for telassistmd.com
+# This script invokes the main set-reverse-dns-elastic-ip.sh with the telassistmd.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Setting reverse DNS for Elastic IP for telassistmd.com..."
+echo "Invoking set-reverse-dns-elastic-ip.sh from administration folder..."
+
+# Call the main set-reverse-dns-elastic-ip.sh script with telassistmd.com domain
+exec "${ADMIN_DIR}/set-reverse-dns-elastic-ip.sh" "telassistmd.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/telassistmd/set-ses-dns-records.sh ====
+#!/bin/bash
+
+# Set SES DNS records script for telassistmd.com
+# This script invokes the main set-ses-dns-records.sh with the telassistmd.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Setting SES DNS records for telassistmd.com..."
+echo "Invoking set-ses-dns-records.sh from administration folder..."
+
+# Call the main set-ses-dns-records.sh script with telassistmd.com domain
+exec "${ADMIN_DIR}/set-ses-dns-records.sh" "telassistmd.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/telassistmd/setup-ssh-access.sh ====
+#!/bin/bash
+
+# Setup SSH access script for telassistmd.com
+# This script invokes the main setup-ssh-access.sh with the telassistmd.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Setting up SSH access for telassistmd.com..."
+echo "Invoking setup-ssh-access.sh from administration folder..."
+
+# Call the main setup-ssh-access.sh script with telassistmd.com domain
+exec "${ADMIN_DIR}/setup-ssh-access.sh" "telassistmd.com" 
+
+
+==== FILE: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive/telassistmd/test-dns-api.sh ====
+#!/bin/bash
+
+# Test DNS API script for telassistmd.com
+# This script invokes the main test-dns-api.sh with the telassistmd.com domain
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADMIN_DIR="${SCRIPT_DIR}/../administration"
+
+echo "Testing DNS API for telassistmd.com..."
+echo "Invoking test-dns-api.sh from administration folder..."
+
+# Call the main test-dns-api.sh script with telassistmd.com domain
+exec "${ADMIN_DIR}/test-dns-api.sh" "telassistmd.com" 
+
+
