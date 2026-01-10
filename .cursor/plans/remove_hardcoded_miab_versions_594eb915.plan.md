@@ -1,33 +1,3 @@
----
-name: Remove Hardcoded MIAB Versions
-overview: Enhance bootstrap to create admin user, add user backup to backup bridge, and create tools to discover users from mailbox backups and restore both users and mailboxes. All operations use Mail-in-a-Box management scripts only (no SQLite writes). Support both legacy and new backup formats.
-todos:
-  - id: todo-1762823821328-ro2bbvap1
-    content: Update miab-setup.sh to create admin user and set me@ password after MIAB setup completes
-    status: pending
-  - id: todo-1762823821328-a6qqaf7v9
-    content: Create discover-users-from-mailboxes.cli.ts to extract user list from mailbox backup structure
-    status: pending
-  - id: todo-1762823821328-klh9v6k6v
-    content: Create create-multiple-users.cli.ts for bulk user creation with idempotency
-    status: pending
-  - id: todo-1762823821328-93vgdsqtc
-    content: Create restore-mailboxes.cli.ts to restore mailboxes via rsync/SSH with proper permissions
-    status: pending
-  - id: todo-1762823821328-ehfgxgmjr
-    content: Create restore-users-and-mailboxes.cli.ts to orchestrate user and mailbox restoration
-    status: pending
-  - id: todo-1762823821328-vz8rk534v
-    content: Update backup-bridge.ts to include user backup in backup workflow
-    status: pending
-  - id: todo-1762823821328-u7pst7kp7
-    content: Update create-admin-account.cli.ts to handle me@ password update
-    status: pending
-  - id: todo-1762823821328-us59e8s8p
-    content: Add Nx tasks for new tools in project.json
-    status: pending
----
-
 # User and Mailbox Backup/Restore System
 
 ## Overview
