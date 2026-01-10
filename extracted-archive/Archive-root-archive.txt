@@ -1,5 +1,5 @@
 # Archive Root Directory Files
-# Generated on: Wed Nov 26 02:54:02 EST 2025
+# Generated on: Fri Jan  9 16:24:50 EST 2026
 # Source: /Users/evanmccall/Projects/aws-opensource-mailserver/Archive
 #
 # This file contains files from the Archive root directory.
@@ -3807,7 +3807,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     DependsOn: SyslogGroup
     Properties:
-      LogGroupName: /ec2/syslog
+      LogGroupName: !Sub /ec2/syslog-${AWS::StackName}
       FilterPattern: "Out of memory"
       MetricTransformations:
         - MetricValue: "1"
