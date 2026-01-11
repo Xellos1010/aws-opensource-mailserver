@@ -18,6 +18,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as https from 'https';
 import { toMailserverInstanceStackName } from '@mm/infra-naming';
+import { resolveStackName as resolveStackNameFromApp } from '@mm/admin-stack-info';
 
 /**
  * Options for bootstrapping an instance
@@ -25,7 +26,9 @@ import { toMailserverInstanceStackName } from '@mm/infra-naming';
 export interface BootstrapOptions {
   /** Domain name (e.g., "emcnotary.com") - used to derive stack name if stackName not provided */
   domain?: string;
-  /** Explicit stack name (overrides domain-derived) */
+  /** App path (e.g., "apps/cdk-emc-notary/instance") - used to derive stack name if stackName not provided */
+  appPath?: string;
+  /** Explicit stack name (overrides domain/appPath-derived) */
   stackName?: string;
   /** AWS region (default: "us-east-1") */
   region?: string;
@@ -134,14 +137,20 @@ function createClients(
 /**
  * Resolve target stack name from options using canonical naming
  */
-function resolveStackName(options: BootstrapOptions): string {
+function resolveInstanceStackName(options: BootstrapOptions): string {
   if (options.stackName) {
     return options.stackName;
   }
+  const appPath = options.appPath || process.env['APP_PATH'];
+  if (appPath) {
+    const domain = options.domain;
+    if (!domain && !appPath) {
+      throw new Error('Cannot resolve stack name. Provide domain with appPath, or explicit stackName');
+    }
+    return resolveStackNameFromApp(domain, appPath, undefined, 'instance');
+  }
   if (!options.domain) {
-    throw new Error(
-      'Either stackName or domain must be provided in BootstrapOptions'
-    );
+    throw new Error('Cannot resolve stack name. Provide domain, appPath, or explicit stackName');
   }
   return toMailserverInstanceStackName(options.domain);
 }
@@ -850,7 +859,7 @@ export async function bootstrapInstance(
   }
 
   // Resolve stack name (doesn't require AWS)
-  const stackName = resolveStackName(options);
+  const stackName = resolveInstanceStackName(options);
   console.log(`📋 Resolving stack: ${stackName}`);
 
   // Early dry-run check - preview mode (doesn't require AWS credentials)
@@ -1026,7 +1035,11 @@ export async function bootstrapInstance(
     console.log('\n🔐 Testing SSH connectivity (optional, for troubleshooting)...');
     try {
       const { spawn } = await import('child_process');
-      const domain = options.domain || 'emcnotary.com';
+      const domain = options.domain;
+      if (!domain && !options.appPath && !process.env['APP_PATH']) {
+        console.error('Error: Cannot test SSH connectivity. Domain or APP_PATH is required');
+        return;
+      }
       const profile = options.profile || process.env.AWS_PROFILE || 'hepe-admin-mfa';
       
       const sshTestProcess = spawn('pnpm', [

@@ -18,6 +18,7 @@ async function main() {
 
   // Determine which backup to run
   const skipDns = process.env['SKIP_DNS'] === '1' || process.env['SKIP_DNS'] === 'true';
+  const skipUsers = process.env['SKIP_USERS'] === '1' || process.env['SKIP_USERS'] === 'true';
   const skipMail = process.env['SKIP_MAIL'] === '1' || process.env['SKIP_MAIL'] === 'true';
 
   log('info', 'Starting backup bridge', {
@@ -25,6 +26,7 @@ async function main() {
     stackName,
     domain,
     skipDns,
+    skipUsers,
     skipMail,
   });
 
@@ -36,6 +38,7 @@ async function main() {
       region: process.env['AWS_REGION'],
       profile: process.env['AWS_PROFILE'],
       skipDns,
+      skipUsers,
       skipMail,
       dnsBucket: process.env['DNS_BACKUP_BUCKET'],
       dnsPrefix: process.env['DNS_BACKUP_PREFIX'],
@@ -52,6 +55,11 @@ async function main() {
     console.log(`DNS Backup: ${result.summary.dnsSuccess ? '✓ Success' : '✗ Failed'}`);
     if (result.dnsBackup) {
       console.log(`  Output: ${result.dnsBackup.outputDir}`);
+    }
+    console.log(`Users Backup: ${result.summary.userSuccess ? '✓ Success' : '✗ Failed'}`);
+    if (result.userBackup) {
+      console.log(`  Output: ${result.userBackup.outputDir}`);
+      console.log(`  Users: ${result.userBackup.userCount}`);
     }
     console.log(`Mail Backup: ${result.summary.mailSuccess ? '✓ Success' : '✗ Failed'}`);
     if (result.mailBackup) {
@@ -70,6 +78,7 @@ async function main() {
 
     log('info', 'Backup bridge completed successfully', {
       dnsSuccess: result.summary.dnsSuccess,
+      userSuccess: result.summary.userSuccess,
       mailSuccess: result.summary.mailSuccess,
     });
   } catch (err) {

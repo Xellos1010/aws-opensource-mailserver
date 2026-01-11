@@ -374,6 +374,162 @@ else
 fi
 
 # ==========================================
+# Admin User Creation (idempotent)
+# ==========================================
+# Only create admin user if MIAB setup completed successfully
+if [ -f "${MIAB_COMPLETE_MARKER}" ]; then
+  ADMIN_USER_MARKER="/home/user-data/.admin_user_created"
+  if [ -f "${ADMIN_USER_MARKER}" ]; then
+    echo "Admin user already created (marker file exists)"
+    echo "Skipping admin user creation to avoid duplicate operations"
+  else
+    echo "Creating admin user account..."
+    
+    # Get admin credentials from SSM
+    ADMIN_PASSWORD_PARAM="/MailInABoxAdminPassword-${STACK_NAME}"
+    EMAIL_ADDR="admin@${DOMAIN_NAME}"
+    EMAIL_PW=""
+    
+    if aws ssm get-parameter --region "${REGION}" --name "${ADMIN_PASSWORD_PARAM}" --with-decryption >/dev/null 2>&1; then
+      EMAIL_PW=$(aws ssm get-parameter --region "${REGION}" --name "${ADMIN_PASSWORD_PARAM}" --with-decryption --query Parameter.Value --output text)
+    else
+      echo "Warning: Admin password not found in SSM (${ADMIN_PASSWORD_PARAM})"
+      echo "Skipping admin user creation - password required"
+    fi
+    
+    if [ -n "${EMAIL_PW}" ]; then
+      # Wait for API key generation (max 5 minutes, check every 10 seconds)
+      API_KEY_PATH="/var/lib/mailinabox/api.key"
+      MAX_WAIT=300  # 5 minutes
+      CHECK_INTERVAL=10  # 10 seconds
+      WAITED=0
+      API_KEY_AVAILABLE=0
+      
+      echo "Waiting for API key generation..."
+      while [ ${WAITED} -lt ${MAX_WAIT} ]; do
+        if [ -f "${API_KEY_PATH}" ] && [ -r "${API_KEY_PATH}" ]; then
+          API_KEY_AVAILABLE=1
+          echo "API key found after ${WAITED} seconds"
+          break
+        fi
+        sleep ${CHECK_INTERVAL}
+        WAITED=$((WAITED + CHECK_INTERVAL))
+        if [ $((WAITED % 30)) -eq 0 ]; then
+          echo "Still waiting for API key... (${WAITED}/${MAX_WAIT} seconds)"
+        fi
+      done
+      
+      if [ ${API_KEY_AVAILABLE} -eq 0 ]; then
+        echo "Warning: API key not available after ${MAX_WAIT} seconds"
+        echo "Admin user creation will be skipped - API key required"
+        echo "Mail-in-a-Box setup may still be in progress"
+      else
+        # Check if admin user exists (idempotent check)
+        USER_EXISTS=0
+        RETRY_COUNT=0
+        MAX_RETRIES=3
+        
+        while [ ${RETRY_COUNT} -lt ${MAX_RETRIES} ]; do
+          # Try cli.py first (v73+)
+          if [ -f "/opt/mailinabox/management/cli.py" ]; then
+            cd /opt/mailinabox
+            git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true
+            if sudo -n -u user-data /opt/mailinabox/management/cli.py user 2>/dev/null | grep -qi "${EMAIL_ADDR}"; then
+              USER_EXISTS=1
+              echo "Admin user already exists: ${EMAIL_ADDR}"
+              break
+            fi
+          fi
+          
+          # Try users.py (older versions)
+          if [ ${USER_EXISTS} -eq 0 ] && [ -f "/opt/mailinabox/management/users.py" ]; then
+            cd /opt/mailinabox
+            git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true
+            if sudo -n -u user-data /opt/mailinabox/management/users.py list 2>/dev/null | grep -qi "${EMAIL_ADDR}"; then
+              USER_EXISTS=1
+              echo "Admin user already exists: ${EMAIL_ADDR}"
+              break
+            fi
+          fi
+          
+          # If user doesn't exist, try to create
+          if [ ${USER_EXISTS} -eq 0 ]; then
+            echo "Creating admin user: ${EMAIL_ADDR} (attempt $((RETRY_COUNT + 1))/${MAX_RETRIES})"
+            
+            # Try cli.py first (v73+)
+            if [ -f "/opt/mailinabox/management/cli.py" ]; then
+              cd /opt/mailinabox
+              git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true
+              if sudo -n -u user-data bash -c "cd /opt/mailinabox && /opt/mailinabox/management/cli.py user add \"${EMAIL_ADDR}\" \"${EMAIL_PW}\" admin" 2>&1; then
+                USER_EXISTS=1
+                echo "Admin user created successfully via cli.py"
+                break
+              else
+                echo "Warning: cli.py user creation failed, will retry..."
+              fi
+            fi
+            
+            # Try users.py (older versions)
+            if [ ${USER_EXISTS} -eq 0 ] && [ -f "/opt/mailinabox/management/users.py" ]; then
+              cd /opt/mailinabox
+              git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true
+              if sudo -n -u user-data bash -c "cd /opt/mailinabox && /opt/mailinabox/management/users.py add \"${EMAIL_ADDR}\" \"${EMAIL_PW}\"" 2>&1; then
+                # Add admin privileges separately for older versions
+                if sudo -n -u user-data bash -c "cd /opt/mailinabox && /opt/mailinabox/management/users.py privileges add \"${EMAIL_ADDR}\" admin" 2>&1; then
+                  USER_EXISTS=1
+                  echo "Admin user created successfully via users.py"
+                  break
+                fi
+              else
+                echo "Warning: users.py user creation failed, will retry..."
+              fi
+            fi
+          fi
+          
+          RETRY_COUNT=$((RETRY_COUNT + 1))
+          if [ ${RETRY_COUNT} -lt ${MAX_RETRIES} ]; then
+            # Exponential backoff: wait 2^retry_count seconds
+            BACKOFF=$((1 << RETRY_COUNT))
+            echo "Waiting ${BACKOFF} seconds before retry..."
+            sleep ${BACKOFF}
+          fi
+        done
+        
+        # Set password for me@${PRIMARY_HOSTNAME} to match admin password
+        if [ ${USER_EXISTS} -eq 1 ]; then
+          ME_USER="me@${PRIMARY_HOSTNAME}"
+          echo "Setting password for ${ME_USER} to match admin password..."
+          
+          # Try cli.py first (v73+)
+          if [ -f "/opt/mailinabox/management/cli.py" ]; then
+            cd /opt/mailinabox
+            git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true
+            sudo -n -u user-data bash -c "cd /opt/mailinabox && /opt/mailinabox/management/cli.py user password \"${ME_USER}\" \"${EMAIL_PW}\"" 2>&1 || echo "Warning: Failed to set ${ME_USER} password via cli.py"
+          fi
+          
+          # Try users.py (older versions)
+          if [ -f "/opt/mailinabox/management/users.py" ]; then
+            cd /opt/mailinabox
+            git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true
+            sudo -n -u user-data bash -c "cd /opt/mailinabox && /opt/mailinabox/management/users.py password \"${ME_USER}\" \"${EMAIL_PW}\"" 2>&1 || echo "Warning: Failed to set ${ME_USER} password via users.py"
+          fi
+          
+          # Create marker file to indicate admin user was created
+          touch "${ADMIN_USER_MARKER}"
+          chown user-data:user-data "${ADMIN_USER_MARKER}"
+          echo "Admin user creation completed successfully"
+        else
+          echo "Warning: Failed to create admin user after ${MAX_RETRIES} attempts"
+          echo "This is non-fatal - user can be created manually later"
+        fi
+      fi
+    fi
+  fi
+else
+  echo "Skipping admin user creation - MIAB setup not yet complete"
+fi
+
+# ==========================================
 # SES Relay Configuration (idempotent)
 # ==========================================
 SES_RELAY_MARKER="/home/user-data/.ses_relay_configured"

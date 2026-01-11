@@ -1,0 +1,70 @@
+📊 Generating System Status Report
+
+   Domain: (will be resolved)
+   App Path: apps/cdk-emc-notary/instance
+   Region: us-east-1
+   Profile: hepe-admin-mfa
+
+🔍 Step 1: Getting stack information...
+✅ Instance: i-0bb56d49f12d430b4
+   IP: 3.229.143.6
+   Hostname: box.emcnotary.com
+
+🔍 Step 2: Getting SSH key...
+✅ SSH key ready
+
+🔍 Step 3: Checking bootstrap status...
+   Admin Password Param: ✅
+   Bootstrap File: ✅
+   Status: complete
+
+🔍 Step 4: Checking services...
+   Postfix: ❌
+   Dovecot: ❌
+   Nginx: ❌
+   Named (DNS): ❌
+   MIAB Installed: ❌
+
+🔍 Step 5: Checking SSL certificate...
+   SSL Provisioned: ❌
+
+🔍 Step 6: Checking DNS records...
+   Total DNS Records: 0
+   A Record: ❌
+   CNAME Records: ❌
+   MX Records: ❌
+   TXT Records: ❌
+
+🔍 Step 7: Checking users and mailboxes...
+   Total Users: 0
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 SYSTEM STATUS SUMMARY
+
+   Instance: i-0bb56d49f12d430b4 (running)
+   IP: 3.229.143.6
+   Hostname: box.emcnotary.com
+
+   Bootstrap: ✅ Complete
+   Services: ⚠️  Some Issues
+   SSL: ❌ Not Provisioned
+   DNS A Record: ❌ Missing
+   DNS CNAME Records: ❌ None
+   Users: 0 (0 with mailboxes)
+
+❌ Critical Issues:
+   - Postfix service not running
+   - Dovecot service not running
+   - A record not found
+
+⚠️  Warnings:
+   - Nginx service not running
+   - DNS service (named) not running
+   - SSL certificate not provisioned
+   - No CNAME records found
+   - No users found
+
+❌ Some critical issues detected. Review above.
+
+📄 Report saved to: /Users/evanmccall/Projects/aws-opensource-mailserver/.cursor/system-status-report.json
+

@@ -11,7 +11,8 @@ const log = (
   );
 
 export type ProvisionInstanceConfig = {
-  domain: string;
+  domain?: string;
+  appPath?: string;
   region?: string;
   profile?: string;
   miabAdminEmail?: string; // Defaults to admin@{domain}
@@ -41,14 +42,35 @@ export async function provisionInstance(
   config: ProvisionInstanceConfig
 ): Promise<ProvisionResult> {
   const domain = config.domain;
+  const appPath = config.appPath || process.env['APP_PATH'];
   const region = config.region || process.env['AWS_REGION'] || 'us-east-1';
   const profile = config.profile || process.env['AWS_PROFILE'] || 'hepe-admin-mfa';
-  const miabAdminEmail = config.miabAdminEmail || `admin@${domain}`;
+  
+  if (!domain && !appPath) {
+    const error = 'Cannot resolve domain. Provide domain or appPath';
+    log('error', error);
+    return { success: false, error };
+  }
+  
+  // Resolve domain from appPath if needed
+  let resolvedDomain = domain;
+  if (!resolvedDomain && appPath) {
+    const { resolveDomain } = await import('@mm/admin-stack-info');
+    resolvedDomain = resolveDomain(appPath) || undefined;
+    if (!resolvedDomain) {
+      const error = 'Cannot resolve domain from appPath. Provide domain explicitly';
+      log('error', error);
+      return { success: false, error };
+    }
+  }
+  
+  const miabAdminEmail = config.miabAdminEmail || (resolvedDomain ? `admin@${resolvedDomain}` : undefined);
   const skipSsh = config.skipSsh || false;
   const skipSesDns = config.skipSesDns || false;
 
   log('info', 'Starting instance provisioning', {
-    domain,
+    domain: resolvedDomain,
+    appPath,
     region,
     profile,
     miabAdminEmail,
@@ -65,7 +87,8 @@ export async function provisionInstance(
     if (!skipSsh) {
       log('info', 'Setting up SSH access');
       const sshResult = await setupSshAccess({
-        domain,
+        domain: resolvedDomain,
+        appPath,
         region,
         profile,
       });
@@ -98,7 +121,8 @@ export async function provisionInstance(
     if (!skipSesDns) {
       log('info', 'Setting up SES DNS records');
       const sesDnsResult = await setSesDnsRecords({
-        domain,
+        domain: resolvedDomain,
+        appPath,
         region,
         profile,
         miabAdminEmail,

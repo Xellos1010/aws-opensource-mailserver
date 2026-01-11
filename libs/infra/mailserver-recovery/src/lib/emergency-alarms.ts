@@ -1,0 +1,176 @@
+import { Construct } from 'constructs';
+import {
+  Stack,
+  aws_cloudwatch as cw,
+  aws_cloudwatch_actions as cwa,
+  aws_sns as sns,
+  aws_lambda as lambda,
+  aws_logs as logs,
+  aws_iam as iam,
+  Duration,
+  RemovalPolicy,
+} from 'aws-cdk-lib';
+
+export interface EmergencyAlarmsProps {
+  /** EC2 instance ID to monitor */
+  instanceId: string;
+  /** Recovery orchestrator Lambda function */
+  recoveryOrchestratorLambda: lambda.IFunction;
+  /** SNS topic for alarm notifications (optional) */
+  notificationTopic?: sns.ITopic;
+  /** Domain name for resource naming */
+  domainName: string;
+  /** CloudWatch Log Group name for syslog (default: /ec2/syslog-{domain}-mailserver) */
+  syslogLogGroupName?: string;
+  /** Log retention in days (default: 7) */
+  logRetentionDays?: number;
+}
+
+/**
+ * Emergency Alarms - CloudWatch alarms wired to recovery system
+ *
+ * Creates:
+ * - InstanceStatusCheck alarm (instance-level issues)
+ * - SystemStatusCheck alarm (AWS infrastructure issues)
+ * - OOMKillDetected alarm (memory exhaustion)
+ * - OOM Metric Filter + Log Group for syslog
+ * - Alarm → Lambda invoke permissions (critical fix from hepefoundation)
+ */
+export class EmergencyAlarms extends Construct {
+  public readonly instanceStatusAlarm: cw.Alarm;
+  public readonly systemStatusAlarm: cw.Alarm;
+  public readonly oomKillAlarm: cw.Alarm;
+  public readonly syslogLogGroup: logs.LogGroup;
+
+  constructor(scope: Construct, id: string, props: EmergencyAlarmsProps) {
+    super(scope, id);
+
+    const {
+      instanceId,
+      recoveryOrchestratorLambda,
+      notificationTopic,
+      domainName,
+      syslogLogGroupName: providedSyslogLogGroupName,
+      logRetentionDays = 7,
+    } = props;
+
+    // Use stack name for syslog log group if not provided (domainName is a token from SSM)
+    const stack = Stack.of(this);
+    const syslogLogGroupName =
+      providedSyslogLogGroupName || `/ec2/syslog-${stack.stackName}-mailserver`;
+
+    // CloudWatch Log Group for syslog (required for OOM detection)
+    // Map retention days to RetentionDays enum
+    const retentionDaysMap: Record<number, logs.RetentionDays> = {
+      1: logs.RetentionDays.ONE_DAY,
+      3: logs.RetentionDays.THREE_DAYS,
+      5: logs.RetentionDays.FIVE_DAYS,
+      7: logs.RetentionDays.ONE_WEEK,
+      14: logs.RetentionDays.TWO_WEEKS,
+      30: logs.RetentionDays.ONE_MONTH,
+    };
+    const retention = retentionDaysMap[logRetentionDays] || logs.RetentionDays.ONE_WEEK;
+
+    this.syslogLogGroup = new logs.LogGroup(this, 'SyslogLogGroup', {
+      logGroupName: syslogLogGroupName,
+      retention,
+      removalPolicy: RemovalPolicy.RETAIN, // Retain logs for compliance
+    });
+
+    // OOM Metric Filter - detects "Out of memory" messages in syslog
+    // This creates a CloudWatch metric that increments when OOM kills occur
+    new logs.MetricFilter(this, 'OOMMetricFilter', {
+      logGroup: this.syslogLogGroup,
+      filterPattern: logs.FilterPattern.literal('Out of memory'),
+      metricNamespace: 'EC2',
+      metricName: 'oom_kills',
+      metricValue: '1',
+      defaultValue: 0,
+    });
+
+    // CRITICAL FIX: Create CloudWatch alarm permission manually once (before creating alarms)
+    // LambdaAction.bind() creates permissions with ID "AlarmPermission" for each alarm,
+    // causing conflicts when multiple alarms trigger the same Lambda.
+    // By creating the permission manually first with a wildcard sourceArn, we avoid duplicates.
+    recoveryOrchestratorLambda.addPermission('CloudWatchAlarmInvoke', {
+      principal: new iam.ServicePrincipal('lambda.alarms.cloudwatch.amazonaws.com'),
+      sourceArn: `arn:aws:cloudwatch:${stack.region}:${stack.account}:alarm:*`,
+    });
+
+    const lambdaArn = recoveryOrchestratorLambda.functionArn;
+    const alarmActions: string[] = [lambdaArn];
+    if (notificationTopic) {
+      alarmActions.push(notificationTopic.topicArn);
+    }
+
+    // Instance Status Check Alarm
+    this.instanceStatusAlarm = new cw.Alarm(this, 'InstanceStatusCheckAlarm', {
+      alarmName: `InstanceStatusCheck-${instanceId}`,
+      alarmDescription:
+        'Alerts when EC2 instance status check fails (instance-level issues). Triggers automatic restart via recovery orchestrator.',
+      metric: new cw.Metric({
+        namespace: 'AWS/EC2',
+        metricName: 'StatusCheckFailed_Instance',
+        dimensionsMap: {
+          InstanceId: instanceId,
+        },
+        period: Duration.minutes(1),
+        statistic: 'Maximum',
+      }),
+      threshold: 1,
+      evaluationPeriods: 2,
+      comparisonOperator: cw.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: cw.TreatMissingData.BREACHING,
+    });
+    
+    // Set alarm actions directly using escape hatch (bypasses LambdaAction)
+    const instanceStatusCfn = this.instanceStatusAlarm.node.defaultChild as cw.CfnAlarm;
+    instanceStatusCfn.addPropertyOverride('AlarmActions', alarmActions);
+
+    // System Status Check Alarm
+    this.systemStatusAlarm = new cw.Alarm(this, 'SystemStatusCheckAlarm', {
+      alarmName: `SystemStatusCheck-${instanceId}`,
+      alarmDescription:
+        'Alerts when EC2 system status check fails (AWS infrastructure issues). Triggers automatic restart via recovery orchestrator.',
+      metric: new cw.Metric({
+        namespace: 'AWS/EC2',
+        metricName: 'StatusCheckFailed_System',
+        dimensionsMap: {
+          InstanceId: instanceId,
+        },
+        period: Duration.minutes(1),
+        statistic: 'Maximum',
+      }),
+      threshold: 1,
+      evaluationPeriods: 2,
+      comparisonOperator: cw.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: cw.TreatMissingData.BREACHING,
+    });
+    
+    // Set alarm actions directly using escape hatch (bypasses LambdaAction)
+    const systemStatusCfn = this.systemStatusAlarm.node.defaultChild as cw.CfnAlarm;
+    systemStatusCfn.addPropertyOverride('AlarmActions', alarmActions);
+
+    // OOM Kill Alarm
+    this.oomKillAlarm = new cw.Alarm(this, 'OOMKillAlarm', {
+      alarmName: `OOMKillDetected-${instanceId}`,
+      alarmDescription:
+        'Alerts when Out-of-Memory killer terminates processes. Triggers automatic restart via recovery orchestrator.',
+      metric: new cw.Metric({
+        namespace: 'EC2',
+        metricName: 'oom_kills',
+        period: Duration.minutes(1),
+        statistic: 'Sum',
+      }),
+      threshold: 0,
+      evaluationPeriods: 1,
+      comparisonOperator: cw.ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: cw.TreatMissingData.NOT_BREACHING,
+    });
+    
+    // Set alarm actions directly using escape hatch (bypasses LambdaAction)
+    const oomKillCfn = this.oomKillAlarm.node.defaultChild as cw.CfnAlarm;
+    oomKillCfn.addPropertyOverride('AlarmActions', alarmActions);
+  }
+}
+

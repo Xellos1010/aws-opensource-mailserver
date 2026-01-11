@@ -9,13 +9,16 @@ import * as path from 'path';
  * Fix SSM agent on existing instance by installing it via SSH
  */
 async function fixSsmAgent(): Promise<void> {
-  const domain = process.env.DOMAIN || 'emcnotary.com';
+  const domain = process.env.DOMAIN;
   const appPath = process.env.APP_PATH || 'apps/cdk-emc-notary/instance';
   const profile = process.env.AWS_PROFILE || 'hepe-admin-mfa';
   const region = process.env.AWS_REGION || 'us-east-1';
+  
+  if (!domain && !appPath) {
+    throw new Error('Cannot resolve domain. Provide DOMAIN or APP_PATH environment variable');
+  }
 
-  console.log(`🔧 Fixing SSM agent for domain: ${domain}`);
-  console.log(`   App path: ${appPath}`);
+  console.log(`🔧 Fixing SSM agent${domain ? ` for domain: ${domain}` : ''}${appPath ? ` for app path: ${appPath}` : ''}`);
   console.log(`   Region: ${region}\n`);
 
   try {

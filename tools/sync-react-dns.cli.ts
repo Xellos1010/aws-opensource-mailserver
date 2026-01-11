@@ -3,8 +3,11 @@
 import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-cloudformation';
 import { fromIni } from '@aws-sdk/credential-providers';
 import { getAdminCredentials } from '@mm/admin-credentials';
+import { resolveStackName, resolveDomain } from '@mm/admin-stack-info';
 import * as fs from 'node:fs';
+import * as https from 'node:https';
 import * as path from 'node:path';
+import * as url from 'node:url';
 
 interface SyncDnsOptions {
   backupFile?: string;
@@ -76,40 +79,66 @@ function normalizeValue(value: string, rtype: string): string {
 
 /**
  * Makes API call to Mail-in-a-Box DNS API
+ * Uses https module with rejectUnauthorized: false to handle self-signed certificates
  */
 async function makeApiCall(
   method: string,
-  path: string,
+  apiPath: string,
   data: string | undefined,
   baseUrl: string,
   email: string,
   password: string
 ): Promise<{ httpCode: number; body: string }> {
-  const url = `${baseUrl}${path}`;
+  return new Promise((resolve, reject) => {
+    const parsedUrl = new URL(baseUrl);
+    const fullPath = `${parsedUrl.pathname}${apiPath}`.replace(/\/+/g, '/');
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/x-www-form-urlencoded',
-  };
-
-  const auth = Buffer.from(`${email}:${password}`).toString('base64');
-  headers['Authorization'] = `Basic ${auth}`;
-
-  const body = data || undefined;
-
-  try {
-    const response = await fetch(url, {
+    const auth = Buffer.from(`${email}:${password}`).toString('base64');
+    
+    const options: https.RequestOptions = {
+      hostname: parsedUrl.hostname,
+      port: parsedUrl.port || 443,
+      path: fullPath,
       method,
-      headers,
-      body,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${auth}`,
+        'User-Agent': 'Mail-in-a-Box-DNS-Sync/1.0',
+      },
+      rejectUnauthorized: false, // Allow self-signed certificates
+      timeout: 30000, // 30 second timeout
+    };
+
+    const req = https.request(options, (res) => {
+      let responseBody = '';
+      
+      res.on('data', (chunk) => {
+        responseBody += chunk;
+      });
+
+      res.on('end', () => {
+        resolve({
+          httpCode: res.statusCode || 500,
+          body: responseBody,
+        });
+      });
     });
 
-    const responseBody = await response.text();
-    const httpCode = response.status;
+    req.on('error', (err) => {
+      reject(new Error(`API call failed: ${err.message}`));
+    });
 
-    return { httpCode, body: responseBody };
-  } catch (err) {
-    throw new Error(`API call failed: ${String(err)}`);
-  }
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('API call timeout after 30 seconds'));
+    });
+
+    if (data) {
+      req.write(data);
+    }
+
+    req.end();
+  });
 }
 
 /**
@@ -161,11 +190,26 @@ async function getCurrentRecord(
 async function syncDns(options: SyncDnsOptions): Promise<void> {
   const region = options.region || process.env.AWS_REGION || 'us-east-1';
   const profile = options.profile || process.env.AWS_PROFILE || 'hepe-admin-mfa';
-  const stackName = options.stackName || 'emcnotary-react-webserver';
-  const domain = options.domain || process.env.DOMAIN || 'emcnotary.com';
-  const appPath = options.appPath || 'apps/cdk-emc-notary/instance';
+  const domain = options.domain || process.env.DOMAIN;
+  const appPath = options.appPath || process.env.APP_PATH;
   const dryRun = options.dryRun ?? (process.env.DRY_RUN === '1');
   const verbose = options.verbose || process.env.VERBOSE === '1' || process.env.VERBOSE === 'true';
+  
+  if (!options.stackName && !domain && !appPath) {
+    throw new Error('Cannot resolve stack name. Provide stackName, domain, or appPath');
+  }
+  
+  const stackName = options.stackName || resolveStackName(domain, appPath, undefined, 'core');
+  
+  if (!domain && !appPath) {
+    throw new Error('Cannot resolve domain. Provide domain or appPath');
+  }
+  
+  // Resolve domain from appPath if needed for backup file path
+  const resolvedDomain = domain || (appPath ? resolveDomain(appPath) : null);
+  if (!resolvedDomain) {
+    throw new Error('Cannot resolve domain for backup file path. Provide domain or appPath');
+  }
 
   // Default backup file path (relative to workspace root)
   const backupFile =
@@ -174,13 +218,13 @@ async function syncDns(options: SyncDnsOptions): Promise<void> {
       process.cwd(),
       'Archive',
       'backups',
-      domain,
+      resolvedDomain,
       'dns',
       'dns-backup-20250915-120038.json'
     );
 
   console.log('🌐 Sync React DNS Records');
-  console.log(`   Domain: ${domain}`);
+  console.log(`   Domain: ${resolvedDomain}`);
   console.log(`   Stack: ${stackName}`);
   console.log(`   Backup File: ${backupFile}`);
   console.log(`   Region: ${region}`);
@@ -228,8 +272,10 @@ async function syncDns(options: SyncDnsOptions): Promise<void> {
       profile,
     });
 
-    const baseUrl = `https://box.${credentials.domain}`;
-    console.log(`✅ Admin credentials ready\n`);
+    // Use IP address directly since DNS may not be configured yet
+    const instanceIp = await getStackOutput(stackName, 'ElasticIPAddress', region, profile);
+    const baseUrl = `https://${instanceIp}`;
+    console.log(`✅ Admin credentials ready (using IP: ${instanceIp})\n`);
 
     if (dryRun) {
       console.log('\n⚠️  DRY RUN MODE - No changes will be applied\n');

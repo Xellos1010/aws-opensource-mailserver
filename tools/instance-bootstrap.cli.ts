@@ -128,10 +128,21 @@ async function main(): Promise<void> {
     // Parse CLI args
     const cliOptions = parseArgs();
 
-    // Merge with environment variables and defaults
+    // Merge with environment variables
+    const domain = cliOptions.domain || process.env.DOMAIN;
+    const appPath = process.env.APP_PATH;
+    const stackName = cliOptions.stackName || process.env.STACK;
+    
+    if (!domain && !appPath && !stackName) {
+      console.error('Error: Either --domain, APP_PATH, or --stack must be provided');
+      console.error('Use --help for usage information');
+      process.exit(1);
+    }
+    
     const options: BootstrapOptions = {
-      domain: cliOptions.domain || process.env.DOMAIN || 'emcnotary.com',
-      stackName: cliOptions.stackName || process.env.STACK,
+      domain,
+      appPath,
+      stackName,
       region: cliOptions.region || process.env.CDK_DEFAULT_REGION || process.env.AWS_REGION || 'us-east-1',
       profile: cliOptions.profile || process.env.AWS_PROFILE || process.env.PROFILE,
       dryRun: cliOptions.dryRun || process.env.DRY_RUN === '1',
@@ -141,13 +152,6 @@ async function main(): Promise<void> {
         : process.env.REBOOT_AFTER_SETUP === '1',
       featureFlagEnv: 'FEATURE_INSTANCE_BOOTSTRAP_ENABLED',
     };
-
-    // Validate required options
-    if (!options.domain && !options.stackName) {
-      console.error('Error: Either --domain or --stack must be provided');
-      console.error('Use --help for usage information');
-      process.exit(1);
-    }
 
     // Validate feature flag
     if (process.env[options.featureFlagEnv || 'FEATURE_INSTANCE_BOOTSTRAP_ENABLED'] === '0') {

@@ -3,6 +3,7 @@
 import { getStackInfoFromApp } from '@mm/admin-stack-info';
 import { getSshKeyPath } from '@mm/admin-ssh';
 import { getAdminCredentials } from '@mm/admin-credentials';
+import { checkAdminAccountExists } from '@mm/admin-account';
 import { spawn } from 'child_process';
 import * as https from 'https';
 
@@ -147,8 +148,12 @@ async function testAdminLogin(
 async function testCredentials(options: TestCredentialsOptions): Promise<void> {
   const region = options.region || process.env.AWS_REGION || 'us-east-1';
   const profile = options.profile || process.env.AWS_PROFILE || 'hepe-admin-mfa';
-  const appPath = options.appPath || 'apps/cdk-emc-notary/instance';
-  const domain = options.domain || process.env.DOMAIN || 'emcnotary.com';
+  const appPath = options.appPath || process.env.APP_PATH || 'apps/cdk-emc-notary/instance';
+  const domain = options.domain || process.env.DOMAIN;
+  
+  if (!domain && !appPath) {
+    throw new Error('Cannot resolve domain. Provide domain or appPath');
+  }
 
   console.log('🔐 Admin Credentials Test');
   console.log(`   Domain: ${domain}`);
@@ -215,30 +220,10 @@ async function testCredentials(options: TestCredentialsOptions): Promise<void> {
     // Check 1: Verify admin user exists in Mail-in-a-Box
     console.log('🔍 Step 4: Checking admin user account...');
     
-    // Detect which script to use (cli.py for v73+, users.py for older)
-    const checkCliPy = `test -f /opt/mailinabox/management/cli.py && echo "CLI_EXISTS" || echo "NOT_FOUND"`;
-    const checkUsersPy = `test -f /opt/mailinabox/management/users.py && echo "USERS_EXISTS" || echo "NOT_FOUND"`;
-    
-    const cliCheck = await sshCommand(keyPath, instanceIp, checkCliPy);
-    const usersCheck = await sshCommand(keyPath, instanceIp, checkUsersPy);
-    
-    let userCheckCommand: string;
-    if (cliCheck.output.includes('CLI_EXISTS')) {
-      // v73+ uses cli.py
-      userCheckCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && sudo -u user-data /opt/mailinabox/management/cli.py user | grep -i "${credentials.email}" || echo "not found"'`;
-    } else if (usersCheck.output.includes('USERS_EXISTS')) {
-      // Older versions use users.py
-      userCheckCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && sudo -u user-data /opt/mailinabox/management/users.py list | grep -i "${credentials.email}" || echo "not found"'`;
-    } else {
-      console.log(`⚠️  Could not find management scripts (cli.py or users.py)`);
-      userCheckCommand = `echo "not found"`;
-    }
-    
-    const userCheck = await sshCommand(keyPath, instanceIp, userCheckCommand);
+    const accountExists = await checkAdminAccountExists(keyPath, instanceIp, credentials.email);
 
-    if (userCheck.success && userCheck.output.toLowerCase().includes(credentials.email.toLowerCase())) {
-      console.log(`✅ Admin user exists: ${credentials.email}`);
-      console.log(`   User details: ${userCheck.output}\n`);
+    if (accountExists) {
+      console.log(`✅ Admin user exists: ${credentials.email}\n`);
     } else {
       console.log(`⚠️  Admin user not found in Mail-in-a-Box user list`);
       console.log(`   This may indicate the account was not created during bootstrap\n`);

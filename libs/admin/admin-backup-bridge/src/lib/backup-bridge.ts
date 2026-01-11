@@ -1,6 +1,7 @@
 import { getStackInfo, getStackInfoFromApp } from '@mm/admin-stack-info';
 import { backupDns } from 'admin-dns-backup';
 import { backupMailbox } from 'admin-mail-backup';
+import { backupUsers } from '@mm/admin-users-backup';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 
@@ -11,6 +12,7 @@ export type BackupBridgeConfig = {
   region?: string;
   profile?: string;
   skipDns?: boolean;
+  skipUsers?: boolean;
   skipMail?: boolean;
   dnsBucket?: string;
   dnsPrefix?: string;
@@ -30,13 +32,18 @@ export type BackupBridgeResult = {
   dnsBackup?: {
     outputDir: string;
   };
-    mailBackup?: {
-      outDir: string;
-      tarPath: string;
-      s3Uri?: string;
-    };
+  userBackup?: {
+    outputDir: string;
+    userCount: number;
+  };
+  mailBackup?: {
+    outDir: string;
+    tarPath: string;
+    s3Uri?: string;
+  };
   summary: {
     dnsSuccess: boolean;
+    userSuccess: boolean;
     mailSuccess: boolean;
     errors: string[];
   };
@@ -60,6 +67,7 @@ export async function backupBridge(
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const errors: string[] = [];
   let dnsBackup: { outputDir: string } | undefined;
+  let userBackup: { outputDir: string; userCount: number } | undefined;
   let mailBackup:
     | { outDir: string; tarPath: string; s3Uri?: string }
     | undefined;
@@ -128,6 +136,42 @@ export async function backupBridge(
     log('info', 'Skipping DNS backup (skipDns=true)');
   }
 
+  // Backup Users
+  if (!config.skipUsers) {
+    log('info', 'Starting users backup', {
+      stackName: stackInfo.stackName,
+      domain: stackInfo.domain,
+    });
+
+    try {
+      const userResult = await backupUsers({
+        appPath: config.appPath,
+        stackName: config.stackName,
+        domain: stackInfo.domain,
+        region: config.region,
+        profile: config.profile,
+        outputDir: path.resolve(
+          'dist/backups',
+          stackInfo.domain.replace(/\./g, '-'),
+          'users',
+          timestamp
+        ),
+      });
+
+      userBackup = userResult;
+      log('info', 'Users backup completed', {
+        outputDir: userResult.outputDir,
+        userCount: userResult.userCount,
+      });
+    } catch (err) {
+      const errorMsg = `Users backup failed: ${err}`;
+      log('error', errorMsg);
+      errors.push(errorMsg);
+    }
+  } else {
+    log('info', 'Skipping users backup (skipUsers=true)');
+  }
+
   // Backup Mail
   if (!config.skipMail) {
     log('info', 'Starting mail backup', {
@@ -183,9 +227,11 @@ export async function backupBridge(
       instancePublicIp: stackInfo.instancePublicIp,
     },
     dnsBackup,
+    userBackup,
     mailBackup,
     summary: {
       dnsSuccess: !!dnsBackup,
+      userSuccess: !!userBackup,
       mailSuccess: !!mailBackup,
       errors,
     },

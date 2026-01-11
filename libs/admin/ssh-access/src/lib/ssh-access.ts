@@ -5,6 +5,7 @@ import { execSync } from 'child_process';
 import { existsSync, mkdirSync, chmodSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
+import { resolveStackName } from '@mm/admin-stack-info';
 
 const log = (
   level: 'info' | 'warn' | 'error',
@@ -16,7 +17,8 @@ const log = (
   );
 
 export type SetupSshAccessConfig = {
-  domain: string;
+  domain?: string;
+  appPath?: string;
   region?: string;
   profile?: string;
   stackName?: string; // Auto-generated if not provided
@@ -41,7 +43,15 @@ export async function setupSshAccess(
   const region = config.region || process.env['AWS_REGION'] || 'us-east-1';
   const profile = config.profile || process.env['AWS_PROFILE'] || 'hepe-admin-mfa';
   const domain = config.domain;
-  const stackName = config.stackName || `${domain.replace(/\./g, '-')}-mailserver-instance`;
+  const appPath = config.appPath || process.env['APP_PATH'];
+  
+  if (!config.stackName && !domain && !appPath) {
+    const error = 'Cannot resolve stack name. Provide stackName, domain, or appPath';
+    log('error', error);
+    return { success: false, error };
+  }
+  
+  const stackName = config.stackName || resolveStackName(domain, appPath, undefined, 'instance');
 
   log('info', 'Setting up SSH access', {
     domain,
