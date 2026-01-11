@@ -1,0 +1,101 @@
+{
+  "name": "rollout-menu",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "tags": ["type:tool", "scope:ops"],
+  "targets": {
+    "menu": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/rollout-menu.cli.ts"
+      },
+      "description": "Rollout menu: Print categorized Nx targets for apps/cdk-emc-notary (drill down via menu:* targets)"
+    },
+    "menu:json": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/rollout-menu.cli.ts --json"
+      },
+      "description": "Rollout menu: Output categorized targets as JSON (machine-readable)"
+    },
+    "menu:cdk-stack": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/rollout-menu.cli.ts --category cdk-stack"
+      },
+      "description": "Rollout menu: CDK Stack Operations"
+    },
+    "menu:build-test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/rollout-menu.cli.ts --category build-test"
+      },
+      "description": "Rollout menu: Build & Test"
+    },
+    "menu:stack-info": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/rollout-menu.cli.ts --category stack-info"
+      },
+      "description": "Rollout menu: Stack Information"
+    },
+    "menu:ssh": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/rollout-menu.cli.ts --category ssh"
+      },
+      "description": "Rollout menu: SSH Operations"
+    },
+    "menu:bootstrap": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/rollout-menu.cli.ts --category bootstrap"
+      },
+      "description": "Rollout menu: Bootstrap Operations"
+    },
+    "menu:provisioning": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/rollout-menu.cli.ts --category provisioning"
+      },
+      "description": "Rollout menu: Provisioning"
+    },
+    "menu:ssl": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/rollout-menu.cli.ts --category ssl"
+      },
+      "description": "Rollout menu: SSL Management"
+    },
+    "menu:credentials": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/rollout-menu.cli.ts --category credentials"
+      },
+      "description": "Rollout menu: Credentials"
+    },
+    "menu:users-mailboxes": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/rollout-menu.cli.ts --category users-mailboxes"
+      },
+      "description": "Rollout menu: Users & Mailboxes"
+    },
+    "menu:dns": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/rollout-menu.cli.ts --category dns"
+      },
+      "description": "Rollout menu: DNS Management"
+    },
+    "menu:miab": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/rollout-menu.cli.ts --category miab"
+      },
+      "description": "Rollout menu: MIAB Maintenance"
+    }
+  }
+}
+
+
+

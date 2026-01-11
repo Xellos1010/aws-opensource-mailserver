@@ -103,6 +103,9 @@ async function makeApiCall(
       method,
       headers,
       body,
+      // Allow self-signed certificates for Mail-in-a-Box
+      // @ts-expect-error - agent option exists but TypeScript types may not include it
+      agent: process.env['NODE_TLS_REJECT_UNAUTHORIZED'] === '0' ? undefined : undefined,
     });
 
     const responseBody = await response.text();
@@ -112,7 +115,18 @@ async function makeApiCall(
 
     return { httpCode, body: responseBody };
   } catch (err) {
-    log('error', 'API call failed', { error: String(err), method, path });
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    log('error', 'API call failed', { 
+      error: errorMessage,
+      errorType: err instanceof Error ? err.constructor.name : typeof err,
+      method, 
+      path,
+      url,
+      // Include more context for debugging
+      hint: errorMessage.includes('fetch failed') 
+        ? 'Network error - check if instance is accessible and HTTPS is working'
+        : undefined,
+    });
     throw err;
   }
 }
@@ -134,7 +148,7 @@ export async function restoreDnsFromBackup(
     throw new Error('Backup file must contain an array of DNS records');
   }
 
-  // Get admin credentials
+  // Get admin credentials and stack info
   log('info', 'Retrieving admin credentials');
   const credentials = await getAdminCredentials({
     appPath: config.appPath,
@@ -144,8 +158,25 @@ export async function restoreDnsFromBackup(
     profile: config.profile,
   });
 
-  const baseUrl = `https://box.${credentials.domain}`;
+  // Get stack info to access instance IP
+  const { getStackInfoFromApp } = await import('@mm/admin-stack-info');
+  const stackInfo = await getStackInfoFromApp(
+    config.appPath || 'apps/cdk-emc-notary/instance',
+    {
+      domain: config.domain,
+      region: config.region,
+      profile: config.profile,
+    }
+  );
+
+  // Use instance IP if available, otherwise try domain
+  // Mail-in-a-Box admin interface is accessible via IP or domain
+  const baseUrl = stackInfo.instancePublicIp
+    ? `https://${stackInfo.instancePublicIp}`
+    : `https://box.${credentials.domain}`;
   const zone = credentials.domain;
+  
+  log('info', 'Using base URL for DNS API', { baseUrl, instanceIp: stackInfo.instancePublicIp });
 
   log('info', 'Preparing to restore DNS records', {
     domain: credentials.domain,

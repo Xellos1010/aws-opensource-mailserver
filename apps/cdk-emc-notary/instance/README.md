@@ -162,6 +162,35 @@ The instance UserData only prepares the instance for SSM access. The full MIAB s
 
 See [Instance Bootstrap Library](../../libs/support-scripts/aws/instance-bootstrap/README.md) for details.
 
+## Status Checks
+
+After MIAB is bootstrapped, you can fetch and analyze status checks locally:
+
+```bash
+# Fetch status checks
+pnpm nx run cdk-emcnotary-instance:admin:miab:status-check
+
+# Save to JSON file for analysis
+OUTPUT_FILE=status-report.json pnpm nx run cdk-emcnotary-instance:admin:miab:status-check
+
+# Verbose output
+VERBOSE=1 pnpm nx run cdk-emcnotary-instance:admin:miab:status-check
+```
+
+The status check tool:
+- Connects to the instance via SSH
+- Runs MIAB status checks (`status_checks.py`)
+- Parses and categorizes results (OK, Errors, Warnings)
+- Outputs structured JSON for programmatic analysis
+- Allows local iteration to resolve issues
+
+**Common Issues to Address:**
+- **Postgrey not running**: Check service status and restart if needed
+- **SMTP port 25 blocked**: AWS may restrict outbound port 25; use SES for sending
+- **MTA-STS policy missing**: Configure MTA-STS records in DNS
+- **TLS certificate self-signed**: Provision Let's Encrypt certificates
+- **Disk space low**: Run cleanup: `pnpm nx run cdk-emcnotary-instance:admin:cleanup:disk-space`
+
 ## Feature Flags
 
 - **`FEATURE_CDK_EMCNOTARY_STACKS_ENABLED`**: Controls CDK stack deployment (default: `0`, set to `1` to enable)

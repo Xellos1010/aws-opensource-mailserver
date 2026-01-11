@@ -180,10 +180,15 @@ export async function getStackInfo(
   const profile = config.profile || process.env['AWS_PROFILE'] || 'hepe-admin-mfa';
   
   // Resolve domain and stack name
-  const domain =
+  let domain =
     config.domain ||
-    resolveDomain(config.appPath, config.stackName) ||
-    'emcnotary.com'; // default fallback
+    resolveDomain(config.appPath, config.stackName);
+  
+  if (!domain && !config.stackName) {
+    throw new Error(
+      'Cannot resolve domain or stack name. Provide domain, appPath, or explicit stackName'
+    );
+  }
   
   // Determine stack type from appPath or stackName
   let stackType: 'core' | 'instance' | undefined;
@@ -209,6 +214,17 @@ export async function getStackInfo(
     config.stackName,
     stackType
   );
+  
+  // Ensure domain is resolved from stack name if not already resolved
+  if (!domain && stackName) {
+    domain = resolveDomain(undefined, stackName);
+  }
+  
+  if (!domain) {
+    throw new Error(
+      `Cannot resolve domain from stack name ${stackName}. Provide domain explicitly.`
+    );
+  }
   
   // Create AWS clients
   const credentials = fromIni({ profile });
@@ -246,8 +262,9 @@ export async function getStackInfo(
         );
         // Update stackName to the actual found stack name
         stackName = fallbackStackName;
+        const canonicalName = domain ? toMailserverInstanceStackName(domain) : 'canonical stack name';
         console.warn(
-          `⚠️  Found legacy stack ${fallbackStackName}. Please migrate to canonical name ${toMailserverInstanceStackName(domain)}`
+          `⚠️  Found legacy stack ${fallbackStackName}. Please migrate to canonical name ${canonicalName}`
         );
       } catch (fallbackErr) {
         throw new Error(

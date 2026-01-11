@@ -25,80 +25,6 @@
         }
       }
     },
-    "synth": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 node ../../../../dist/libs/infra/config-loader/bin/cdk-synth.js",
-        "cwd": "dist/apps/cdk-emc-notary/instance"
-      },
-      "dependsOn": ["build", "infra-config-loader:build"]
-    },
-    "deploy": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js deploy --require-approval never ${DOMAIN:+--context domain=$DOMAIN} ${INSTANCE_DNS:+--context instanceDns=$INSTANCE_DNS} ${CORE_PARAM_PREFIX:+--context coreParamPrefix=$CORE_PARAM_PREFIX}",
-        "cwd": "dist/apps/cdk-emc-notary/instance"
-      },
-      "dependsOn": ["build", "infra-config-loader:build"]
-    },
-    "diff": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 cdk diff ${DOMAIN:+--context domain=$DOMAIN} ${INSTANCE_DNS:+--context instanceDns=$INSTANCE_DNS} ${CORE_PARAM_PREFIX:+--context coreParamPrefix=$CORE_PARAM_PREFIX}",
-        "cwd": "dist/apps/cdk-emc-notary/instance"
-      },
-      "dependsOn": ["build"]
-    },
-    "emergency-monitoring-legacy:build": {
-      "executor": "@nx/esbuild:esbuild",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "platform": "node",
-        "outputPath": "dist/apps/cdk-emc-notary/instance-emergency-legacy",
-        "format": ["cjs"],
-        "bundle": true,
-        "main": "apps/cdk-emc-notary/instance/src/emergency-monitoring-legacy-main.ts",
-        "tsConfig": "apps/cdk-emc-notary/instance/tsconfig.app.json",
-        "assets": ["apps/cdk-emc-notary/instance/cdk.json"],
-        "generatePackageJson": true,
-        "esbuildOptions": {
-          "sourcemap": true,
-          "external": ["aws-sdk"]
-        }
-      }
-    },
-    "emergency-monitoring-legacy:synth": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "cdk synth --app 'node dist/apps/cdk-emc-notary/instance-emergency-legacy/emergency-monitoring-legacy-main.js' ${DOMAIN:+--context domain=$DOMAIN} ${LEGACY_STACK_NAME:+--context legacyStackName=$LEGACY_STACK_NAME} ${ALARMS_TOPIC_ARN:+--context alarmsTopicArn=$ALARMS_TOPIC_ARN}",
-        "cwd": "."
-      },
-      "dependsOn": ["emergency-monitoring-legacy:build"]
-    },
-    "emergency-monitoring-legacy:deploy": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "cdk deploy --app 'node dist/apps/cdk-emc-notary/instance-emergency-legacy/emergency-monitoring-legacy-main.js' --require-approval never ${DOMAIN:+--context domain=$DOMAIN} ${LEGACY_STACK_NAME:+--context legacyStackName=$LEGACY_STACK_NAME} ${ALARMS_TOPIC_ARN:+--context alarmsTopicArn=$ALARMS_TOPIC_ARN}",
-        "cwd": "."
-      },
-      "dependsOn": ["emergency-monitoring-legacy:build"]
-    },
-    "emergency-monitoring-legacy:diff": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "cdk diff --app 'node dist/apps/cdk-emc-notary/instance-emergency-legacy/emergency-monitoring-legacy-main.js' ${DOMAIN:+--context domain=$DOMAIN} ${LEGACY_STACK_NAME:+--context legacyStackName=$LEGACY_STACK_NAME} ${ALARMS_TOPIC_ARN:+--context alarmsTopicArn=$ALARMS_TOPIC_ARN}",
-        "cwd": "."
-      },
-      "dependsOn": ["emergency-monitoring-legacy:build"]
-    },
-    "destroy": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js destroy --force ${DOMAIN:+--context domain=$DOMAIN} ${INSTANCE_DNS:+--context instanceDns=$INSTANCE_DNS} ${CORE_PARAM_PREFIX:+--context coreParamPrefix=$CORE_PARAM_PREFIX}",
-        "cwd": "dist/apps/cdk-emc-notary/instance"
-      },
-      "dependsOn": ["build", "infra-config-loader:build"]
-    },
     "lint": {
       "executor": "@nx/eslint:lint"
     },
@@ -156,7 +82,7 @@
     "test:bootstrap": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/apps/cdk-emc-notary/instance"],
-      "dependsOn": ["build", "^build"],
+      "dependsOn": ["build", "^build", "admin:test:instance-deployed", "admin:test:bootstrap-complete"],
       "options": {
         "jestConfig": "apps/cdk-emc-notary/instance/jest.config.ts",
         "testPathPattern": "bootstrap.e2e",
@@ -166,7 +92,7 @@
     "test:reboot": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/apps/cdk-emc-notary/instance"],
-      "dependsOn": ["build", "^build"],
+      "dependsOn": ["build", "^build", "admin:test:instance-deployed"],
       "options": {
         "jestConfig": "apps/cdk-emc-notary/instance/jest.config.ts",
         "testPathPattern": "reboot-event.e2e",
@@ -176,7 +102,7 @@
     "test:reboot-integration": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/apps/cdk-emc-notary/instance"],
-      "dependsOn": ["build", "^build"],
+      "dependsOn": ["build", "^build", "admin:test:instance-deployed"],
       "options": {
         "jestConfig": "apps/cdk-emc-notary/instance/jest.config.ts",
         "testPathPattern": "reboot-integration",
@@ -199,7 +125,7 @@
     "test:reboot-lambda-only": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/apps/cdk-emc-notary/instance"],
-      "dependsOn": ["build", "^build"],
+      "dependsOn": ["build", "^build", "admin:test:instance-deployed"],
       "options": {
         "jestConfig": "apps/cdk-emc-notary/instance/jest.config.ts",
         "testPathPattern": "reboot-integration",
@@ -223,12 +149,86 @@
     "test:deploy-validation": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/apps/cdk-emc-notary/instance"],
-      "dependsOn": ["build", "^build"],
+      "dependsOn": ["build", "^build", "admin:test:instance-deployed"],
       "options": {
         "jestConfig": "apps/cdk-emc-notary/instance/jest.config.ts",
         "testPathPattern": "deploy-schedule-validation.e2e",
         "passWithNoTests": true
       }
+    },
+    "synth": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 node ../../../../dist/libs/infra/config-loader/bin/cdk-synth.js",
+        "cwd": "dist/apps/cdk-emc-notary/instance"
+      },
+      "dependsOn": ["build", "infra-config-loader:build"]
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js deploy --require-approval never ${DOMAIN:+--context domain=$DOMAIN} ${INSTANCE_DNS:+--context instanceDns=$INSTANCE_DNS} ${CORE_PARAM_PREFIX:+--context coreParamPrefix=$CORE_PARAM_PREFIX}",
+        "cwd": "dist/apps/cdk-emc-notary/instance"
+      },
+      "dependsOn": ["build", "infra-config-loader:build", "cdk-emcnotary-core:admin:test:core-deployed"]
+    },
+    "diff": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 cdk diff ${DOMAIN:+--context domain=$DOMAIN} ${INSTANCE_DNS:+--context instanceDns=$INSTANCE_DNS} ${CORE_PARAM_PREFIX:+--context coreParamPrefix=$CORE_PARAM_PREFIX}",
+        "cwd": "dist/apps/cdk-emc-notary/instance"
+      },
+      "dependsOn": ["build"]
+    },
+    "destroy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "FEATURE_CDK_EMCNOTARY_STACKS_ENABLED=1 node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js destroy --force ${DOMAIN:+--context domain=$DOMAIN} ${INSTANCE_DNS:+--context instanceDns=$INSTANCE_DNS} ${CORE_PARAM_PREFIX:+--context coreParamPrefix=$CORE_PARAM_PREFIX}",
+        "cwd": "dist/apps/cdk-emc-notary/instance"
+      },
+      "dependsOn": ["build", "infra-config-loader:build"]
+    },
+    "emergency-monitoring-legacy:build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/cdk-emc-notary/instance-emergency-legacy",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/cdk-emc-notary/instance/src/emergency-monitoring-legacy-main.ts",
+        "tsConfig": "apps/cdk-emc-notary/instance/tsconfig.app.json",
+        "assets": ["apps/cdk-emc-notary/instance/cdk.json"],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "external": ["aws-sdk"]
+        }
+      }
+    },
+    "emergency-monitoring-legacy:synth": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk synth --app 'node dist/apps/cdk-emc-notary/instance-emergency-legacy/emergency-monitoring-legacy-main.js' ${DOMAIN:+--context domain=$DOMAIN} ${LEGACY_STACK_NAME:+--context legacyStackName=$LEGACY_STACK_NAME} ${ALARMS_TOPIC_ARN:+--context alarmsTopicArn=$ALARMS_TOPIC_ARN}",
+        "cwd": "."
+      },
+      "dependsOn": ["emergency-monitoring-legacy:build"]
+    },
+    "emergency-monitoring-legacy:deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk deploy --app 'node dist/apps/cdk-emc-notary/instance-emergency-legacy/emergency-monitoring-legacy-main.js' --require-approval never ${DOMAIN:+--context domain=$DOMAIN} ${LEGACY_STACK_NAME:+--context legacyStackName=$LEGACY_STACK_NAME} ${ALARMS_TOPIC_ARN:+--context alarmsTopicArn=$ALARMS_TOPIC_ARN}",
+        "cwd": "."
+      },
+      "dependsOn": ["emergency-monitoring-legacy:build", "admin:test:instance-deployed"]
+    },
+    "emergency-monitoring-legacy:diff": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cdk diff --app 'node dist/apps/cdk-emc-notary/instance-emergency-legacy/emergency-monitoring-legacy-main.js' ${DOMAIN:+--context domain=$DOMAIN} ${LEGACY_STACK_NAME:+--context legacyStackName=$LEGACY_STACK_NAME} ${ALARMS_TOPIC_ARN:+--context alarmsTopicArn=$ALARMS_TOPIC_ARN}",
+        "cwd": "."
+      },
+      "dependsOn": ["emergency-monitoring-legacy:build"]
     },
     "admin:info": {
       "executor": "nx:run-commands",
@@ -254,11 +254,35 @@
       },
       "description": "Get only failed CloudFormation stack events"
     },
+    "admin:test:instance-deployed": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/test-instance-deployed.cli.ts"
+      },
+      "description": "Prerequisite test: Verify instance stack is deployed and EC2 instance is running"
+    },
+    "admin:test:bootstrap-complete": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/test-bootstrap-complete.cli.ts"
+      },
+      "description": "Prerequisite test: Verify MIAB bootstrap completed (admin password SSM parameter present)"
+    },
+    "admin:test:e2e": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin-dns-restore:build", "admin:ssh:test"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/test-and-restore-e2e.cli.ts ${MAILBOX_BACKUP_PATH:+--mailbox-backup-path $MAILBOX_BACKUP_PATH} ${DNS_BACKUP_PATH:+--dns-backup-path $DNS_BACKUP_PATH} ${DOMAIN:+--domain $DOMAIN} ${SKIP_DEPLOY:+--skip-deploy} ${SKIP_RESTORE:+--skip-restore} ${SKIP_TESTS:+--skip-tests} ${DRY_RUN:+--dry-run}"
+      },
+      "description": "End-to-end test and restore: Deploys stacks, restores from backups, and validates all components (use MAILBOX_BACKUP_PATH and DNS_BACKUP_PATH to specify backup locations)"
+    },
     "admin:bootstrap-miab-ec2-instance": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build", "support-scripts-aws-instance-bootstrap:build"],
+      "dependsOn": ["admin:test:instance-deployed", "^build", "support-scripts-aws-instance-bootstrap:build"],
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/instance-bootstrap.cli.ts"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance pnpm exec tsx --tsconfig tools/tsconfig.json tools/instance-bootstrap.cli.ts"
       },
       "description": "Bootstrap Mail-in-a-Box (MIAB) to EC2 instance via SSM RunCommand"
     },
@@ -266,65 +290,9 @@
       "executor": "nx:run-commands",
       "dependsOn": ["^build", "support-scripts-aws-instance-bootstrap:build", "admin:info"],
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/instance-bootstrap.cli.ts --dry-run"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance pnpm exec tsx --tsconfig tools/tsconfig.json tools/instance-bootstrap.cli.ts --dry-run"
       },
       "description": "Dry run: Preview bootstrap of Mail-in-a-Box (MIAB) to EC2 instance (no SSM command sent). First retrieves stack info via admin:info, then validates with AWS credentials."
-    },
-    "admin:ssh:setup": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["admin-ssh:build"],
-      "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm nx run admin-ssh:setup"
-      },
-      "description": "Setup SSH access (fetch key from SSM, configure known_hosts)"
-    },
-    "admin:ssh:test": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["admin-ssh:build:test"],
-      "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm nx run admin-ssh:test"
-      },
-      "description": "Test SSH connection to instance"
-    },
-    "admin:ses-dns": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["ses-dns:build"],
-      "options": {
-        "command": "pnpm nx run ses-dns:set-dns -- --domain ${DOMAIN:-emcnotary.com}"
-      },
-      "description": "Set SES DNS records (DKIM, Mail-From) via Mail-in-a-Box API"
-    },
-    "admin:ses-dns:dry-run": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["ses-dns:build"],
-      "options": {
-        "command": "pnpm nx run ses-dns:set-dns -- --domain ${DOMAIN:-emcnotary.com} --dry-run"
-      },
-      "description": "Dry run: Preview SES DNS records without making changes"
-    },
-    "admin:provision:ssh-and-ses-dns": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["instance-provision:build"],
-      "options": {
-        "command": "DOMAIN=${DOMAIN:-emcnotary.com} pnpm nx run instance-provision:provision"
-      },
-      "description": "Provision instance: Setup SSH access and configure SES DNS records"
-    },
-    "admin:provision:ses-dns-only": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["instance-provision:build"],
-      "options": {
-        "command": "DOMAIN=${DOMAIN:-emcnotary.com} pnpm nx run instance-provision:provision -- --skip-ssh"
-      },
-      "description": "Provision instance: Configure SES DNS only (skip SSH setup)"
-    },
-    "admin:fix-ssm-agent": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build"],
-      "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/fix-ssm-agent.cli.ts"
-      },
-      "description": "Fix SSM agent on existing instance: Install and start SSM agent via SSH (for instances deployed before UserData fix)"
     },
     "admin:bootstrap:status": {
       "executor": "nx:run-commands",
@@ -344,7 +312,7 @@
     },
     "admin:bootstrap:logs": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build"],
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test"],
       "options": {
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/bootstrap-logs.cli.ts ${TAIL:+--tail $TAIL}"
       },
@@ -352,7 +320,7 @@
     },
     "admin:bootstrap:logs:follow": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build"],
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test"],
       "options": {
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} FOLLOW=1 pnpm exec tsx --tsconfig tools/tsconfig.json tools/bootstrap-logs.cli.ts --follow"
       },
@@ -368,31 +336,119 @@
     },
     "admin:bootstrap:confirm": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build"],
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test"],
       "options": {
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/bootstrap-confirm.cli.ts"
       },
       "description": "Confirm bootstrap success: Comprehensive check of instance state against expected bootstrap outcomes"
     },
+    "admin:fix-ssm-agent": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/fix-ssm-agent.cli.ts"
+      },
+      "description": "Fix SSM agent on existing instance: Install and start SSM agent via SSH (for instances deployed before UserData fix)"
+    },
+    "admin:ssh:setup": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["admin-ssh:build", "admin:ssh:test"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm nx run admin-ssh:setup"
+      },
+      "description": "Setup SSH access (fetch key from SSM, configure known_hosts) and validate connectivity"
+    },
+    "admin:ssh:test": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["admin:test:instance-deployed", "admin-ssh:build:test"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm nx run admin-ssh:test"
+      },
+      "description": "Test SSH connection to instance"
+    },
+    "admin:provision:ssh-and-ses-dns": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["instance-provision:build", "admin:test:instance-deployed", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "APP_PATH=apps/cdk-emc-notary/instance pnpm nx run instance-provision:provision"
+      },
+      "description": "Provision instance: Setup SSH access and configure SES DNS records"
+    },
+    "admin:provision:ses-dns-only": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["instance-provision:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "APP_PATH=apps/cdk-emc-notary/instance pnpm nx run instance-provision:provision -- --skip-ssh"
+      },
+      "description": "Provision instance: Configure SES DNS only (skip SSH setup)"
+    },
+    "admin:ses-dns": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["ses-dns:build", "admin:test:bootstrap-complete", "admin:ssh:test"],
+      "options": {
+        "command": "APP_PATH=apps/cdk-emc-notary/instance pnpm nx run ses-dns:set-dns"
+      },
+      "description": "Set SES DNS records (DKIM, Mail-From) via Mail-in-a-Box API"
+    },
+    "admin:ses-dns:dry-run": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["ses-dns:build"],
+      "options": {
+        "command": "APP_PATH=apps/cdk-emc-notary/instance pnpm nx run ses-dns:set-dns -- --dry-run"
+      },
+      "description": "Dry run: Preview SES DNS records without making changes"
+    },
+    "admin:ses:status": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/check-ses-status.cli.ts ${DOMAIN:+--domain $DOMAIN}"
+      },
+      "description": "Check SES status: Verifies SES domain verification, DKIM, and Mail-From status from AWS"
+    },
     "admin:ssl:provision": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build"],
+      "dependsOn": ["^build", "admin-stack-info:build", "admin-credentials:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/ssl-provision-api.cli.ts"
+      },
+      "description": "Provision SSL certificates: Uses Mail-in-a-Box HTTP API to provision Let's Encrypt SSL certificates (Method 2 - recommended)"
+    },
+    "admin:ssl:provision:ssh": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
       "options": {
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/ssl-provision.cli.ts ${DOMAINS:+--domains $DOMAINS}"
       },
-      "description": "Provision SSL certificates: Uses Mail-in-a-Box management script to provision Let's Encrypt SSL certificates for configured domains"
+      "description": "Provision SSL certificates (SSH method): Uses Mail-in-a-Box management script via SSH (fallback method)"
     },
     "admin:ssl:status": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build"],
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
       "options": {
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/ssl-status.cli.ts"
       },
       "description": "Check SSL certificate status: Verifies SSL certificate provisioning, validity, expiration, and configuration"
     },
+    "admin:ssl:audit": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/audit-miab-ssl-provision.cli.ts"
+      },
+      "description": "Audit Mail-in-a-Box SSL provisioning: Examines how the UI provisions SSL certificates and identifies programmatic invocation methods"
+    },
+    "admin:ssl:find-endpoint": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/find-ssl-api-endpoint.cli.ts"
+      },
+      "description": "Find SSL API endpoint: Examines Mail-in-a-Box web UI code to find the actual SSL provisioning endpoint"
+    },
     "admin:credentials": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build", "admin-stack-info:build", "admin-credentials:build"],
+      "dependsOn": ["^build", "admin-stack-info:build", "admin-credentials:build", "admin:test:bootstrap-complete"],
       "options": {
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/get-admin-credentials.cli.ts ${DOMAIN:+--domain $DOMAIN}"
       },
@@ -400,7 +456,7 @@
     },
     "admin:credentials:test": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin-credentials:build"],
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin-credentials:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
       "options": {
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/test-admin-credentials.cli.ts ${DOMAIN:+--domain $DOMAIN}"
       },
@@ -408,7 +464,7 @@
     },
     "admin:credentials:create": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin-credentials:build"],
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin-credentials:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
       "options": {
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/create-admin-account.cli.ts ${EMAIL:+--email $EMAIL} ${PASSWORD:+--password $PASSWORD}"
       },
@@ -416,15 +472,79 @@
     },
     "admin:users:list": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build"],
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
       "options": {
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} VERBOSE=${VERBOSE:-false} pnpm exec tsx --tsconfig tools/tsconfig.json tools/list-miab-users.cli.ts ${DOMAIN:+--domain $DOMAIN} ${VERBOSE:+--verbose}"
       },
       "description": "List Mail-in-a-Box users: Retrieves and displays all email users configured on the Mail-in-a-Box server (use VERBOSE=1 for detailed debugging)"
     },
+    "admin:users:discover-from-mailboxes": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/discover-users-from-mailboxes.cli.ts ${BACKUP_PATH:+--backup-path $BACKUP_PATH} ${DOMAIN:+--domain $DOMAIN} ${OUTPUT:+--output $OUTPUT} ${VALIDATE_STRUCTURE:+--validate-structure $VALIDATE_STRUCTURE} ${INCLUDE_METADATA:+--include-metadata $INCLUDE_METADATA} ${EXTRACT_TAR:+--extract-tar $EXTRACT_TAR} ${TEMP_DIR:+--temp-dir $TEMP_DIR}"
+      },
+      "description": "Discover users from mailbox backup: Scans mailbox backup directory and extracts user information. Auto-discovers backup path when not specified, or use BACKUP_PATH to specify backup location."
+    },
+    "admin:users:create-multiple": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/create-multiple-users.cli.ts --users ${USERS} ${DOMAIN:+--domain $DOMAIN} ${DEFAULT_PASSWORD:+--default-password $DEFAULT_PASSWORD} ${ADMIN_USERS:+--admin-users $ADMIN_USERS} ${WAIT_FOR_API_KEY:+--wait-for-api-key $WAIT_FOR_API_KEY} ${RETRY_ATTEMPTS:+--retry-attempts $RETRY_ATTEMPTS}"
+      },
+      "description": "Create multiple users from JSON: Creates multiple Mail-in-a-Box users from JSON file or inline JSON array (use USERS to specify JSON file path or inline JSON)"
+    },
+    "admin:mailboxes:restore": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/restore-mailboxes.cli.ts --backup-path ${BACKUP_PATH} ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run} ${RESTART_SERVICES:+--restart-services $RESTART_SERVICES} ${VERIFY_AFTER_RESTORE:+--verify-after-restore $VERIFY_AFTER_RESTORE} ${EXTRACT_TAR:+--extract-tar $EXTRACT_TAR} ${TEMP_DIR:+--temp-dir $TEMP_DIR} ${BACKUP_FORMAT:+--backup-format $BACKUP_FORMAT}"
+      },
+      "description": "Restore mailboxes from backup: Restores mailboxes from backup directory or tar.gz file (use BACKUP_PATH to specify backup location, use DRY_RUN=1 to preview)"
+    },
+    "admin:mailboxes:restore-aggregated": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-mailbox-restore:build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/restore-aggregated-mailboxes.cli.ts ${BACKUP_FOLDERS:+--backup-folders $BACKUP_FOLDERS} ${BACKUP_BASE_DIR:+--backup-base-dir $BACKUP_BASE_DIR} ${DOMAIN:+--domain $DOMAIN} ${ADMIN_PASSWORD:+--admin-password $ADMIN_PASSWORD} ${NO_GENERATE_PASSWORDS:+--no-generate-passwords} ${NO_SKIP_EXISTING_USERS:+--no-skip-existing-users} ${NO_SKIP_EXISTING_EMAILS:+--no-skip-existing-emails} ${DRY_RUN:+--dry-run}"
+      },
+      "description": "Restore aggregated mailboxes: Aggregates users and emails from multiple backup folders (de-duplicated) and restores them to Mail-in-a-Box server"
+    },
+    "admin:mailboxes:sync-master": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/sync-master-backup.cli.ts --master-backup-dir ${MASTER_BACKUP_DIR} ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+      },
+      "description": "Sync master backup folder: Syncs master backup folder with mailserver (skips duplicates, use MASTER_BACKUP_DIR to specify master backup location)"
+    },
+    "admin:mailboxes:archive-master": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build"],
+      "options": {
+        "command": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/archive-master-backup.cli.ts --master-backup-dir ${MASTER_BACKUP_DIR} ${ARCHIVE_BASE_DIR:+--archive-base-dir $ARCHIVE_BASE_DIR} ${TIMESTAMP:+--timestamp $TIMESTAMP}"
+      },
+      "description": "Archive master backup folder: Packages master backup folder into a date&timestamped archive folder (use MASTER_BACKUP_DIR to specify master backup location)"
+    },
+    "admin:restore:users-and-mailboxes": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/restore-users-and-mailboxes.cli.ts --backup-path ${BACKUP_PATH} ${DOMAIN:+--domain $DOMAIN} ${DEFAULT_PASSWORD:+--default-password $DEFAULT_PASSWORD} ${SKIP_USERS:+--skip-users} ${SKIP_MAILBOXES:+--skip-mailboxes} ${WAIT_FOR_API_KEY:+--wait-for-api-key $WAIT_FOR_API_KEY} ${VERIFY_AFTER_RESTORE:+--verify-after-restore $VERIFY_AFTER_RESTORE} ${DRY_RUN:+--dry-run} ${BACKUP_FORMAT:+--backup-format $BACKUP_FORMAT} ${EXTRACT_TAR:+--extract-tar $EXTRACT_TAR}"
+      },
+      "description": "Combined restore workflow: Discovers users from mailbox backup, creates users, and restores mailboxes in a single operation (use BACKUP_PATH to specify backup location)"
+    },
+    "admin:restore:emcnotary": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/restore-emcnotary.cli.ts"
+      },
+      "description": "Quick restore for emcnotary.com using Archive backups (set DRY_RUN=1 for dry run, SKIP_DEPLOY=1 to skip deployment, SKIP_RESTORE=1 to skip restore, SKIP_TESTS=1 to skip tests)"
+    },
     "admin:dns:list": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build"],
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
       "options": {
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/list-miab-dns.cli.ts ${DOMAIN:+--domain $DOMAIN}"
       },
@@ -432,7 +552,7 @@
     },
     "admin:dns:sync-react": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build", "admin-credentials:build"],
+      "dependsOn": ["^build", "admin-credentials:build", "admin:test:bootstrap-complete"],
       "options": {
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} STACK_NAME=${STACK_NAME:-emcnotary-react-webserver} BACKUP_FILE=${BACKUP_FILE:-Archive/backups/emcnotary.com/dns/dns-backup-20250915-120038.json} DRY_RUN=${DRY_RUN:-0} VERBOSE=${VERBOSE:-false} pnpm exec tsx --tsconfig tools/tsconfig.json tools/sync-react-dns.cli.ts ${DOMAIN:+--domain $DOMAIN} ${STACK_NAME:+--stack-name $STACK_NAME} ${BACKUP_FILE:+--backup-file $BACKUP_FILE} ${DRY_RUN:+--dry-run} ${VERBOSE:+--verbose}"
       },
@@ -440,7 +560,7 @@
     },
     "admin:miab:audit": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build"],
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
       "options": {
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} UPDATE=${UPDATE:-0} VERBOSE=${VERBOSE:-false} pnpm exec tsx --tsconfig tools/tsconfig.json tools/audit-miab-version.cli.ts ${DOMAIN:+--domain $DOMAIN} ${UPDATE:+--update} ${VERBOSE:+--verbose}"
       },
@@ -448,11 +568,27 @@
     },
     "admin:miab:cleanup": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build"],
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test"],
       "options": {
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} PRESERVE_DATA=${PRESERVE_DATA:-0} VERBOSE=${VERBOSE:-false} pnpm exec tsx --tsconfig tools/tsconfig.json tools/cleanup-miab.cli.ts ${DOMAIN:+--domain $DOMAIN} ${PRESERVE_DATA:+--preserve-data} ${VERBOSE:+--verbose}"
       },
       "description": "Cleanup Mail-in-a-Box installation: Removes git repository and bootstrap markers to allow fresh bootstrap (use PRESERVE_DATA=1 to keep user data)"
+    },
+    "admin:cleanup:disk-space": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/cleanup-disk-space.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+      },
+      "description": "Clean up disk space on Mail-in-a-Box instance (removes old logs, temp files, apt cache, etc.)"
+    },
+    "admin:miab:status-check": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/miab-status-check.cli.ts ${DOMAIN:+--domain $DOMAIN} ${OUTPUT_FILE:+--output $OUTPUT_FILE} ${VERBOSE:+--verbose}"
+      },
+      "description": "Fetch and parse Mail-in-a-Box status checks from instance (use OUTPUT_FILE to save JSON, VERBOSE=1 for detailed output)"
     }
   }
 }

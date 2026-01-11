@@ -5,6 +5,7 @@ import {
   CfnParameter,
   Tags,
   Duration,
+  RemovalPolicy,
   aws_ec2 as ec2,
   aws_ssm as ssm,
   aws_cloudwatch as cw,
@@ -12,6 +13,7 @@ import {
   aws_sns as sns,
   aws_lambda as lambda,
   aws_iam as iam,
+  aws_logs as logs,
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { tagStack } from '@mm/infra-shared-constructs';
@@ -23,6 +25,16 @@ import {
   createNightlyReboot,
   createBootstrapPlaceholderUserData,
 } from '@mm/infra-instance-constructs';
+import {
+  MailHealthCheckLambda,
+  ServiceRestartLambda,
+  SystemResetLambda,
+  StopStartHelperLambda,
+  RecoveryOrchestratorLambda,
+  EmergencyAlarms,
+  SystemStatsLambda,
+  ExternalMonitoring,
+} from '@mm/infra-mailserver-recovery';
 
 export interface MailServerInstanceStackProps extends StackProps {
   /** Domain configuration */
@@ -170,219 +182,77 @@ export class MailServerInstanceStack extends Stack {
       account: this.account,
     });
 
-    // Emergency Restart Lambda - automatically restarts instance on critical failures
-    const emergencyRestartLambdaRole = new iam.Role(this, 'EmergencyRestartLambdaRole', {
-      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
-      description: 'Role for emergency instance restart Lambda',
-      managedPolicies: [
-        iam.ManagedPolicy.fromAwsManagedPolicyName(
-          'service-role/AWSLambdaBasicExecutionRole'
-        ),
-      ],
+    // ============================================================================
+    // Mailserver Recovery System (ported from hepefoundation)
+    // Provides progressive recovery: Health Check → System Reset → Service Restart → Instance Restart
+    // Recovery time: 30-90 seconds for most failures (vs 5-10 minutes)
+    // ============================================================================
+
+    // Mail Health Check Lambda - Scheduled health checks via EventBridge
+    const mailHealthCheck = new MailHealthCheckLambda(this, 'MailHealthCheck', {
+      instanceId: instance.instanceId,
+      domainName,
+      scheduleExpression: 'rate(5 minutes)',
+      notificationTopic: alarmsTopic,
     });
 
-    emergencyRestartLambdaRole.addToPolicy(
-      new iam.PolicyStatement({
-        actions: [
-          'ec2:StopInstances',
-          'ec2:StartInstances',
-          'ec2:DescribeInstances',
-          'ec2:DescribeInstanceStatus',
-        ],
-        resources: [`arn:aws:ec2:${this.region}:${this.account}:instance/${instance.instanceId}`],
-      })
-    );
-
-    const emergencyRestartLambda = new lambda.Function(this, 'EmergencyRestartLambda', {
-      functionName: `emergency-restart-${domainName.replace(/\./g, '-')}`,
-      runtime: lambda.Runtime.NODEJS_20_X,
-      code: lambda.Code.fromInline(`
-const { EC2Client, StopInstancesCommand, StartInstancesCommand, DescribeInstancesCommand } = require('@aws-sdk/client-ec2');
-
-const ec2Client = new EC2Client({ region: process.env.AWS_REGION });
-
-async function getInstanceState(instanceId) {
-  const response = await ec2Client.send(
-    new DescribeInstancesCommand({ InstanceIds: [instanceId] })
-  );
-  const instance = response.Reservations?.[0]?.Instances?.[0];
-  if (!instance) {
-    throw new Error(\`Instance \${instanceId} not found\`);
-  }
-  return instance.State?.Name || 'unknown';
-}
-
-async function waitForState(instanceId, desiredState, timeoutMs = 600000) {
-  const startTime = Date.now();
-  const checkInterval = 10000;
-
-  console.log(\`Waiting for instance \${instanceId} to reach state: \${desiredState}\`);
-
-  while (Date.now() - startTime < timeoutMs) {
-    const currentState = await getInstanceState(instanceId);
-    if (currentState === desiredState) {
-      console.log(\`Instance \${instanceId} is now in \${desiredState} state\`);
-      return;
-    }
-    const elapsed = Math.floor((Date.now() - startTime) / 1000 / 60);
-    console.log(\`Current state: \${currentState}. Waiting... (\${elapsed} minutes elapsed)\`);
-    await new Promise((resolve) => setTimeout(resolve, checkInterval));
-  }
-  throw new Error(\`Timeout waiting for instance \${instanceId} to reach \${desiredState} state\`);
-}
-
-async function stopAndStart(instanceId) {
-  console.log(\`Emergency restart: Stopping and restarting instance \${instanceId}...\`);
-  let currentState = await getInstanceState(instanceId);
-  console.log(\`Current instance state: \${currentState}\`);
-
-  if (currentState === 'pending') {
-    console.log(\`Instance \${instanceId} is starting. Waiting for running state...\`);
-    await waitForState(instanceId, 'running', 900000);
-    currentState = await getInstanceState(instanceId);
-  }
-
-  if (currentState === 'running') {
-    console.log(\`Stopping instance \${instanceId}...\`);
-    await ec2Client.send(new StopInstancesCommand({ InstanceIds: [instanceId] }));
-    await waitForState(instanceId, 'stopped');
-  } else if (currentState === 'stopping') {
-    console.log(\`Instance \${instanceId} is already stopping. Waiting...\`);
-    await waitForState(instanceId, 'stopped');
-  } else if (currentState === 'stopped') {
-    console.log(\`Instance \${instanceId} is already stopped\`);
-  } else {
-    throw new Error(\`Cannot stop instance \${instanceId} from \${currentState} state\`);
-  }
-
-  currentState = await getInstanceState(instanceId);
-  if (currentState === 'stopped') {
-    console.log(\`Starting instance \${instanceId}...\`);
-    await ec2Client.send(new StartInstancesCommand({ InstanceIds: [instanceId] }));
-    await waitForState(instanceId, 'running', 900000);
-  } else if (currentState === 'pending') {
-    console.log(\`Instance \${instanceId} is already starting. Waiting...\`);
-    await waitForState(instanceId, 'running', 900000);
-  } else if (currentState === 'running') {
-    console.log(\`Instance \${instanceId} is already running\`);
-  } else {
-    throw new Error(\`Cannot start instance \${instanceId} from \${currentState} state\`);
-  }
-  console.log(\`✅ Emergency restart completed successfully for instance \${instanceId}\`);
-}
-
-exports.handler = async (event) => {
-  const instanceId = process.env.INSTANCE_ID;
-  if (!instanceId) {
-    throw new Error('INSTANCE_ID environment variable not set');
-  }
-
-  const alarmName = event?.AlarmName || event?.detail?.alarmName || 'Unknown';
-  const alarmReason = event?.NewStateReason || event?.detail?.reason || 'No reason provided';
-  const triggerTime = new Date().toISOString();
-
-  console.log(\`🚨 Emergency restart triggered by alarm: \${alarmName}\`);
-  console.log(\`Reason: \${alarmReason}\`);
-  console.log(\`Trigger time: \${triggerTime}\`);
-  console.log(\`Instance ID: \${instanceId}\`);
-
-  try {
-    await stopAndStart(instanceId);
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        message: \`Emergency restart completed for instance \${instanceId}\`,
-        alarmName,
-        triggerTime,
-        instanceId,
-      }),
-    };
-  } catch (error) {
-    console.error(\`❌ Emergency restart failed:\`, error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        message: \`Emergency restart failed\`,
-        error: error.message,
-        alarmName,
-        triggerTime,
-        instanceId,
-      }),
-    };
-  }
-};
-      `),
-      handler: 'index.handler',
-      role: emergencyRestartLambdaRole,
-      timeout: Duration.minutes(20),
-      memorySize: 256,
-      environment: {
-        INSTANCE_ID: instance.instanceId,
-        DOMAIN_NAME: domainName,
-      },
-      description: 'Emergency restart Lambda - automatically restarts instance on critical failures',
+    // Service Restart Lambda - Restarts mail services without instance reboot
+    const serviceRestart = new ServiceRestartLambda(this, 'ServiceRestart', {
+      instanceId: instance.instanceId,
+      domainName,
     });
 
-    // CloudWatch Alarms for instance health and resource monitoring
-    // Instance Status Check Alarm - detects when instance status check fails
-    const instanceStatusAlarm = new cw.Alarm(this, 'InstanceStatusCheckAlarm', {
-      alarmName: `InstanceStatusCheck-${instance.instanceId}`,
-      metric: new cw.Metric({
-        namespace: 'AWS/EC2',
-        metricName: 'StatusCheckFailed_Instance',
-        dimensionsMap: {
-          InstanceId: instance.instanceId,
-        },
-        period: Duration.minutes(1),
-        statistic: 'Maximum',
-      }),
-      threshold: 1,
-      evaluationPeriods: 2,
-      comparisonOperator: cw.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-      treatMissingData: cw.TreatMissingData.BREACHING,
-      alarmDescription: 'Alerts when EC2 instance status check fails (instance-level issues)',
+    // System Reset Lambda - Comprehensive recovery without instance reboot
+    const systemReset = new SystemResetLambda(this, 'SystemReset', {
+      instanceId: instance.instanceId,
+      domainName,
     });
-    instanceStatusAlarm.addAlarmAction(new cwa.SnsAction(alarmsTopic));
-    instanceStatusAlarm.addAlarmAction(new cwa.LambdaAction(emergencyRestartLambda)); // Auto-restart on failure
 
-    // System Status Check Alarm - detects when system status check fails
-    const systemStatusAlarm = new cw.Alarm(this, 'SystemStatusCheckAlarm', {
-      alarmName: `SystemStatusCheck-${instance.instanceId}`,
-      metric: new cw.Metric({
-        namespace: 'AWS/EC2',
-        metricName: 'StatusCheckFailed_System',
-        dimensionsMap: {
-          InstanceId: instance.instanceId,
-        },
-        period: Duration.minutes(1),
-        statistic: 'Maximum',
-      }),
-      threshold: 1,
-      evaluationPeriods: 2,
-      comparisonOperator: cw.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-      treatMissingData: cw.TreatMissingData.BREACHING,
-      alarmDescription: 'Alerts when EC2 system status check fails (AWS infrastructure issues)',
+    // Stop/Start Helper Lambda - Smart instance restart (last resort)
+    const stopStartHelper = new StopStartHelperLambda(this, 'StopStartHelper', {
+      mailServerStackName: this.stackName,
+      domainName,
+      mailHealthCheckLambdaName: mailHealthCheck.lambda.functionName,
+      serviceRestartLambdaName: serviceRestart.lambda.functionName,
+      scheduleExpression: 'cron(0 8 * * ? *)', // Daily at 3am EST (8am UTC)
+      maintenanceWindowStartHour: 8,
+      maintenanceWindowEndHour: 8.25,
     });
-    systemStatusAlarm.addAlarmAction(new cwa.SnsAction(alarmsTopic));
-    systemStatusAlarm.addAlarmAction(new cwa.LambdaAction(emergencyRestartLambda)); // Auto-restart on failure
 
-    // OOM Kill Alarm - detects when OOM killer terminates processes
-    const oomKillAlarm = new cw.Alarm(this, 'OOMKillAlarm', {
-      alarmName: `OOMKillDetected-${instance.instanceId}`,
-      metric: new cw.Metric({
-        namespace: 'EC2',
-        metricName: 'oom_kills',
-        period: Duration.minutes(1),
-        statistic: 'Sum',
-      }),
-      threshold: 0,
-      evaluationPeriods: 1,
-      comparisonOperator: cw.ComparisonOperator.GREATER_THAN_THRESHOLD,
-      treatMissingData: cw.TreatMissingData.NOT_BREACHING,
-      alarmDescription: 'Alerts when Out-of-Memory killer terminates processes (indicates memory exhaustion)',
+    // Recovery Orchestrator Lambda - Orchestrates progressive recovery flow
+    const recoveryOrchestrator = new RecoveryOrchestratorLambda(this, 'RecoveryOrchestrator', {
+      mailHealthCheckLambdaArn: mailHealthCheck.lambda.functionArn,
+      systemResetLambdaArn: systemReset.lambda.functionArn,
+      serviceRestartLambdaArn: serviceRestart.lambda.functionArn,
+      stopStartLambdaArn: stopStartHelper.lambda.functionArn,
+      domainName,
     });
-    oomKillAlarm.addAlarmAction(new cwa.SnsAction(alarmsTopic));
-    oomKillAlarm.addAlarmAction(new cwa.LambdaAction(emergencyRestartLambda)); // Auto-restart on OOM
+
+    // Emergency Alarms - CloudWatch alarms wired to recovery orchestrator
+    const emergencyAlarms = new EmergencyAlarms(this, 'EmergencyAlarms', {
+      instanceId: instance.instanceId,
+      recoveryOrchestratorLambda: recoveryOrchestrator.lambda,
+      notificationTopic: alarmsTopic,
+      domainName,
+    });
+
+    // System Stats Lambda - Comprehensive system statistics for operational monitoring
+    const systemStats = new SystemStatsLambda(this, 'SystemStats', {
+      instanceId: instance.instanceId,
+      domainName,
+      scheduleExpression: 'rate(1 hour)', // Collect stats hourly
+    });
+
+    // External Monitoring - Route 53 health checks + proactive health check
+    // Use instanceDns parameter value (which handles tokens properly)
+    const externalMonitoring = new ExternalMonitoring(this, 'ExternalMonitoring', {
+      instanceId: instance.instanceId,
+      domainName,
+      boxHostname: `${instanceDns.valueAsString}.${domainName}`,
+      emergencyRestartLambdaArn: recoveryOrchestrator.lambda.functionArn,
+      notificationTopic: alarmsTopic,
+      healthCheckIntervalSeconds: 30,
+    });
 
     // Memory High Alarm - alerts when memory usage exceeds threshold
     const memoryHighAlarm = new cw.Alarm(this, 'MemoryHighAlarm', {
@@ -473,6 +343,32 @@ exports.handler = async (event) => {
     new CfnOutput(this, 'BootstrapCommand', {
       value: `pnpm nx run ops-runner:instance:bootstrap -- --domain ${domainName}`,
       description: 'Command to bootstrap this instance via SSM',
+    });
+
+    // Recovery System Outputs
+    new CfnOutput(this, 'MailHealthCheckLambdaArn', {
+      value: mailHealthCheck.lambda.functionArn,
+      description: 'ARN of the mail health check Lambda function',
+    });
+
+    new CfnOutput(this, 'RecoveryOrchestratorLambdaArn', {
+      value: recoveryOrchestrator.lambda.functionArn,
+      description: 'ARN of the recovery orchestrator Lambda function',
+    });
+
+    new CfnOutput(this, 'RecoverySystemEnabled', {
+      value: 'true',
+      description: 'Recovery system is enabled with progressive recovery flow',
+    });
+
+    new CfnOutput(this, 'SystemStatsLambdaArn', {
+      value: systemStats.lambda.functionArn,
+      description: 'ARN of the system statistics Lambda function',
+    });
+
+    new CfnOutput(this, 'ExternalMonitoringEnabled', {
+      value: 'true',
+      description: 'External monitoring enabled with Route 53 health checks and proactive checks',
     });
   }
 }

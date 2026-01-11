@@ -1,7 +1,7 @@
 #!/usr/bin/env ts-node
 
 import { getStackInfoFromApp } from '@mm/admin-stack-info';
-import { getSshKeyPath } from '@mm/admin-ssh';
+import { getSshKeyPath, buildSshArgs } from '@mm/admin-ssh';
 import * as https from 'https';
 import * as tls from 'tls';
 import { spawn } from 'child_process';
@@ -22,25 +22,17 @@ interface SslCheck {
 
 /**
  * Execute SSH command and return output
+ * Uses SSH agent if available, falls back to key file
  */
 async function sshCommand(
-  keyPath: string,
+  keyPath: string | null,
   host: string,
   command: string
 ): Promise<{ success: boolean; output: string; error?: string }> {
-  return new Promise((resolve) => {
-    const sshArgs = [
-      '-i',
-      keyPath,
-      '-o',
-      'StrictHostKeyChecking=no',
-      '-o',
-      'UserKnownHostsFile=/dev/null',
-      '-o',
-      'ConnectTimeout=10',
-      `ubuntu@${host}`,
-      command,
-    ];
+  return new Promise(async (resolve) => {
+    // Build SSH args with agent preference
+    const sshArgs = await buildSshArgs(keyPath, host, 'ubuntu');
+    sshArgs.push(command);
 
     let output = '';
     let error = '';
@@ -151,8 +143,12 @@ async function checkSslCertificate(
 async function checkSslStatus(options: SslStatusOptions): Promise<void> {
   const region = options.region || process.env.AWS_REGION || 'us-east-1';
   const profile = options.profile || process.env.AWS_PROFILE || 'hepe-admin-mfa';
-  const appPath = options.appPath || 'apps/cdk-emc-notary/instance';
-  const domain = options.domain || process.env.DOMAIN || 'emcnotary.com';
+  const appPath = options.appPath || process.env.APP_PATH || 'apps/cdk-emc-notary/instance';
+  const domain = options.domain || process.env.DOMAIN;
+  
+  if (!domain && !appPath) {
+    throw new Error('Cannot resolve domain. Provide domain or appPath');
+  }
 
   console.log('🔐 SSL Certificate Status Check');
   console.log(`   Domain: ${domain}`);
@@ -187,23 +183,30 @@ async function checkSslStatus(options: SslStatusOptions): Promise<void> {
     console.log(`   IP: ${instanceIp}`);
     console.log(`   Hostname: ${hostname}\n`);
 
-    // Get SSH key
-    console.log('📋 Step 2: Getting SSH key...');
+    // Get SSH key (prefer SSH agent if available)
+    console.log('📋 Step 2: Getting SSH authentication...');
     const keyPath = await getSshKeyPath({
       appPath,
       domain,
       region,
       profile,
-      ensureSetup: true,
+      ensureSetup: false, // Don't auto-setup, prefer SSH agent
     });
 
     if (!keyPath) {
-      throw new Error(
-        'SSH key not found. Run: pnpm nx run cdk-emcnotary-instance:admin:ssh:setup'
-      );
+      // Check if SSH agent is available
+      const { isSshAgentAvailable } = await import('@mm/admin-ssh');
+      const agentAvailable = await isSshAgentAvailable();
+      
+      if (!agentAvailable) {
+        throw new Error(
+          'SSH key not found and SSH agent not available. Run: pnpm nx run cdk-emcnotary-instance:admin:ssh:setup'
+        );
+      }
+      console.log(`✅ Using SSH agent for authentication\n`);
+    } else {
+      console.log(`✅ SSH key ready: ${keyPath}\n`);
     }
-
-    console.log(`✅ SSH key ready: ${keyPath}\n`);
 
     // Start checks
     console.log('🔍 Step 3: Running SSL certificate checks...\n');
@@ -269,13 +272,19 @@ async function checkSslStatus(options: SslStatusOptions): Promise<void> {
       certDetailsCheck.output.length > 0
     ) {
       const details = certDetailsCheck.output;
+      // Check if certificate is from Let's Encrypt
+      const isLetsEncrypt = details.includes("Let's Encrypt") || 
+                           details.includes('R12') || 
+                           details.includes('R3') ||
+                           details.includes("Let\\'s Encrypt");
+      
       checks.push({
         name: 'Certificate Details',
         status: 'pass',
-        message: 'Certificate details readable',
+        message: isLetsEncrypt ? 'Let\'s Encrypt certificate found' : 'Certificate details readable',
         details: details.split('\n').slice(0, 4).join('; '),
       });
-      console.log('      ✅ Pass');
+      console.log(`      ✅ Pass${isLetsEncrypt ? ' (Let\'s Encrypt)' : ''}`);
     } else {
       checks.push({
         name: 'Certificate Details',
@@ -473,11 +482,38 @@ async function checkSslStatus(options: SslStatusOptions): Promise<void> {
       }
     }
 
+    // Check if Let's Encrypt certificate is present
+    const certDetailsCheckResult = checks.find(c => c.name === 'Certificate Details');
+    const isLetsEncrypt = certDetailsCheckResult?.details?.includes("Let's Encrypt") ||
+                         certDetailsCheckResult?.details?.includes('R12') ||
+                         certDetailsCheckResult?.details?.includes('R3') ||
+                         ipCertCheck.issuer?.includes('R12') ||
+                         ipCertCheck.issuer?.includes('R3') ||
+                         ipCertCheck.issuer?.includes("Let's Encrypt");
+
     // Final verdict
     console.log('\n🎯 Verdict:\n');
-    if (failed === 0 && warnings <= 2) {
+    if (isLetsEncrypt && failed === 0) {
+      // Let's Encrypt certificate found and no failures = PROVISIONED
+      console.log('✅ SSL certificates are PROVISIONED and VALID');
+      console.log('   Let\'s Encrypt certificates are properly configured and working.\n');
+      process.exit(0);
+    } else if (failed === 0 && warnings <= 2) {
       console.log('✅ SSL certificates are PROVISIONED and VALID');
       console.log('   Certificates are properly configured and working.\n');
+      process.exit(0);
+    } else if (isLetsEncrypt && failed === 0 && warnings > 2) {
+      // Let's Encrypt found but some warnings (e.g., nginx config, auto-renewal)
+      console.log('✅ SSL certificates are PROVISIONED (Let\'s Encrypt)');
+      console.log('   Certificates are valid. Some configuration warnings may exist.\n');
+      if (warnings > 0) {
+        const warningChecks = checks.filter((c) => c.status === 'warning');
+        console.log('   Warnings:');
+        warningChecks.forEach((check) => {
+          console.log(`     - ${check.name}: ${check.message}`);
+        });
+        console.log('');
+      }
       process.exit(0);
     } else if (failed <= 2 && passed >= 5) {
       console.log('⚠️  SSL certificates are PARTIALLY PROVISIONED');

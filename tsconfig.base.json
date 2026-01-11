@@ -26,6 +26,8 @@
       "@mm/admin-ssh": ["libs/admin/admin-ssh/src/index.ts"],
       "@mm/admin-dns-restore": ["libs/admin/admin-dns-restore/src/index.ts"],
       "@mm/admin-credentials": ["libs/admin/admin-credentials/src/index.ts"],
+      "@mm/admin-account": ["libs/admin/admin-account/src/index.ts"],
+      "@mm/admin-mailbox-restore": ["libs/admin/admin-mailbox-restore/src/index.ts"],
       "@mm/admin-reverse-dns": ["libs/admin/admin-reverse-dns/src/index.ts"],
       "@mm/admin-dns-api": ["libs/admin/admin-dns-api/src/index.ts"],
       "@mm/admin-users-backup": ["libs/admin/admin-users-backup/src/index.ts"],
@@ -38,10 +40,12 @@
       "@mm/infra-config-loader": ["libs/infra/config-loader/src/index.ts"],
       "@mm/infra-instance-constructs": ["libs/infra/instance-constructs/src/index.ts"],
       "@mm/infra-naming": ["libs/infra/naming/src/index.ts"],
+      "@mm/infra-mailserver-recovery": ["libs/infra/mailserver-recovery/src/index.ts"],
       "@mm/admin-ssh-access": ["libs/admin/ssh-access/src/index.ts"],
       "@mm/admin-ses-dns": ["libs/admin/ses-dns/src/index.ts"],
       "@mm/admin-instance-provision": ["libs/admin/instance-provision/src/index.ts"],
-      "@mm/admin-godaddy-dns": ["libs/admin/godaddy-dns/src/index.ts"]
+      "@mm/admin-godaddy-dns": ["libs/admin/godaddy-dns/src/index.ts"],
+      "@mm/admin-miab-api": ["libs/admin/admin-miab-api/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

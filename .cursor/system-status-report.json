@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-01-10T23:54:23.709Z",
+  "instance": {
+    "id": "i-0bb56d49f12d430b4",
+    "ip": "3.229.143.6",
+    "state": "running",
+    "hostname": "box.emcnotary.com"
+  },
+  "bootstrap": {
+    "status": "complete",
+    "adminPasswordParam": "/MailInABoxAdminPassword-emcnotary-com-mailserver-instance",
+    "adminPasswordExists": true,
+    "bootstrapFileExists": true
+  },
+  "services": {
+    "postfix": false,
+    "dovecot": false,
+    "nginx": false,
+    "named": false,
+    "miab": false
+  },
+  "ssl": {
+    "provisioned": false,
+    "valid": false
+  },
+  "dns": {
+    "records": [],
+    "cnameRecords": [],
+    "mxRecords": [],
+    "txtRecords": []
+  },
+  "users": {
+    "count": 0,
+    "list": []
+  },
+  "summary": {
+    "allChecksPassed": false,
+    "criticalIssues": [
+      "Postfix service not running",
+      "Dovecot service not running",
+      "A record not found"
+    ],
+    "warnings": [
+      "Nginx service not running",
+      "DNS service (named) not running",
+      "SSL certificate not provisioned",
+      "No CNAME records found",
+      "No users found"
+    ]
+  }
+}

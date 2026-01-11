@@ -71,7 +71,12 @@ async function listDns(options: ListDnsOptions): Promise<void> {
   const region = options.region || process.env.AWS_REGION || 'us-east-1';
   const profile = options.profile || process.env.AWS_PROFILE || 'hepe-admin-mfa';
   const appPath = options.appPath || 'apps/cdk-emc-notary/instance';
-  const domain = options.domain || process.env.DOMAIN || 'emcnotary.com';
+  const appPath = options.appPath || process.env.APP_PATH || 'apps/cdk-emc-notary/instance';
+  const domain = options.domain || process.env.DOMAIN;
+  
+  if (!domain && !appPath) {
+    throw new Error('Cannot resolve domain. Provide domain or appPath');
+  }
 
   console.log('🌐 Mail-in-a-Box DNS Records');
   console.log(`   Domain: ${domain}`);

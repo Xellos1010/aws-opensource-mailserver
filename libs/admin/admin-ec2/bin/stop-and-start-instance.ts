@@ -4,9 +4,15 @@ import { getStackInfo } from '@mm/admin-stack-info';
 import { stopAndStart } from '../src/lib/ec2';
 
 async function main() {
-  // Get domain from argument or environment variable, default to emcnotary.com
-  const domain =
-    process.argv[2] || process.env['DOMAIN'] || 'emcnotary.com';
+  // Get domain from argument or environment variable
+  const domain = process.argv[2] || process.env['DOMAIN'];
+  
+  if (!domain) {
+    console.error('Error: DOMAIN is required');
+    console.error('Usage: stop-and-start-instance <domain>');
+    console.error('   or: DOMAIN=<domain> stop-and-start-instance');
+    process.exit(1);
+  }
 
   console.log(`Resolving EC2 instance for domain: ${domain}`);
 

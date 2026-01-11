@@ -22,8 +22,8 @@ new EmergencyMonitoringLegacyStack(app, 'EmergencyMonitoringLegacyStack', {
   domainName: domain,
   alarmsTopicArn,
   env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
+    account: process.env['CDK_DEFAULT_ACCOUNT'],
+    region: process.env['CDK_DEFAULT_REGION'] || 'us-east-1',
   },
 });
 

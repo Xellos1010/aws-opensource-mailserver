@@ -8,23 +8,27 @@ async function main() {
   const skipSshIndex = args.indexOf('--skip-ssh');
   const skipSesDnsIndex = args.indexOf('--skip-ses-dns');
 
-  if (domainIndex === -1 || domainIndex + 1 >= args.length) {
+  const domain = domainIndex !== -1 && domainIndex + 1 < args.length ? args[domainIndex + 1] : undefined;
+  const appPath = process.env['APP_PATH'];
+  const skipSsh = skipSshIndex !== -1;
+  const skipSesDns = skipSesDnsIndex !== -1;
+
+  if (!domain && !appPath) {
+    console.error('Error: Either --domain or APP_PATH environment variable is required');
     console.error('Usage: provision-instance --domain <domain> [--skip-ssh] [--skip-ses-dns]');
+    console.error('   or: APP_PATH=apps/cdk-emc-notary/instance provision-instance [--skip-ssh] [--skip-ses-dns]');
     console.error('Example: provision-instance --domain emcnotary.com --skip-ssh');
     process.exit(1);
   }
 
-  const domain = args[domainIndex + 1];
-  const skipSsh = skipSshIndex !== -1;
-  const skipSesDns = skipSesDnsIndex !== -1;
-
-  console.log(`Provisioning instance for domain: ${domain}`);
+  console.log(`Provisioning instance${domain ? ` for domain: ${domain}` : ''}${appPath ? ` for app path: ${appPath}` : ''}`);
   console.log(`Skip SSH: ${skipSsh}`);
   console.log(`Skip SES DNS: ${skipSesDns}`);
   console.log('----------------------------------------');
 
   const result = await provisionInstance({
     domain,
+    appPath,
     region: process.env['AWS_REGION'] || 'us-east-1',
     profile: process.env['AWS_PROFILE'] || 'hepe-admin-mfa',
     skipSsh,

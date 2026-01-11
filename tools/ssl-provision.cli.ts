@@ -20,8 +20,12 @@ async function provisionSslCertificates(
 ): Promise<void> {
   const region = options.region || process.env.AWS_REGION || 'us-east-1';
   const profile = options.profile || process.env.AWS_PROFILE || 'hepe-admin-mfa';
-  const appPath = options.appPath || 'apps/cdk-emc-notary/instance';
-  const domain = options.domain || process.env.DOMAIN || 'emcnotary.com';
+  const appPath = options.appPath || process.env.APP_PATH || 'apps/cdk-emc-notary/instance';
+  const domain = options.domain || process.env.DOMAIN;
+  
+  if (!domain && !appPath) {
+    throw new Error('Cannot resolve domain. Provide domain or appPath');
+  }
 
   console.log('🔐 SSL Certificate Provision');
   console.log(`   Domain: ${domain}`);
@@ -102,11 +106,43 @@ async function provisionSslCertificates(
     return new Promise((resolve, reject) => {
       console.log('⏳ Provisioning SSL certificates (this may take 1-2 minutes)...\n');
 
-      const ssh = spawn('ssh', sshArgs, {
-        stdio: 'inherit',
+      // Capture stderr separately to detect connection errors
+      let stderrOutput = '';
+
+      const ssh = spawn('ssh', sshArgs);
+
+      // Forward stdout to console
+      ssh.stdout.on('data', (data) => {
+        process.stdout.write(data);
+      });
+
+      // Capture stderr to detect connection errors
+      ssh.stderr.on('data', (data) => {
+        const text = data.toString();
+        stderrOutput += text;
+        // Filter out common SSH warnings that aren't errors
+        if (!text.includes('Permanently added') && !text.includes('Warning: Permanently added')) {
+          process.stderr.write(text);
+        }
       });
 
       ssh.on('close', (code) => {
+        // Check for connection errors in stderr
+        const connectionErrorPatterns = [
+          'Connection refused',
+          'Connection timed out',
+          'Connection closed',
+          'Network is unreachable',
+          'No route to host',
+          'Host key verification failed',
+          'Permission denied',
+          'Could not resolve hostname',
+        ];
+
+        const isConnectionError = connectionErrorPatterns.some((pattern) =>
+          stderrOutput.toLowerCase().includes(pattern.toLowerCase())
+        );
+
         if (code === 0) {
           console.log('\n✅ SSL certificate provisioning completed successfully');
           console.log('\n💡 Next steps:');
@@ -114,15 +150,40 @@ async function provisionSslCertificates(
           console.log(`   2. Access admin UI: https://${instanceIp}/admin`);
           console.log(`   3. Check System > TLS(SSL) Certificates in admin UI\n`);
           resolve();
+        } else if (isConnectionError) {
+          // Connection errors are real failures - instance is not accessible
+          console.error(`\n❌ SSL provisioning failed: Connection error`);
+          console.error(`   Exit code: ${code}`);
+          console.error(`   Error: ${stderrOutput.trim() || 'Unknown connection error'}`);
+          console.error('\n💡 Troubleshooting steps:');
+          console.error(`   1. Verify instance is running: aws ec2 describe-instance-status --instance-ids ${instanceId} --region ${region} --profile ${profile}`);
+          console.error(`   2. Check security group allows SSH from your IP`);
+          console.error(`   3. Verify SSH key is correct: pnpm nx run cdk-emcnotary-instance:admin:ssh:test`);
+          console.error(`   4. Check instance logs: aws ec2 get-console-output --instance-id ${instanceId} --region ${region} --profile ${profile}\n`);
+          reject(
+            new Error(
+              `SSH connection failed: ${stderrOutput.trim() || 'Connection error'} (exit code: ${code})`
+            )
+          );
         } else {
+          // Non-zero exit code but not a connection error
+          // This might be normal if certificates are already provisioned or SSL script has warnings
           console.log(`\n⚠️  SSL provisioning exited with code ${code}`);
+          if (stderrOutput.trim()) {
+            console.log(`   Error output: ${stderrOutput.trim()}`);
+          }
           console.log('   This may be normal if certificates are already provisioned.');
-          console.log('   Check the output above for details.\n');
-          resolve(); // Don't fail - certificates might already be provisioned
+          console.log('   Check the output above for details.');
+          console.log(`\n💡 Verify SSL status: pnpm nx run cdk-emcnotary-instance:admin:ssl:status\n`);
+          // Resolve successfully - certificates might already be provisioned
+          // User can verify with ssl:status task
+          resolve();
         }
       });
 
       ssh.on('error', (error) => {
+        // Spawn errors (e.g., ssh command not found) are always failures
+        console.error(`\n❌ Failed to execute SSH command: ${error.message}`);
         reject(error);
       });
 

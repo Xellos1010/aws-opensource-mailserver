@@ -337,7 +337,7 @@ def lambda_handler(event, context):
 
     const smtpLambda = new lambda.Function(this, 'SmtpLambdaFunction', {
       functionName: `SMTPCredentialsLambdaFunction-${this.stackName}`,
-      runtime: lambda.Runtime.PYTHON_3_8,
+      runtime: lambda.Runtime.PYTHON_3_11,
       handler: 'index.lambda_handler',
       role: smtpLambdaRole,
       timeout: Duration.seconds(30),
@@ -353,10 +353,14 @@ import cfnresponse
 import logging
 import os
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 log = logging.getLogger(__name__)
-region = os.environ['AWS_REGION']
-ssm = boto3.client('ssm',region_name=region)
+region = os.environ.get('AWS_REGION', 'us-east-1')
+ssm = boto3.client('ssm', region_name=region)
 
 SMTP_REGIONS = [
     'us-east-2', 'us-east-1', 'us-west-2', 'ap-south-1',
@@ -410,42 +414,77 @@ def delete_smtp_credentials(type, stack_name):
         return False
 
 def lambda_handler(event, context):
-    log.debug('%s', event)
+    request_id = context.aws_request_id if context else 'unknown'
+    request_type = event.get('RequestType', 'Unknown')
     stack_name = os.environ.get('STACK_NAME', '')
-    parameter_type = event['ResourceProperties']['ParameterType']
-    parameter_arn = "arn:aws:ssm:"+region+":"+os.environ.get('AWS_ACCOUNT_ID', '')+":parameter/smtp-"+parameter_type+"-"+stack_name
-    key = event['ResourceProperties']['Key']
-    proceed = "True"
-
-    if event['RequestType'] == 'Create':
-        if parameter_type == 'username':
-            proceed = put_parameter(key, parameter_type, stack_name)
-        elif parameter_type == 'password':
-            pwd = calculate_key(key, region)
-            proceed = put_parameter(pwd, parameter_type, stack_name)
-        reason = "Created SMTP "+parameter_type
-    elif event['RequestType'] == 'Update':
-        if parameter_type == 'username':
-            proceed = put_parameter(key, parameter_type, stack_name)
-        elif parameter_type == 'password':
-            pwd = calculate_key(key, region)
-            proceed = put_parameter(pwd, parameter_type, stack_name)
-        reason = "Updated SMTP "+parameter_type
-    elif event['RequestType'] == 'Delete':
-        proceed = delete_smtp_credentials(parameter_type, stack_name)
-        reason = "Deleted SMTP "+parameter_type
-    else:
+    log.info('SMTP Lambda invoked: request_id=%s, request_type=%s, stack_name=%s', 
+              request_id, request_type, stack_name)
+    
+    try:
+        if not stack_name:
+            raise ValueError('STACK_NAME environment variable not set')
+        
+        resource_props = event.get('ResourceProperties', {})
+        parameter_type = resource_props.get('ParameterType')
+        key = resource_props.get('Key')
+        
+        if not parameter_type:
+            raise ValueError('ParameterType missing from ResourceProperties')
+        if not key:
+            raise ValueError('Key missing from ResourceProperties')
+        
+        account_id = os.environ.get('AWS_ACCOUNT_ID', '')
+        parameter_arn = f"arn:aws:ssm:{region}:{account_id}:parameter/smtp-{parameter_type}-{stack_name}"
+        
         proceed = False
-        reason = "Operation %s is unsupported" % (event['RequestType'])
-
-    if proceed:
-        cfnresponse.send(event, context, cfnresponse.SUCCESS, {'Reason': reason}, parameter_arn)
-    else:
-        cfnresponse.send(event, context, cfnresponse.FAILED, {'Reason': reason}, parameter_arn)
+        reason = ''
+        
+        if request_type == 'Create':
+            log.info('Creating SMTP credentials: parameter_type=%s', parameter_type)
+            if parameter_type == 'username':
+                proceed = put_parameter(key, parameter_type, stack_name)
+            elif parameter_type == 'password':
+                pwd = calculate_key(key, region)
+                proceed = put_parameter(pwd, parameter_type, stack_name)
+            else:
+                raise ValueError(f'Unsupported parameter type: {parameter_type}')
+            reason = f"Created SMTP {parameter_type}"
+            
+        elif request_type == 'Update':
+            log.info('Updating SMTP credentials: parameter_type=%s', parameter_type)
+            if parameter_type == 'username':
+                proceed = put_parameter(key, parameter_type, stack_name)
+            elif parameter_type == 'password':
+                pwd = calculate_key(key, region)
+                proceed = put_parameter(pwd, parameter_type, stack_name)
+            else:
+                raise ValueError(f'Unsupported parameter type: {parameter_type}')
+            reason = f"Updated SMTP {parameter_type}"
+            
+        elif request_type == 'Delete':
+            log.info('Deleting SMTP credentials: parameter_type=%s', parameter_type)
+            proceed = delete_smtp_credentials(parameter_type, stack_name)
+            reason = f"Deleted SMTP {parameter_type}"
+            
+        else:
+            raise ValueError(f"Unsupported request type: {request_type}")
+        
+        if proceed:
+            log.info('SMTP Lambda succeeded: reason=%s, request_id=%s', reason, request_id)
+            cfnresponse.send(event, context, cfnresponse.SUCCESS, {'Reason': reason}, parameter_arn)
+        else:
+            log.error('SMTP Lambda failed: reason=%s, request_id=%s', reason, request_id)
+            cfnresponse.send(event, context, cfnresponse.FAILED, {'Reason': reason}, parameter_arn)
+            
+    except Exception as e:
+        error_msg = f"SMTP Lambda error: {str(e)}"
+        log.error('%s: request_id=%s', error_msg, request_id, exc_info=True)
+        cfnresponse.send(event, context, cfnresponse.FAILED, {'Reason': error_msg}, 'unknown')
       `),
       environment: {
         STACK_NAME: this.stackName,
         AWS_ACCOUNT_ID: this.account,
+        // Note: AWS_REGION is automatically set by Lambda runtime - don't set it manually
       },
     });
 

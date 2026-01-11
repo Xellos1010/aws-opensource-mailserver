@@ -7,16 +7,19 @@ async function main() {
   const domainIndex = args.indexOf('--domain');
   const dryRunIndex = args.indexOf('--dry-run');
 
-  if (domainIndex === -1 || domainIndex + 1 >= args.length) {
+  const domain = domainIndex !== -1 && domainIndex + 1 < args.length ? args[domainIndex + 1] : undefined;
+  const appPath = process.env['APP_PATH'];
+  const dryRun = dryRunIndex !== -1;
+
+  if (!domain && !appPath) {
+    console.error('Error: Either --domain or APP_PATH environment variable is required');
     console.error('Usage: set-ses-dns --domain <domain> [--dry-run]');
+    console.error('   or: APP_PATH=apps/cdk-emc-notary/core set-ses-dns [--dry-run]');
     console.error('Example: set-ses-dns --domain emcnotary.com --dry-run');
     process.exit(1);
   }
 
-  const domain = args[domainIndex + 1];
-  const dryRun = dryRunIndex !== -1;
-
-  console.log(`Setting SES DNS records for domain: ${domain}`);
+  console.log(`Setting SES DNS records${domain ? ` for domain: ${domain}` : ''}${appPath ? ` for app path: ${appPath}` : ''}`);
   if (dryRun) {
     console.log('DRY RUN MODE - No changes will be made');
   }
@@ -24,6 +27,7 @@ async function main() {
 
   const result = await setSesDnsRecords({
     domain,
+    appPath,
     region: process.env['AWS_REGION'] || 'us-east-1',
     profile: process.env['AWS_PROFILE'] || 'hepe-admin-mfa',
     dryRun,
