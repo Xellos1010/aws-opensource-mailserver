@@ -348,19 +348,152 @@ export async function setSesDnsRecords(
       execSync(`echo "${privateKey}" > "${tempKeyFile}"`, { stdio: 'inherit' });
       execSync(`chmod 400 "${tempKeyFile}"`, { stdio: 'inherit' });
 
-      // Mail-in-a-Box API requires full FQDN for qname
-      // The domain must already be managed by Mail-in-a-Box (added via mail users)
-      // Use the full FQDN as-is from the stack outputs
-      log('info', 'Using full FQDN for DNS qnames', { 
-        domain: resolvedDomain,
-        dkimName1: dkimName1,
-        mailFromDomain: mailFromDomain 
-      });
+      // Check if domain is managed by Mail-in-a-Box
+      // Mail-in-a-Box requires a domain to have at least one mail user before DNS records can be set
+      // We'll check if admin@domain exists using base64 encoding to avoid shell escaping issues
+      log('info', 'Checking if domain is managed by Mail-in-a-Box', { domain: resolvedDomain, email: miabAdminEmail });
+      
+      const emailB64 = Buffer.from(miabAdminEmail).toString('base64');
+      const checkDomainManaged = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && EMAIL=\$(echo "${emailB64}" | base64 -d) && sudo -n -u user-data bash -c "cd /opt/mailinabox && /opt/mailinabox/management/cli.py user list 2>/dev/null | grep -q \\\"\$EMAIL\\\" && echo EXISTS || echo NOT_FOUND" 2>&1'`;
+      
+      let domainManaged = false;
+      try {
+        const checkResult = execSync(
+          `ssh -i "${tempKeyFile}" -o StrictHostKeyChecking=no -o ConnectTimeout=10 "ubuntu@${instanceIpString}" "${checkDomainManaged}"`,
+          { encoding: 'utf-8', timeout: 30000 }
+        );
+        domainManaged = checkResult.trim().includes('EXISTS');
+        log('info', 'Domain management check result', { domainManaged, output: checkResult.trim() });
+      } catch (error) {
+        log('warn', 'Could not check if domain is managed, assuming managed (admin user should exist)', { error: error instanceof Error ? error.message : String(error) });
+        // Assume managed since admin user should exist from bootstrap
+        domainManaged = true;
+      }
 
-      const normalizedDkimName1 = dkimName1;
-      const normalizedDkimName2 = dkimName2;
-      const normalizedDkimName3 = dkimName3;
-      const normalizedMailFromDomain = mailFromDomain;
+      // If domain is not managed, try to ensure admin user exists using HTTP API
+      // This is more reliable than SSH commands with shell escaping
+      if (!domainManaged) {
+        log('info', 'Domain may not be managed, ensuring admin user exists via HTTP API', { email: miabAdminEmail });
+        
+        try {
+          const { URLSearchParams } = await import('url');
+          const https = await import('https');
+          
+          const baseUrl = `https://box.${resolvedDomain}`;
+          const auth = Buffer.from(`${miabAdminEmail}:${adminPassword}`).toString('base64');
+          
+          // Check if user exists via API
+          const checkUserUrl = `${baseUrl}/admin/mail/users?format=json`;
+          const checkOptions = {
+            headers: {
+              'Authorization': `Basic ${auth}`,
+              'Accept': 'application/json',
+            },
+            rejectUnauthorized: false, // Allow self-signed certs
+          };
+          
+          const checkUserResult = await new Promise<string>((resolve, reject) => {
+            https.get(checkUserUrl, checkOptions, (res) => {
+              let data = '';
+              res.on('data', (chunk) => { data += chunk; });
+              res.on('end', () => {
+                if (res.statusCode === 200) {
+                  resolve(data);
+                } else {
+                  reject(new Error(`HTTP ${res.statusCode}: ${data}`));
+                }
+              });
+            }).on('error', reject);
+          });
+          
+          const users = JSON.parse(checkUserResult);
+          const userExists = Array.isArray(users) && users.some((u: { email: string }) => u.email === miabAdminEmail);
+          
+          if (!userExists) {
+            log('info', 'Admin user not found, creating via HTTP API');
+            
+            // Create user via HTTP API
+            const createUserUrl = `${baseUrl}/admin/mail/users/add`;
+            const params = new URLSearchParams();
+            params.append('email', miabAdminEmail);
+            params.append('password', adminPassword);
+            
+            const createOptions = {
+              method: 'POST',
+              headers: {
+                'Authorization': `Basic ${auth}`,
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              rejectUnauthorized: false,
+            };
+            
+            await new Promise<void>((resolve, reject) => {
+              const req = https.request(createUserUrl, createOptions, (res) => {
+                let data = '';
+                res.on('data', (chunk) => { data += chunk; });
+                res.on('end', () => {
+                  if (res.statusCode === 200) {
+                    log('info', 'Admin user created via HTTP API');
+                    resolve();
+                  } else {
+                    log('warn', 'Admin user creation via API failed, but continuing', { statusCode: res.statusCode, body: data });
+                    resolve(); // Continue anyway
+                  }
+                });
+              });
+              req.on('error', reject);
+              req.write(params.toString());
+              req.end();
+            });
+            
+            // Wait for Mail-in-a-Box to recognize the domain
+            await new Promise(resolve => setTimeout(resolve, 3000));
+          } else {
+            log('info', 'Admin user exists, domain should be managed');
+          }
+        } catch (error) {
+          log('warn', 'Could not ensure admin user via HTTP API, but continuing', { error: error instanceof Error ? error.message : String(error) });
+          // Continue anyway - domain might be managed or we'll get a clearer error from DNS API
+        }
+      } else {
+        log('info', 'Domain is already managed by Mail-in-a-Box');
+      }
+
+      // Normalize qname for Mail-in-a-Box API
+      // The API expects the subdomain part only (without the trailing domain)
+      // e.g., "2hpatmaxfyj2qykbxigz5gqq7qvi75oc._domainkey.emcnotary.com" -> "2hpatmaxfyj2qykbxigz5gqq7qvi75oc._domainkey"
+      // This matches the archive script behavior: local normalized_name=${name%.$DOMAIN_NAME}
+      const normalizeQname = (qname: string, domain: string): string => {
+        // Remove trailing dot if present
+        const normalizedQname = qname.endsWith('.') ? qname.slice(0, -1) : qname;
+        const normalizedDomain = domain.endsWith('.') ? domain.slice(0, -1) : domain;
+        
+        // If qname ends with domain, extract the subdomain part
+        if (normalizedQname.endsWith(`.${normalizedDomain}`)) {
+          return normalizedQname.slice(0, -(normalizedDomain.length + 1));
+        }
+        
+        // If qname equals domain (root), return empty string
+        if (normalizedQname === normalizedDomain) {
+          return '';
+        }
+        
+        // Otherwise return as-is (might be a subdomain of a different domain)
+        return normalizedQname;
+      };
+
+      const normalizedDkimName1 = normalizeQname(dkimName1, resolvedDomain);
+      const normalizedDkimName2 = normalizeQname(dkimName2, resolvedDomain);
+      const normalizedDkimName3 = normalizeQname(dkimName3, resolvedDomain);
+      const normalizedMailFromDomain = normalizeQname(mailFromDomain, resolvedDomain);
+
+      log('info', 'Normalized DNS qnames for API', { 
+        domain: resolvedDomain,
+        dkimName1Before: dkimName1,
+        dkimName1After: normalizedDkimName1,
+        mailFromDomainBefore: mailFromDomain,
+        mailFromDomainAfter: normalizedMailFromDomain
+      });
 
       // Strip priority from MX record (format: "10 mail.example.com" -> "mail.example.com")
       const mailFromMxValue = mailFromMx.split(/\s+/).slice(1).join(' ') || mailFromMx;

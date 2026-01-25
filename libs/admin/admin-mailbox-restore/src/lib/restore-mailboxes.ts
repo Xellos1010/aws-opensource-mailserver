@@ -22,6 +22,10 @@ export interface RestoreMailboxesOptions {
   users: Map<string, AggregatedUser>;
   /** Admin password (for admin@domain account) */
   adminPassword?: string;
+  /** Admin email (for HTTP API authentication) */
+  adminEmail?: string;
+  /** Base URL for HTTP API (e.g., https://box.domain.com) */
+  baseUrl?: string;
   /** Generate passwords for users */
   generatePasswords?: boolean;
   /** Skip user creation if user already exists */
@@ -76,37 +80,121 @@ async function checkUserExists(
 }
 
 /**
- * Create user on server
+ * Create user via HTTP API (fallback when SSH fails)
+ */
+async function createUserViaHttpApi(
+  baseUrl: string,
+  adminEmail: string,
+  adminPassword: string,
+  email: string,
+  password: string
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const auth = Buffer.from(`${adminEmail}:${adminPassword}`).toString('base64');
+    const params = new URLSearchParams();
+    params.append('email', email);
+    params.append('password', password);
+    
+    const response = await fetch(`${baseUrl}/admin/mail/users/add`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
+      // @ts-expect-error - allow self-signed certificates
+      rejectUnauthorized: false,
+    });
+    
+    const responseText = await response.text();
+    
+    if (response.status === 200) {
+      return { success: true, message: 'User created successfully via HTTP API' };
+    } else if (responseText.includes('already exists') || responseText.includes('already a mail user')) {
+      return { success: true, message: 'User already exists' };
+    } else {
+      return { success: false, message: `HTTP ${response.status}: ${responseText.substring(0, 200)}` };
+    }
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+/**
+ * Create user on server via HTTP API (primary method for proper webmail setup)
+ * Falls back to SSH/CLI only if HTTP API is unavailable
  */
 async function createUser(
   keyPath: string,
   instanceIp: string,
   email: string,
-  password: string
+  password: string,
+  retryAttempts: number = 3,
+  baseUrl?: string,
+  adminEmail?: string,
+  adminPassword?: string
 ): Promise<{ success: boolean; message: string }> {
-  // Fix API key permissions
-  await sshCommand(keyPath, instanceIp, 'sudo chmod 644 /var/lib/mailinabox/api.key 2>/dev/null && sudo chown user-data:user-data /var/lib/mailinabox/api.key 2>/dev/null || true');
-  
-  const checkCliPy = `test -f /opt/mailinabox/management/cli.py && echo "CLI_EXISTS" || echo "NOT_FOUND"`;
-  const cliCheck = await sshCommand(keyPath, instanceIp, checkCliPy);
-  
-  const emailB64 = Buffer.from(email).toString('base64');
-  const passwordB64 = Buffer.from(password).toString('base64');
-  
-  let createCommand: string;
-  if (cliCheck.output.includes('CLI_EXISTS')) {
-    createCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && EMAIL=\$(echo "${emailB64}" | base64 -d) && PASS=\$(echo "${passwordB64}" | base64 -d) && sudo -n -u user-data bash -c "cd /opt/mailinabox && /opt/mailinabox/management/cli.py user add \\\"\$EMAIL\\\" \\\"\$PASS\\\"" 2>&1'`;
-  } else {
-    createCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && EMAIL=\$(echo "${emailB64}" | base64 -d) && PASS=\$(echo "${passwordB64}" | base64 -d) && sudo -n -u user-data bash -c "cd /opt/mailinabox && /opt/mailinabox/management/users.py add \\\"\$EMAIL\\\" \\\"\$PASS\\\"" 2>&1'`;
+  // Prefer HTTP API as primary method (ensures proper webmail setup)
+  if (baseUrl && adminEmail && adminPassword) {
+    console.log(`   Using HTTP API for user creation (ensures proper webmail setup)...`);
+    return await createUserViaHttpApi(baseUrl, adminEmail, adminPassword, email, password);
   }
   
-  const result = await sshCommand(keyPath, instanceIp, createCommand);
+  // Fallback to SSH/CLI if HTTP API credentials not provided
+  console.log(`   HTTP API credentials not available, falling back to SSH/CLI...`);
+  let sshFailed = false;
   
-  if (result.success) {
-    return { success: true, message: 'User created successfully' };
-  } else {
-    return { success: false, message: result.output || result.error || 'Unknown error' };
+  try {
+    // Fix API key permissions
+    await sshCommand(keyPath, instanceIp, 'sudo chmod 644 /var/lib/mailinabox/api.key 2>/dev/null && sudo chown user-data:user-data /var/lib/mailinabox/api.key 2>/dev/null || true');
+    
+    const checkCliPy = `test -f /opt/mailinabox/management/cli.py && echo "CLI_EXISTS" || echo "NOT_FOUND"`;
+    const cliCheck = await sshCommand(keyPath, instanceIp, checkCliPy);
+    
+    const emailB64 = Buffer.from(email).toString('base64');
+    const passwordB64 = Buffer.from(password).toString('base64');
+    
+    // Retry logic matching bootstrap script
+    for (let retryCount = 0; retryCount < retryAttempts; retryCount++) {
+      // Add delay between retries (exponential backoff)
+      if (retryCount > 0) {
+        const backoffSeconds = Math.pow(2, retryCount - 1);
+        console.log(`   Retrying user creation (attempt ${retryCount + 1}/${retryAttempts}) after ${backoffSeconds}s delay...`);
+        await new Promise(resolve => setTimeout(resolve, backoffSeconds * 1000));
+      }
+      
+      let createCommand: string;
+      if (cliCheck.output.includes('CLI_EXISTS')) {
+        // Use cli.py (v73+) - matching bootstrap script line 463
+        createCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && EMAIL=\$(echo "${emailB64}" | base64 -d) && PASS=\$(echo "${passwordB64}" | base64 -d) && sudo -n -u user-data bash -c "cd /opt/mailinabox && /opt/mailinabox/management/cli.py user add \\\"\$EMAIL\\\" \\\"\$PASS\\\"" 2>&1'`;
+      } else {
+        // Use users.py (older versions) - matching bootstrap script line 476
+        createCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && EMAIL=\$(echo "${emailB64}" | base64 -d) && PASS=\$(echo "${passwordB64}" | base64 -d) && sudo -n -u user-data bash -c "cd /opt/mailinabox && /opt/mailinabox/management/users.py add \\\"\$EMAIL\\\" \\\"\$PASS\\\"" 2>&1'`;
+      }
+      
+      const result = await sshCommand(keyPath, instanceIp, createCommand);
+      
+      if (result.success) {
+        return { success: true, message: 'User created successfully via SSH/CLI' };
+      }
+      
+      // If connection refused, mark SSH as failed
+      if (result.error?.includes('Connection refused') || result.error?.includes('connect to host')) {
+        console.log(`   SSH connection refused...`);
+        sshFailed = true;
+        break;
+      }
+      
+      // If user already exists, that's success
+      if (result.output?.includes('already exists') || result.output?.includes('already a mail user')) {
+        return { success: true, message: 'User already exists' };
+      }
+    }
+  } catch (error) {
+    sshFailed = true;
   }
+  
+  return { success: false, message: `Failed after ${retryAttempts} SSH attempts${sshFailed ? ' (SSH connection refused)' : ''}` };
 }
 
 /**
@@ -265,13 +353,23 @@ export async function restoreMailboxes(
     domain,
     users,
     adminPassword,
+    adminEmail = `admin@${domain}`,
+    baseUrl = `https://box.${domain}`,
     generatePasswords = true,
     skipExistingUsers = true,
     skipExistingEmails = true,
     dryRun = false,
   } = options;
   
-  for (const [email, user] of users.entries()) {
+  // Process users sequentially with delays to avoid SSH connection limits
+  const userEntries = Array.from(users.entries());
+  for (let i = 0; i < userEntries.length; i++) {
+    const [email, user] = userEntries[i];
+    
+    // Add delay between users (except first one)
+    if (i > 0) {
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    }
     const result: RestoreResult = {
       email,
       userCreated: false,
@@ -302,8 +400,17 @@ export async function restoreMailboxes(
           continue;
         }
         
-        // Create user
-        const createResult = await createUser(keyPath, instanceIp, email, password);
+        // Create user (with retry logic matching bootstrap script, HTTP API fallback)
+        const createResult = await createUser(
+          keyPath, 
+          instanceIp, 
+          email, 
+          password, 
+          3,
+          baseUrl,
+          adminEmail,
+          adminPassword
+        );
         result.userCreated = createResult.success;
         result.userMessage = createResult.message;
         
@@ -312,6 +419,9 @@ export async function restoreMailboxes(
           results.set(email, result);
           continue;
         }
+        
+        // Add small delay after user creation to avoid connection limits
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
       
       // Upload emails

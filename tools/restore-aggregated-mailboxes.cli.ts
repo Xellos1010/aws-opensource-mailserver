@@ -108,8 +108,9 @@ async function restoreAggregatedMailboxes(options: RestoreAggregatedOptions): Pr
     console.log(`   Total emails: ${aggregateResult.totalEmails}`);
     console.log(`   Total size: ${(aggregateResult.totalSize / 1024 / 1024).toFixed(2)} MB\n`);
 
-    // Get admin password if needed
+    // Get admin credentials if needed
     let adminPassword: string | undefined = options.adminPassword;
+    let adminEmail: string | undefined;
     if (!adminPassword) {
       const credentials = await getAdminCredentials({
         appPath,
@@ -118,7 +119,13 @@ async function restoreAggregatedMailboxes(options: RestoreAggregatedOptions): Pr
         profile,
       });
       adminPassword = credentials.password;
+      adminEmail = credentials.email;
+    } else {
+      adminEmail = `admin@${domain}`;
     }
+
+    const hostname = `box.${domain}`;
+    const baseUrl = `https://${hostname}`;
 
     // Restore mailboxes
     console.log('📋 Step 4: Restoring mailboxes...\n');
@@ -128,6 +135,8 @@ async function restoreAggregatedMailboxes(options: RestoreAggregatedOptions): Pr
       domain: domain!,
       users: aggregateResult.users,
       adminPassword,
+      adminEmail,
+      baseUrl,
       generatePasswords: options.generatePasswords !== false,
       skipExistingUsers: options.skipExistingUsers !== false,
       skipExistingEmails: options.skipExistingEmails !== false,

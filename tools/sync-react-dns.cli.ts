@@ -225,20 +225,59 @@ async function syncDns(options: SyncDnsOptions): Promise<void> {
 
   console.log('🌐 Sync React DNS Records');
   console.log(`   Domain: ${resolvedDomain}`);
-  console.log(`   Stack: ${stackName}`);
+  console.log(`   React Stack: ${options.stackName || process.env.STACK_NAME || 'emcnotary-react-webserver'}`);
   console.log(`   Backup File: ${backupFile}`);
   console.log(`   Region: ${region}`);
   console.log(`   Profile: ${profile}`);
   console.log(`   Dry Run: ${dryRun ? 'YES' : 'NO'}\n`);
 
   try {
-    // Step 1: Get Elastic IP from CloudFormation stack
-    console.log('📋 Step 1: Getting Elastic IP from CloudFormation stack...');
-    const elasticIp = await getStackOutput(stackName, 'ElasticIPAddress', region, profile);
-    console.log(`✅ Found Elastic IP: ${elasticIp}\n`);
+    // Step 1: Get Elastic IP from React webserver CloudFormation stack
+    console.log('📋 Step 1: Getting Elastic IP from React webserver stack...');
+    const reactStackName = options.stackName || process.env.STACK_NAME || 'emcnotary-react-webserver';
+    let elasticIp: string;
+    try {
+      // Try ElasticIPAddress first (if using Elastic IP)
+      elasticIp = await getStackOutput(reactStackName, 'ElasticIPAddress', region, profile);
+    } catch (error) {
+      // Fallback to PublicIpAddress if ElasticIPAddress doesn't exist
+      try {
+        elasticIp = await getStackOutput(reactStackName, 'PublicIpAddress', region, profile);
+      } catch (fallbackError) {
+        throw new Error(
+          `Could not find ElasticIPAddress or PublicIpAddress in stack ${reactStackName}. ` +
+          `Error: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    }
+    console.log(`✅ Found React webserver IP: ${elasticIp}\n`);
 
-    // Step 2: Read backup file
-    console.log('📋 Step 2: Reading DNS backup file...');
+    // Step 2: Get Mail-in-a-Box instance IP for API calls
+    console.log('📋 Step 2: Getting Mail-in-a-Box instance IP...');
+    const instanceStackName = resolveStackName(domain, appPath, undefined, 'instance');
+    let instanceIp: string;
+    try {
+      // Try various output keys that might contain the instance IP
+      instanceIp = await getStackOutput(instanceStackName, 'InstancePublicIp', region, profile);
+    } catch (error) {
+      try {
+        instanceIp = await getStackOutput(instanceStackName, 'PublicIp', region, profile);
+      } catch (fallbackError1) {
+        try {
+          instanceIp = await getStackOutput(instanceStackName, 'ElasticIPAddress', region, profile);
+        } catch (fallbackError2) {
+          throw new Error(
+            `Could not find instance IP in stack ${instanceStackName}. ` +
+            `Tried: InstancePublicIp, PublicIp, ElasticIPAddress. ` +
+            `Error: ${error instanceof Error ? error.message : String(error)}`
+          );
+        }
+      }
+    }
+    console.log(`✅ Found Mail-in-a-Box instance IP: ${instanceIp}\n`);
+
+    // Step 3: Read backup file
+    console.log('📋 Step 3: Reading DNS backup file...');
     if (!fs.existsSync(backupFile)) {
       throw new Error(`Backup file not found: ${backupFile}`);
     }
@@ -252,8 +291,8 @@ async function syncDns(options: SyncDnsOptions): Promise<void> {
 
     console.log(`✅ Loaded ${backupRecords.length} DNS records from backup\n`);
 
-    // Step 3: Filter and update A records
-    console.log('📋 Step 3: Processing DNS records...');
+    // Step 4: Filter and update A records
+    console.log('📋 Step 4: Processing DNS records...');
     const aRecords = backupRecords.filter((r) => r.rtype === 'A');
     const cnameRecords = backupRecords.filter((r) => r.rtype === 'CNAME');
 
@@ -263,8 +302,8 @@ async function syncDns(options: SyncDnsOptions): Promise<void> {
       console.log(`✅ Found ${aRecords.length} A record(s) to process\n`);
     }
 
-    // Step 4: Get admin credentials for Mail-in-a-Box API
-    console.log('📋 Step 4: Getting Mail-in-a-Box admin credentials...');
+    // Step 5: Get admin credentials for Mail-in-a-Box API
+    console.log('📋 Step 5: Getting Mail-in-a-Box admin credentials...');
     const credentials = await getAdminCredentials({
       appPath,
       domain,
@@ -272,10 +311,9 @@ async function syncDns(options: SyncDnsOptions): Promise<void> {
       profile,
     });
 
-    // Use IP address directly since DNS may not be configured yet
-    const instanceIp = await getStackOutput(stackName, 'ElasticIPAddress', region, profile);
+    // Use Mail-in-a-Box instance IP for API calls (not React webserver IP)
     const baseUrl = `https://${instanceIp}`;
-    console.log(`✅ Admin credentials ready (using IP: ${instanceIp})\n`);
+    console.log(`✅ Admin credentials ready (using Mail-in-a-Box IP: ${instanceIp})\n`);
 
     if (dryRun) {
       console.log('\n⚠️  DRY RUN MODE - No changes will be applied\n');

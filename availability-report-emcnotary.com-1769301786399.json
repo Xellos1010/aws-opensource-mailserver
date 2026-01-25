@@ -1,0 +1,79 @@
+{
+  "timestamp": "2026-01-25T00:42:56.031Z",
+  "domain": "emcnotary.com",
+  "instanceId": "i-0239dde3de6782b2e",
+  "instanceIp": "3.229.143.6",
+  "hostname": "box.emcnotary.com",
+  "services": [
+    {
+      "name": "nginx",
+      "status": "running",
+      "details": "active"
+    },
+    {
+      "name": "dovecot",
+      "status": "running",
+      "details": "active"
+    },
+    {
+      "name": "postfix",
+      "status": "running",
+      "details": "active"
+    },
+    {
+      "name": "php8.0-fpm",
+      "status": "running",
+      "details": "active"
+    },
+    {
+      "name": "nsd",
+      "status": "running",
+      "details": "active"
+    },
+    {
+      "name": "fail2ban",
+      "status": "running",
+      "details": "active"
+    }
+  ],
+  "healthChecks": [
+    {
+      "name": "HTTP Web Server",
+      "status": "healthy",
+      "responseTime": 98,
+      "details": "HTTP 301 (98ms)"
+    },
+    {
+      "name": "HTTPS Web Server",
+      "status": "healthy",
+      "responseTime": 182,
+      "details": "HTTPS 200 (182ms)"
+    },
+    {
+      "name": "Webmail (Roundcube)",
+      "status": "healthy",
+      "responseTime": 283,
+      "details": "HTTP 200 (283ms)"
+    },
+    {
+      "name": "Admin Panel",
+      "status": "healthy",
+      "responseTime": 163,
+      "details": "HTTP 200 (163ms)"
+    },
+    {
+      "name": "DNS Resolution",
+      "status": "healthy",
+      "responseTime": 34,
+      "details": "Resolved to 3.229.143.6 (34ms)"
+    }
+  ],
+  "summary": {
+    "overall": "online",
+    "servicesRunning": 6,
+    "servicesTotal": 6,
+    "healthChecksPassing": 5,
+    "healthChecksTotal": 5
+  },
+  "ec2Status": "running"
+}
