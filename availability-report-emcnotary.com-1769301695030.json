@@ -1,0 +1,48 @@
+{
+  "timestamp": "2026-01-25T00:41:28.126Z",
+  "domain": "emcnotary.com",
+  "instanceId": "i-0239dde3de6782b2e",
+  "instanceIp": "3.229.143.6",
+  "hostname": "box.emcnotary.com",
+  "services": [],
+  "healthChecks": [
+    {
+      "name": "HTTP Web Server",
+      "status": "healthy",
+      "responseTime": 64,
+      "details": "HTTP 301 (64ms)"
+    },
+    {
+      "name": "HTTPS Web Server",
+      "status": "healthy",
+      "responseTime": 102,
+      "details": "HTTPS 200 (102ms)"
+    },
+    {
+      "name": "Webmail (Roundcube)",
+      "status": "healthy",
+      "responseTime": 1063,
+      "details": "HTTP 200 (1063ms)"
+    },
+    {
+      "name": "Admin Panel",
+      "status": "healthy",
+      "responseTime": 159,
+      "details": "HTTP 200 (159ms)"
+    },
+    {
+      "name": "DNS Resolution",
+      "status": "healthy",
+      "responseTime": 32,
+      "details": "Resolved to 3.229.143.6 (32ms)"
+    }
+  ],
+  "summary": {
+    "overall": "online",
+    "servicesRunning": 0,
+    "servicesTotal": 0,
+    "healthChecksPassing": 5,
+    "healthChecksTotal": 5
+  },
+  "ec2Status": "running"
+}

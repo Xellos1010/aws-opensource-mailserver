@@ -1,0 +1,23 @@
+[25-Jan-2026 00:00:02] NOTICE: error log file re-opened
+[25-Jan-2026 01:00:05] NOTICE: Terminating ...
+[25-Jan-2026 01:00:05] NOTICE: exiting, bye-bye!
+[25-Jan-2026 01:00:22] NOTICE: fpm is running, pid 115499
+[25-Jan-2026 01:00:22] NOTICE: ready to handle connections
+[25-Jan-2026 01:00:22] NOTICE: systemd monitor interval set to 10000ms
+[25-Jan-2026 03:27:45] NOTICE: Reloading in progress ...
+[25-Jan-2026 03:27:45] NOTICE: reloading: execvp("/usr/sbin/php-fpm8.0", {"/usr/sbin/php-fpm8.0", "--nodaemonize", "--fpm-config", "/etc/php/8.0/fpm/php-fpm.conf"})
+[25-Jan-2026 03:27:45] NOTICE: using inherited socket fd=8, "/run/php/php8.0-fpm.sock"
+[25-Jan-2026 03:27:45] NOTICE: fpm is running, pid 115499
+[25-Jan-2026 03:27:45] NOTICE: ready to handle connections
+[25-Jan-2026 03:27:45] NOTICE: systemd monitor interval set to 10000ms
+[25-Jan-2026 03:30:03] NOTICE: Terminating ...
+[25-Jan-2026 03:30:03] NOTICE: exiting, bye-bye!
+[25-Jan-2026 03:30:03] NOTICE: fpm is running, pid 133138
+[25-Jan-2026 03:30:03] NOTICE: ready to handle connections
+[25-Jan-2026 03:30:03] NOTICE: systemd monitor interval set to 10000ms
+[25-Jan-2026 03:36:15] NOTICE: Reloading in progress ...
+[25-Jan-2026 03:36:15] NOTICE: reloading: execvp("/usr/sbin/php-fpm8.0", {"/usr/sbin/php-fpm8.0", "--nodaemonize", "--fpm-config", "/etc/php/8.0/fpm/php-fpm.conf"})
+[25-Jan-2026 03:36:15] NOTICE: using inherited socket fd=8, "/run/php/php8.0-fpm.sock"
+[25-Jan-2026 03:36:15] NOTICE: fpm is running, pid 133138
+[25-Jan-2026 03:36:15] NOTICE: ready to handle connections
+[25-Jan-2026 03:36:15] NOTICE: systemd monitor interval set to 10000ms

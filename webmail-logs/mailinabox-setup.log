@@ -1,0 +1,400 @@
+++ '[' 0 '!=' 0 ']'
+++ rm -f /tmp/tmp.xJiI3zol0N
+++ cat
+++ chown munin /var/log/munin/munin-cgi-html.log
+++ chown munin /var/log/munin/munin-cgi-graph.log
+++ tools/editconf.py /etc/munin/munin-node.conf -s host_name=box.emcnotary.com log_level=1
+++ munin-node-configure --shell --remove-also
+++ sh
+++ /bin/true
+++ find /etc/munin/plugins/ -lname /usr/share/munin/plugins/ntp_ -print0
+++ xargs -0 /bin/rm -f
++++ find /etc/munin/plugins/ '(' -lname /usr/share/munin/plugins/if_ -o -lname /usr/share/munin/plugins/if_err_ -o -lname /usr/share/munin/plugins/bonding_err_ ')'
+++ for f in $(find /etc/munin/plugins/ \( -lname /usr/share/munin/plugins/if_ -o -lname /usr/share/munin/plugins/if_err_ -o -lname /usr/share/munin/plugins/bonding_err_ \))
++++ echo /etc/munin/plugins/if_eth0
++++ sed 's/.*_//'
+++ IF=eth0
+++ grep -qFx up /sys/class/net/eth0/operstate
+++ for f in $(find /etc/munin/plugins/ \( -lname /usr/share/munin/plugins/if_ -o -lname /usr/share/munin/plugins/if_err_ -o -lname /usr/share/munin/plugins/bonding_err_ \))
++++ echo /etc/munin/plugins/if_err_eth0
++++ sed 's/.*_//'
+++ IF=eth0
+++ grep -qFx up /sys/class/net/eth0/operstate
+++ mkdir -p /var/lib/munin-node/plugin-state/
+++ ln -sf /opt/mailinabox/management/munin_start.sh /usr/local/lib/mailinabox/munin_start.sh
+++ chmod 0744 /usr/local/lib/mailinabox/munin_start.sh
+++ cp --remove-destination conf/munin.service /lib/systemd/system/munin.service
+++ hide_output systemctl link -f /lib/systemd/system/munin.service
++++ mktemp
+++ OUTPUT=/tmp/tmp.A2VKNBoS6S
+++ set +e
+++ systemctl link -f /lib/systemd/system/munin.service
+++ E=0
+++ set -e
+++ '[' 0 '!=' 0 ']'
+++ rm -f /tmp/tmp.A2VKNBoS6S
+++ hide_output systemctl daemon-reload
++++ mktemp
+++ OUTPUT=/tmp/tmp.N2g9z6eR3A
+++ set +e
+++ systemctl daemon-reload
+++ E=0
+++ set -e
+++ '[' 0 '!=' 0 ']'
+++ rm -f /tmp/tmp.N2g9z6eR3A
+++ hide_output systemctl unmask munin.service
++++ mktemp
+++ OUTPUT=/tmp/tmp.uLUZYof7k2
+++ set +e
+++ systemctl unmask munin.service
+++ E=0
+++ set -e
+++ '[' 0 '!=' 0 ']'
+++ rm -f /tmp/tmp.uLUZYof7k2
+++ hide_output systemctl enable munin.service
++++ mktemp
+++ OUTPUT=/tmp/tmp.bSQsVzDPAB
+++ set +e
+++ systemctl enable munin.service
+++ E=0
+++ set -e
+++ '[' 0 '!=' 0 ']'
+++ rm -f /tmp/tmp.bSQsVzDPAB
+++ restart_service munin
+++ hide_output service munin restart
++++ mktemp
+++ OUTPUT=/tmp/tmp.T9enleicnQ
+++ set +e
+++ service munin restart
+++ E=0
+++ set -e
+++ '[' 0 '!=' 0 ']'
+++ rm -f /tmp/tmp.T9enleicnQ
+++ restart_service munin-node
+++ hide_output service munin-node restart
++++ mktemp
+++ OUTPUT=/tmp/tmp.sztsuLVfAL
+++ set +e
+++ service munin-node restart
+++ E=0
+++ set -e
+++ '[' 0 '!=' 0 ']'
+++ rm -f /tmp/tmp.sztsuLVfAL
+++ '[' '!' -f /var/run/munin/munin-update.lock ']'
+++ sudo -H -u munin munin-cron
+sudo: unable to resolve host box.emcnotary.com: Temporary failure in name resolution
++ nc -z -w 4 127.0.0.1 10222
++ tools/dns_update
+updated DNS: box.emcnotary.com
++ tools/web_update
+web updated
++ restart_service fail2ban
++ hide_output service fail2ban restart
+++ mktemp
++ OUTPUT=/tmp/tmp.HkHTsyItBj
++ set +e
++ service fail2ban restart
++ E=0
++ set -e
++ '[' 0 '!=' 0 ']'
++ rm -f /tmp/tmp.HkHTsyItBj
++ source setup/firstuser.sh
++++ management/cli.py user
+++ '[' -z '' ']'
+++ '[' -z '' ']'
+++ '[' -z 1 ']'
+++ EMAIL_ADDR=me@box.emcnotary.com
+++ EMAIL_PW=12345678
+++ echo
+
+++ echo 'Creating a new administrative mail account for me@box.emcnotary.com with password 12345678.'
+Creating a new administrative mail account for me@box.emcnotary.com with password 12345678.
+++ echo
+
+++ management/cli.py user add me@box.emcnotary.com 12345678
+mail user added
+updated DNS: box.emcnotary.com
+web updated
+
+++ hide_output management/cli.py user make-admin me@box.emcnotary.com
++++ mktemp
+++ OUTPUT=/tmp/tmp.Lgml6JeMIX
+++ set +e
+++ management/cli.py user make-admin me@box.emcnotary.com
+++ E=0
+++ set -e
+++ '[' 0 '!=' 0 ']'
+++ rm -f /tmp/tmp.Lgml6JeMIX
+++ management/cli.py alias add administrator@box.emcnotary.com me@box.emcnotary.com
++ '[' '!' -d /home/user-data/ssl/lets_encrypt/accounts/acme-v02.api.letsencrypt.org/ ']'
++ echo
+
++ echo -----------------------------------------------
+-----------------------------------------------
++ echo 'Mail-in-a-Box uses Let'\''s Encrypt to provision free SSL/TLS certificates'
+Mail-in-a-Box uses Let's Encrypt to provision free SSL/TLS certificates
++ echo 'to enable HTTPS connections to your box. We'\''re automatically'
+to enable HTTPS connections to your box. We're automatically
++ echo 'agreeing you to their subscriber agreement. See https://letsencrypt.org.'
+agreeing you to their subscriber agreement. See https://letsencrypt.org.
++ echo
+
++ certbot register --register-unsafely-without-email --agree-tos --config-dir /home/user-data/ssl/lets_encrypt
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Account registered.
++ echo
+
++ echo -----------------------------------------------
+-----------------------------------------------
++ echo
+
++ echo 'Your Mail-in-a-Box is running.'
+Your Mail-in-a-Box is running.
++ echo
+
++ echo 'Please log in to the control panel for further instructions at:'
+Please log in to the control panel for further instructions at:
++ echo
+
++ management/status_checks.py --check-primary-hostname
++ echo https://3.229.143.6/admin
+https://3.229.143.6/admin
++ echo
+
++ echo 'You will be alerted that the website has an invalid certificate. Check that'
+You will be alerted that the website has an invalid certificate. Check that
++ echo 'the certificate fingerprint matches:'
+the certificate fingerprint matches:
++ echo
+
++ openssl x509 -in /home/user-data/ssl/ssl_certificate.pem -noout -fingerprint -sha256
++ sed 's/SHA256 Fingerprint=//i'
+BD:D8:AC:D2:D5:D0:4D:FC:17:86:11:9C:3F:E9:EC:80:60:89:EC:1C:6B:4E:5A:5C:38:A3:DC:96:B9:A4:72:95
++ echo
+
++ echo 'Then you can confirm the security exception and continue.'
+Then you can confirm the security exception and continue.
++ echo
+
++ echo 'Mail-in-a-Box installer completed successfully'
+Mail-in-a-Box installer completed successfully
++ touch /home/user-data/.miab_setup_complete
++ chown user-data:user-data /home/user-data/.miab_setup_complete
++ rm -f /home/user-data/.miab_installing
++ '[' -f /home/user-data/.miab_setup_complete ']'
++ ADMIN_USER_MARKER=/home/user-data/.admin_user_created
++ '[' -f /home/user-data/.admin_user_created ']'
++ echo 'Creating admin user account...'
+Creating admin user account...
++ ADMIN_PASSWORD_PARAM=/MailInABoxAdminPassword-emcnotary-com-mailserver-instance
++ EMAIL_ADDR=admin@emcnotary.com
++ EMAIL_PW=
++ aws ssm get-parameter --region us-east-1 --name /MailInABoxAdminPassword-emcnotary-com-mailserver-instance --with-decryption
+++ aws ssm get-parameter --region us-east-1 --name /MailInABoxAdminPassword-emcnotary-com-mailserver-instance --with-decryption --query Parameter.Value --output text
++ EMAIL_PW=933QI0eR6cHSmmNQ
++ '[' -n 933QI0eR6cHSmmNQ ']'
++ API_KEY_PATH=/var/lib/mailinabox/api.key
++ MAX_WAIT=300
++ CHECK_INTERVAL=10
++ WAITED=0
++ API_KEY_AVAILABLE=0
++ echo 'Waiting for API key generation...'
+Waiting for API key generation...
++ '[' 0 -lt 300 ']'
++ '[' -f /var/lib/mailinabox/api.key ']'
++ '[' -r /var/lib/mailinabox/api.key ']'
++ API_KEY_AVAILABLE=1
++ echo 'API key found after 0 seconds'
+API key found after 0 seconds
++ break
++ '[' 1 -eq 0 ']'
++ USER_EXISTS=0
++ RETRY_COUNT=0
++ MAX_RETRIES=3
++ '[' 0 -lt 3 ']'
++ '[' -f /opt/mailinabox/management/cli.py ']'
++ cd /opt/mailinabox
++ git config --global --add safe.directory /opt/mailinabox
++ true
++ sudo -n -u user-data /opt/mailinabox/management/cli.py user
++ grep -qi admin@emcnotary.com
++ '[' 0 -eq 0 ']'
++ '[' -f /opt/mailinabox/management/users.py ']'
++ '[' 0 -eq 0 ']'
++ echo 'Creating admin user: admin@emcnotary.com (attempt 1/3)'
+Creating admin user: admin@emcnotary.com (attempt 1/3)
++ '[' -f /opt/mailinabox/management/cli.py ']'
++ cd /opt/mailinabox
++ git config --global --add safe.directory /opt/mailinabox
++ true
++ sudo -n -u user-data bash -c 'cd /opt/mailinabox && /opt/mailinabox/management/cli.py user add "admin@emcnotary.com" "933QI0eR6cHSmmNQ" admin'
+Traceback (most recent call last):
+  File "/opt/mailinabox/management/cli.py", line 102, in <module>
+    print(mgmt("/mail/users/add", { "email": email, "password": pw }))
+  File "/opt/mailinabox/management/cli.py", line 16, in mgmt
+    setup_key_auth(mgmt_uri)
+  File "/opt/mailinabox/management/cli.py", line 49, in setup_key_auth
+    with open('/var/lib/mailinabox/api.key', encoding='utf-8') as f:
+PermissionError: [Errno 13] Permission denied: '/var/lib/mailinabox/api.key'
++ echo 'Warning: cli.py user creation failed, will retry...'
+Warning: cli.py user creation failed, will retry...
++ '[' 0 -eq 0 ']'
++ '[' -f /opt/mailinabox/management/users.py ']'
++ RETRY_COUNT=1
++ '[' 1 -lt 3 ']'
++ BACKOFF=2
++ echo 'Waiting 2 seconds before retry...'
+Waiting 2 seconds before retry...
++ sleep 2
++ '[' 1 -lt 3 ']'
++ '[' -f /opt/mailinabox/management/cli.py ']'
++ cd /opt/mailinabox
++ git config --global --add safe.directory /opt/mailinabox
++ true
++ sudo -n -u user-data /opt/mailinabox/management/cli.py user
++ grep -qi admin@emcnotary.com
++ '[' 0 -eq 0 ']'
++ '[' -f /opt/mailinabox/management/users.py ']'
++ '[' 0 -eq 0 ']'
++ echo 'Creating admin user: admin@emcnotary.com (attempt 2/3)'
+Creating admin user: admin@emcnotary.com (attempt 2/3)
++ '[' -f /opt/mailinabox/management/cli.py ']'
++ cd /opt/mailinabox
++ git config --global --add safe.directory /opt/mailinabox
++ true
++ sudo -n -u user-data bash -c 'cd /opt/mailinabox && /opt/mailinabox/management/cli.py user add "admin@emcnotary.com" "933QI0eR6cHSmmNQ" admin'
+Traceback (most recent call last):
+  File "/opt/mailinabox/management/cli.py", line 102, in <module>
+    print(mgmt("/mail/users/add", { "email": email, "password": pw }))
+  File "/opt/mailinabox/management/cli.py", line 16, in mgmt
+    setup_key_auth(mgmt_uri)
+  File "/opt/mailinabox/management/cli.py", line 49, in setup_key_auth
+    with open('/var/lib/mailinabox/api.key', encoding='utf-8') as f:
+PermissionError: [Errno 13] Permission denied: '/var/lib/mailinabox/api.key'
++ echo 'Warning: cli.py user creation failed, will retry...'
+Warning: cli.py user creation failed, will retry...
++ '[' 0 -eq 0 ']'
++ '[' -f /opt/mailinabox/management/users.py ']'
++ RETRY_COUNT=2
++ '[' 2 -lt 3 ']'
++ BACKOFF=4
++ echo 'Waiting 4 seconds before retry...'
+Waiting 4 seconds before retry...
++ sleep 4
++ '[' 2 -lt 3 ']'
++ '[' -f /opt/mailinabox/management/cli.py ']'
++ cd /opt/mailinabox
++ git config --global --add safe.directory /opt/mailinabox
++ true
++ sudo -n -u user-data /opt/mailinabox/management/cli.py user
++ grep -qi admin@emcnotary.com
++ '[' 0 -eq 0 ']'
++ '[' -f /opt/mailinabox/management/users.py ']'
++ '[' 0 -eq 0 ']'
++ echo 'Creating admin user: admin@emcnotary.com (attempt 3/3)'
+Creating admin user: admin@emcnotary.com (attempt 3/3)
++ '[' -f /opt/mailinabox/management/cli.py ']'
++ cd /opt/mailinabox
++ git config --global --add safe.directory /opt/mailinabox
++ true
++ sudo -n -u user-data bash -c 'cd /opt/mailinabox && /opt/mailinabox/management/cli.py user add "admin@emcnotary.com" "933QI0eR6cHSmmNQ" admin'
+Traceback (most recent call last):
+  File "/opt/mailinabox/management/cli.py", line 102, in <module>
+    print(mgmt("/mail/users/add", { "email": email, "password": pw }))
+  File "/opt/mailinabox/management/cli.py", line 16, in mgmt
+    setup_key_auth(mgmt_uri)
+  File "/opt/mailinabox/management/cli.py", line 49, in setup_key_auth
+    with open('/var/lib/mailinabox/api.key', encoding='utf-8') as f:
+PermissionError: [Errno 13] Permission denied: '/var/lib/mailinabox/api.key'
++ echo 'Warning: cli.py user creation failed, will retry...'
+Warning: cli.py user creation failed, will retry...
++ '[' 0 -eq 0 ']'
++ '[' -f /opt/mailinabox/management/users.py ']'
++ RETRY_COUNT=3
++ '[' 3 -lt 3 ']'
++ '[' 3 -lt 3 ']'
++ '[' 0 -eq 1 ']'
++ echo 'Warning: Failed to create admin user after 3 attempts'
+Warning: Failed to create admin user after 3 attempts
++ echo 'This is non-fatal - user can be created manually later'
+This is non-fatal - user can be created manually later
++ SES_RELAY_MARKER=/home/user-data/.ses_relay_configured
++ [[ true == \t\r\u\e ]]
++ '[' -f /home/user-data/.ses_relay_configured ']'
++ echo 'Configuring SES SMTP relay...'
+Configuring SES SMTP relay...
++ SMTP_USERNAME_PARAM=/smtp-username-emcnotary-com-mailserver-instance
++ SMTP_PASSWORD_PARAM=/smtp-password-emcnotary-com-mailserver-instance
++ aws ssm get-parameter --region us-east-1 --name /smtp-username-emcnotary-com-mailserver-instance --with-decryption
++ echo 'Warning: SES SMTP credentials not found in SSM. Skipping relay configuration.'
+Warning: SES SMTP credentials not found in SSM. Skipping relay configuration.
+++ ip route list
+++ awk '/default/ {print $5; exit}'
++ IFACE=eth0
++ NETPLAN_FILE=/etc/netplan/99-custom-dns.yaml
++ '[' '!' -f /etc/netplan/99-custom-dns.yaml ']'
++ echo 'Configuring DNS resolver...'
+Configuring DNS resolver...
++ cat
++ netplan apply
++ DUPLICITY_MARKER=/root/.duplicity_installed
++ '[' -f /root/.duplicity_installed ']'
++ command -v duplicity
++ duplicity --version
++ grep -q duplicity
++ touch /root/.duplicity_installed
++ BACKUP_MARKER=/home/user-data/.initial_backup_complete
++ '[' -f /opt/mailinabox/management/backup.py ']'
++ '[' '!' -f /home/user-data/.initial_backup_complete ']'
++ echo 'Running initial backup...'
+Running initial backup...
++ /opt/mailinabox/management/backup.py
++ touch /home/user-data/.initial_backup_complete
++ chown user-data:user-data /home/user-data/.initial_backup_complete
++ echo 'Initial backup completed successfully'
+Initial backup completed successfully
+++ curl -s http://169.254.169.254/latest/meta-data/instance-id
++ IID=i-0239dde3de6782b2e
++ CLEANUP_DIR=/var/lib/cloud/instances/i-0239dde3de6782b2e
++ '[' -d /var/lib/cloud/instances/i-0239dde3de6782b2e ']'
++ echo 'Cleaning up cloud-init sensitive files...'
+Cleaning up cloud-init sensitive files...
++ for f in "${CLEANUP_DIR}"/scripts/part-00* "${CLEANUP_DIR}"/user-data.txt* "${CLEANUP_DIR}"/obj.pkl
++ '[' -e /var/lib/cloud/instances/i-0239dde3de6782b2e/scripts/part-001 ']'
++ rm -f /var/lib/cloud/instances/i-0239dde3de6782b2e/scripts/part-001
++ for f in "${CLEANUP_DIR}"/scripts/part-00* "${CLEANUP_DIR}"/user-data.txt* "${CLEANUP_DIR}"/obj.pkl
++ '[' -e /var/lib/cloud/instances/i-0239dde3de6782b2e/user-data.txt ']'
++ rm -f /var/lib/cloud/instances/i-0239dde3de6782b2e/user-data.txt
++ for f in "${CLEANUP_DIR}"/scripts/part-00* "${CLEANUP_DIR}"/user-data.txt* "${CLEANUP_DIR}"/obj.pkl
++ '[' -e /var/lib/cloud/instances/i-0239dde3de6782b2e/user-data.txt.i ']'
++ rm -f /var/lib/cloud/instances/i-0239dde3de6782b2e/user-data.txt.i
++ for f in "${CLEANUP_DIR}"/scripts/part-00* "${CLEANUP_DIR}"/user-data.txt* "${CLEANUP_DIR}"/obj.pkl
++ '[' -e /var/lib/cloud/instances/i-0239dde3de6782b2e/obj.pkl ']'
++ rm -f /var/lib/cloud/instances/i-0239dde3de6782b2e/obj.pkl
++ BOOTSTRAP_COMPLETE_MARKER=/home/user-data/.bootstrap_complete
++ '[' '!' -f /home/user-data/.bootstrap_complete ']'
++ echo 'Creating bootstrap completion marker...'
+Creating bootstrap completion marker...
++ touch /home/user-data/.bootstrap_complete
++ chown user-data:user-data /home/user-data/.bootstrap_complete
+++ date
++ echo 'Bootstrap completed at: Sun Jan 11 03:42:39 UTC 2026'
++ chown user-data:user-data /home/user-data/.bootstrap_complete
++ [[ false == \t\r\u\e ]]
++ echo ==========================================
+==========================================
++ echo 'MIAB setup complete for box.emcnotary.com'
+MIAB setup complete for box.emcnotary.com
+++ date
++ echo 'Completed at: Sun Jan 11 03:42:39 UTC 2026'
+Completed at: Sun Jan 11 03:42:39 UTC 2026
++ echo ==========================================
+==========================================
++ echo ''
+
++ echo '✅ Bootstrap completed successfully'
+✅ Bootstrap completed successfully
++ echo '   All operations completed without errors'
+   All operations completed without errors
++ echo '   Safe to re-run - script will skip completed steps'
+   Safe to re-run - script will skip completed steps

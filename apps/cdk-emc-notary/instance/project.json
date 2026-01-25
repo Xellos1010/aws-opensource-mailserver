@@ -398,6 +398,38 @@
       },
       "description": "Dry run: Preview SES DNS records without making changes"
     },
+    "admin:ses-dns:print": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/core DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/print-ses-dns-records.cli.ts"
+      },
+      "description": "Print SES DNS records (from core stack admin:info) in MIAB-friendly format for NSD nameserver"
+    },
+    "admin:ses-dns:set": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin-credentials:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} CORE_APP_PATH=apps/cdk-emc-notary/core pnpm exec tsx --tsconfig tools/tsconfig.json tools/set-ses-dns-miab.cli.ts"
+      },
+      "description": "Set SES DNS records via Mail-in-a-Box DNS API (external approach - recommended)"
+    },
+    "admin:ses-dns:set:ssm": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} CORE_APP_PATH=apps/cdk-emc-notary/core pnpm exec tsx --tsconfig tools/tsconfig.json tools/set-ses-dns-ssm.cli.ts"
+      },
+      "description": "Set SES DNS records via SSM agent script executed on instance (alternative approach)"
+    },
+    "admin:nameserver:audit": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/audit-miab-nameserver.cli.ts"
+      },
+      "description": "Audit Mail-in-a-Box NSD nameserver configuration and domain management"
+    },
     "admin:ses:status": {
       "executor": "nx:run-commands",
       "dependsOn": ["^build", "admin-stack-info:build"],
@@ -405,6 +437,14 @@
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/check-ses-status.cli.ts ${DOMAIN:+--domain $DOMAIN}"
       },
       "description": "Check SES status: Verifies SES domain verification, DKIM, and Mail-From status from AWS"
+    },
+    "admin:ses:poll": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} CORE_APP_PATH=apps/cdk-emc-notary/core pnpm exec tsx --tsconfig tools/tsconfig.json tools/poll-ses-status.cli.ts"
+      },
+      "description": "Poll SES service: Comprehensive verification of SES status and DNS records (internal and external)"
     },
     "admin:ssl:provision": {
       "executor": "nx:run-commands",
@@ -470,13 +510,125 @@
       },
       "description": "Create admin account: Creates the admin@domain email account in Mail-in-a-Box if it doesn't exist (uses SSM password by default)"
     },
+    "admin:credentials:sync": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin-credentials:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/sync-admin-password.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+      },
+      "description": "Sync admin password: Syncs admin@domain password from SSM Parameter Store to Mail-in-a-Box account via SSM RunCommand (ensures password matches admin:credentials output)"
+    },
+    "admin:logs:webmail": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} OUTPUT_DIR=${OUTPUT_DIR:-./webmail-logs} LOG_LINES=${LOG_LINES:-1000} pnpm exec tsx --tsconfig tools/tsconfig.json tools/pull-webmail-logs.cli.ts ${DOMAIN:+--domain $DOMAIN} ${OUTPUT_DIR:+--output-dir $OUTPUT_DIR} ${LOG_LINES:+--lines $LOG_LINES}"
+      },
+      "description": "Pull webmail logs: Retrieves webmail/web UI logs from Mail-in-a-Box instance to diagnose authentication issues (use LOG_LINES to control how many lines, OUTPUT_DIR for output location)"
+    },
+    "admin:diagnose:webmail-401": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} TEST_EMAIL=${TEST_EMAIL:-test@emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/diagnose-webmail-401.cli.ts ${DOMAIN:+--domain $DOMAIN} ${TEST_EMAIL:+--email $TEST_EMAIL}"
+      },
+      "description": "Diagnose webmail 401 errors: Checks PHP-FPM, Roundcube, user accounts, and authentication to identify cause of 401 errors"
+    },
+    "admin:fix:webmail-401": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/fix-webmail-401.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+      },
+      "description": "Fix webmail 401 errors: Restarts PHP-FPM, Nginx, and Dovecot services to resolve webmail authentication issues"
+    },
+    "admin:availability:report": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} OUTPUT_FILE=${OUTPUT_FILE} pnpm exec tsx --tsconfig tools/tsconfig.json tools/availability-report.cli.ts ${DOMAIN:+--domain $DOMAIN} ${OUTPUT_FILE:+--output $OUTPUT_FILE}"
+      },
+      "description": "Generate availability report: Checks EC2 status, services, and health endpoints to determine instance availability"
+    },
+    "admin:users:password:set": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} USER_EMAIL=${USER_EMAIL} USER_PASSWORD=${USER_PASSWORD} pnpm exec tsx --tsconfig tools/tsconfig.json tools/set-user-password.cli.ts ${DOMAIN:+--domain $DOMAIN} ${USER_EMAIL:+--email $USER_EMAIL} ${USER_PASSWORD:+--password $USER_PASSWORD} ${DRY_RUN:+--dry-run}"
+      },
+      "description": "Set a user's password via SSM RunCommand (requires USER_EMAIL and USER_PASSWORD)"
+    },
+    "admin:dovecot:users:verify": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} EMAILS=${EMAILS} pnpm exec tsx --tsconfig tools/tsconfig.json tools/verify-dovecot-users.cli.ts ${DOMAIN:+--domain $DOMAIN} ${EMAILS:+--emails $EMAILS}"
+      },
+      "description": "Verify Dovecot userdb entries for specific mail users (default: admin@domain and me@box.domain)"
+    },
+    "admin:imap:auth:test": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} USER_EMAIL=${USER_EMAIL} USER_PASSWORD=${USER_PASSWORD} pnpm exec tsx --tsconfig tools/tsconfig.json tools/test-imap-auth.cli.ts ${DOMAIN:+--domain $DOMAIN} ${USER_EMAIL:+--email $USER_EMAIL} ${USER_PASSWORD:+--password $USER_PASSWORD}"
+      },
+      "description": "Test IMAP authentication via doveadm auth test (defaults to admin credentials from SSM)"
+    },
+    "admin:roundcube:diagnose": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/diagnose-roundcube-login.cli.ts ${DOMAIN:+--domain $DOMAIN}"
+      },
+      "description": "Diagnose Roundcube login issues (PHP session path, logs, and Roundcube config)"
+    },
+    "admin:roundcube:fix-session": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/fix-roundcube-session.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+      },
+      "description": "Fix Roundcube PHP session directory permissions and reload services"
+    },
+    "admin:mail:flow:test": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} FROM_EMAIL=${FROM_EMAIL} FROM_PASSWORD=${FROM_PASSWORD} TO=${TO} SUBJECT=${SUBJECT} BODY=${BODY} pnpm exec tsx --tsconfig tools/tsconfig.json tools/test-mail-flow.cli.ts ${DOMAIN:+--domain $DOMAIN} ${FROM_EMAIL:+--from-email $FROM_EMAIL} ${FROM_PASSWORD:+--from-password $FROM_PASSWORD} ${TO:+--to $TO} ${SUBJECT:+--subject $SUBJECT} ${BODY:+--body $BODY}"
+      },
+      "description": "Send test emails and verify IMAP auth via doveadm (use FROM_EMAIL, FROM_PASSWORD, TO)"
+    },
     "admin:users:list": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
+      "dependsOn": ["^build", "admin-stack-info:build", "admin:test:bootstrap-complete"],
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} VERBOSE=${VERBOSE:-false} pnpm exec tsx --tsconfig tools/tsconfig.json tools/list-miab-users.cli.ts ${DOMAIN:+--domain $DOMAIN} ${VERBOSE:+--verbose}"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/manage-miab-users.cli.ts --action list ${DOMAIN:+--domain $DOMAIN} ${VERBOSE:+--verbose}"
       },
-      "description": "List Mail-in-a-Box users: Retrieves and displays all email users configured on the Mail-in-a-Box server (use VERBOSE=1 for detailed debugging)"
+      "description": "List Mail-in-a-Box users via SSM RunCommand: Retrieves and displays all email users configured on the Mail-in-a-Box server (bypasses HTTP API auth issues)"
+    },
+    "admin:users:add": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin-credentials:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/manage-miab-users.cli.ts --action add --email ${EMAIL} --password ${PASSWORD} ${ADMIN:+--admin} ${DOMAIN:+--domain $DOMAIN}"
+      },
+      "description": "Add Mail-in-a-Box user via HTTP API: Creates a new user (use EMAIL, PASSWORD env vars, ADMIN=1 for admin privileges)"
+    },
+    "admin:users:remove": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin-credentials:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/manage-miab-users.cli.ts --action remove --email ${EMAIL} ${DOMAIN:+--domain $DOMAIN}"
+      },
+      "description": "Remove Mail-in-a-Box user via HTTP API: Removes a user (use EMAIL env var)"
+    },
+    "admin:users:remove-all": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin-credentials:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/remove-all-users.cli.ts ${DOMAIN:+--domain $DOMAIN} ${KEEP_ADMIN:+--keep-admin} ${DRY_RUN:+--dry-run}"
+      },
+      "description": "Remove all Mail-in-a-Box users via HTTP API: Removes all users except me@box.domain (use KEEP_ADMIN=1 to keep admin@domain, DRY_RUN=1 to preview)"
     },
     "admin:users:discover-from-mailboxes": {
       "executor": "nx:run-commands",
@@ -558,6 +710,30 @@
       },
       "description": "Sync React DNS records: Updates DNS A records from backup file with Elastic IP from CloudFormation stack (use DRY_RUN=1 to preview changes)"
     },
+    "admin:users:reset": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin-credentials:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/reset-and-create-admin-workflow.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+      },
+      "description": "Reset users and create admin: Creates admin@domain via HTTP API, then removes all other users via SSM RunCommand (use DRY_RUN=1 to preview)"
+    },
+    "admin:users:reset:ssm-only": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/reset-users-via-ssm.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+      },
+      "description": "Reset users via SSM only: Removes all users except admin accounts using SSM RunCommand (bypasses SSH issues, use DRY_RUN=1 to preview)"
+    },
+    "admin:users:reset:workflow": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin-credentials:build", "admin-ssh:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/reset-users-workflow.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+      },
+      "description": "Reset users workflow: Creates admin@domain via HTTP API, then removes all other users via SSH (use DRY_RUN=1 to preview)"
+    },
     "admin:miab:audit": {
       "executor": "nx:run-commands",
       "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
@@ -589,6 +765,14 @@
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/miab-status-check.cli.ts ${DOMAIN:+--domain $DOMAIN} ${OUTPUT_FILE:+--output $OUTPUT_FILE} ${VERBOSE:+--verbose}"
       },
       "description": "Fetch and parse Mail-in-a-Box status checks from instance (use OUTPUT_FILE to save JSON, VERBOSE=1 for detailed output)"
+    },
+    "admin:verify-and-setup": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/verify-and-setup-emcnotary.cli.ts"
+      },
+      "description": "Comprehensive verification: Checks recovery system, SES configuration, and provides mailbox restore guidance"
     }
   }
 }
