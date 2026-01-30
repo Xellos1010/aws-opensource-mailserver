@@ -120,17 +120,16 @@ async function printDnsRecords() {
     console.log('');
     
     records.dkimRecords.forEach((dkim, index) => {
-      const normalizedName = dkim.name.replace(`.${domain}`, '');
       console.log(`# DKIM Record #${index + 1}`);
-      console.log(`curl -k -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X PUT -d "value=${dkim.value}." "\${MIAB_HOST}/admin/dns/custom/${normalizedName}/CNAME"`);
+      console.log(`curl -k -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X PUT --data-raw "${dkim.value}." -H "Content-Type: text/plain" "\${MIAB_HOST}/admin/dns/custom/${dkim.name}/CNAME"`);
       console.log('');
     });
     
     console.log(`# Mail From MX Record`);
-    console.log(`curl -k -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X PUT -d "value=${records.mailFromMx}" "\${MIAB_HOST}/admin/dns/custom/mail/MX"`);
+    console.log(`curl -k -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X PUT --data-raw "${records.mailFromMx}" -H "Content-Type: text/plain" "\${MIAB_HOST}/admin/dns/custom/${records.mailFromDomain}/MX"`);
     console.log('');
     console.log(`# Mail From SPF TXT Record`);
-    console.log(`curl -k -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X PUT -d "value=${records.mailFromTxt}" "\${MIAB_HOST}/admin/dns/custom/mail/TXT"`);
+    console.log(`curl -k -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X PUT --data-raw "${records.mailFromTxt}" -H "Content-Type: text/plain" "\${MIAB_HOST}/admin/dns/custom/${records.mailFromDomain}/TXT"`);
     console.log('');
 
     console.log('\n' + '='.repeat(60) + '\n');
@@ -148,4 +147,3 @@ printDnsRecords().catch((error) => {
   console.error('Fatal error:', error);
   process.exit(1);
 });
-

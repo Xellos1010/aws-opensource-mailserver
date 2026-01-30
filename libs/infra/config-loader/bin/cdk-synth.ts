@@ -49,6 +49,9 @@ function main(): void {
   if (env['CORE_PARAM_PREFIX']) {
     contextArgs.push(`--context coreParamPrefix=${env['CORE_PARAM_PREFIX']}`);
   }
+  if (env['INSTANCE_TYPE']) {
+    contextArgs.push(`--context instanceType=${env['INSTANCE_TYPE']}`);
+  }
 
   // Build full CDK command
   const fullCommand = `cdk synth ${contextArgs.join(' ')}`.trim();
@@ -78,4 +81,3 @@ function main(): void {
 }
 
 main();
-

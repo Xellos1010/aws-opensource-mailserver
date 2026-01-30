@@ -199,9 +199,9 @@ async function checkSslStatus(options: SslStatusOptions): Promise<void> {
       const agentAvailable = await isSshAgentAvailable();
       
       if (!agentAvailable) {
-        throw new Error(
+      throw new Error(
           'SSH key not found and SSH agent not available. Run: pnpm nx run cdk-emcnotary-instance:admin:ssh:setup'
-        );
+      );
       }
       console.log(`✅ Using SSH agent for authentication\n`);
     } else {

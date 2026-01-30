@@ -89,7 +89,8 @@ async function syncAdminPassword(options: SyncAdminPasswordOptions): Promise<voi
   const emailB64 = Buffer.from(adminEmail).toString('base64');
   const passwordB64 = Buffer.from(adminPassword).toString('base64');
   
-  const syncCommand = `cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && EMAIL=\$(echo "${emailB64}" | base64 -d) && PASS=\$(echo "${passwordB64}" | base64 -d) && sudo -u user-data /opt/mailinabox/management/cli.py user password "\$EMAIL" "\$PASS" 2>&1 || sudo -u user-data /opt/mailinabox/management/users.py password "\$EMAIL" "\$PASS" 2>&1`;
+  const hostname = `box.${resolvedDomain}`;
+  const syncCommand = `grep -q "${hostname}" /etc/hosts || echo "127.0.0.1 ${hostname}" >> /etc/hosts; cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && EMAIL=\$(echo "${emailB64}" | base64 -d) && PASS=\$(echo "${passwordB64}" | base64 -d) && /opt/mailinabox/management/cli.py user password "\$EMAIL" "\$PASS" 2>&1`;
   
   const syncResult = await ssmClient.send(
     new SendCommandCommand({
@@ -194,4 +195,3 @@ Options:
 }
 
 export { syncAdminPassword };
-

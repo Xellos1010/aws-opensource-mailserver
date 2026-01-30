@@ -28,6 +28,7 @@ async function main() {
     let stackInfo;
     if (appPath) {
       stackInfo = await getStackInfoFromApp(appPath, {
+        domain,
         region: process.env['AWS_REGION'],
         profile: process.env['AWS_PROFILE'],
       });

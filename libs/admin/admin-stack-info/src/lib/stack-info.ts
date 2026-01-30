@@ -91,8 +91,10 @@ export function resolveDomain(
       'emc-notary': 'emcnotary.com',
       'emcnotary': 'emcnotary.com',
       'askdaokapra': 'askdaokapra.com',
+      'k3frame': 'k3frame.com',
+      'k3-frame': 'k3frame.com',
     };
-    
+
     return domainMap[domainPart] || `${domainPart.replace(/-/g, '')}.com`;
   }
   
@@ -413,4 +415,3 @@ export async function getStackInfoFromApp(
 ): Promise<StackInfo> {
   return getStackInfo({ ...config, appPath });
 }
-

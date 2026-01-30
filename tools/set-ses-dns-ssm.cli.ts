@@ -13,6 +13,7 @@
  */
 
 import { getStackInfoFromApp } from '@mm/admin-stack-info';
+import { getAdminCredentials } from '@mm/admin-credentials';
 import { SSMClient, SendCommandCommand, GetCommandInvocationCommand } from '@aws-sdk/client-ssm';
 import { fromIni } from '@aws-sdk/credential-providers';
 
@@ -94,33 +95,29 @@ async function setSesDnsViaSsm() {
 
     console.log(`✅ Retrieved SES DNS records from ${coreStackName}\n`);
 
-    // Step 3: Get admin credentials from SSM
+    // Step 3: Get admin credentials (SSM-backed)
     console.log('📋 Step 3: Getting admin credentials from SSM...');
-    const { SSMClient: SSMClientForCreds, GetParameterCommand } = await import('@aws-sdk/client-ssm');
-    const ssmClientForCreds = new SSMClientForCreds({ region, credentials });
-    
-    const passwordParam = `/mailserver/${domain}/admin-password`;
-    const passwordResp = await ssmClientForCreds.send(
-      new GetParameterCommand({ Name: passwordParam, WithDecryption: true })
-    );
-    const adminPassword = passwordResp.Parameter?.Value;
-    
-    if (!adminPassword) {
-      throw new Error(`Could not retrieve admin password from SSM: ${passwordParam}`);
-    }
-
-    const adminEmail = `admin@${domain}`;
+    const adminCreds = await getAdminCredentials({
+      appPath,
+      domain,
+      region,
+      profile,
+    });
+    const adminEmail = adminCreds.email;
+    const adminPassword = adminCreds.password;
     const hostname = `box.${domain}`;
     const baseUrl = `https://${hostname}`;
 
     console.log(`✅ Admin email: ${adminEmail}\n`);
 
     // Step 4: Normalize qnames
+    // MIAB DNS API expects a fully-qualified domain name (must include a dot).
+    // If we receive a short name, append the domain; otherwise keep the FQDN.
     function normalizeQname(qname: string, domain: string): string {
-      if (qname.endsWith(`.${domain}`)) {
-        return qname.slice(0, -(domain.length + 1));
+      if (qname.includes('.')) {
+        return qname;
       }
-      return qname;
+      return `${qname}.${domain}`;
     }
 
     const normalizedDkim1 = normalizeQname(dkimName1, domain);
@@ -136,36 +133,38 @@ IFS=$'\\n\\t'
 
 # Mail-in-a-Box API endpoint
 MIAB_HOST="${baseUrl}"
+RESOLVE_HOST="${hostname}:443:127.0.0.1"
 ADMIN_EMAIL="${adminEmail}"
 ADMIN_PASSWORD="${adminPassword}"
 
 # Function to make API call
 set_dns_record() {
-    local type=\\$1
-    local name=\\$2
-    local value=\\$3
+    local type=$1
+    local name=$2
+    local value=$3
 
-    echo "Setting \\$type record: \\$name -> \\$value"
+    echo "Setting $type record: $name -> $value"
 
     # Make the API call (use -k to skip SSL verification for self-signed certs)
-    response=\\$(curl -k -s -w "%{http_code}" -o /tmp/curl_response \\
-         -u "\\${ADMIN_EMAIL}:\\${ADMIN_PASSWORD}" \\
-         -X PUT \\
-         -d "value=\\$value" \\
-         -H "Content-Type: application/x-www-form-urlencoded" \\
-         "\\${MIAB_HOST}/admin/dns/custom/\\${name}/\\${type}" 2>&1)
+    response=$(curl -k -s -w "%{http_code}" -o /tmp/curl_response \
+         --resolve "$RESOLVE_HOST" \
+         -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" \
+         -X PUT \
+         --data-raw "$value" \
+         -H "Content-Type: text/plain" \
+         "\${MIAB_HOST}/admin/dns/custom/\${name}/\${type}" 2>&1)
 
-    http_code=\\${response##* }
-    response_body=\\$(cat /tmp/curl_response)
+    http_code=\${response##* }
+    response_body=$(cat /tmp/curl_response)
     rm -f /tmp/curl_response
 
-    if [ "\\$http_code" != "200" ]; then
-        echo "Error: Failed to set \\$type record for \\$name (HTTP \\$http_code)"
-        echo "Response: \\$response_body"
+    if [ "$http_code" != "200" ]; then
+        echo "Error: Failed to set $type record for $name (HTTP $http_code)"
+        echo "Response: $response_body"
         return 1
     fi
 
-    echo "Successfully set \\$type record for \\$name"
+    echo "Successfully set $type record for $name"
     return 0
 }
 
@@ -282,4 +281,3 @@ setSesDnsViaSsm().catch((error) => {
   console.error('Fatal error:', error);
   process.exit(1);
 });
-

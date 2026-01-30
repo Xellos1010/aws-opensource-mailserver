@@ -598,6 +598,14 @@
       },
       "description": "Send test emails and verify IMAP auth via doveadm (use FROM_EMAIL, FROM_PASSWORD, TO)"
     },
+    "admin:postfix:ses:relay": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} SMTP_REGION=${SMTP_REGION} SMTP_USERNAME=${SMTP_USERNAME} SMTP_PASSWORD=${SMTP_PASSWORD} pnpm exec tsx --tsconfig tools/tsconfig.json tools/configure-ses-relay.cli.ts ${DOMAIN:+--domain $DOMAIN} ${SMTP_REGION:+--smtp-region $SMTP_REGION} ${SMTP_USERNAME:+--smtp-username $SMTP_USERNAME} ${SMTP_PASSWORD:+--smtp-password $SMTP_PASSWORD}"
+      },
+      "description": "Configure Postfix to relay outbound mail via SES SMTP (use SMTP_USERNAME/SMTP_PASSWORD)"
+    },
     "admin:users:list": {
       "executor": "nx:run-commands",
       "dependsOn": ["^build", "admin-stack-info:build", "admin:test:bootstrap-complete"],
@@ -666,9 +674,25 @@
       "executor": "nx:run-commands",
       "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/sync-master-backup.cli.ts --master-backup-dir ${MASTER_BACKUP_DIR} ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} USERS=${USERS} INCLUDE_DELETED=${INCLUDE_DELETED} pnpm exec tsx --tsconfig tools/tsconfig.json tools/sync-master-backup.cli.ts --master-backup-dir ${MASTER_BACKUP_DIR} ${DOMAIN:+--domain $DOMAIN} ${USERS:+--users $USERS} ${INCLUDE_DELETED:+--include-deleted} ${DRY_RUN:+--dry-run}"
       },
-      "description": "Sync master backup folder: Syncs master backup folder with mailserver (skips duplicates, use MASTER_BACKUP_DIR to specify master backup location)"
+      "description": "Sync master backup folder: Syncs master backup folder with mailserver (skips duplicates, use MASTER_BACKUP_DIR to specify master backup location, USERS to limit, INCLUDE_DELETED=1 to include trash)"
+    },
+    "admin:mailboxes:aggregate-admin": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} SOURCE_PATH=${SOURCE_PATH} USER=${USER} STAGING_DIR=${STAGING_DIR} pnpm exec tsx --tsconfig tools/tsconfig.json tools/aggregate-admin-mailbox.cli.ts --source-path ${SOURCE_PATH} ${DOMAIN:+--domain $DOMAIN} ${USER:+--user $USER} ${STAGING_DIR:+--staging-dir $STAGING_DIR} ${DRY_RUN:+--dry-run}"
+      },
+      "description": "Aggregate admin mailbox (cur/new + .Sent) with dedupe, skip trash, and upload (use SOURCE_PATH, USER, STAGING_DIR, DRY_RUN)"
+    },
+    "admin:mailboxes:pull": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} DESTINATION_DIR=${DESTINATION_DIR} USERS=${USERS} pnpm exec tsx --tsconfig tools/tsconfig.json tools/pull-mailboxes.cli.ts ${DESTINATION_DIR:+--destination-dir $DESTINATION_DIR} ${USERS:+--users $USERS} ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+      },
+      "description": "Pull mailboxes from server to local backup dir (use DESTINATION_DIR, USERS, DRY_RUN)"
     },
     "admin:mailboxes:archive-master": {
       "executor": "nx:run-commands",

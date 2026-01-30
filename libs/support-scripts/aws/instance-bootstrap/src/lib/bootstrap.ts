@@ -17,7 +17,7 @@ import { fromIni } from '@aws-sdk/credential-providers';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as https from 'https';
-import { toMailserverInstanceStackName } from '@mm/infra-naming';
+import { coreParamPrefix, toMailserverInstanceStackName } from '@mm/infra-naming';
 import { resolveStackName as resolveStackNameFromApp } from '@mm/admin-stack-info';
 
 /**
@@ -297,8 +297,8 @@ async function readCoreParams(
   domain: string
 ): Promise<CoreParams> {
   // Determine core param prefix from domain (e.g., /emcnotary/core or /{domain}/core)
-  // For now, assume /emcnotary/core pattern, but make it configurable
-  const corePrefix = `/emcnotary/core`;
+  // Allow override via CORE_PARAM_PREFIX, otherwise derive from domain
+  const corePrefix = process.env.CORE_PARAM_PREFIX || coreParamPrefix(domain);
 
   const paramNames = [
     `${corePrefix}/domainName`,
