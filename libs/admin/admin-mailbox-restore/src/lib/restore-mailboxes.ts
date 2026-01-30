@@ -145,14 +145,14 @@ async function createUser(
   let sshFailed = false;
   
   try {
-    // Fix API key permissions
-    await sshCommand(keyPath, instanceIp, 'sudo chmod 644 /var/lib/mailinabox/api.key 2>/dev/null && sudo chown user-data:user-data /var/lib/mailinabox/api.key 2>/dev/null || true');
-    
-    const checkCliPy = `test -f /opt/mailinabox/management/cli.py && echo "CLI_EXISTS" || echo "NOT_FOUND"`;
-    const cliCheck = await sshCommand(keyPath, instanceIp, checkCliPy);
-    
-    const emailB64 = Buffer.from(email).toString('base64');
-    const passwordB64 = Buffer.from(password).toString('base64');
+  // Fix API key permissions
+  await sshCommand(keyPath, instanceIp, 'sudo chmod 644 /var/lib/mailinabox/api.key 2>/dev/null && sudo chown user-data:user-data /var/lib/mailinabox/api.key 2>/dev/null || true');
+  
+  const checkCliPy = `test -f /opt/mailinabox/management/cli.py && echo "CLI_EXISTS" || echo "NOT_FOUND"`;
+  const cliCheck = await sshCommand(keyPath, instanceIp, checkCliPy);
+  
+  const emailB64 = Buffer.from(email).toString('base64');
+  const passwordB64 = Buffer.from(password).toString('base64');
     
     // Retry logic matching bootstrap script
     for (let retryCount = 0; retryCount < retryAttempts; retryCount++) {
@@ -162,19 +162,19 @@ async function createUser(
         console.log(`   Retrying user creation (attempt ${retryCount + 1}/${retryAttempts}) after ${backoffSeconds}s delay...`);
         await new Promise(resolve => setTimeout(resolve, backoffSeconds * 1000));
       }
-      
-      let createCommand: string;
-      if (cliCheck.output.includes('CLI_EXISTS')) {
+  
+  let createCommand: string;
+  if (cliCheck.output.includes('CLI_EXISTS')) {
         // Use cli.py (v73+) - matching bootstrap script line 463
-        createCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && EMAIL=\$(echo "${emailB64}" | base64 -d) && PASS=\$(echo "${passwordB64}" | base64 -d) && sudo -n -u user-data bash -c "cd /opt/mailinabox && /opt/mailinabox/management/cli.py user add \\\"\$EMAIL\\\" \\\"\$PASS\\\"" 2>&1'`;
-      } else {
+    createCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && EMAIL=\$(echo "${emailB64}" | base64 -d) && PASS=\$(echo "${passwordB64}" | base64 -d) && sudo -n -u user-data bash -c "cd /opt/mailinabox && /opt/mailinabox/management/cli.py user add \\\"\$EMAIL\\\" \\\"\$PASS\\\"" 2>&1'`;
+  } else {
         // Use users.py (older versions) - matching bootstrap script line 476
-        createCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && EMAIL=\$(echo "${emailB64}" | base64 -d) && PASS=\$(echo "${passwordB64}" | base64 -d) && sudo -n -u user-data bash -c "cd /opt/mailinabox && /opt/mailinabox/management/users.py add \\\"\$EMAIL\\\" \\\"\$PASS\\\"" 2>&1'`;
-      }
-      
-      const result = await sshCommand(keyPath, instanceIp, createCommand);
-      
-      if (result.success) {
+    createCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && EMAIL=\$(echo "${emailB64}" | base64 -d) && PASS=\$(echo "${passwordB64}" | base64 -d) && sudo -n -u user-data bash -c "cd /opt/mailinabox && /opt/mailinabox/management/users.py add \\\"\$EMAIL\\\" \\\"\$PASS\\\"" 2>&1'`;
+  }
+  
+  const result = await sshCommand(keyPath, instanceIp, createCommand);
+  
+  if (result.success) {
         return { success: true, message: 'User created successfully via SSH/CLI' };
       }
       

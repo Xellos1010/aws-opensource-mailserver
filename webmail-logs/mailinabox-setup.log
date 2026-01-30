@@ -1,400 +1,312 @@
-++ '[' 0 '!=' 0 ']'
-++ rm -f /tmp/tmp.xJiI3zol0N
-++ cat
-++ chown munin /var/log/munin/munin-cgi-html.log
-++ chown munin /var/log/munin/munin-cgi-graph.log
-++ tools/editconf.py /etc/munin/munin-node.conf -s host_name=box.emcnotary.com log_level=1
-++ munin-node-configure --shell --remove-also
-++ sh
-++ /bin/true
-++ find /etc/munin/plugins/ -lname /usr/share/munin/plugins/ntp_ -print0
-++ xargs -0 /bin/rm -f
-+++ find /etc/munin/plugins/ '(' -lname /usr/share/munin/plugins/if_ -o -lname /usr/share/munin/plugins/if_err_ -o -lname /usr/share/munin/plugins/bonding_err_ ')'
-++ for f in $(find /etc/munin/plugins/ \( -lname /usr/share/munin/plugins/if_ -o -lname /usr/share/munin/plugins/if_err_ -o -lname /usr/share/munin/plugins/bonding_err_ \))
-+++ echo /etc/munin/plugins/if_eth0
-+++ sed 's/.*_//'
-++ IF=eth0
-++ grep -qFx up /sys/class/net/eth0/operstate
-++ for f in $(find /etc/munin/plugins/ \( -lname /usr/share/munin/plugins/if_ -o -lname /usr/share/munin/plugins/if_err_ -o -lname /usr/share/munin/plugins/bonding_err_ \))
-+++ echo /etc/munin/plugins/if_err_eth0
-+++ sed 's/.*_//'
-++ IF=eth0
-++ grep -qFx up /sys/class/net/eth0/operstate
-++ mkdir -p /var/lib/munin-node/plugin-state/
-++ ln -sf /opt/mailinabox/management/munin_start.sh /usr/local/lib/mailinabox/munin_start.sh
-++ chmod 0744 /usr/local/lib/mailinabox/munin_start.sh
-++ cp --remove-destination conf/munin.service /lib/systemd/system/munin.service
-++ hide_output systemctl link -f /lib/systemd/system/munin.service
-+++ mktemp
-++ OUTPUT=/tmp/tmp.A2VKNBoS6S
-++ set +e
-++ systemctl link -f /lib/systemd/system/munin.service
-++ E=0
-++ set -e
-++ '[' 0 '!=' 0 ']'
-++ rm -f /tmp/tmp.A2VKNBoS6S
-++ hide_output systemctl daemon-reload
-+++ mktemp
-++ OUTPUT=/tmp/tmp.N2g9z6eR3A
-++ set +e
-++ systemctl daemon-reload
-++ E=0
-++ set -e
-++ '[' 0 '!=' 0 ']'
-++ rm -f /tmp/tmp.N2g9z6eR3A
-++ hide_output systemctl unmask munin.service
-+++ mktemp
-++ OUTPUT=/tmp/tmp.uLUZYof7k2
-++ set +e
-++ systemctl unmask munin.service
-++ E=0
-++ set -e
-++ '[' 0 '!=' 0 ']'
-++ rm -f /tmp/tmp.uLUZYof7k2
-++ hide_output systemctl enable munin.service
-+++ mktemp
-++ OUTPUT=/tmp/tmp.bSQsVzDPAB
-++ set +e
-++ systemctl enable munin.service
-++ E=0
-++ set -e
-++ '[' 0 '!=' 0 ']'
-++ rm -f /tmp/tmp.bSQsVzDPAB
-++ restart_service munin
-++ hide_output service munin restart
-+++ mktemp
-++ OUTPUT=/tmp/tmp.T9enleicnQ
-++ set +e
-++ service munin restart
-++ E=0
-++ set -e
-++ '[' 0 '!=' 0 ']'
-++ rm -f /tmp/tmp.T9enleicnQ
-++ restart_service munin-node
-++ hide_output service munin-node restart
-+++ mktemp
-++ OUTPUT=/tmp/tmp.sztsuLVfAL
-++ set +e
-++ service munin-node restart
-++ E=0
-++ set -e
-++ '[' 0 '!=' 0 ']'
-++ rm -f /tmp/tmp.sztsuLVfAL
-++ '[' '!' -f /var/run/munin/munin-update.lock ']'
-++ sudo -H -u munin munin-cron
-sudo: unable to resolve host box.emcnotary.com: Temporary failure in name resolution
-+ nc -z -w 4 127.0.0.1 10222
-+ tools/dns_update
-updated DNS: box.emcnotary.com
-+ tools/web_update
-web updated
-+ restart_service fail2ban
-+ hide_output service fail2ban restart
-++ mktemp
-+ OUTPUT=/tmp/tmp.HkHTsyItBj
-+ set +e
-+ service fail2ban restart
-+ E=0
-+ set -e
-+ '[' 0 '!=' 0 ']'
-+ rm -f /tmp/tmp.HkHTsyItBj
-+ source setup/firstuser.sh
-+++ management/cli.py user
-++ '[' -z '' ']'
-++ '[' -z '' ']'
-++ '[' -z 1 ']'
-++ EMAIL_ADDR=me@box.emcnotary.com
-++ EMAIL_PW=12345678
-++ echo
-
-++ echo 'Creating a new administrative mail account for me@box.emcnotary.com with password 12345678.'
-Creating a new administrative mail account for me@box.emcnotary.com with password 12345678.
-++ echo
-
-++ management/cli.py user add me@box.emcnotary.com 12345678
-mail user added
-updated DNS: box.emcnotary.com
-web updated
-
-++ hide_output management/cli.py user make-admin me@box.emcnotary.com
-+++ mktemp
-++ OUTPUT=/tmp/tmp.Lgml6JeMIX
-++ set +e
-++ management/cli.py user make-admin me@box.emcnotary.com
-++ E=0
-++ set -e
-++ '[' 0 '!=' 0 ']'
-++ rm -f /tmp/tmp.Lgml6JeMIX
-++ management/cli.py alias add administrator@box.emcnotary.com me@box.emcnotary.com
-+ '[' '!' -d /home/user-data/ssl/lets_encrypt/accounts/acme-v02.api.letsencrypt.org/ ']'
-+ echo
-
-+ echo -----------------------------------------------
------------------------------------------------
-+ echo 'Mail-in-a-Box uses Let'\''s Encrypt to provision free SSL/TLS certificates'
-Mail-in-a-Box uses Let's Encrypt to provision free SSL/TLS certificates
-+ echo 'to enable HTTPS connections to your box. We'\''re automatically'
-to enable HTTPS connections to your box. We're automatically
-+ echo 'agreeing you to their subscriber agreement. See https://letsencrypt.org.'
-agreeing you to their subscriber agreement. See https://letsencrypt.org.
-+ echo
-
-+ certbot register --register-unsafely-without-email --agree-tos --config-dir /home/user-data/ssl/lets_encrypt
-Saving debug log to /var/log/letsencrypt/letsencrypt.log
-Account registered.
-+ echo
-
-+ echo -----------------------------------------------
------------------------------------------------
-+ echo
-
-+ echo 'Your Mail-in-a-Box is running.'
-Your Mail-in-a-Box is running.
-+ echo
-
-+ echo 'Please log in to the control panel for further instructions at:'
-Please log in to the control panel for further instructions at:
-+ echo
-
-+ management/status_checks.py --check-primary-hostname
-+ echo https://3.229.143.6/admin
-https://3.229.143.6/admin
-+ echo
-
-+ echo 'You will be alerted that the website has an invalid certificate. Check that'
-You will be alerted that the website has an invalid certificate. Check that
-+ echo 'the certificate fingerprint matches:'
-the certificate fingerprint matches:
-+ echo
-
-+ openssl x509 -in /home/user-data/ssl/ssl_certificate.pem -noout -fingerprint -sha256
-+ sed 's/SHA256 Fingerprint=//i'
-BD:D8:AC:D2:D5:D0:4D:FC:17:86:11:9C:3F:E9:EC:80:60:89:EC:1C:6B:4E:5A:5C:38:A3:DC:96:B9:A4:72:95
-+ echo
-
-+ echo 'Then you can confirm the security exception and continue.'
-Then you can confirm the security exception and continue.
-+ echo
-
-+ echo 'Mail-in-a-Box installer completed successfully'
-Mail-in-a-Box installer completed successfully
-+ touch /home/user-data/.miab_setup_complete
-+ chown user-data:user-data /home/user-data/.miab_setup_complete
-+ rm -f /home/user-data/.miab_installing
-+ '[' -f /home/user-data/.miab_setup_complete ']'
-+ ADMIN_USER_MARKER=/home/user-data/.admin_user_created
-+ '[' -f /home/user-data/.admin_user_created ']'
-+ echo 'Creating admin user account...'
-Creating admin user account...
-+ ADMIN_PASSWORD_PARAM=/MailInABoxAdminPassword-emcnotary-com-mailserver-instance
-+ EMAIL_ADDR=admin@emcnotary.com
-+ EMAIL_PW=
-+ aws ssm get-parameter --region us-east-1 --name /MailInABoxAdminPassword-emcnotary-com-mailserver-instance --with-decryption
-++ aws ssm get-parameter --region us-east-1 --name /MailInABoxAdminPassword-emcnotary-com-mailserver-instance --with-decryption --query Parameter.Value --output text
-+ EMAIL_PW=933QI0eR6cHSmmNQ
-+ '[' -n 933QI0eR6cHSmmNQ ']'
-+ API_KEY_PATH=/var/lib/mailinabox/api.key
-+ MAX_WAIT=300
-+ CHECK_INTERVAL=10
-+ WAITED=0
-+ API_KEY_AVAILABLE=0
-+ echo 'Waiting for API key generation...'
-Waiting for API key generation...
-+ '[' 0 -lt 300 ']'
-+ '[' -f /var/lib/mailinabox/api.key ']'
-+ '[' -r /var/lib/mailinabox/api.key ']'
-+ API_KEY_AVAILABLE=1
-+ echo 'API key found after 0 seconds'
-API key found after 0 seconds
-+ break
-+ '[' 1 -eq 0 ']'
-+ USER_EXISTS=0
-+ RETRY_COUNT=0
-+ MAX_RETRIES=3
-+ '[' 0 -lt 3 ']'
-+ '[' -f /opt/mailinabox/management/cli.py ']'
-+ cd /opt/mailinabox
-+ git config --global --add safe.directory /opt/mailinabox
-+ true
-+ sudo -n -u user-data /opt/mailinabox/management/cli.py user
-+ grep -qi admin@emcnotary.com
-+ '[' 0 -eq 0 ']'
-+ '[' -f /opt/mailinabox/management/users.py ']'
-+ '[' 0 -eq 0 ']'
-+ echo 'Creating admin user: admin@emcnotary.com (attempt 1/3)'
-Creating admin user: admin@emcnotary.com (attempt 1/3)
-+ '[' -f /opt/mailinabox/management/cli.py ']'
-+ cd /opt/mailinabox
-+ git config --global --add safe.directory /opt/mailinabox
-+ true
-+ sudo -n -u user-data bash -c 'cd /opt/mailinabox && /opt/mailinabox/management/cli.py user add "admin@emcnotary.com" "933QI0eR6cHSmmNQ" admin'
-Traceback (most recent call last):
-  File "/opt/mailinabox/management/cli.py", line 102, in <module>
-    print(mgmt("/mail/users/add", { "email": email, "password": pw }))
-  File "/opt/mailinabox/management/cli.py", line 16, in mgmt
-    setup_key_auth(mgmt_uri)
-  File "/opt/mailinabox/management/cli.py", line 49, in setup_key_auth
-    with open('/var/lib/mailinabox/api.key', encoding='utf-8') as f:
-PermissionError: [Errno 13] Permission denied: '/var/lib/mailinabox/api.key'
-+ echo 'Warning: cli.py user creation failed, will retry...'
-Warning: cli.py user creation failed, will retry...
-+ '[' 0 -eq 0 ']'
-+ '[' -f /opt/mailinabox/management/users.py ']'
-+ RETRY_COUNT=1
-+ '[' 1 -lt 3 ']'
-+ BACKOFF=2
-+ echo 'Waiting 2 seconds before retry...'
-Waiting 2 seconds before retry...
-+ sleep 2
-+ '[' 1 -lt 3 ']'
-+ '[' -f /opt/mailinabox/management/cli.py ']'
-+ cd /opt/mailinabox
-+ git config --global --add safe.directory /opt/mailinabox
-+ true
-+ sudo -n -u user-data /opt/mailinabox/management/cli.py user
-+ grep -qi admin@emcnotary.com
-+ '[' 0 -eq 0 ']'
-+ '[' -f /opt/mailinabox/management/users.py ']'
-+ '[' 0 -eq 0 ']'
-+ echo 'Creating admin user: admin@emcnotary.com (attempt 2/3)'
-Creating admin user: admin@emcnotary.com (attempt 2/3)
-+ '[' -f /opt/mailinabox/management/cli.py ']'
-+ cd /opt/mailinabox
-+ git config --global --add safe.directory /opt/mailinabox
-+ true
-+ sudo -n -u user-data bash -c 'cd /opt/mailinabox && /opt/mailinabox/management/cli.py user add "admin@emcnotary.com" "933QI0eR6cHSmmNQ" admin'
-Traceback (most recent call last):
-  File "/opt/mailinabox/management/cli.py", line 102, in <module>
-    print(mgmt("/mail/users/add", { "email": email, "password": pw }))
-  File "/opt/mailinabox/management/cli.py", line 16, in mgmt
-    setup_key_auth(mgmt_uri)
-  File "/opt/mailinabox/management/cli.py", line 49, in setup_key_auth
-    with open('/var/lib/mailinabox/api.key', encoding='utf-8') as f:
-PermissionError: [Errno 13] Permission denied: '/var/lib/mailinabox/api.key'
-+ echo 'Warning: cli.py user creation failed, will retry...'
-Warning: cli.py user creation failed, will retry...
-+ '[' 0 -eq 0 ']'
-+ '[' -f /opt/mailinabox/management/users.py ']'
-+ RETRY_COUNT=2
-+ '[' 2 -lt 3 ']'
-+ BACKOFF=4
-+ echo 'Waiting 4 seconds before retry...'
-Waiting 4 seconds before retry...
-+ sleep 4
-+ '[' 2 -lt 3 ']'
-+ '[' -f /opt/mailinabox/management/cli.py ']'
-+ cd /opt/mailinabox
-+ git config --global --add safe.directory /opt/mailinabox
-+ true
-+ sudo -n -u user-data /opt/mailinabox/management/cli.py user
-+ grep -qi admin@emcnotary.com
-+ '[' 0 -eq 0 ']'
-+ '[' -f /opt/mailinabox/management/users.py ']'
-+ '[' 0 -eq 0 ']'
-+ echo 'Creating admin user: admin@emcnotary.com (attempt 3/3)'
-Creating admin user: admin@emcnotary.com (attempt 3/3)
-+ '[' -f /opt/mailinabox/management/cli.py ']'
-+ cd /opt/mailinabox
-+ git config --global --add safe.directory /opt/mailinabox
-+ true
-+ sudo -n -u user-data bash -c 'cd /opt/mailinabox && /opt/mailinabox/management/cli.py user add "admin@emcnotary.com" "933QI0eR6cHSmmNQ" admin'
-Traceback (most recent call last):
-  File "/opt/mailinabox/management/cli.py", line 102, in <module>
-    print(mgmt("/mail/users/add", { "email": email, "password": pw }))
-  File "/opt/mailinabox/management/cli.py", line 16, in mgmt
-    setup_key_auth(mgmt_uri)
-  File "/opt/mailinabox/management/cli.py", line 49, in setup_key_auth
-    with open('/var/lib/mailinabox/api.key', encoding='utf-8') as f:
-PermissionError: [Errno 13] Permission denied: '/var/lib/mailinabox/api.key'
-+ echo 'Warning: cli.py user creation failed, will retry...'
-Warning: cli.py user creation failed, will retry...
-+ '[' 0 -eq 0 ']'
-+ '[' -f /opt/mailinabox/management/users.py ']'
-+ RETRY_COUNT=3
-+ '[' 3 -lt 3 ']'
-+ '[' 3 -lt 3 ']'
-+ '[' 0 -eq 1 ']'
-+ echo 'Warning: Failed to create admin user after 3 attempts'
-Warning: Failed to create admin user after 3 attempts
-+ echo 'This is non-fatal - user can be created manually later'
-This is non-fatal - user can be created manually later
-+ SES_RELAY_MARKER=/home/user-data/.ses_relay_configured
-+ [[ true == \t\r\u\e ]]
-+ '[' -f /home/user-data/.ses_relay_configured ']'
-+ echo 'Configuring SES SMTP relay...'
-Configuring SES SMTP relay...
-+ SMTP_USERNAME_PARAM=/smtp-username-emcnotary-com-mailserver-instance
-+ SMTP_PASSWORD_PARAM=/smtp-password-emcnotary-com-mailserver-instance
-+ aws ssm get-parameter --region us-east-1 --name /smtp-username-emcnotary-com-mailserver-instance --with-decryption
-+ echo 'Warning: SES SMTP credentials not found in SSM. Skipping relay configuration.'
-Warning: SES SMTP credentials not found in SSM. Skipping relay configuration.
-++ ip route list
-++ awk '/default/ {print $5; exit}'
-+ IFACE=eth0
-+ NETPLAN_FILE=/etc/netplan/99-custom-dns.yaml
-+ '[' '!' -f /etc/netplan/99-custom-dns.yaml ']'
-+ echo 'Configuring DNS resolver...'
-Configuring DNS resolver...
-+ cat
-+ netplan apply
-+ DUPLICITY_MARKER=/root/.duplicity_installed
-+ '[' -f /root/.duplicity_installed ']'
-+ command -v duplicity
-+ duplicity --version
-+ grep -q duplicity
-+ touch /root/.duplicity_installed
-+ BACKUP_MARKER=/home/user-data/.initial_backup_complete
-+ '[' -f /opt/mailinabox/management/backup.py ']'
-+ '[' '!' -f /home/user-data/.initial_backup_complete ']'
-+ echo 'Running initial backup...'
-Running initial backup...
-+ /opt/mailinabox/management/backup.py
-+ touch /home/user-data/.initial_backup_complete
-+ chown user-data:user-data /home/user-data/.initial_backup_complete
-+ echo 'Initial backup completed successfully'
-Initial backup completed successfully
-++ curl -s http://169.254.169.254/latest/meta-data/instance-id
-+ IID=i-0239dde3de6782b2e
-+ CLEANUP_DIR=/var/lib/cloud/instances/i-0239dde3de6782b2e
-+ '[' -d /var/lib/cloud/instances/i-0239dde3de6782b2e ']'
-+ echo 'Cleaning up cloud-init sensitive files...'
-Cleaning up cloud-init sensitive files...
-+ for f in "${CLEANUP_DIR}"/scripts/part-00* "${CLEANUP_DIR}"/user-data.txt* "${CLEANUP_DIR}"/obj.pkl
-+ '[' -e /var/lib/cloud/instances/i-0239dde3de6782b2e/scripts/part-001 ']'
-+ rm -f /var/lib/cloud/instances/i-0239dde3de6782b2e/scripts/part-001
-+ for f in "${CLEANUP_DIR}"/scripts/part-00* "${CLEANUP_DIR}"/user-data.txt* "${CLEANUP_DIR}"/obj.pkl
-+ '[' -e /var/lib/cloud/instances/i-0239dde3de6782b2e/user-data.txt ']'
-+ rm -f /var/lib/cloud/instances/i-0239dde3de6782b2e/user-data.txt
-+ for f in "${CLEANUP_DIR}"/scripts/part-00* "${CLEANUP_DIR}"/user-data.txt* "${CLEANUP_DIR}"/obj.pkl
-+ '[' -e /var/lib/cloud/instances/i-0239dde3de6782b2e/user-data.txt.i ']'
-+ rm -f /var/lib/cloud/instances/i-0239dde3de6782b2e/user-data.txt.i
-+ for f in "${CLEANUP_DIR}"/scripts/part-00* "${CLEANUP_DIR}"/user-data.txt* "${CLEANUP_DIR}"/obj.pkl
-+ '[' -e /var/lib/cloud/instances/i-0239dde3de6782b2e/obj.pkl ']'
-+ rm -f /var/lib/cloud/instances/i-0239dde3de6782b2e/obj.pkl
-+ BOOTSTRAP_COMPLETE_MARKER=/home/user-data/.bootstrap_complete
-+ '[' '!' -f /home/user-data/.bootstrap_complete ']'
-+ echo 'Creating bootstrap completion marker...'
-Creating bootstrap completion marker...
-+ touch /home/user-data/.bootstrap_complete
-+ chown user-data:user-data /home/user-data/.bootstrap_complete
-++ date
-+ echo 'Bootstrap completed at: Sun Jan 11 03:42:39 UTC 2026'
-+ chown user-data:user-data /home/user-data/.bootstrap_complete
-+ [[ false == \t\r\u\e ]]
 + echo ==========================================
 ==========================================
-+ echo 'MIAB setup complete for box.emcnotary.com'
-MIAB setup complete for box.emcnotary.com
++ echo 'MIAB Bootstrap Script'
+MIAB Bootstrap Script
 ++ date
-+ echo 'Completed at: Sun Jan 11 03:42:39 UTC 2026'
-Completed at: Sun Jan 11 03:42:39 UTC 2026
++ echo 'Started at: Sun Jan 11 03:32:29 UTC 2026'
+Started at: Sun Jan 11 03:32:29 UTC 2026
++ echo 'Domain: emcnotary.com'
+Domain: emcnotary.com
++ echo 'Instance DNS: box.emcnotary.com'
+Instance DNS: box.emcnotary.com
 + echo ==========================================
 ==========================================
-+ echo ''
++ command -v aws
++ echo 'AWS CLI already installed'
+AWS CLI already installed
++ ELASTIC_IP=
++ [[ -n eipalloc-0d087f649c9291bb5 ]]
++ echo 'Resolving Elastic IP from AllocationId: eipalloc-0d087f649c9291bb5'
+Resolving Elastic IP from AllocationId: eipalloc-0d087f649c9291bb5
+++ aws ec2 describe-addresses --allocation-ids eipalloc-0d087f649c9291bb5 --region us-east-1 --query 'Addresses[0].PublicIp' --output text
+++ echo ''
++ ELASTIC_IP=
+++ curl -s http://169.254.169.254/latest/meta-data/public-ipv4
++ PUBLIC_IP=3.229.143.6
+++ curl -s http://169.254.169.254/latest/meta-data/local-ipv4
++ PRIVATE_IP=172.31.86.85
++ echo 'Public IP: 3.229.143.6'
+Public IP: 3.229.143.6
++ echo 'Private IP: 172.31.86.85'
+Private IP: 172.31.86.85
++ export NONINTERACTIVE=1
++ NONINTERACTIVE=1
++ export DEBIAN_FRONTEND=noninteractive
++ DEBIAN_FRONTEND=noninteractive
++ export TERM=xterm
++ TERM=xterm
++ export SKIP_NETWORK_CHECKS=true
++ SKIP_NETWORK_CHECKS=true
++ export STORAGE_ROOT=/home/user-data
++ STORAGE_ROOT=/home/user-data
++ export STORAGE_USER=user-data
++ STORAGE_USER=user-data
++ export PRIMARY_HOSTNAME=box.emcnotary.com
++ PRIMARY_HOSTNAME=box.emcnotary.com
++ export DEFAULT_PRIMARY_HOSTNAME=box.emcnotary.com
++ DEFAULT_PRIMARY_HOSTNAME=box.emcnotary.com
++ export DEFAULT_PUBLIC_IP=3.229.143.6
++ DEFAULT_PUBLIC_IP=3.229.143.6
++ PACKAGES_MARKER=/root/.miab_packages_installed
++ '[' -f /root/.miab_packages_installed ']'
++ echo 'Updating system packages...'
+Updating system packages...
++ apt-get update -qq
+++ apt list --upgradable
+++ grep -v Listing...
++ '[' -z 'dirmngr/jammy-updates,jammy-security 2.2.27-3ubuntu2.5 amd64 [upgradable from: 2.2.27-3ubuntu2.4]
+gnupg-l10n/jammy-updates,jammy-security 2.2.27-3ubuntu2.5 all [upgradable from: 2.2.27-3ubuntu2.4]
+gnupg-utils/jammy-updates,jammy-security 2.2.27-3ubuntu2.5 amd64 [upgradable from: 2.2.27-3ubuntu2.4]
+gnupg/jammy-updates,jammy-security 2.2.27-3ubuntu2.5 all [upgradable from: 2.2.27-3ubuntu2.4]
+gpg-agent/jammy-updates,jammy-security 2.2.27-3ubuntu2.5 amd64 [upgradable from: 2.2.27-3ubuntu2.4]
+gpg-wks-client/jammy-updates,jammy-security 2.2.27-3ubuntu2.5 amd64 [upgradable from: 2.2.27-3ubuntu2.4]
+gpg-wks-server/jammy-updates,jammy-security 2.2.27-3ubuntu2.5 amd64 [upgradable from: 2.2.27-3ubuntu2.4]
+gpg/jammy-updates,jammy-security 2.2.27-3ubuntu2.5 amd64 [upgradable from: 2.2.27-3ubuntu2.4]
+gpgconf/jammy-updates,jammy-security 2.2.27-3ubuntu2.5 amd64 [upgradable from: 2.2.27-3ubuntu2.4]
+gpgsm/jammy-updates,jammy-security 2.2.27-3ubuntu2.5 amd64 [upgradable from: 2.2.27-3ubuntu2.4]
+gpgv/jammy-updates,jammy-security 2.2.27-3ubuntu2.5 amd64 [upgradable from: 2.2.27-3ubuntu2.4]
+libglib2.0-0/jammy-updates,jammy-security 2.72.4-0ubuntu2.7 amd64 [upgradable from: 2.72.4-0ubuntu2.6]
+libglib2.0-bin/jammy-updates,jammy-security 2.72.4-0ubuntu2.7 amd64 [upgradable from: 2.72.4-0ubuntu2.6]
+libglib2.0-data/jammy-updates,jammy-security 2.72.4-0ubuntu2.7 all [upgradable from: 2.72.4-0ubuntu2.6]
+libsodium23/jammy-updates,jammy-security 1.0.18-1ubuntu0.22.04.1 amd64 [upgradable from: 1.0.18-1build2]
+libxslt1.1/jammy-updates,jammy-security 1.1.34-4ubuntu0.22.04.5 amd64 [upgradable from: 1.1.34-4ubuntu0.22.04.4]
+snapd/jammy-updates 2.73+ubuntu22.04 amd64 [upgradable from: 2.72+ubuntu22.04]' ']'
++ echo 'Upgrading system packages...'
+Upgrading system packages...
++ DEBIAN_FRONTEND=noninteractive
++ apt-get upgrade -o DPkg::Lock::Timeout=120 -y -qq
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 66032 files and directories currently installed.)
+Preparing to unpack .../00-gpg-wks-client_2.2.27-3ubuntu2.5_amd64.deb ...
+Unpacking gpg-wks-client (2.2.27-3ubuntu2.5) over (2.2.27-3ubuntu2.4) ...
+Preparing to unpack .../01-dirmngr_2.2.27-3ubuntu2.5_amd64.deb ...
+Unpacking dirmngr (2.2.27-3ubuntu2.5) over (2.2.27-3ubuntu2.4) ...
+Preparing to unpack .../02-gpg-wks-server_2.2.27-3ubuntu2.5_amd64.deb ...
+Unpacking gpg-wks-server (2.2.27-3ubuntu2.5) over (2.2.27-3ubuntu2.4) ...
+Preparing to unpack .../03-gnupg-utils_2.2.27-3ubuntu2.5_amd64.deb ...
+Unpacking gnupg-utils (2.2.27-3ubuntu2.5) over (2.2.27-3ubuntu2.4) ...
+Preparing to unpack .../04-gpg-agent_2.2.27-3ubuntu2.5_amd64.deb ...
+Unpacking gpg-agent (2.2.27-3ubuntu2.5) over (2.2.27-3ubuntu2.4) ...
+Preparing to unpack .../05-gpg_2.2.27-3ubuntu2.5_amd64.deb ...
+Unpacking gpg (2.2.27-3ubuntu2.5) over (2.2.27-3ubuntu2.4) ...
+Preparing to unpack .../06-gpgconf_2.2.27-3ubuntu2.5_amd64.deb ...
+Unpacking gpgconf (2.2.27-3ubuntu2.5) over (2.2.27-3ubuntu2.4) ...
+Preparing to unpack .../07-gnupg-l10n_2.2.27-3ubuntu2.5_all.deb ...
+Unpacking gnupg-l10n (2.2.27-3ubuntu2.5) over (2.2.27-3ubuntu2.4) ...
+Preparing to unpack .../08-gnupg_2.2.27-3ubuntu2.5_all.deb ...
+Unpacking gnupg (2.2.27-3ubuntu2.5) over (2.2.27-3ubuntu2.4) ...
+Preparing to unpack .../09-gpgsm_2.2.27-3ubuntu2.5_amd64.deb ...
+Unpacking gpgsm (2.2.27-3ubuntu2.5) over (2.2.27-3ubuntu2.4) ...
+Preparing to unpack .../10-gpgv_2.2.27-3ubuntu2.5_amd64.deb ...
+Unpacking gpgv (2.2.27-3ubuntu2.5) over (2.2.27-3ubuntu2.4) ...
+Setting up gpgv (2.2.27-3ubuntu2.5) ...
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 66032 files and directories currently installed.)
+Preparing to unpack .../0-libglib2.0-data_2.72.4-0ubuntu2.7_all.deb ...
+Unpacking libglib2.0-data (2.72.4-0ubuntu2.7) over (2.72.4-0ubuntu2.6) ...
+Preparing to unpack .../1-libglib2.0-bin_2.72.4-0ubuntu2.7_amd64.deb ...
+Unpacking libglib2.0-bin (2.72.4-0ubuntu2.7) over (2.72.4-0ubuntu2.6) ...
+Preparing to unpack .../2-libglib2.0-0_2.72.4-0ubuntu2.7_amd64.deb ...
+Unpacking libglib2.0-0:amd64 (2.72.4-0ubuntu2.7) over (2.72.4-0ubuntu2.6) ...
+Preparing to unpack .../3-libsodium23_1.0.18-1ubuntu0.22.04.1_amd64.deb ...
+Unpacking libsodium23:amd64 (1.0.18-1ubuntu0.22.04.1) over (1.0.18-1build2) ...
+Preparing to unpack .../4-libxslt1.1_1.1.34-4ubuntu0.22.04.5_amd64.deb ...
+Unpacking libxslt1.1:amd64 (1.1.34-4ubuntu0.22.04.5) over (1.1.34-4ubuntu0.22.04.4) ...
+Preparing to unpack .../5-snapd_2.73+ubuntu22.04_amd64.deb ...
+Unpacking snapd (2.73+ubuntu22.04) over (2.72+ubuntu22.04) ...
+Setting up snapd (2.73+ubuntu22.04) ...
+Installing new version of config file /etc/apparmor.d/usr.lib.snapd.snap-confine.real ...
+Installing new version of config file /etc/profile.d/apps-bin-path.sh ...
+snapd.failure.service is a disabled or a static unit not running, not starting it.
+snapd.gpio-chardev-setup.target is a disabled or a static unit not running, not starting it.
+snapd.snap-repair.service is a disabled or a static unit not running, not starting it.
+Setting up libsodium23:amd64 (1.0.18-1ubuntu0.22.04.1) ...
+Setting up libglib2.0-0:amd64 (2.72.4-0ubuntu2.7) ...
+No schema files found: doing nothing.
+Setting up libglib2.0-data (2.72.4-0ubuntu2.7) ...
+Setting up gnupg-l10n (2.2.27-3ubuntu2.5) ...
+Setting up libxslt1.1:amd64 (1.1.34-4ubuntu0.22.04.5) ...
+Setting up gpgconf (2.2.27-3ubuntu2.5) ...
+Setting up gpg (2.2.27-3ubuntu2.5) ...
+Setting up gnupg-utils (2.2.27-3ubuntu2.5) ...
+Setting up gpg-agent (2.2.27-3ubuntu2.5) ...
+Setting up gpgsm (2.2.27-3ubuntu2.5) ...
+Setting up libglib2.0-bin (2.72.4-0ubuntu2.7) ...
+Setting up dirmngr (2.2.27-3ubuntu2.5) ...
+Setting up gpg-wks-server (2.2.27-3ubuntu2.5) ...
+Setting up gpg-wks-client (2.2.27-3ubuntu2.5) ...
+Setting up gnupg (2.2.27-3ubuntu2.5) ...
+Processing triggers for libc-bin (2.35-0ubuntu3.11) ...
+Processing triggers for man-db (2.10.2-1) ...
+Processing triggers for dbus (1.12.20-2ubuntu4.1) ...
+Processing triggers for install-info (6.8-4build1) ...
 
-+ echo '✅ Bootstrap completed successfully'
-✅ Bootstrap completed successfully
-+ echo '   All operations completed without errors'
-   All operations completed without errors
-+ echo '   Safe to re-run - script will skip completed steps'
-   Safe to re-run - script will skip completed steps
+Running kernel seems to be up-to-date.
+
+Services to be restarted:
+ systemctl restart packagekit.service
+ systemctl restart polkit.service
+
+Service restarts being deferred:
+ systemctl restart networkd-dispatcher.service
+ systemctl restart unattended-upgrades.service
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
++ echo 'Installing prerequisites...'
+Installing prerequisites...
++ apt-get install -y dialog librsync-dev python3-setuptools python3-pip python3-boto3 unzip intltool python-is-python3 git
+Reading package lists...
+Building dependency tree...
+Reading state information...
+git is already the newest version (1:2.34.1-1ubuntu1.15).
+git set to manually installed.
+python3-setuptools is already the newest version (59.6.0-1.2ubuntu0.22.04.3).
+unzip is already the newest version (6.0-26ubuntu3.2).
+The following additional packages will be installed:
+  autoconf automake autotools-dev build-essential bzip2 cpp cpp-11 dpkg-dev
+  fakeroot fontconfig-config fonts-dejavu-core g++ g++-11 gcc gcc-11
+  gcc-11-base gettext javascript-common libalgorithm-diff-perl
+  libalgorithm-diff-xs-perl libalgorithm-merge-perl libasan6 libatomic1
+  libauthen-sasl-perl libc-dev-bin libc-devtools libc6-dev libcc1-0
+  libclone-perl libcrypt-dev libdata-dump-perl libdeflate0 libdpkg-perl
+  libencode-locale-perl libexpat1-dev libfakeroot libfile-fcntllock-perl
+  libfile-listing-perl libfont-afm-perl libfontconfig1 libgcc-11-dev libgd3
+  libgomp1 libhtml-form-perl libhtml-format-perl libhtml-parser-perl
+  libhtml-tagset-perl libhtml-tree-perl libhttp-cookies-perl
+  libhttp-daemon-perl libhttp-date-perl libhttp-message-perl
+  libhttp-negotiate-perl libio-html-perl libio-socket-ssl-perl libisl23
+  libitm1 libjbig0 libjpeg-turbo8 libjpeg8 libjs-jquery libjs-sphinxdoc
+  libjs-underscore liblsan0 liblwp-mediatypes-perl liblwp-protocol-https-perl
+  libmailtools-perl libmpc3 libnet-http-perl libnet-smtp-ssl-perl
+  libnet-ssleay-perl libnsl-dev libpopt-dev libpython3-dev libpython3.10-dev
+  libquadmath0 librsync2 libstdc++-11-dev libtiff5 libtimedate-perl
+  libtirpc-dev libtry-tiny-perl libtsan0 libubsan1 liburi-perl libwebp7
+  libwww-perl libwww-robotrules-perl libxml-parser-perl libxpm4 linux-libc-dev
+  lto-disabled-list m4 make manpages-dev perl-openssl-defaults
+  python3-botocore python3-dateutil python3-dev python3-jmespath
+  python3-s3transfer python3-wheel python3.10-dev rpcsvc-proto zlib1g-dev
+Suggested packages:
+  autoconf-archive gnu-standards autoconf-doc libtool bzip2-doc cpp-doc
+  gcc-11-locales debian-keyring g++-multilib g++-11-multilib gcc-11-doc
+  gcc-multilib flex bison gdb gcc-doc gcc-11-multilib gettext-doc autopoint
+  libasprintf-dev libgettextpo-dev apache2 | lighttpd | httpd
+  libdigest-hmac-perl libgssapi-perl glibc-doc bzr libgd-tools
+  libcrypt-ssleay-perl libstdc++-11-doc libsub-name-perl libbusiness-isbn-perl
+  libauthen-ntlm-perl m4-doc make-doc
+The following NEW packages will be installed:
+  autoconf automake autotools-dev build-essential bzip2 cpp cpp-11 dialog
+  dpkg-dev fakeroot fontconfig-config fonts-dejavu-core g++ g++-11 gcc gcc-11
+  gcc-11-base gettext intltool javascript-common libalgorithm-diff-perl
+  libalgorithm-diff-xs-perl libalgorithm-merge-perl libasan6 libatomic1
+  libauthen-sasl-perl libc-dev-bin libc-devtools libc6-dev libcc1-0
+  libclone-perl libcrypt-dev libdata-dump-perl libdeflate0 libdpkg-perl
+  libencode-locale-perl libexpat1-dev libfakeroot libfile-fcntllock-perl
+  libfile-listing-perl libfont-afm-perl libfontconfig1 libgcc-11-dev libgd3
+  libgomp1 libhtml-form-perl libhtml-format-perl libhtml-parser-perl
+  libhtml-tagset-perl libhtml-tree-perl libhttp-cookies-perl
+  libhttp-daemon-perl libhttp-date-perl libhttp-message-perl
+  libhttp-negotiate-perl libio-html-perl libio-socket-ssl-perl libisl23
+  libitm1 libjbig0 libjpeg-turbo8 libjpeg8 libjs-jquery libjs-sphinxdoc
+  libjs-underscore liblsan0 liblwp-mediatypes-perl liblwp-protocol-https-perl
+  libmailtools-perl libmpc3 libnet-http-perl libnet-smtp-ssl-perl
+  libnet-ssleay-perl libnsl-dev libpopt-dev libpython3-dev libpython3.10-dev
+  libquadmath0 librsync-dev librsync2 libstdc++-11-dev libtiff5
+  libtimedate-perl libtirpc-dev libtry-tiny-perl libtsan0 libubsan1
+  liburi-perl libwebp7 libwww-perl libwww-robotrules-perl libxml-parser-perl
+  libxpm4 linux-libc-dev lto-disabled-list m4 make manpages-dev
+  perl-openssl-defaults python-is-python3 python3-boto3 python3-botocore
+  python3-dateutil python3-dev python3-jmespath python3-pip python3-s3transfer
+  python3-wheel python3.10-dev rpcsvc-proto zlib1g-dev
+0 upgraded, 111 newly installed, 0 to remove and 0 not upgraded.
+Need to get 80.3 MB of archives.
+After this operation, 320 MB of additional disk space will be used.
+Get:1 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 m4 amd64 1.4.18-5ubuntu2 [199 kB]
+Get:2 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 autoconf all 2.71-2 [338 kB]
+Get:3 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 autotools-dev all 20220109.1 [44.9 kB]
+Get:4 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 automake all 1:1.16.5-1.3 [558 kB]
+Get:5 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libc-dev-bin amd64 2.35-0ubuntu3.11 [20.3 kB]
+Get:6 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 linux-libc-dev amd64 5.15.0-164.174 [1325 kB]
+Get:7 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libcrypt-dev amd64 1:4.4.27-1 [112 kB]
+Get:8 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 rpcsvc-proto amd64 1.4.2-0ubuntu6 [68.5 kB]
+Get:9 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libtirpc-dev amd64 1.3.2-2ubuntu0.1 [192 kB]
+Get:10 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libnsl-dev amd64 1.3.0-2build2 [71.3 kB]
+Get:11 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libc6-dev amd64 2.35-0ubuntu3.11 [2100 kB]
+Get:12 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 gcc-11-base amd64 11.4.0-1ubuntu1~22.04.2 [20.8 kB]
+Get:13 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libisl23 amd64 0.24-2build1 [727 kB]
+Get:14 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libmpc3 amd64 1.2.1-2build1 [46.9 kB]
+Get:15 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 cpp-11 amd64 11.4.0-1ubuntu1~22.04.2 [10.0 MB]
+Get:16 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 cpp amd64 4:11.2.0-1ubuntu1 [27.7 kB]
+Get:17 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libcc1-0 amd64 12.3.0-1ubuntu1~22.04.2 [48.3 kB]
+Get:18 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libgomp1 amd64 12.3.0-1ubuntu1~22.04.2 [127 kB]
+Get:19 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libitm1 amd64 12.3.0-1ubuntu1~22.04.2 [30.2 kB]
+Get:20 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libatomic1 amd64 12.3.0-1ubuntu1~22.04.2 [10.4 kB]
+Get:21 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libasan6 amd64 11.4.0-1ubuntu1~22.04.2 [2283 kB]
+Get:22 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 liblsan0 amd64 12.3.0-1ubuntu1~22.04.2 [1069 kB]
+Get:23 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libtsan0 amd64 11.4.0-1ubuntu1~22.04.2 [2262 kB]
+Get:24 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libubsan1 amd64 12.3.0-1ubuntu1~22.04.2 [976 kB]
+Get:25 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libquadmath0 amd64 12.3.0-1ubuntu1~22.04.2 [154 kB]
+Get:26 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libgcc-11-dev amd64 11.4.0-1ubuntu1~22.04.2 [2517 kB]
+Get:27 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 gcc-11 amd64 11.4.0-1ubuntu1~22.04.2 [20.1 MB]
+Get:28 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 gcc amd64 4:11.2.0-1ubuntu1 [5112 B]
+Get:29 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libstdc++-11-dev amd64 11.4.0-1ubuntu1~22.04.2 [2101 kB]
+Get:30 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 g++-11 amd64 11.4.0-1ubuntu1~22.04.2 [11.4 MB]
+Get:31 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 g++ amd64 4:11.2.0-1ubuntu1 [1412 B]
+Get:32 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 make amd64 4.3-4.1build1 [180 kB]
+Get:33 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libdpkg-perl all 1.21.1ubuntu2.6 [237 kB]
+Get:34 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 bzip2 amd64 1.0.8-5build1 [34.8 kB]
+Get:35 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 lto-disabled-list all 24 [12.5 kB]
+Get:36 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 dpkg-dev all 1.21.1ubuntu2.6 [922 kB]
+Get:37 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 build-essential amd64 12.9ubuntu3 [4744 B]
+Get:38 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/universe amd64 dialog amd64 1.3-20211214-1 [303 kB]
+Get:39 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libfakeroot amd64 1.28-1ubuntu1 [31.5 kB]
+Get:40 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 fakeroot amd64 1.28-1ubuntu1 [60.4 kB]
+Get:41 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 fonts-dejavu-core all 2.37-2build1 [1041 kB]
+Get:42 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 fontconfig-config all 2.13.1-4.2ubuntu5 [29.1 kB]
+Get:43 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 gettext amd64 0.21-4ubuntu4 [868 kB]
+Get:44 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 liburi-perl all 5.10-1 [78.8 kB]
+Get:45 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libencode-locale-perl all 1.05-1.1 [11.8 kB]
+Get:46 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libtimedate-perl all 2.3300-2 [34.0 kB]
+Get:47 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libhttp-date-perl all 6.05-1 [9920 B]
+Get:48 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libfile-listing-perl all 6.14-1 [11.2 kB]
+Get:49 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libhtml-tagset-perl all 3.20-4 [12.5 kB]
+Get:50 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libhtml-parser-perl amd64 3.76-1build2 [88.4 kB]
+Get:51 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libhtml-tree-perl all 5.07-2 [200 kB]
+Get:52 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libio-html-perl all 1.004-2 [15.4 kB]
+Get:53 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 liblwp-mediatypes-perl all 6.04-1 [19.5 kB]
+Get:54 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libhttp-message-perl all 6.36-1 [76.8 kB]
+Get:55 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libhttp-cookies-perl all 6.10-1 [18.4 kB]
+Get:56 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libhttp-negotiate-perl all 6.01-1 [12.5 kB]
+Get:57 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 perl-openssl-defaults amd64 5build2 [7542 B]
+Get:58 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libnet-ssleay-perl amd64 1.92-1build2 [327 kB]
+Get:59 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libio-socket-ssl-perl all 2.074-2 [192 kB]
+Get:60 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libnet-http-perl all 6.22-1 [23.2 kB]
+Get:61 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 liblwp-protocol-https-perl all 6.10-1 [10.9 kB]
+Get:62 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libtry-tiny-perl all 0.31-1 [21.8 kB]
+Get:63 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libwww-robotrules-perl all 6.02-1 [12.6 kB]
+Get:64 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libwww-perl all 6.61-1 [141 kB]
+Get:65 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libxml-parser-perl amd64 2.46-3build1 [212 kB]
+Get:66 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/universe amd64 intltool all 0.51.0-6 [44.6 kB]
+Get:67 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 javascript-common all 11+nmu1 [5936 B]
+Get:68 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libalgorithm-diff-perl all 1.201-1 [41.8 kB]
+Get:69 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libalgorithm-diff-xs-perl amd64 0.04-6build3 [11.9 kB]
+Get:70 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libalgorithm-merge-perl all 0.08-3 [12.0 kB]
+Get:71 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libfontconfig1 amd64 2.13.1-4.2ubuntu5 [131 kB]
+Get:72 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libjpeg-turbo8 amd64 2.1.2-0ubuntu1 [134 kB]
+Get:73 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libjpeg8 amd64 8c-2ubuntu10 [2264 B]
+Get:74 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libdeflate0 amd64 1.10-2 [70.9 kB]
+Get:75 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libjbig0 amd64 2.1-3.1ubuntu0.22.04.1 [29.2 kB]
+Get:76 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libwebp7 amd64 1.2.2-2ubuntu0.22.04.2 [206 kB]
+Get:77 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libtiff5 amd64 4.3.0-6ubuntu0.12 [185 kB]
+Get:78 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libxpm4 amd64 1:3.5.12-1ubuntu0.22.04.2 [36.7 kB]
+Get:79 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libgd3 amd64 2.3.0-2ubuntu2.3 [129 kB]
+Get:80 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libc-devtools amd64 2.35-0ubuntu3.11 [29.0 kB]
+Get:81 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libclone-perl amd64 0.45-1build3 [11.0 kB]
+Get:82 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libdata-dump-perl all 1.25-1 [25.9 kB]
+Get:83 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libexpat1-dev amd64 2.4.7-1ubuntu0.6 [148 kB]
+Get:84 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libfile-fcntllock-perl amd64 0.22-3build7 [33.9 kB]
+Get:85 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libfont-afm-perl all 1.20-3 [13.6 kB]
+Get:86 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libhtml-form-perl all 6.07-1 [22.2 kB]
+Get:87 http://us-east-1.ec2.archive.ubuntu.com/ubuntu jammy/main amd64 libhtml-format-perl all 2.12-1.1 [41.3 kB]
+Get:88--output truncated--

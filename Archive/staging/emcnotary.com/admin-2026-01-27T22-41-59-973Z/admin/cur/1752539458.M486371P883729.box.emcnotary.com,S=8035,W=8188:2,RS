@@ -1,0 +1,153 @@
+Return-Path: <bounces+ad6f70f312c99800@bluenotary.on.crisp.email>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id VjSfGEGhdWgRfA0AQCw0vA
+	(envelope-from <bounces+ad6f70f312c99800@bluenotary.on.crisp.email>)
+	for <admin@emcnotary.com>; Tue, 15 Jul 2025 00:30:57 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.3 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,HTML_IMAGE_ONLY_32,HTML_MESSAGE,SPF_HELO_NONE,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 SPF_PASS SPF check passed
+	* -0.1 DMARC_PASS DMARC check passed
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 HTML_IMAGE_ONLY_32 BODY: HTML: images with 2800-3200 bytes of
+	*      words
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+X-Spam-Score: -0.3
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=quarantine dis=none) header.from=bluenotary.on.crisp.email
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=bluenotary.on.crisp.email
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (2048-bit key; unprotected) header.d=bluenotary.on.crisp.email header.i=@bluenotary.on.crisp.email header.a=rsa-sha256 header.s=crisp header.b=c3FqUjop;
+	dkim=pass (2048-bit key; secure) header.d=crisp.email header.i=@crisp.email header.a=rsa-sha256 header.s=platform header.b=cDeHzClp;
+	dkim-atps=neutral
+Received: from mailer-1x.outbound.crisp.email (mailer-1x.outbound.crisp.email [93.177.84.76])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id 136C14128D
+	for <admin@emcnotary.com>; Tue, 15 Jul 2025 00:30:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=bluenotary.on.crisp.email; s=crisp; t=1752539456;
+	bh=XCR/qMOSz6YqCJdzcXBnwkRshj1dfC4v1geKdibpPNY=;
+	h=References:From:To:Reply-To:Subject:Date:From;
+	b=c3FqUjopWkYuXjIUMKwgvtAW3AD2Zk+HLzKHheai7z0pFT3gdC4Qt2xrmk+MIF4Pi
+	 2OIiWjNy6FMVY25I9k9oHwcIyKQiKuVGevWNKjEwPjOnalhO6B9sUproVIYaHP5WzB
+	 iAiZaSHM7Vi6ktdVuHk0XrUNzEhmxsKIYWV45sxqp3lZ51xS60rHi4wZlBHP/uxk1M
+	 BDbi9zYBR9r/IXJ70ThWh4nDuwY0CjRZbyObAsKZunPKlAeaYhmqG3xQYZqf3f8u3I
+	 XBf2wzdvQHsDMAE1U0dOK99Ga5HKvFtVVhUU6RjcF2c9Ucap6M4BtBlvarJGHmoZEz
+	 G80mEFtqqIOnQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=crisp.email;
+	s=platform; t=1752539456;
+	bh=XCR/qMOSz6YqCJdzcXBnwkRshj1dfC4v1geKdibpPNY=;
+	h=References:From:To:Reply-To:Subject:Date:From;
+	b=cDeHzClpKFUFLiJ6PrwMXclD3BfZeaaS9R/BsXnwul/WJgu4532jUFH51kWmhKTAV
+	 Acoo+PQOqtShBEVDAsdbNDNwlzRiqBsjOVlT00+l82/euVBK01lWgILIq5yC84OTAe
+	 HcYyx+UC7l7KwQINQ3+PviFL1UIhP20Wjoj6ho/m1ssXoVrYPWbb+OCXk0fLaIkYHD
+	 q0Wz9P3+22V941e9tnE67YpoSCsLIWN+YnkxB2wHyd8krrtoDCt35P1fNctGvM2Ov+
+	 U7jhGdm62QN/YdwWKpI0P7ksbch3jhsd1uGuBWnRn/d1POKGrMZ8mpdoMyMioFpvHE
+	 H6NIT/EqrXPWw==
+X-Universally-Unique-Identifier: 95f2d914-2da4-4928-aaeb-83be82d378bc
+MIME-Version: 1.0 (Crisp Mailer)
+X-Report-Abuse: Please report spam or abuse to abuse@crisp.chat
+X-Auto-Response-Suppress: All
+References:
+ <010001980b7c8cb0-bb1bf51e-06bc-40c5-8e50-d1552c40f6a9-000000@email.amazonses.com>
+X-Crisp-Shard-Type: transactional
+X-Crisp-Website-ID: f5f3357e-d73e-4c9b-93c3-9d7932c502e3
+Feedback-ID:
+ session:f5f3357e-d73e-4c9b-93c3-9d7932c502e3:message_replies:CrispIM
+From: "Marj - BlueNotary" <marj@bluenotary.on.crisp.email>
+To: admin@emcnotary.com
+Reply-To: BlueNotary <s.9b70ab6a91c1b000.i@bluenotary.on.crisp.email>
+Subject: Re: URGENT Session 85D98
+Message-ID:
+ <05590741-89d6-ea55-6880-97454653fb80@bluenotary.on.crisp.email>
+Date: Tue, 15 Jul 2025 00:30:56 +0000
+Content-Type: multipart/alternative;
+ boundary="--_NmP-941fc0069490dc0c-Part_1"
+
+----_NmP-941fc0069490dc0c-Part_1
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+Please make sure to inform them as well via email
+
+On Tue, 15 Jul 2025 00:29:30 GMT Evan McCall wrote:
+> I sent them a session request
+
+On Tue, 15 Jul 2025 00:23:30 GMT Evan McCall wrote:
+> ab*******************@g****.c**
+
+On Tue, 15 Jul 2025 00:22:56 GMT Evan McCall wrote:
+> What is their email address?
+
+I can only start a chat and the email is scrubbed.
+
+On Tue, 15 Jul 2025 00:20:35 GMT Evan McCall wrote:
+> What is the session number?
+----_NmP-941fc0069490dc0c-Part_1
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" =
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html =
+xmlns=3D"http://www.w3.org/1999/xhtml" lang=3D"en" dir=3D"ltr"><head>
+
+<meta http-equiv=3D"Content-Type" content=3D"text/html; =
+charset=3DUTF-8"><meta name=3D"viewport" content=3D"width=3Ddevice-width, =
+initial-scale=3D1"><title>Crisp Email</title></head><body =
+style=3D"font-weight: 400;"><div dir=3D"auto" style=3D"font-size: =
+1em;">Please make sure to inform them as well via email</div><br><div><!=
+--[if !plain]-->
+--<br><br><div><!--[if !mso]><!-- --><img alt =
+src=3D"https://bluenotary.on.crisp.email/image/avatar/operator/12da4969-de7=
+a-4a37-a1e1-da1834b66dc5/92/?1752051400207" style=3D"background-size: =
+contain; background-repeat: no-repeat; background-position: center; =
+background-color: #EBEBEB; width: 2em; height: 2em; max-width: 30px; =
+max-height: 30px; margin-right: .5em; vertical-align: middle; display: =
+inline-block; border-radius: 2em;"><!--<![endif]--><strong>Marj</strong><sp=
+an> </span>from<span> </span><a href=3D"https://bluenotary.us/" =
+target=3D"_blank">BlueNotary</a>.</div><br><div style=3D"margin-top: .75em;=
+ font-size: .9em; color: #7b7b7b;"><div style=3D"margin-top: .=
+25em;"></div></div></div><!--[endif]--><div style=3D"font-size: .95em; =
+margin-top: 1em;"><br><div style=3D"color: #6B095D; border-left: 1px solid =
+#D0D0D0; margin: 0 .5em; padding: 0 .6em;"><div>On Tue, 15 Jul 2025 =
+00:29:30 GMT Evan McCall wrote:</div><br><blockquote dir=3D"auto" =
+style=3D"font-style: normal; margin: 0; padding: 0;">I sent them a session =
+request</blockquote><br><div style=3D"color: #6B095D; border-left: 1px =
+solid #D0D0D0; margin: 0 .5em; padding: 0 .6em;"><div>On Tue, 15 Jul 2025 =
+00:23:30 GMT Evan McCall wrote:</div><br><blockquote dir=3D"auto" =
+style=3D"font-style: normal; margin: 0; padding: 0;">ab*******************@=
+g****.c**</blockquote><br><div style=3D"color: #6B095D; border-left: 1px =
+solid #D0D0D0; margin: 0 .5em; padding: 0 .6em;"><div>On Tue, 15 Jul 2025 =
+00:22:56 GMT Evan McCall wrote:</div><br><blockquote dir=3D"auto" =
+style=3D"font-style: normal; margin: 0; padding: 0;">What is their email =
+address?<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span><span style=3D"display: =
+block; line-height: .5em;"><br style=3D"display: block; padding: .25em =
+0;"></span>I can only start a chat and the email is scrubbed.=
+</blockquote><br><div style=3D"color: #6B095D; border-left: 1px solid =
+#D0D0D0; margin: 0 .5em; padding: 0 .6em;"><div>On Tue, 15 Jul 2025 =
+00:20:35 GMT Evan McCall wrote:</div><br><blockquote dir=3D"auto" =
+style=3D"font-style: normal; margin: 0; padding: 0;">What is the session =
+number?</blockquote></div></div></div></div><br></div><!--[if !plain]-->
+
+<img src=3D"https://bluenotary.on.crisp.email/hooks/email/track/message/?=
+session_id=3Dsession_1c8c32f8-ebec-4d9e-8976-405a41e9be4d&amp;user_id=3Dses=
+sion_1c8c32f8-ebec-4d9e-8976-405a41e9be4d&amp;website_id=3Df5f3357e-d73e-4c=
+9b-93c3-9d7932c502e3&amp;direction=3Din&amp;fingerprints=3D%5B1752539395586=
+100%5D&amp;signature=3D3afe4a561ce10800" alt><!--[endif]--></body></html>
+----_NmP-941fc0069490dc0c-Part_1--

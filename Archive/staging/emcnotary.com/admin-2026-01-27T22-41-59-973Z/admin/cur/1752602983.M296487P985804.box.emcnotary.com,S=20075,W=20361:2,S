@@ -1,0 +1,286 @@
+Return-Path: <msprvs1=20291GCbejX7P=bounces-280172-715@bounces.rover.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id SBgHCGaZdmjMCg8AQCw0vA
+	(envelope-from <msprvs1=20291GCbejX7P=bounces-280172-715@bounces.rover.com>)
+	for <admin@emcnotary.com>; Tue, 15 Jul 2025 18:09:42 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-7.8 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,HTML_MESSAGE,SPF_HELO_NONE,SPF_PASS,
+	T_REMOTE_IMAGE,USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no
+	version=3.4.6
+X-Spam-Report: 
+	* -0.1 SPF_PASS SPF check passed
+	* -0.1 DMARC_PASS DMARC check passed
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	* -7.5 USER_IN_DEF_DKIM_WL From: address is in the default DKIM
+	*      welcome-list
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	*  0.0 T_REMOTE_IMAGE Message contains an external image
+X-Spam-Score: -7.8
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=reject dis=none) header.from=e.rover.com
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=bounces.rover.com
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (1024-bit key; unprotected) header.d=e.rover.com header.i=@e.rover.com header.a=rsa-sha256 header.s=scph1221 header.b=PRTpKKcl;
+	dkim-atps=neutral
+Received: from mta-174-81-81.rover.com.sparkpostmail.com (mta-174-81-81.rover.com.sparkpostmail.com [192.174.81.81])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id 927E34128E
+	for <admin@emcnotary.com>; Tue, 15 Jul 2025 18:09:41 +0000 (UTC)
+X-MSFBL: peR+8ppdH7LLJwp/VOUaQ3Kan07f3jIpX56SzFqbu58=|eyJzdWJhY2NvdW50X2l
+	kIjoiNzE1IiwidGVuYW50X2lkIjoic3BjIiwibWVzc2FnZV9pZCI6IjY4NzE2NDk
+	5NzY2ODUxYWQzMDUwIiwiY3VzdG9tZXJfaWQiOiIyODAxNzIiLCJyIjoiYWRtaW5
+	AZW1jbm90YXJ5LmNvbSJ9
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=e.rover.com;
+	s=scph1221; t=1752602980; i=@e.rover.com;
+	bh=eI04WUi/gYFnjENgbwlV2akKjhfZ9Ua9OSJbTUckreA=;
+	h=To:Message-ID:Date:Content-Type:From:Subject:From:To:Cc:Subject;
+	b=PRTpKKclvTFyHptK/ialVkWzubC+exGL6DYAD6Ib4vOpUR6CLdTZKw+YjvbZrl9EE
+	 8vkn0IIhOgrg6Xa9k7Pr4V8qj+Tci+j14CeAYHCr46YSCq9g4hz7QxItdgAfL0z9+w
+	 2ZElrbY5zp9/d8kBZSrwJeAuRBCOtbQ+ETkIZDNA=
+Received: from [10.90.34.178] ([10.90.34.178])
+	by i-0dfd13c3942ad3099.mta1vrest.sd.prd.sparkpost (ecelerity 5.0.0.74550 r(msys-ecelerity:tags/5.0.0.13)) with REST
+	id 05/03-47948-46996786; Tue, 15 Jul 2025 18:09:40 +0000
+To: "Evan" <admin@emcnotary.com>
+Message-ID: <05.03.47948.46996786@i-0dfd13c3942ad3099.mta1vrest.sd.prd.sparkpost>
+Date: Tue, 15 Jul 2025 18:09:40 +0000
+Content-Type: multipart/alternative; boundary="_----4QpA6oq40/sVpGbhUYQIuQ===_94/03-47948-46996786"
+MIME-Version: 1.0
+Reply-To: support@rover.com
+X-Campaign-ID: 4099656
+From: "Rover.com" <rover@e.rover.com>
+Subject: Good news! Someone just wrote you a testimonial
+X-Message-ID: a7dab3d50bb7496eb843b50b7afb8daf
+X-Feedback-ID: 5580645:4099656:55122:iterable
+Feedback-ID: 5580645:4099656:55122:iterable
+
+--_----4QpA6oq40/sVpGbhUYQIuQ===_94/03-47948-46996786
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
+
+Rover You have a new testimonial on Rover.  =E2=80=8C =E2=80=8C =E2=80=8C =
+=E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=
+=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=
+=8C =0A=E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=
+=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =
+=E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=
+=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=
+=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =
+=0A=0A=0A=0A <https://www.rover.com> =0A=0A=0A=0AHi Evan,=0A=0ACheck it out=
+! Timothy left you a testimonial on Rover.=0A=0AHere's what it says:=0A=0A=
+=0A=0AEvan is a great guy. I have known him for many years. He is compassio=
+nate and =0Athoughtful in his interactions with both humans and animals. He=
+ has provided =0Ahouse sitting services for me in the past and I was very h=
+appy knowing I could =0Acount on him to watch my place with no issues while=
+ I was away. Highly =0Arecommend.=0A=0A=0AIt's also live on your profile=E2=
+=80=94take a look here =0A<https://www.rover.com/account/profile/> to see i=
+t in action.=0A=0AAll the best,=0A The Rover Team=0A=0A=0A=0APlease add rov=
+er@e.rover.com <mailto:rover@e.rover.com> to your address book =0Ato make s=
+ure our emails are delivered to your inbox.=0A=0ARover is an online marketp=
+lace that connects pet parents and local pet care =0Aproviders. Pet care pr=
+oviders are neither employed nor endorsed by Rover.=0A=0AA Place for Rover,=
+ Inc. <https://www.rover.com/>=0ARover.com <https://www.rover.com> | 711 Ca=
+pitol Way S., Suite 204 | Olympia, =0AWashington 98501 | USA=0A=0APrivacy S=
+tatement <https://www.rover.com/terms/privacy/> Contact Us =0A<https://supp=
+ort.rover.com/hc/en-us/>
+--_----4QpA6oq40/sVpGbhUYQIuQ===_94/03-47948-46996786
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset="UTF-8"
+
+<!DOCTYPE html> <html xmlns=3D"http://www.w3.org/1999/xhtml" xmlns:v=3D"urn=
+:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-microsoft-com:office:off=
+ice" lang=3D"en"> <head><meta charset=3D"utf-8"><meta http-equiv=3D"X-UA-Co=
+mpatible" content=3D"IE=3Dedge"><meta name=3D"viewport" content=3D"width=3D=
+device-width,initial-scale=3D1"><meta name=3D"format-detection" content=3D"=
+telephone=3Dno, date=3Dno, address=3Dno, email=3Dno, url=3Dno"><meta name=
+=3D"x-apple-disable-message-reformatting"> <title>Rover</title> <style type=
+=3D"text/css">table{border-collapse:collapse}img,a img{border:0;height:auto=
+;outline:0;text-decoration:none}body{height:100%!important;margin:0 auto!im=
+portant;padding:0;width:100%!important}a{text-decoration:underline}a[x-appl=
+e-data-detectors]{color:inherit!important;text-decoration:none!important;fo=
+nt-size:inherit!important;font-family:inherit!important;font-weight:inherit=
+!important;line-height:inherit!important}u+.body .gmail{display:block!impor=
+tant}body,table,p,ul,ul li{font-family:'Averta',Arial,sans-serif;font-size:=
+16px;line-height:24px;font-weight:400;color:#555}span,a{font-family:'Averta=
+',Arial,sans-serif}h1{font-family:'Bogart',Georgia,serif;font-size:40px;lin=
+e-height:44px;font-weight:400}h2{font-family:'Averta',Arial,sans-serif;font=
+-size:24px;line-height:28px;font-weight:700}h3{font-family:'Averta',Arial,s=
+ans-serif;font-size:20px;line-height:24px;font-weight:400}h4{font-family:'B=
+ogart',Georgia,serif;font-size:22px;line-height:26px;font-weight:400}.btnPr=
+im{font-family:'Averta',Arial,sans-serif;font-size:18px;line-height:22px;co=
+lor:#fff;font-weight:600}.btnPrim:hover{background:#6d95df!important;transi=
+tion:all 200ms}a.btnPrim:visited,a.btnPrim:active{color:#fff}.btnSec{font-f=
+amily:'Averta',Arial,sans-serif;font-size:18px;line-height:22px;color:#2e67=
+d1;font-weight:600}.btnSec:hover{border:2px solid #6d95df!important;color:#=
+6d95df!important;transition:all 200ms}a.btnSec:visited,a.btnSec:active{colo=
+r:#2e67d1}sup{line-height:0;font-size:65%;mso-text-raise:60%}@media screen =
+and (max-width:599px){.mw100{max-width:100%!important}.w100{width:100%!impo=
+rtant}.w88{width:88%!important;margin:0 auto!important;float:none!important=
+}.mbl-center{margin:0 auto!important;float:none!important}.mbl-hide{display=
+:none!important}.mbl-show{display:block!important;max-height:none!important=
+;overflow:visible!important;visibility:visible!important}u ~ div .full-wrap=
+{min-width:100vw}div>u ~ div .full-wrap{min-width:100%}}@font-face{font-fam=
+ily:'Averta';font-style:normal;font-weight:400;src:local('Averta-Regular-Ba=
+sic');src:url('https://www.rover.com/static/dist/Averta-Regular-Basic.woff'=
+) format('woff');mso-font-alt:Arial,sans-serif}@font-face{font-family:'Aver=
+ta';font-style:normal;font-weight:700;src:local('Averta-Semibold-Basic');sr=
+c:url('https://www.rover.com/static/dist/Averta-Semibold-Basic.woff') forma=
+t('woff');mso-font-alt:Arial,sans-serif}@font-face{font-family:'Bogart';fon=
+t-style:normal;font-weight:400;src:local('Bogart-Semibold');src:url('https:=
+//www.rover.com/static/dist/Bogart-Semibold-Basic.woff2') format('woff2');m=
+so-font-alt:Georgia,serif}</style> <!--[if mso]><style type=3D"text/css">p,=
+a,span,ul,ol,li{mso-line-height-rule:exactly}ul,ol{margin:0!important}h1,h4=
+{font-weight:bold!important}</style><![endif]--><!--[if mso]><xml><o:Office=
+DocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:Offi=
+ceDocumentSettings></xml><![endif]--> </head> <body class=3D"body" style=3D=
+"background-color: #f2f2f2;">=0D=0A<div style=3D"color:transparent;visibili=
+ty:hidden;opacity:0;font-size:0px;border:0;max-height:1px;width:1px;margin:=
+0px;padding:0px;border-width:0px!important;display:none!important;line-heig=
+ht:0px!important;"><img border=3D"0" width=3D"1" height=3D"1" src=3D"http:/=
+/tracksp.rover.com/q/v-TZSG3-TDl6yoE_quD9PQ~~/AARGbBA~/6gZ-goJdjaQPbZqf1TcL=
+60k1aDxbL51CmXmaO8l50sghQaQ4_rb-6v2ZrrTeHFk-CwKaE3DH8Ek-aC4UBRXP7g~~" alt=
+=3D""/></div>=0D=0A<span style=3D"color:transparent;visibility:hidden;displ=
+ay:none;opacity:0;height:0;width:0;font-size:0;"></span><img src=3D"https:/=
+/links.rover.com/e/eo=3F_t=3D8c2eaae8d6cb4882a21332c885701eba&amp;_m=3Da7da=
+b3d50bb7496eb843b50b7afb8daf&amp;_e=3DCcTNwG4_4-U3mNqjr2ZM8Z4Vqr1p-HjmQHBm_=
+cABJjg5BaIOUxzmMYadrnE1THl2hp7uufugSt5MrXm768iYiG4OTUJbrNN78bSWQJE9rmniJSzL=
+B8h50m4LMAHaQj7l0a-o6MMAaqycdYA7sMvQLA%3D%3D" style=3D"border:0;width:1px;h=
+eight:1px;border-width:0px!important;display:none!important;line-height:0!i=
+mportant;" width=3D"1" height=3D"1"/> <div id=3D"wrapper" role=3D"article" =
+aria-roledescription=3D"email" aria-label=3D"Testimonial Received" style=3D=
+"background-color: #f2f2f2;font-size:16px; font-size:1rem; font-size:max(16=
+px, 1rem)" class=3D"full-wrap" lang=3D"en" align=3D"center"><!--[if mso]><t=
+able align=3D"center" cellpadding=3D"0" cellspacing=3D"0" border=3D"0" styl=
+e=3D"width:640px;"><tr><td align=3D"center" bgcolor"#ffffff"><![endif]--><!=
+--hidden preheader--> <div style=3D"display: none; max-height: 0px; overflo=
+w: hidden;">You have a new testimonial on Rover.</div> <!-- Insert &nbsp;&z=
+wnj; hack after hidden preview text --> <div style=3D"display: none; max-he=
+ight: 0px; overflow: hidden;">&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C=
+&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C=
+&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C=
+&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C=
+&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C=
+&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C=
+&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C=
+&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C=
+&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C=
+&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C=
+&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C=
+&nbsp;=E2=80=8C</div> <!--/hidden preheader--><!-- =3D=3D Header Section=3D=
+=3D --> <tr> <td valign=3D"top" align=3D"center"> <table align=3D"center" c=
+lass=3D"em_wrapper" width=3D"640" border=3D"0" cellspacing=3D"0" cellpaddin=
+g=3D"0" style=3D"width:640px;"> <tbody> <tr> <td width=3D"20" style=3D"widt=
+h:20px;"> </td> <td valign=3D"top" align=3D"center"> <table width=3D"600" a=
+lign=3D"center" class=3D"em_wrapper" border=3D"0" cellspacing=3D"0" cellpad=
+ding=3D"0" style=3D"width:600px;"> <tbody> <tr> <td height=3D"30" style=3D"=
+height:30px; font-size:0px; line-height:0px;" class=3D"em_h30"> </td> </tr>=
+ <!-- =3D=3DDesktop LoGo Section=3D=3D --> <tr> <td align=3D"center" valign=
+=3D"top"> <table border=3D"0" cellspacing=3D"0" cellpadding=3D"0" align=3D"=
+center"> <tbody> <tr> <td align=3D"center" valign=3D"top"><a target=3D"_bla=
+nk" style=3D"text-decoration:none;" href=3D"https://links.rover.com/u/click=
+=3F_t=3D8c2eaae8d6cb4882a21332c885701eba&_m=3Da7dab3d50bb7496eb843b50b7afb8=
+daf&_e=3DWhsv1nV2-_4Jvyl9GLjxa6PbqSS8RiQhfJIqFfdcHE2wpLjYv-6EY2k1F3XKUWidgs=
+kup6_qCzC3XP5q5rf6OoxI7WQskvBXWf2yqm66zMr9S5h8ajKAy1ZvJTjS9jm0d1u-E7Y9SpBCJ=
+LulrBs4DndrXFveZ_7ppu8Ca1r3e0zYM_Qgcd_ksi_HCaFR5VT-7AblQphVNhFzEWUi_LKv4Rl0=
+T6BcvKOzSt0kcqNP-FcntrkohSGzPG4VEvPFZISOcdHiqzxBRXxXeWZeLVpB1do3O_pN3buQyLC=
+zdobbFe3mijw4hczqe5TePnl5NewsH4qFZ_BMqZBVWf1pPu6JXaPg51vCtxQM-OQYUax6cOw%3D=
+"><img width=3D"132" alt=3D"Rover=C2=AE" style=3D"display:block; max-width:=
+132px; font-family:Arial, sans-serif; font-size:24px; line-height:28px; col=
+or:#00bd70; font-weight:bold;" class=3D"em_g_img" border=3D"0" src=3D"https=
+://d15k2d11r6t6rl.cloudfront.net/public/users/Integrators/669d5713-9b6a-46b=
+b-bd7e-c542cff6dd6a/8c2eaae8d6cb4882a21332c885701eba/Header/rover.com/Trans=
+actional_LetterStyle_EmailUpdates_logo.png"/></a> </td> </tr> </tbody> </ta=
+ble> </td> </tr> <!-- =3D=3DDesktop LoGo Section=3D=3D --> <tr> <td height=
+=3D"30" style=3D"height:30px; font-size:0px; line-height:0px;" class=3D"em_=
+h30"> </td> </tr> </tbody> </table> </td> <td width=3D"20" style=3D"width:2=
+0px;"> </td> </tr> </tbody> </table> </td> </tr> <!-- =3D=3D //Header Secti=
+on=3D=3D --> <!-- ALL CONTENT STARTS HERE --> <!--body copy --> <table role=
+=3D"presentation" style=3D"width:100%;max-width:640px;background-color:#fff=
+fff;" cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center"> <t=
+body> <tr> <td style=3D"padding:40px 0px;" align=3D"center"> <table role=3D=
+"presentation" style=3D"width:88%;" cellspacing=3D"0" cellpadding=3D"0" bor=
+der=3D"0" align=3D"center"> <tbody> <tr> <td style=3D"padding-bottom:20px;"=
+> <p style=3D"margin:0;padding:0;">Hi Evan,</p> <p style=3D"margin:0;paddin=
+g:0;margin-top:20px;">Check it out! Timothy left you a testimonial on Rover=
+.</p> <p style=3D"margin:0;padding:0;margin-top:20px;">Here's what it says=
+:</p> </td> </tr> <!-- bullets--> <tr> <td style=3D"padding-bottom:20px;"> =
+<table role=3D"presentation" style=3D"width:88%;" cellspacing=3D"0" cellpad=
+ding=3D"0" border=3D"0" align=3D"center"> <tbody> <tr> <td> <p style=3D"mar=
+gin:0;padding:0;font-style:italic">Evan is a great guy. I have known him fo=
+r many years. He is compassionate and thoughtful in his interactions with b=
+oth humans and animals. He has provided house sitting services for me in th=
+e past and I was very happy knowing I could count on him to watch my place =
+with no issues while I was away. Highly recommend.</p> </td> </tr> </tbody>=
+ </table> </td> </tr> <tr> <td> <p style=3D"margin:0;padding:0;">It's also =
+live on your profile=E2=80=94take a look <a style=3D"color: #2E67D1;" href=
+=3D"https://links.rover.com/u/click=3F_t=3D8c2eaae8d6cb4882a21332c885701eba=
+&_m=3Da7dab3d50bb7496eb843b50b7afb8daf&_e=3DWhsv1nV2-_4Jvyl9GLjxa5kja7F-6sB=
+uGdlzUSX3qiO9Yolmn3onfjDVyrIQpsvkqI5qOQ9cl-dEOEErI_q16l9GxIyW41CAQvl9Cuj49j=
+RtfJbHij2gGI7xZ0KYG16b5k8g94E30amR0qU_MVEkc0JWCiIGBrrR_klwhymBIMU98LKZvINB0=
+4HV1B_mfSS5N5sbreeBVMm0Xqw3eS-8iu8UjZz1tjHL2xH3rHc3DaET1ydzVBzoWTENzQvTP6Xo=
+5J3fj11VueTtixvg2b68wavqIqMFFxzhWGlCn-FmOrPpi1Jfax4JU4shniXwrqY3zk_YiSRr1Jd=
+1GOPy-gHnIc-T0S_Phz1rATJC3VJJrdTKjKzf3YWBMlK4z6OLcemu">here</a> to see it i=
+n action.</p> <p style=3D"margin:0;padding:0;margin-top:20px;">All the best=
+,<br/> The Rover Team</p> </td> </tr> </tbody> </table> </td> </tr> </tbody=
+> </table> <!-- /body copy --> <!-- ALL CONTENT ENDS HERE --> <!-- Footer -=
+-> <table role=3D"presentation" align=3D"center" cellpadding=3D"0" cellspac=
+ing=3D"0" border=3D"0" style=3D"width:100%;max-width:640px;background-color=
+: #f2f2f2"> <tr> <td style=3D"padding:20px 0px 40px 0px;"> <table role=3D"p=
+resentation" align=3D"center" cellpadding=3D"0" cellspacing=3D"0" border=3D=
+"0" style=3D"width:88%;"> <!-- legal --> <tr> <td align=3D"center"> <p styl=
+e=3D"margin:0;padding:0;font-family:'Averta', Arial, sans-serif;font-size:1=
+0px;line-height:15px;margin-bottom:10px;color:#404347">Please add <a href=
+=3D"mailto:rover@e.rover.com" style=3D"text-decoration:underline; color:#40=
+4347;">rover@e.rover.com</a> to your address book to make sure our emails a=
+re delivered to your inbox.<br><br>Rover is an online marketplace that conn=
+ects pet parents and local pet care providers. Pet care providers are neith=
+er employed nor endorsed by&nbsp;Rover.</p> <p style=3D"margin:0;padding:0;=
+font-family:'Averta', Arial, sans-serif;font-size:10px;line-height:15px;mar=
+gin-bottom:10px;color:#404347"><a style=3D"text-decoration:none; color:#404=
+347;" href=3D"https://links.rover.com/u/click=3F_t=3D8c2eaae8d6cb4882a21332=
+c885701eba&_m=3Da7dab3d50bb7496eb843b50b7afb8daf&_e=3DWhsv1nV2-_4Jvyl9GLjxa=
+8xutMqml_-nwEkTTBI2Z95DRlGSXKFa6_UgByTTnBSvq0rUNPFOKA4-a3KM9Hnscf7ZxM9oFvKU=
+-kB-KrNqwnYKnwOLOPh-JAFkhRDSplbn90nErgv8rRwMq-J4f_4m2kTHs74lrEETLaKwk5GsICe=
+0LRWA0RBJi609d9S3pXe2qbip8pyIn4aVSV5AVdo0kUbzZexglPxzxFXZGAIL61TCwDZkI-Qo4Y=
+52rCfgwhqWsXy00-b8AJ550cF4eRNXh7bhlLdllq80nN0ENvTM27FU01zzVEdgXYKoX3aBTtWVr=
+TsPmjVZD1hlx1dus3IXXvpBBSUGAigfvGlXxwITdpY%3D">A Place for Rover, Inc.</a><=
+br/><a style=3D"text-decoration:none; color:#404347;" target=3D"_blank" hre=
+f=3D"https://links.rover.com/u/click=3F_t=3D8c2eaae8d6cb4882a21332c885701eb=
+a&_m=3Da7dab3d50bb7496eb843b50b7afb8daf&_e=3DWhsv1nV2-_4Jvyl9GLjxa6PbqSS8Ri=
+QhfJIqFfdcHE2wpLjYv-6EY2k1F3XKUWidgskup6_qCzC3XP5q5rf6OoxI7WQskvBXWf2yqm66z=
+Mr9S5h8ajKAy1ZvJTjS9jm0d1u-E7Y9SpBCJLulrBs4DndrXFveZ_7ppu8Ca1r3e0zYM_Qgcd_k=
+si_HCaFR5VT-7AblQphVNhFzEWUi_LKv4fbyxZxl7Vwh8gz-pM52gh1a5F2u0QLhTh565DG_THk=
+FWCXIGZMRf-um6JCzV1k9-sNgz92f9859aLC4elySLe42FUR8mqZPZ-aDTDRV76FTFJIXwITp9g=
+aAHyzOWD_P0LAo5fhv30jMXYB3eCT4Jy0%3D">Rover.com</a> | 711 Capitol Way S., S=
+uite 204 | Olympia, Washington 98501 | USA</p> <p style=3D"margin:0;padding=
+:0;font-family:'Averta', Arial, sans-serif;font-size:10px;line-height:15px;=
+color:#404347"><a href=3D"https://links.rover.com/u/click=3F_t=3D8c2eaae8d6=
+cb4882a21332c885701eba&_m=3Da7dab3d50bb7496eb843b50b7afb8daf&_e=3DWhsv1nV2-=
+_4Jvyl9GLjxa1uSAAHlmOefIqybDkGx9gk2qd4lRzsgjDYLmqBv8PAFf-xg5XPm6XGnJbidtBfu=
+jbgPEGkqEfLjGUqJsv9FL3-M13xKSJ97FIkGOMvngMr12RbRREbOE1Y-7AD5huJ4GBFbJwUxAfL=
+OqdmBS3zHhHHPYUc6EedLieJlWjM8C6EDvucRd17hDTBRyCBb8cVrFNqba7W6JSCMoD-5QidyrU=
+fQE5ihzKsuNwA6066V-YknlmoNRJH6Yd1Y0JWZQ7d_JYs7coVPKvxC9jK253w_ShYcuiNfrZqvR=
+N5_esKY4_Cw3nsI9pKCotPGON4b-LgkBpWZjd69EVu9j1fNHbmtTWnFYog5i1Q1SG0WMftAfK0w=
+" style=3D"text-decoration:underline; color:#404347;">Privacy Statement</a>=
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href=3D"https://links.rover.com/u/click=
+=3F_t=3D8c2eaae8d6cb4882a21332c885701eba&_m=3Da7dab3d50bb7496eb843b50b7afb8=
+daf&_e=3DWhsv1nV2-_4Jvyl9GLjxa7zOqt7r0oOyT3etKdhDREKLBDChBvuWq7y8fQpTz0-MJd=
+matUkgWEC1CMN-S_0ycm0i88mm4axx5bD-ceyBrcP7oCCFk4Co1fNSRWtyxfbVFFJIq64DKkgq5=
+cZ_bW1UpvVlTlrVSWi9OODdbgW2RVID_Kq8z0ZcrVHEzvnCdnS01K0hp-sTkWxRDfW2yORNfBv4=
+OhN6-2YZPtw_zW_Uwn6cuNw6wiNjPdNnwkKdY8ClMWtjLJSYwbQxrn1OdUJIsGSEBBHkGVAT94_=
+TJDc1i_xNi09tCmIP5Y603WjYyF25tnlEhGX6DTscu6v97you4p54ZZW_RdL_gGxWl0hOi8ID22=
+aka1L_1mbwIy4K_ISS" style=3D"text-decoration:underline; color:#404347;">Con=
+tact Us</a></p> </td> </tr> </table> </td> </tr> </table> <!-- Footer--> <!=
+--[if mso]></td></tr></table><![endif]--></div> =0D=0A<img border=3D"0" wid=
+th=3D"1" height=3D"1" alt=3D"" src=3D"http://tracksp.rover.com/q/XwrrGtdJNx=
+R1-ldTDT4yFg~~/AARGbBA~/Me7DNXQWwu-GQI6iboZrftRO7j9fCV6eq4kIE7rZZNxTTagQVXb=
+zK7ysriProqEqbGzG2za0jSs5P9f5ZJfoEA~~">=0D=0A</body> </html>
+--_----4QpA6oq40/sVpGbhUYQIuQ===_94/03-47948-46996786--

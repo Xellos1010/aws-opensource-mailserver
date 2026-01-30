@@ -1,0 +1,79 @@
+Return-Path: <administrator@box.emcnotary.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id t+aOBx0tb2h4KQMAQCw0vA
+	(envelope-from <administrator@box.emcnotary.com>)
+	for <admin@emcnotary.com>; Thu, 10 Jul 2025 03:01:49 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.3 required=5.0 tests=ALL_TRUSTED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HTML_MESSAGE,PDS_FRNOM_TODOM_NAKED_TO,
+	PDS_FROM_NAME_TO_DOMAIN,TVD_SPACE_RATIO autolearn=no
+	autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -1.0 ALL_TRUSTED Passed through trusted hosts only via SMTP
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	*  0.0 TVD_SPACE_RATIO No description available.
+	*  0.7 PDS_FROM_NAME_TO_DOMAIN From:name looks like To:domain
+	*  0.0 PDS_FRNOM_TODOM_NAKED_TO Naked to From name equals to Domain
+X-Spam-Score: -0.3
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=box.emcnotary.com;
+	s=mail; t=1752116509;
+	bh=vzEHDVstlbxy9fk+yNyOzB+w+uBqslKAFlDvEoByDNE=;
+	h=From:To:Subject:Date:From;
+	b=LHrUCY7bue3DCRrLJ3R483P686MNdWEgCCU1a9gogbre87o6E55qXr4cBMdUBiHu1
+	 nI7HpdhTZFb4Up3IkZ5aC6HR7+opeFfMDnFmmxUTj8FbZNhg+O1ueuA9hfouhnSytV
+	 6ysdDK5spD8EjfgUfKSggcyt0i1MOWhqEdtyZ8s6lkiQK+XGfBzEplqKggSIfOLz+u
+	 gUaSkb61DlUpzNTvBRdIhqsFqJsyBjFcMb8H5sNTH4RLiS0hoiePmICxFTdOkWdlhC
+	 4YIZJfimcWyzlC6E16t73xBF/ciYO/LQc4YBKR22xZv0U3okUpgiRafdiTWh1DbtQe
+	 RQs7CZnowSjog==
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by box.emcnotary.com (Postfix) with ESMTP id EE1E84128E
+	for <administrator@box.emcnotary.com>; Thu, 10 Jul 2025 03:01:48 +0000 (UTC)
+Content-Type: multipart/alternative; boundary="===============4517921036331467278=="
+MIME-Version: 1.0
+From: "box.emcnotary.com" <administrator@box.emcnotary.com>
+To: administrator@box.emcnotary.com
+Subject: [box.emcnotary.com] Status Checks Change Notice
+Message-Id: <20250710030148.EE1E84128E@box.emcnotary.com>
+Date: Thu, 10 Jul 2025 03:01:48 +0000 (UTC)
+
+--===============4517921036331467278==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+
+U3lzdGVtIC0tIFByZXZpb3VzbHk6Cj09PT09PT09PT09PT09PT09PT09PQrinJYgIFRoZXJlIGFy
+ZSAzIHNvZnR3YXJlIHBhY2thZ2VzIHRoYXQgY2FuIGJlIHVwZGF0ZWQuCiAgIGdob3N0c2NyaXB0
+ICg5LjU1LjB+ZGZzZzEtMHVidW50dTUuMTIpCiAgIGxpYmdzOSAoOS41NS4wfmRmc2cxLTB1YnVu
+dHU1LjEyKQogICBsaWJnczktY29tbW9uICg5LjU1LjB+ZGZzZzEtMHVidW50dTUuMTIpCgpTeXN0
+ZW0gLS0gQ3VycmVudGx5Ogo9PT09PT09PT09PT09PT09PT09PQrinJYgIFRoZXJlIGFyZSA1IHNv
+ZnR3YXJlIHBhY2thZ2VzIHRoYXQgY2FuIGJlIHVwZGF0ZWQuCiAgIHVidW50dS1wcm8tY2xpZW50
+LWwxMG4gKDM2dWJ1bnR1MH4yMi4wNCkKICAgdWJ1bnR1LXByby1jbGllbnQgKDM2dWJ1bnR1MH4y
+Mi4wNCkKICAgdWJ1bnR1LWFkdmFudGFnZS10b29scyAoMzZ1YnVudHUwfjIyLjA0KQogICBnaXQt
+bWFuICgxOjIuMzQuMS0xdWJ1bnR1MS4xMykKICAgZ2l0ICgxOjIuMzQuMS0xdWJ1bnR1MS4xMyk=
+
+--===============4517921036331467278==
+Content-Type: text/html; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+
+PGh0bWw+PGJvZHk+PHByZSBzdHlsZT0ib3ZlcmZsb3cteDogc2Nyb2xsOyB3aGl0ZS1zcGFjZTog
+cHJlOyI+U3lzdGVtIC0tIFByZXZpb3VzbHk6Cj09PT09PT09PT09PT09PT09PT09PQrinJYgIFRo
+ZXJlIGFyZSAzIHNvZnR3YXJlIHBhY2thZ2VzIHRoYXQgY2FuIGJlIHVwZGF0ZWQuCiAgIGdob3N0
+c2NyaXB0ICg5LjU1LjB+ZGZzZzEtMHVidW50dTUuMTIpCiAgIGxpYmdzOSAoOS41NS4wfmRmc2cx
+LTB1YnVudHU1LjEyKQogICBsaWJnczktY29tbW9uICg5LjU1LjB+ZGZzZzEtMHVidW50dTUuMTIp
+CgpTeXN0ZW0gLS0gQ3VycmVudGx5Ogo9PT09PT09PT09PT09PT09PT09PQrinJYgIFRoZXJlIGFy
+ZSA1IHNvZnR3YXJlIHBhY2thZ2VzIHRoYXQgY2FuIGJlIHVwZGF0ZWQuCiAgIHVidW50dS1wcm8t
+Y2xpZW50LWwxMG4gKDM2dWJ1bnR1MH4yMi4wNCkKICAgdWJ1bnR1LXByby1jbGllbnQgKDM2dWJ1
+bnR1MH4yMi4wNCkKICAgdWJ1bnR1LWFkdmFudGFnZS10b29scyAoMzZ1YnVudHUwfjIyLjA0KQog
+ICBnaXQtbWFuICgxOjIuMzQuMS0xdWJ1bnR1MS4xMykKICAgZ2l0ICgxOjIuMzQuMS0xdWJ1bnR1
+MS4xMyk8L3ByZT48L2JvZHk+PC9odG1sPg==
+
+--===============4517921036331467278==--

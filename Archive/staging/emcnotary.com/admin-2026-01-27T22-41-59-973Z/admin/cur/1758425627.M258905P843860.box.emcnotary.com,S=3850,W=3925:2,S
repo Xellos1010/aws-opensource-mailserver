@@ -1,0 +1,75 @@
+Return-Path: <administrator@box.emcnotary.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id c5I8Oxdyz2hU4AwAQCw0vA
+	(envelope-from <administrator@box.emcnotary.com>)
+	for <admin@emcnotary.com>; Sun, 21 Sep 2025 03:33:43 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-1.1 required=5.0 tests=ALL_TRUSTED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HTML_MESSAGE,PDS_FRNOM_TODOM_NAKED_TO,
+	PDS_FROM_NAME_TO_DOMAIN autolearn=ham autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -1.0 ALL_TRUSTED Passed through trusted hosts only via SMTP
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	*  0.0 PDS_FROM_NAME_TO_DOMAIN From:name looks like To:domain
+	*  0.0 PDS_FRNOM_TODOM_NAKED_TO Naked to From name equals to Domain
+X-Spam-Score: -1.1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=box.emcnotary.com;
+	s=mail; t=1758425623;
+	bh=yArr+5EZbBVz0Np93x2pCXKeexjOjYfXLRv/HnEZNgE=;
+	h=From:To:Subject:Date:From;
+	b=wp2BpNUdfai3zkPUP/ZN37Gc3q46PAqSPHV9p4PRl1AnQxkCbHsjxFxoSqU5rQTpW
+	 aw/FMs/1A08Gn4TbnDCIU7pjk0LEMDhCyDcbDdVqqspKqwjYjls6CtiW4W93qfZsRg
+	 Z6pA4QOxeREhW9IzyUtB/OmzFEGBx2SZ4pR7hgRKgQRO0++/tKa8M/HvEH5zLVe4Vc
+	 +ODh5VgdMTz77NaXijvwf45fARHiueVlspEbF5WDaXvJJzhyIYPGG0avbKJb3+RrCL
+	 h/waL8UyaS+uNuhNfBkrF1uspOLUJ/yjFgvD+5flJAIlLP3QDtsm+7EZOiI4DECz/B
+	 Owos3aI5M/68Q==
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by box.emcnotary.com (Postfix) with ESMTP id B17757E61C
+	for <administrator@box.emcnotary.com>; Sun, 21 Sep 2025 03:33:43 +0000 (UTC)
+Content-Type: multipart/alternative; boundary="===============3214252115697257704=="
+MIME-Version: 1.0
+From: "box.emcnotary.com" <administrator@box.emcnotary.com>
+To: administrator@box.emcnotary.com
+Subject: [box.emcnotary.com] Status Checks Change Notice
+Message-Id: <20250921033343.B17757E61C@box.emcnotary.com>
+Date: Sun, 21 Sep 2025 03:33:43 +0000 (UTC)
+
+--===============3214252115697257704==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+
+U3lzdGVtIC0tIFByZXZpb3VzbHk6Cj09PT09PT09PT09PT09PT09PT09PQrinJYgIFRoZXJlIGFy
+ZSAzIHNvZnR3YXJlIHBhY2thZ2VzIHRoYXQgY2FuIGJlIHVwZGF0ZWQuCgpTeXN0ZW0gLS0gQ3Vy
+cmVudGx5Ogo9PT09PT09PT09PT09PT09PT09PQrinJYgIFRoZXJlIGFyZSA1IHNvZnR3YXJlIHBh
+Y2thZ2VzIHRoYXQgY2FuIGJlIHVwZGF0ZWQuCgpTeXN0ZW0gLS0gQWRkZWQKPT09PT09PT09PT09
+PT09CiAgIGxpYm15c3FsY2xpZW50MjEgKDguMC40My0wdWJ1bnR1MC4yMi4wNC4yKQogICBteXNx
+bC1jbGllbnQtY29yZS04LjAgKDguMC40My0wdWJ1bnR1MC4yMi4wNC4yKQogICBteXNxbC1jbGll
+bnQtOC4wICg4LjAuNDMtMHVidW50dTAuMjIuMDQuMikKClN5c3RlbSAtLSBSZW1vdmVkCj09PT09
+PT09PT09PT09PT09CiAgIGxpYm9wZW5qcDItNyAoMi40LjAtNnVidW50dTAuNCk=
+
+--===============3214252115697257704==
+Content-Type: text/html; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+
+PGh0bWw+PGJvZHk+PHByZSBzdHlsZT0ib3ZlcmZsb3cteDogc2Nyb2xsOyB3aGl0ZS1zcGFjZTog
+cHJlOyI+U3lzdGVtIC0tIFByZXZpb3VzbHk6Cj09PT09PT09PT09PT09PT09PT09PQrinJYgIFRo
+ZXJlIGFyZSAzIHNvZnR3YXJlIHBhY2thZ2VzIHRoYXQgY2FuIGJlIHVwZGF0ZWQuCgpTeXN0ZW0g
+LS0gQ3VycmVudGx5Ogo9PT09PT09PT09PT09PT09PT09PQrinJYgIFRoZXJlIGFyZSA1IHNvZnR3
+YXJlIHBhY2thZ2VzIHRoYXQgY2FuIGJlIHVwZGF0ZWQuCgpTeXN0ZW0gLS0gQWRkZWQKPT09PT09
+PT09PT09PT09CiAgIGxpYm15c3FsY2xpZW50MjEgKDguMC40My0wdWJ1bnR1MC4yMi4wNC4yKQog
+ICBteXNxbC1jbGllbnQtY29yZS04LjAgKDguMC40My0wdWJ1bnR1MC4yMi4wNC4yKQogICBteXNx
+bC1jbGllbnQtOC4wICg4LjAuNDMtMHVidW50dTAuMjIuMDQuMikKClN5c3RlbSAtLSBSZW1vdmVk
+Cj09PT09PT09PT09PT09PT09CiAgIGxpYm9wZW5qcDItNyAoMi40LjAtNnVidW50dTAuNCk8L3By
+ZT48L2JvZHk+PC9odG1sPg==
+
+--===============3214252115697257704==--

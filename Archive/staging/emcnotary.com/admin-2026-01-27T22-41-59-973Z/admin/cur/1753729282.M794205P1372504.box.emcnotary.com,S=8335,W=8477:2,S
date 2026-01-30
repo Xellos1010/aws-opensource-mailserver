@@ -1,0 +1,142 @@
+Return-Path: <npexpresstrust@gmail.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id 1PMRNgHJh2hY8RQAQCw0vA
+	(envelope-from <npexpresstrust@gmail.com>)
+	for <admin@emcnotary.com>; Mon, 28 Jul 2025 19:01:21 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.3 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,FREEMAIL_FROM,HTML_MESSAGE,RCVD_IN_DNSWL_NONE,
+	RCVD_IN_MSPIKE_H2,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 SPF_PASS SPF check passed
+	* -0.1 DMARC_PASS DMARC check passed
+	*  0.0 FREEMAIL_FROM Sender email is commonly abused enduser mail
+	*      provider
+	*      [npexpresstrust[at]gmail.com]
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	* -0.0 RCVD_IN_DNSWL_NONE RBL: Sender listed at
+	*      https://www.dnswl.org/, no trust
+	*      [209.85.166.50 listed in list.dnswl.org]
+	*  0.0 RCVD_IN_MSPIKE_H2 RBL: Average reputation (+2)
+	*      [209.85.166.50 listed in wl.mailspike.net]
+X-Spam-Score: -0.3
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (2048-bit key; unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20230601 header.b=P7O4amHi;
+	dkim-atps=neutral
+Received: from mail-io1-f50.google.com (mail-io1-f50.google.com [209.85.166.50])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id B6F1E3F64C
+	for <admin@emcnotary.com>; Mon, 28 Jul 2025 19:01:21 +0000 (UTC)
+Received: by mail-io1-f50.google.com with SMTP id ca18e2360f4ac-87653e3adc6so180275539f.3
+        for <admin@emcnotary.com>; Mon, 28 Jul 2025 12:01:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1753729281; x=1754334081; darn=emcnotary.com;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=leW58L+84+kKJ+/wXQFP3TliftS7Pm/umskXPuixwKo=;
+        b=P7O4amHiETvV04HI31RLP7JBJmxTenh7znW9VX9ej6VeSCrWzu9kCb1W/AvEOF3qZ4
+         B8rDEdiLsdZCidZOr+YtaDhVXOtAqyDHePV9VL7D1g/F3uEmpHRlM3YubdLTd3zfuHNM
+         gvXQRA3f+q9glIO5r2hzyXcNcGWICAzJG+7FXiW6WiXCtE0OSN6IjjNAvPProYQ7/3LQ
+         3EROCGXyjIfUHCjfRTlKKXHp/FY8lTr/u9+88nN1pw8kapRdN8d+d83TCwk1fsW4svoG
+         et4TTXTyd3UasOeNB4WL0k/nuTFB5J7kFF4uLu3LIvR4haXkCCHLJu6ORPiS1ye/PyeW
+         CzGQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1753729281; x=1754334081;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=leW58L+84+kKJ+/wXQFP3TliftS7Pm/umskXPuixwKo=;
+        b=W95M3azsSEggATGFO2cknRZFxHohjhRx7uCmQo3mkA/WDHkoCPtcM4hB3jIL+QXgRv
+         DjWQZB8ErQBgSPuuURoIUBqUnmYKErAXmsrSKAX+mtX8goOjWS34lKjmeLlGrvtzy7ri
+         KXw7NyQX0D6NcJuGBBcP6o+9xJMs0BkwkJWtrxU+C7UNQ4Bm/BD04lMLgqDdnkkBsZxJ
+         KPWj49DMCWkm/bH/E9u1q52tHDEDo9rEu81nkpjHHmZeV9+xkoJ/yHRPe5NjM3WZ/O4L
+         zHS9oxpq9Sb8CcmbWSD/BNIoQl1obTve7VSVYkR5kjuNXYlKyKN8ayt0tu9vKsEybaGf
+         UX0Q==
+X-Gm-Message-State: AOJu0Yyuuht637Hr4kiQrTxXmTvd4CBp/o+5202Afe6GcMjTNAIgbwwL
+	ltp+qD6KcpAYRoE4NEAGKOfNvxqqhzpr1eeWZ4ACaDuU121UeZJlnTRbX7IIKsIUb04bLye4JY9
+	d1CBOtp9Kg8BIol6n48nWJnqG8RIjm10yYS9W
+X-Gm-Gg: ASbGncsUZPrgSFyrVBlJS+yoRc1N1Z0c0FIKnAbQnb10yq8mSuH/aaQE7et9/3pzsv0
+	F7S1nGY7f/wfCjGQ9R9uM9ZZR7BynYQbGzj1NZ/XA8BVGdnnYirfdUUp9qlyAbM6S25r59JmBNR
+	uTqSD/D9oMFyVlsygvDKmTraFk1M09zOwLJDBCslO3jnEyZIOKss64RdwGjeeb0H4+2mfN4q+fB
+	uK7bA/anw==
+X-Google-Smtp-Source: AGHT+IFdd8tjBEmK0JJA5MOARk08tACMttd22grbOG0nFm0m7EXzZ+eKZGo0s88lvAN0twBoEQaGqJQ+PkabapBiPG8=
+X-Received: by 2002:a05:6e02:216a:b0:3e3:e8ee:68b9 with SMTP id
+ e9e14a558f8ab-3e3e8ee6977mr18066235ab.22.1753729280758; Mon, 28 Jul 2025
+ 12:01:20 -0700 (PDT)
+MIME-Version: 1.0
+From: NOVA PERSONA <npexpresstrust@gmail.com>
+Date: Mon, 28 Jul 2025 15:01:09 -0400
+X-Gm-Features: Ac12FXz0HHaGn4B_jzOfaLyQRWMwIbJpHFguZpWA_VUgDV9PI2VPvaMgQ_uvWk0
+Message-ID: <CAMc2w5p9Mq+At0LjipXAU_SXih3xjB=hchzWY5LqcoydC+QN5Q@mail.gmail.com>
+Subject: 
+To: Admin EMC Notary <admin@emcnotary.com>
+Content-Type: multipart/alternative; boundary="000000000000cfdad7063b01ea71"
+
+--000000000000cfdad7063b01ea71
+Content-Type: text/plain; charset="UTF-8"
+
+Hey Evan,
+
+Teams meeting:
+https://teams.microsoft.com/l/meetup-join/19%3ameeting_MWNlODIzZTktMWJmZi00YmRiLWEwMDEtOThjM2Q0MTczY2Rh%40thread.v2/0?context=%7b%22Tid%22%3a%2240a5ad40-594c-45c2-82c9-2c02614257a0%22%2c%22Oid%22%3a%2287984284-7b10-48f8-a0fe-ba45a1fd1c0c%22%7d
+
+Meeting ID: 264 011 098 565 9
+Passcode: QV9gt3qD
+
+--000000000000cfdad7063b01ea71
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div dir=3D"auto">Hey Evan,=C2=A0</div><div dir=3D"auto"><=
+br></div><div dir=3D"auto">Teams meeting:=C2=A0<a href=3D"https://teams.mic=
+rosoft.com/l/meetup-join/19%3ameeting_MWNlODIzZTktMWJmZi00YmRiLWEwMDEtOThjM=
+2Q0MTczY2Rh%40thread.v2/0?context=3D%7b%22Tid%22%3a%2240a5ad40-594c-45c2-82=
+c9-2c02614257a0%22%2c%22Oid%22%3a%2287984284-7b10-48f8-a0fe-ba45a1fd1c0c%22=
+%7d" target=3D"_blank">https://teams.microsoft.com/l/meetup-join/19%3ameeti=
+ng_MWNlODIzZTktMWJmZi00YmRiLWEwMDEtOThjM2Q0MTczY2Rh%40thread.v2/0?context=
+=3D%7b%22Tid%22%3a%2240a5ad40-594c-45c2-82c9-2c02614257a0%22%2c%22Oid%22%3a=
+%2287984284-7b10-48f8-a0fe-ba45a1fd1c0c%22%7d</a></div><div dir=3D"auto"><b=
+r></div><div dir=3D"auto"><div style=3D"border:0px;font-variant-numeric:inh=
+erit;font-variant-east-asian:inherit;font-variant-alternates:inherit;font-s=
+tretch:inherit;font-size:15px;line-height:inherit;font-family:&quot;Segoe U=
+I&quot;,&quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif;font-size-adj=
+ust:inherit;font-kerning:inherit;font-feature-settings:inherit;margin:0px 0=
+px 6px;padding:0px;vertical-align:baseline;color:rgb(36,36,36)"><span style=
+=3D"border:0px;font-style:inherit;font-variant:inherit;font-weight:inherit;=
+font-stretch:inherit;font-size:14px;line-height:inherit;font-family:inherit=
+;font-size-adjust:inherit;font-kerning:inherit;font-feature-settings:inheri=
+t;margin:0px;padding:0px;vertical-align:baseline;color:rgb(97,97,97)">Meeti=
+ng ID:=C2=A0</span><span style=3D"border:0px;font-style:inherit;font-varian=
+t:inherit;font-weight:inherit;font-stretch:inherit;font-size:14px;line-heig=
+ht:inherit;font-family:inherit;font-size-adjust:inherit;font-kerning:inheri=
+t;font-feature-settings:inherit;margin:0px;padding:0px;vertical-align:basel=
+ine">264 011 098 565 9</span></div><div style=3D"border:0px;font-variant-nu=
+meric:inherit;font-variant-east-asian:inherit;font-variant-alternates:inher=
+it;font-stretch:inherit;font-size:15px;line-height:inherit;font-family:&quo=
+t;Segoe UI&quot;,&quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif;font=
+-size-adjust:inherit;font-kerning:inherit;font-feature-settings:inherit;mar=
+gin:0px 0px 24px;padding:0px;vertical-align:baseline;color:rgb(36,36,36)"><=
+span style=3D"border:0px;font-style:inherit;font-variant:inherit;font-weigh=
+t:inherit;font-stretch:inherit;font-size:14px;line-height:inherit;font-fami=
+ly:inherit;font-size-adjust:inherit;font-kerning:inherit;font-feature-setti=
+ngs:inherit;margin:0px;padding:0px;vertical-align:baseline;color:rgb(97,97,=
+97)">Passcode:=C2=A0</span><span style=3D"border:0px;font-style:inherit;fon=
+t-variant:inherit;font-weight:inherit;font-stretch:inherit;font-size:14px;l=
+ine-height:inherit;font-family:inherit;font-size-adjust:inherit;font-kernin=
+g:inherit;font-feature-settings:inherit;margin:0px;padding:0px;vertical-ali=
+gn:baseline">QV9gt3qD</span></div></div></div>
+
+--000000000000cfdad7063b01ea71--

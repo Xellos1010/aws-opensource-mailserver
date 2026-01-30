@@ -8,11 +8,47 @@ import * as path from 'node:path';
 
 interface SyncMasterBackupOptions {
   masterBackupDir: string;
+  users?: string[];
   domain?: string;
   appPath?: string;
   region?: string;
   profile?: string;
   dryRun?: boolean;
+  includeDeleted?: boolean;
+}
+
+const DELETED_DIRS = new Set(['.Trash', '.Deleted', '.Junk', '.Spam']);
+
+function countDeletedMail(mailboxPath: string): { trashedByFlag: number; trashedByDir: number } {
+  let trashedByFlag = 0;
+  let trashedByDir = 0;
+  const stack: string[] = [mailboxPath];
+
+  while (stack.length > 0) {
+    const current = stack.pop()!;
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(current, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        if (DELETED_DIRS.has(entry.name)) {
+          trashedByDir++;
+          continue;
+        }
+        stack.push(path.join(current, entry.name));
+      } else if (entry.isFile()) {
+        if (entry.name.includes(':2,') && entry.name.includes('T')) {
+          trashedByFlag++;
+        }
+      }
+    }
+  }
+
+  return { trashedByFlag, trashedByDir };
 }
 
 /**
@@ -86,25 +122,50 @@ async function syncMasterBackup(options: SyncMasterBackupOptions): Promise<void>
     console.log('📋 Step 3: Discovering mailboxes...');
     const entries = fs.readdirSync(domainPath, { withFileTypes: true });
     const mailboxes: string[] = [];
-    
+    const requestedUsers = options.users?.map(user => user.trim()).filter(Boolean);
+
     for (const entry of entries) {
       if (entry.isDirectory() && !entry.name.startsWith('.')) {
         const mailboxPath = path.join(domainPath, entry.name);
         // Validate Maildir structure
-        const hasMaildir = ['cur', 'new', 'tmp'].some(subdir => 
+        const hasMaildir = ['cur', 'new', 'tmp'].some(subdir =>
           fs.existsSync(path.join(mailboxPath, subdir))
         );
         if (hasMaildir) {
-          mailboxes.push(entry.name);
+          if (!requestedUsers || requestedUsers.includes(entry.name)) {
+            mailboxes.push(entry.name);
+          }
         }
       }
     }
 
+    if (requestedUsers && mailboxes.length === 0) {
+      throw new Error(`No matching mailboxes found for users: ${requestedUsers.join(', ')}`);
+    }
+
     console.log(`✅ Found ${mailboxes.length} mailbox(es)\n`);
 
+    // Scan for deleted mail (Maildir flags and trash folders)
+    console.log('📋 Step 4: Scanning for deleted mail...');
+    if (!options.includeDeleted) {
+      for (const username of mailboxes) {
+        const localMailboxPath = path.join(domainPath, username);
+        const counts = countDeletedMail(localMailboxPath);
+        console.log(
+          `   ${username}@${domain}: ${counts.trashedByFlag} trashed (flag), ${counts.trashedByDir} trash folder(s)`
+        );
+      }
+      console.log('');
+    } else {
+      console.log('   Skipping scan (includeDeleted enabled)\n');
+    }
+
     // Sync each mailbox
-    console.log('📋 Step 4: Syncing mailboxes...\n');
+    console.log('📋 Step 5: Syncing mailboxes...\n');
     
+    let successCount = 0;
+    let failCount = 0;
+
     for (const username of mailboxes) {
       const localMailboxPath = path.join(domainPath, username);
       const remoteMailboxPath = `/home/user-data/mail/mailboxes/${domain}/${username}`;
@@ -119,6 +180,17 @@ async function syncMasterBackup(options: SyncMasterBackupOptions): Promise<void>
         '--exclude=dovecot.index*',
         '--exclude=subscriptions',
         '--exclude=maildirfolder',
+        ...(options.includeDeleted
+          ? []
+          : [
+              '--exclude=**/.Trash/**',
+              '--exclude=**/.Deleted/**',
+              '--exclude=**/.Junk/**',
+              '--exclude=**/.Spam/**',
+              '--exclude=*:2,*T*',
+            ]),
+        '--rsync-path',
+        'sudo rsync',
         `${localMailboxPath}/`,
         `-e`,
         `ssh -i ${keyPath} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10`,
@@ -129,40 +201,55 @@ async function syncMasterBackup(options: SyncMasterBackupOptions): Promise<void>
         rsyncArgs.push('--dry-run');
       }
       
-      await new Promise<void>((resolve, reject) => {
-        const rsync = spawn('rsync', rsyncArgs);
-        
-        let output = '';
-        rsync.stdout.on('data', (data) => {
-          output += data.toString();
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const rsync = spawn('rsync', rsyncArgs);
+          
+          let output = '';
+          rsync.stdout.on('data', (data) => {
+            output += data.toString();
+          });
+          
+          rsync.stderr.on('data', (data) => {
+            output += data.toString();
+          });
+          
+          rsync.on('close', (code) => {
+            if (code === 0) {
+              // Count files transferred
+              const filesTransferred = (output.match(/^\S+\s+\d+\s+\d+%/gm) || []).length;
+              console.log(`   ✅ Synced (${filesTransferred} files)\n`);
+              resolve();
+            } else {
+              reject(new Error(output.trim() || `rsync failed with code ${code}`));
+            }
+          });
+          
+          rsync.on('error', (error) => {
+            reject(error);
+          });
         });
-        
-        rsync.stderr.on('data', (data) => {
-          output += data.toString();
-        });
-        
-        rsync.on('close', (code) => {
-          if (code === 0) {
-            // Count files transferred
-            const filesTransferred = (output.match(/^\S+\s+\d+\s+\d+%/) || []).length;
-            console.log(`   ✅ Synced (${filesTransferred} files)\n`);
-            resolve();
-          } else {
-            console.log(`   ❌ Sync failed\n`);
-            reject(new Error(`rsync failed with code ${code}`));
-          }
-        });
-        
-        rsync.on('error', (error) => {
-          console.log(`   ❌ Sync error: ${error.message}\n`);
-          reject(error);
-        });
-      });
+        successCount++;
+      } catch (error) {
+        failCount++;
+        console.log(`   ❌ Sync failed`);
+        if (error instanceof Error && error.message) {
+          console.log(`   ${error.message}\n`);
+        } else {
+          console.log(`   ${String(error)}\n`);
+        }
+      }
     }
 
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('✅ Sync Complete');
+    console.log(`   Successful: ${successCount}`);
+    console.log(`   Failed: ${failCount}`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+    if (failCount > 0) {
+      process.exit(1);
+    }
 
   } catch (error) {
     console.error('\n❌ Failed to sync master backup:');
@@ -190,9 +277,20 @@ if (masterBackupDirIndex !== -1 && args[masterBackupDirIndex + 1]) {
   process.exit(1);
 }
 
+// Parse --users
+const usersIndex = args.indexOf('--users');
+if (usersIndex !== -1 && args[usersIndex + 1]) {
+  options.users = args[usersIndex + 1].split(',').map(u => u.trim()).filter(Boolean);
+}
+
 // Parse --dry-run
 if (args.includes('--dry-run')) {
   options.dryRun = true;
+}
+
+// Parse --include-deleted
+if (args.includes('--include-deleted')) {
+  options.includeDeleted = true;
 }
 
 // Run if executed directly

@@ -1,0 +1,155 @@
+Return-Path: <bounces+ad6f70f312c99800@bluenotary.on.crisp.email>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id uVmCDrmigmgNrQwAQCw0vA
+	(envelope-from <bounces+ad6f70f312c99800@bluenotary.on.crisp.email>)
+	for <admin@emcnotary.com>; Thu, 24 Jul 2025 21:16:41 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.3 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,HTML_IMAGE_ONLY_32,HTML_MESSAGE,SPF_HELO_NONE,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 SPF_PASS SPF check passed
+	* -0.1 DMARC_PASS DMARC check passed
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 HTML_IMAGE_ONLY_32 BODY: HTML: images with 2800-3200 bytes of
+	*      words
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+X-Spam-Score: -0.3
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=quarantine dis=none) header.from=bluenotary.on.crisp.email
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=bluenotary.on.crisp.email
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (2048-bit key; unprotected) header.d=bluenotary.on.crisp.email header.i=@bluenotary.on.crisp.email header.a=rsa-sha256 header.s=crisp header.b=ChooArGD;
+	dkim=pass (2048-bit key; secure) header.d=crisp.email header.i=@crisp.email header.a=rsa-sha256 header.s=platform header.b=pVQEjhvB;
+	dkim-atps=neutral
+Received: from mailer-1x.outbound.crisp.email (mailer-1x.outbound.crisp.email [93.177.84.76])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id 09F973F5A6
+	for <admin@emcnotary.com>; Thu, 24 Jul 2025 21:16:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=bluenotary.on.crisp.email; s=crisp; t=1753391800;
+	bh=7PKKblbL8+KwTnf1t9KqYIuvnB6GIGCyJwen5fXxYUE=;
+	h=From:To:Reply-To:Subject:Date:From;
+	b=ChooArGDZPf8MuK0eZEHmcCsn125TzLXnxT9/w/mbM9v93JnXJM2jlYyFCQ921Iek
+	 oL4v5Ha5mlBDHBbYTJYMrURWnGY5lNDsXlMofZnHmQPx/YEbBmmTx+Po9KmM4q6LPg
+	 XfKYWBDPs/X3T28DwmD5QAv/IosBDB3Ei2OvLC8f91KAhPUDmxeKnpJQofz9bWMrt6
+	 fozP8BKX6IbGOZQRxhFzpYzYyy0DVObc34lMvB08WoD5Ufr6fwEX1loTKwduqEXJQ+
+	 4Y7Gjhzhw6BTf59xO0maRSpT2oK4D4zNasNz9Q41Qzz6hNFVoS/E1hIeM69e4gaeWa
+	 YrZhOAJtGRskw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=crisp.email;
+	s=platform; t=1753391800;
+	bh=7PKKblbL8+KwTnf1t9KqYIuvnB6GIGCyJwen5fXxYUE=;
+	h=From:To:Reply-To:Subject:Date:From;
+	b=pVQEjhvBHJ90QYpWbAsmHwtiu1+KGKTFSm3i/4zWmY5GIwBIsSeauUgmb93fYS+iJ
+	 9eWtElA48HoU1pMq9zJLDBRb8sBGVSPPe7idX9vDezMZ7tmdBx/GdM10Bawdbs/Crq
+	 ogBsBpZ1l8QPKinQdBafTDxnFx2m+mxJvZdijX8rEOAyRbQJS2DnMccV/XYNCXHnBt
+	 1ozS33JrrGkIiFFZV4PNbsEEQ3vtMX0vSRXIKj9Cled+PuNNdEGXElidLyU9PpS03B
+	 t0cwSFqTOhuK7c/vxXIdlax9TaVKtBYVmIo7cwZlmbGgYoS2efsgM2w+k6e9evMD5A
+	 cGrBm4lMI/tqA==
+X-Universally-Unique-Identifier: 2d2a8437-11b6-4ea4-b762-7d9f21a04adf
+MIME-Version: 1.0 (Crisp Mailer)
+X-Report-Abuse: Please report spam or abuse to abuse@crisp.chat
+X-Auto-Response-Suppress: All
+X-Crisp-Shard-Type: transactional
+X-Crisp-Website-ID: f5f3357e-d73e-4c9b-93c3-9d7932c502e3
+Feedback-ID:
+ session:f5f3357e-d73e-4c9b-93c3-9d7932c502e3:message_replies:CrispIM
+From: "Abigail - BlueNotary" <abigail@bluenotary.on.crisp.email>
+To: admin@emcnotary.com
+Reply-To: BlueNotary <s.e63b3c4309aa0800.i@bluenotary.on.crisp.email>
+Subject: Upon checking you're unable to access the session because you were
+ removed by...
+Message-ID:
+ <69802e11-034f-ceea-ba4d-b2aa5d110008@bluenotary.on.crisp.email>
+Date: Thu, 24 Jul 2025 21:16:40 +0000
+Content-Type: multipart/alternative;
+ boundary="--_NmP-f17618e6540cf7e0-Part_1"
+
+----_NmP-f17618e6540cf7e0-Part_1
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Hi there! Thank you for reaching out
+Let me check, just a moment, please
+Upon checking you're unable to access the session because you were removed =
+by
+the notary.
+
+On Thu, 24 Jul 2025 21:11:01 GMT Evan McCall wrote:
+> You dont have permission to view this session as non witness
+
+On Thu, 24 Jul 2025 21:10:52 GMT Evan McCall wrote:
+> 6C785
+
+On Thu, 24 Jul 2025 21:10:46 GMT Evan McCall wrote:
+> I am being told I can join a session but I am getting a popup that I =
+cannot join
+as a non-witness
+----_NmP-f17618e6540cf7e0-Part_1
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" =
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html =
+xmlns=3D"http://www.w3.org/1999/xhtml" lang=3D"en" dir=3D"ltr"><head>
+
+<meta http-equiv=3D"Content-Type" content=3D"text/html; =
+charset=3DUTF-8"><meta name=3D"viewport" content=3D"width=3Ddevice-width, =
+initial-scale=3D1"><title>Crisp Email</title></head><body =
+style=3D"font-weight: 400;"><div dir=3D"auto" style=3D"font-size: 1em;">Hi =
+there! Thank you for reaching out</div><br><div dir=3D"auto" =
+style=3D"font-size: 1em;">Let me check, just a moment, please</div><br><div=
+ dir=3D"auto" style=3D"font-size: 1em;">Upon checking you're unable to =
+access the session because you were removed by the notary.</div><br><div><!=
+--[if !plain]-->
+--<br><br><div><!--[if !mso]><!-- --><img alt =
+src=3D"https://bluenotary.on.crisp.email/image/avatar/operator/5da5c6d9-b96=
+6-4f32-a221-437f86a909e4/92/?1752051400207" style=3D"background-size: =
+contain; background-repeat: no-repeat; background-position: center; =
+background-color: #EBEBEB; width: 2em; height: 2em; max-width: 30px; =
+max-height: 30px; margin-right: .5em; vertical-align: middle; display: =
+inline-block; border-radius: 2em;"><!--<![endif]--><strong>Abigail</strong>=
+<span> </span>from<span> </span><a href=3D"https://bluenotary.us/" =
+target=3D"_blank">BlueNotary</a>.</div><br><div style=3D"margin-top: .75em;=
+ font-size: .9em; color: #7b7b7b;"><div>Reply directly to this email, or =
+go<span> </span><a href=3D"https://bluenotary.on.crisp.=
+email/go/chat/resume/?target_url=3Dhttps%3A%2F%2Fapp.bluenotary.=
+us%2Fnotary%2Fdashboard&amp;session_id=3Dsession_5811fed2-1948-4d38-bb7e-f0=
+22b2b611c3" target=3D"_blank" style=3D"color: #7b7b7b;"><strong>to =
+chat</strong></a>.</div><div style=3D"margin-top: .25em;"></div></div></div=
+><!--[endif]--><div style=3D"font-size: .95em; margin-top: 1em;"><br><div =
+style=3D"color: #6B095D; border-left: 1px solid #D0D0D0; margin: 0 .5em; =
+padding: 0 .6em;"><div>On Thu, 24 Jul 2025 21:11:01 GMT Evan McCall =
+wrote:</div><br><blockquote dir=3D"auto" style=3D"font-style: normal; =
+margin: 0; padding: 0;">You dont have permission to view this session as =
+non witness</blockquote><br><div style=3D"color: #6B095D; border-left: 1px =
+solid #D0D0D0; margin: 0 .5em; padding: 0 .6em;"><div>On Thu, 24 Jul 2025 =
+21:10:52 GMT Evan McCall wrote:</div><br><blockquote dir=3D"auto" =
+style=3D"font-style: normal; margin: 0; padding: 0;">6C785</blockquote><br>=
+<div style=3D"color: #6B095D; border-left: 1px solid #D0D0D0; margin: 0 .=
+5em; padding: 0 .6em;"><div>On Thu, 24 Jul 2025 21:10:46 GMT Evan McCall =
+wrote:</div><br><blockquote dir=3D"auto" style=3D"font-style: normal; =
+margin: 0; padding: 0;">I am being told I can join a session but I am =
+getting a popup that I cannot join as a non-witness</blockquote></div></div=
+></div><br></div><!--[if !plain]-->
+
+<img src=3D"https://bluenotary.on.=
+crisp.email/hooks/email/track/message/?session_id=3Dsession_5811fed2-1948-4=
+d38-bb7e-f022b2b611c3&amp;user_id=3Dsession_5811fed2-1948-4d38-bb7e-f022b2b=
+611c3&amp;website_id=3Df5f3357e-d73e-4c9b-93c3-9d7932c502e3&amp;direction=
+=3Din&amp;fingerprints=3D%5B175339167908699%5D&amp;signature=3D4aeb8b391d45=
+9800" alt><!--[endif]--></body></html>
+----_NmP-f17618e6540cf7e0-Part_1--

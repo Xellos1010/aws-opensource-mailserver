@@ -1,0 +1,479 @@
+Return-Path: <npexpresstrust@gmail.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id wJj9K63ZemhQCQAAQCw0vA
+	(envelope-from <npexpresstrust@gmail.com>)
+	for <admin@emcnotary.com>; Fri, 18 Jul 2025 23:33:01 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=0.8 required=5.0 tests=DATE_IN_PAST_03_06,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,DMARC_PASS,FREEMAIL_FROM,HTML_MESSAGE,
+	RCVD_IN_DNSWL_NONE,RCVD_IN_MSPIKE_H2,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 SPF_PASS SPF check passed
+	* -0.1 DMARC_PASS DMARC check passed
+	*  1.1 DATE_IN_PAST_03_06 Date: is 3 to 6 hours before Received: date
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 FREEMAIL_FROM Sender email is commonly abused enduser mail
+	*      provider
+	*      [npexpresstrust[at]gmail.com]
+	* -0.0 RCVD_IN_DNSWL_NONE RBL: Sender listed at
+	*      https://www.dnswl.org/, no trust
+	*      [209.85.166.42 listed in list.dnswl.org]
+	*  0.0 RCVD_IN_MSPIKE_H2 RBL: Average reputation (+2)
+	*      [209.85.166.42 listed in wl.mailspike.net]
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+X-Spam-Score: 0.8
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (2048-bit key; unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20230601 header.b=EadS5V32;
+	dkim-atps=neutral
+Received: from mail-io1-f42.google.com (mail-io1-f42.google.com [209.85.166.42])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id 7DC3E3F467
+	for <admin@emcnotary.com>; Fri, 18 Jul 2025 23:33:01 +0000 (UTC)
+Received: by mail-io1-f42.google.com with SMTP id ca18e2360f4ac-875f28fde67so230819439f.1
+        for <admin@emcnotary.com>; Fri, 18 Jul 2025 16:33:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1752881581; x=1753486381; darn=emcnotary.com;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=EHcGIudR7EitgE6oYIkd/KZF8DnivumYObHiTlzCuWE=;
+        b=EadS5V32hzB+XJpWvYL7HCDN/MvMlX3LBgiu1ZIWBYo6SWHunUDRE4WDWQrERXyBPp
+         Ths/T5HNbMSfpHw5JrI28pw7+xr4pX7/MbwBvah+sNrBfV6t37lri5aQRKWOws0041zc
+         g/8p19dS78xf02pngEcwncJpqbHXkkthGVdzktyhYoeRWNGnnQPAzagTI8YGwrsIJnY7
+         Z2BcefMh6mLMzFsfkNKrMS8RKPJ5V7lroy0YzqxZuU3hbi5jy+l8eaOto6zL05wrsdrQ
+         YKX7/4DgIuYZcQ6HWT3wAGAwRxoVuenoAUtDJuxTpxAtE0i/v2iEIOHJtn5002MM07ZX
+         H+0w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1752881581; x=1753486381;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=EHcGIudR7EitgE6oYIkd/KZF8DnivumYObHiTlzCuWE=;
+        b=XsNnFTL1oTdnWmYUl57TU7bHa2++9ZDpGyW0wuA6/a3c5Draucxm58RXls8uJ5CZvT
+         4htV9b0RpjK3/UFpaaquyA5n/El44Y0YiGbhxdJyCIFyGFI5GdQrEF/2hK1CxTyYdM82
+         VTrMR+t/nOPDWG+wTEDlV6g5WJeZjoZUcSI/+PZ5KFxspnU62zAggR6Tz0mu4ix1uvka
+         8FfhnLj9Xz659ZtHAs+VV7f/OZ6SRSVauZPlVZyUPDoc0ZeNC8uHtABOozbJ+CuKNdFq
+         E9an8uDqKz4kyGo5dGymJbXVmrakpGdBwdWTgHNwFC/BEDaGdxc9CSOR9wxNnsU20c3w
+         tTPw==
+X-Gm-Message-State: AOJu0YwXa9LGiUVU3wxf5KZUtXcyhchpu0qd3EENWYdMtM4kO5ZAhn+9
+	/BhiRY+ItdqxtyvKIfh2BBvAPdD5JIsEI7wG0ZeOrUXznmhU0nup2fWEmukYgRYX92CS/JU78xB
+	vzMjEwVxkvaiDvBSpk9yPhKZCoSGiadaeOQ==
+X-Gm-Gg: ASbGncu1VyqpZSdb2+fPkr3gjBPL64rsQFhF4fwwkjIyOgQLHAOr8r9cg1VTs0Xwwu4
+	j8aUpAm3cQ6w8YWy0ipCGC9A8q2CwKuDokDek56Gol1hHAe1JiLm2ABy+JoZeCIREAEhzH7C4E7
+	AN0cXepruY19zv0g4CWNawQA7f92UblKLEOUVt8B3No2fWTzBYzXPg9Zz5+gRuvc2MKHVQRpxK3
+	c70wwDD2Jb7RV5e+lg8z2vu3gmPLZuvBOeDr1ddmqy0
+X-Google-Smtp-Source: AGHT+IGJ08zazoved7SkILG+lXOuVCWiNWy5bPrCezLG8pkTASnZLF41GbK6lgGKuYnNB38usHlvHEraemsiaSNluxc=
+X-Received: by 2002:a05:6e02:3981:b0:3df:5309:e962 with SMTP id
+ e9e14a558f8ab-3e282485392mr135680285ab.19.1752860798635; Fri, 18 Jul 2025
+ 10:46:38 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAMc2w5pMBbNt=uUfbN9hySAK=h2kPcCqHyCy8oDRMYgnrzCbSw@mail.gmail.com>
+ <0100019818ef3279-f7ed2096-2323-4ba9-93c9-3870bd438e3e-000000@email.amazonses.com>
+ <CAMc2w5pi-TKTOmAsizkJznHbEdY2WSwQDtohY4KR18Daz-tKPA@mail.gmail.com>
+ <CAMc2w5q1p9a13X2puTZu2uxi07v3HUGCmDrk3_wd5_8tBR2reQ@mail.gmail.com>
+ <01000198196c9bcc-f39824aa-95e2-4f60-81bb-139c35048286-000000@email.amazonses.com>
+ <CAMc2w5pDV2Wq8cUywtWR82FYnoCyzfY=_Vhnko39Lp0o-cdGFw@mail.gmail.com>
+ <01000198198ded84-be87c85d-0e38-468b-ad61-de84bb7cf901-000000@email.amazonses.com>
+ <CAMc2w5rdgFvGmGnihF6KrCECPkgaNLP3NoZkEB59fW7Zwaw=oA@mail.gmail.com> <0100019819b4da21-c67b7904-7daf-47a9-9a8a-ae6d45f71a98-000000@email.amazonses.com>
+In-Reply-To: <0100019819b4da21-c67b7904-7daf-47a9-9a8a-ae6d45f71a98-000000@email.amazonses.com>
+From: NOVA PERSONA <npexpresstrust@gmail.com>
+Date: Fri, 18 Jul 2025 13:46:27 -0400
+X-Gm-Features: Ac12FXzL2pI1w-45BzDzXK97JdwW4ExO--rfpTbqdAS4S0WJnXX-m3jFvp_o408
+Message-ID: <CAMc2w5rufRqcD73ME_oYS7Oy6WcYCbJdCH23eoNCQoTOqV_J8w@mail.gmail.com>
+Subject: Re: Notary
+To: Admin EMC Notary <admin@emcnotary.com>
+Content-Type: multipart/alternative; boundary="0000000000003e520d063a37b506"
+
+--0000000000003e520d063a37b506
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hey Evan, mailed everything out yesterday.
+
+On Thu, Jul 17, 2025 at 2:45=E2=80=AFPM Admin EMC Notary <admin@emcnotary.c=
+om>
+wrote:
+
+> Back online.
+>
+> On Jul 17, 2025, at 2:28=E2=80=AFPM, NOVA PERSONA <npexpresstrust@gmail.c=
+om>
+> wrote:
+>
+>
+>
+> On Thu, Jul 17, 2025 at 2:03=E2=80=AFPM Admin EMC Notary <admin@emcnotary=
+.com>
+> wrote:
+>
+>> The link should be from a Blue Notary email address
+>>
+>> On Jul 17, 2025, at 2:01=E2=80=AFPM, NOVA PERSONA <npexpresstrust@gmail.=
+com>
+>> wrote:
+>>
+>> hey, iis this the lnk?
+>>
+>>
+>> On Thu, Jul 17, 2025 at 1:26=E2=80=AFPM Admin EMC Notary <admin@emcnotar=
+y.com>
+>> wrote:
+>>
+>>> Your the best, thank you very much and see you in 30 minutes
+>>>
+>>> On Jul 17, 2025, at 1:25=E2=80=AFPM, NOVA PERSONA <npexpresstrust@gmail=
+.com>
+>>> wrote:
+>>>
+>>> I sent docs over before i read last 2 messages, been in meetings. I
+>>> should be out at 1:45
+>>>
+>>>
+>>> On Thu, Jul 17, 2025 at 1:23=E2=80=AFPM NOVA PERSONA <npexpresstrust@gm=
+ail.com>
+>>> wrote:
+>>>
+>>>>
+>>>>
+>>>> On Thu, Jul 17, 2025 at 11:09=E2=80=AFAM Administrator EMC Notary <
+>>>> admin@emcnotary.com> wrote:
+>>>>
+>>>>> Perfect. I will review them and reschedule the session for 2pm.
+>>>>> I'll followup if I need anything else from you
+>>>>>
+>>>>> On Jul 17, 2025 10:41, NOVA PERSONA <npexpresstrust@gmail.com> wrote:
+>>>>>
+>>>>> Hey Evan, here are the docs. He's good for 2pm EST? he should be
+>>>>> available by then. Please let me know if i need to add anything .
+>>>>>
+>>>>> Cheers
+>>>>>
+>>>>> On Thu, Jul 17, 2025 at 10:06=E2=80=AFAM Administrator EMC Notary <
+>>>>> admin@emcnotary.com> wrote:
+>>>>>
+>>>>> We can schedule the session for a time the is good for muhoro.
+>>>>> When is a good time in his in his timezone?
+>>>>>
+>>>>> If you want, Send me the documents beforehand, I can upload the
+>>>>> documents to the session.
+>>>>>
+>>>>> ~Evan
+>>>>>
+>>>>> On Jul 17, 2025 02:11, NOVA PERSONA <npexpresstrust@gmail.com> wrote:
+>>>>>
+>>>>> Cool, I know Muhoro won=E2=80=99t be home from work yet but we can ju=
+st join
+>>>>> the session. I=E2=80=99ll send you the docs as soon as I=E2=80=99m fi=
+nished adding pages to
+>>>>> make it better recording
+>>>>>
+>>>>> On Wed, Jul 16, 2025 at 6:01=E2=80=AFPM Admin EMC Notary <admin@emcno=
+tary.com>
+>>>>> wrote:
+>>>>>
+>>>>> The timezone the BlueNotary platform allowed me to select was EST.
+>>>>>
+>>>>> I=E2=80=99ve rescheduled the session for tentative 11:30 am EST but i=
+f there
+>>>>> is a time difference and we need to schedule later in the day or earl=
+ier
+>>>>> let me know.
+>>>>>
+>>>>> ~Evan McCall
+>>>>>
+>>>>> On Jul 16, 2025, at 4:57=E2=80=AFPM, Administrator EMC Notary <
+>>>>> admin@emcnotary.com> wrote:
+>>>>>
+>>>>> The same time works for me as well.
+>>>>>
+>>>>> On Jul 16, 2025 16:41, NOVA PERSONA <npexpresstrust@gmail.com> wrote:
+>>>>>
+>>>>> It was a pleasure meeting you as well. What=E2=80=99s a good time for=
+ you
+>>>>> tomorrow ? Muhoro is free around the same time.
+>>>>>
+>>>>> On Wed, Jul 16, 2025 at 2:45=E2=80=AFPM Admin EMC Notary <admin@emcno=
+tary.com>
+>>>>> wrote:
+>>>>>
+>>>>> It was great meeting you.
+>>>>>
+>>>>> Thank you for your consideration regarding my time. I appreciate you.
+>>>>> When you have the document modifications made to move forward let me =
+know.
+>>>>>
+>>>>> As we get to know each other I can offer first hand knowledge when
+>>>>> applicable to serve as identify verification with the caveat that for=
+eign
+>>>>> principals and documents may still require that biometrics verificati=
+on for
+>>>>> legally binding authority and we will take that on a case by case bas=
+is.
+>>>>>
+>>>>> My website is https://emcnotary.com/
+>>>>>
+>>>>> If you want, you can send me the documents beforehand and have me sen=
+d
+>>>>> you a session with all documents uploaded and you select a time that =
+works
+>>>>> for you and Francis.
+>>>>>
+>>>>> I would be happy to take care of any notarization needs you may have
+>>>>> in the future as well.
+>>>>>
+>>>>> God Bless you and your family,
+>>>>>
+>>>>> ~Evan McCall
+>>>>>
+>>>>>
+>>>>> On Jul 16, 2025, at 1:54=E2=80=AFPM, NOVA PERSONA <npexpresstrust@gma=
+il.com>
+>>>>> wrote:
+>>>>>
+>>>>> Hi Evan,
+>>>>>
+>>>>> Nice to meet you. We're experiencing technical difficulties.
+>>>>> Hopefully, we can meet later.
+>>>>>
+>>>>> Best
+>>>>>
+>>>>>
+>>>>>
+>>>>> The same time works for me as well.
+>>>>>
+>>>>> On Jul 16, 2025 16:41, NOVA PERSONA <npexpresstrust@gmail.com> wrote:
+>>>>>
+>>>>>
+>>>>> It was a pleasure meeting you as well. What=E2=80=99s a good time for=
+ you
+>>>>> tomorrow ? Muhoro is free around the same time.
+>>>>>
+>>>>> On Wed, Jul 16, 2025 at 2:45=E2=80=AFPM Admin EMC Notary <admin@emcno=
+tary.com>
+>>>>> wrote:
+>>>>>
+>>>>>
+>>>>> It was great meeting you.
+>>>>>
+>>>>> Thank you for your consideration regarding my time. I appreciate you.
+>>>>> When you have the document modifications made to move forward let me =
+know.
+>>>>>
+>>>>> As we get to know each other I can offer first hand knowledge when
+>>>>> applicable to serve as identify verification with the caveat that for=
+eign
+>>>>> principals and documents may still require that biometrics verificati=
+on for
+>>>>> legally binding authority and we will take that on a case by case bas=
+is.
+>>>>>
+>>>>> My website is https://emcnotary.com/
+>>>>>
+>>>>> If you want, you can send me the documents beforehand and have me sen=
+d
+>>>>> you a session with all documents uploaded and you select a time that =
+works
+>>>>> for you and Francis.
+>>>>>
+>>>>> I would be happy to take care of any notarization needs you may have
+>>>>> in the future as well.
+>>>>>
+>>>>> God Bless you and your family,
+>>>>>
+>>>>> ~Evan McCall
+>>>>>
+>>>>>
+>>>>> On Jul 16, 2025, at 1:54=E2=80=AFPM, NOVA PERSONA <npexpresstrust@gma=
+il.com>
+>>>>> wrote:
+>>>>>
+>>>>> Hi Evan,
+>>>>>
+>>>>> Nice to meet you. We're experiencing technical difficulties.
+>>>>> Hopefully, we can meet later.
+>>>>>
+>>>>> Best
+>>>>>
+>>>>>
+>>>>>
+>>>>>
+>>>>>
+>>>>>
+>>>>>
+>>>
+>> <RecordedDeclarationOfName&ExecutorAppointment.pdf>
+>
+>
+>
+
+--0000000000003e520d063a37b506
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"auto">Hey Evan, mailed everything out yesterday.</div><div><br>=
+<div class=3D"gmail_quote gmail_quote_container"><div dir=3D"ltr" class=3D"=
+gmail_attr">On Thu, Jul 17, 2025 at 2:45=E2=80=AFPM Admin EMC Notary &lt;<a=
+ href=3D"mailto:admin@emcnotary.com">admin@emcnotary.com</a>&gt; wrote:<br>=
+</div><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;b=
+order-left-width:1px;border-left-style:solid;padding-left:1ex;border-left-c=
+olor:rgb(204,204,204)"><div style=3D"line-break:after-white-space">Back onl=
+ine.<div><div><div><br><blockquote type=3D"cite"></blockquote></div></div><=
+/div></div><div style=3D"line-break:after-white-space"><div><div><div><bloc=
+kquote type=3D"cite"><div>On Jul 17, 2025, at 2:28=E2=80=AFPM, NOVA PERSONA=
+ &lt;<a href=3D"mailto:npexpresstrust@gmail.com" target=3D"_blank">npexpres=
+strust@gmail.com</a>&gt; wrote:</div><br></blockquote></div></div></div></d=
+iv><div style=3D"line-break:after-white-space"><div><div><div><blockquote t=
+ype=3D"cite"><div></div></blockquote></div></div></div></div><div style=3D"=
+line-break:after-white-space"><div><div><div><blockquote type=3D"cite"><div=
+><div dir=3D"ltr"><br></div><br><div class=3D"gmail_quote"><div dir=3D"ltr"=
+ class=3D"gmail_attr">On Thu, Jul 17, 2025 at 2:03=E2=80=AFPM Admin EMC Not=
+ary &lt;<a href=3D"mailto:admin@emcnotary.com" target=3D"_blank">admin@emcn=
+otary.com</a>&gt; wrote:<br></div><blockquote class=3D"gmail_quote" style=
+=3D"margin:0px 0px 0px 0.8ex;border-left-width:1px;border-left-style:solid;=
+padding-left:1ex;border-left-color:rgb(204,204,204)"><div>The link should b=
+e from a Blue Notary email address<br id=3D"m_-4569898232819641497m_8451301=
+357310007243lineBreakAtBeginningOfMessage"><div><br><blockquote type=3D"cit=
+e"><div>On Jul 17, 2025, at 2:01=E2=80=AFPM, NOVA PERSONA &lt;<a href=3D"ma=
+ilto:npexpresstrust@gmail.com" target=3D"_blank">npexpresstrust@gmail.com</=
+a>&gt; wrote:</div><br><div><div dir=3D"ltr">hey, iis this the lnk?<div><br=
+></div></div><br><div class=3D"gmail_quote"><div dir=3D"ltr" class=3D"gmail=
+_attr">On Thu, Jul 17, 2025 at 1:26=E2=80=AFPM Admin EMC Notary &lt;<a href=
+=3D"mailto:admin@emcnotary.com" target=3D"_blank">admin@emcnotary.com</a>&g=
+t; wrote:<br></div><blockquote class=3D"gmail_quote" style=3D"margin:0px 0p=
+x 0px 0.8ex;border-left-width:1px;border-left-style:solid;padding-left:1ex;=
+border-left-color:rgb(204,204,204)"><div>Your the best, thank you very much=
+ and see you in 30 minutes<div><div><div><div><br><blockquote type=3D"cite"=
+><div>On Jul 17, 2025, at 1:25=E2=80=AFPM, NOVA PERSONA &lt;<a href=3D"mail=
+to:npexpresstrust@gmail.com" target=3D"_blank">npexpresstrust@gmail.com</a>=
+&gt; wrote:</div><br><div><div dir=3D"ltr">I sent docs over before i read l=
+ast 2 messages, been in meetings. I should be out at 1:45<div><br></div></d=
+iv><br><div class=3D"gmail_quote"><div dir=3D"ltr" class=3D"gmail_attr">On =
+Thu, Jul 17, 2025 at 1:23=E2=80=AFPM NOVA PERSONA &lt;<a href=3D"mailto:npe=
+xpresstrust@gmail.com" target=3D"_blank">npexpresstrust@gmail.com</a>&gt; w=
+rote:<br></div><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0p=
+x 0.8ex;border-left-width:1px;border-left-style:solid;padding-left:1ex;bord=
+er-left-color:rgb(204,204,204)"><div dir=3D"ltr"><br></div><br><div class=
+=3D"gmail_quote"><div dir=3D"ltr" class=3D"gmail_attr">On Thu, Jul 17, 2025=
+ at 11:09=E2=80=AFAM Administrator EMC Notary &lt;<a href=3D"mailto:admin@e=
+mcnotary.com" target=3D"_blank">admin@emcnotary.com</a>&gt; wrote:<br></div=
+><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;border=
+-left-width:1px;border-left-style:solid;padding-left:1ex;border-left-color:=
+rgb(204,204,204)"><div dir=3D"auto"><div>Perfect. I will review them and re=
+schedule the session for 2pm.</div><div dir=3D"auto">I&#39;ll followup if I=
+ need anything else from you<br><div class=3D"gmail_extra" dir=3D"auto"><br=
+><div class=3D"gmail_quote">On Jul 17, 2025 10:41, NOVA PERSONA &lt;<a href=
+=3D"mailto:npexpresstrust@gmail.com" target=3D"_blank">npexpresstrust@gmail=
+.com</a>&gt; wrote:<br type=3D"attribution"><blockquote style=3D"margin:0px=
+ 0px 0px 0.8ex;border-left-width:1px;border-left-style:solid;padding-left:1=
+ex;border-left-color:rgb(204,204,204)"><div dir=3D"ltr">Hey Evan, here are =
+the docs. He&#39;s good for 2pm EST? he should be available by then. Please=
+ let me know if i need to add anything .<div><br></div><div>Cheers</div></d=
+iv><br><div><div dir=3D"ltr">On Thu, Jul 17, 2025 at 10:06=E2=80=AFAM Admin=
+istrator EMC Notary &lt;<a href=3D"mailto:admin@emcnotary.com" target=3D"_b=
+lank">admin@emcnotary.com</a>&gt; wrote:<br></div><blockquote style=3D"marg=
+in:0px 0px 0px 0.8ex;border-left-width:1px;border-left-style:solid;padding-=
+left:1ex;border-left-color:rgb(204,204,204)"><div dir=3D"auto"><div>We can =
+schedule the session for a time the is good for muhoro.</div><div dir=3D"au=
+to">When is a good time in his in his timezone?</div><div dir=3D"auto"><br>=
+</div><div dir=3D"auto">If you want, Send me the documents beforehand, I ca=
+n upload the documents to the session.<br><br>~Evan<br><div dir=3D"auto"><b=
+r><div>On Jul 17, 2025 02:11, NOVA PERSONA &lt;<a href=3D"mailto:npexpresst=
+rust@gmail.com" target=3D"_blank">npexpresstrust@gmail.com</a>&gt; wrote:<b=
+r type=3D"attribution"><blockquote style=3D"margin:0px 0px 0px 0.8ex;border=
+-left-width:1px;border-left-style:solid;padding-left:1ex;border-left-color:=
+rgb(204,204,204)"><div dir=3D"auto">Cool, I know Muhoro won=E2=80=99t be ho=
+me from work yet but we can just join the session. I=E2=80=99ll send you th=
+e docs as soon as I=E2=80=99m finished adding pages to make it better recor=
+ding</div><div><br><div><div dir=3D"ltr">On Wed, Jul 16, 2025 at 6:01=E2=80=
+=AFPM Admin EMC Notary &lt;<a href=3D"mailto:admin@emcnotary.com" target=3D=
+"_blank">admin@emcnotary.com</a>&gt; wrote:<br></div><blockquote style=3D"m=
+argin:0px 0px 0px 0.8ex;border-left-width:1px;border-left-style:solid;paddi=
+ng-left:1ex;border-left-color:rgb(204,204,204)"><div>The timezone the BlueN=
+otary platform allowed me to select was EST.<div><br></div><div>I=E2=80=99v=
+e rescheduled the session for tentative 11:30 am EST but if there is a time=
+ difference and we need to schedule later in the day or earlier let me know=
+.</div><div><br></div><div>~Evan McCall<br><div><br><blockquote><div>On Jul=
+ 16, 2025, at 4:57=E2=80=AFPM, Administrator EMC Notary &lt;<a href=3D"mail=
+to:admin@emcnotary.com" target=3D"_blank">admin@emcnotary.com</a>&gt; wrote=
+:</div><br><div><div dir=3D"auto"><div>The same time works for me as well.<=
+/div><div dir=3D"auto"><div dir=3D"auto"><br><div>On Jul 16, 2025 16:41, NO=
+VA PERSONA &lt;<a href=3D"mailto:npexpresstrust@gmail.com" target=3D"_blank=
+">npexpresstrust@gmail.com</a>&gt; wrote:<br type=3D"attribution"><blockquo=
+te style=3D"margin:0px 0px 0px 0.8ex;border-left-width:1px;border-left-styl=
+e:solid;padding-left:1ex;border-left-color:rgb(204,204,204)"><div dir=3D"au=
+to">It was a pleasure meeting you as well. What=E2=80=99s a good time for y=
+ou tomorrow ? Muhoro is free around the same time.</div><div><br><div><div =
+dir=3D"ltr">On Wed, Jul 16, 2025 at 2:45=E2=80=AFPM Admin EMC Notary &lt;<a=
+ href=3D"mailto:admin@emcnotary.com" target=3D"_blank">admin@emcnotary.com<=
+/a>&gt; wrote:<br></div><blockquote style=3D"margin:0px 0px 0px 0.8ex;borde=
+r-left-width:1px;border-left-style:solid;padding-left:1ex;border-left-color=
+:rgb(204,204,204)"><div>It was great meeting you.<div><br></div><div>Thank =
+you for your consideration regarding my time. I appreciate you. When you ha=
+ve the document modifications made to move forward let me know.</div><div><=
+br></div><div>As we get to know each other I can offer first hand knowledge=
+ when applicable to serve as identify verification with the caveat that for=
+eign principals and documents may still require that biometrics verificatio=
+n for legally binding authority and we will take that on a case by case bas=
+is.</div><div><br></div><div>My website is=C2=A0<a href=3D"https://emcnotar=
+y.com/" target=3D"_blank">https://emcnotary.com/</a></div><div><br></div><d=
+iv>If you want, you can send me the documents beforehand and have me send y=
+ou a session with all documents uploaded and you select a time that works f=
+or you and Francis.</div><div><br></div><div>I would be happy to take care =
+of any notarization needs you may have in the future as well.=C2=A0</div><d=
+iv><br></div><div>God Bless you and your family,</div><div><br></div><div>~=
+Evan McCall</div></div><div><div><br><div><br><blockquote><div>On Jul 16, 2=
+025, at 1:54=E2=80=AFPM, NOVA PERSONA &lt;<a href=3D"mailto:npexpresstrust@=
+gmail.com" target=3D"_blank">npexpresstrust@gmail.com</a>&gt; wrote:</div><=
+br><div><div dir=3D"ltr">Hi Evan,<div><br></div><div>Nice to meet you. We&#=
+39;re experiencing technical difficulties. Hopefully, we can meet later.</d=
+iv><div><br></div><div>Best</div><div><br></div></div>
+</div></blockquote></div><br></div></div></blockquote></div></div>
+</blockquote></div><br></div></div></div>The same time works for me as well=
+.<br><br>On Jul 16, 2025 16:41, NOVA PERSONA &lt;<a href=3D"mailto:npexpres=
+strust@gmail.com" target=3D"_blank">npexpresstrust@gmail.com</a>&gt; wrote:=
+<br><blockquote><br>It was a pleasure meeting you as well. What=E2=80=99s a=
+ good time for you tomorrow ? Muhoro is free around the same time.<br><br>O=
+n Wed, Jul 16, 2025 at 2:45=E2=80=AFPM Admin EMC Notary &lt;<a href=3D"mail=
+to:admin@emcnotary.com" target=3D"_blank">admin@emcnotary.com</a>&gt; wrote=
+:<br><blockquote><br>It was great meeting you.<br><br>Thank you for your co=
+nsideration regarding my time. I appreciate you. When you have the document=
+ modifications made to move forward let me know.<br><br>As we get to know e=
+ach other I can offer first hand knowledge when applicable to serve as iden=
+tify verification with the caveat that foreign principals and documents may=
+ still require that biometrics verification for legally binding authority a=
+nd we will take that on a case by case basis.<br><br>My website is=C2=A0<a =
+href=3D"https://emcnotary.com/" target=3D"_blank">https://emcnotary.com/</a=
+><br><br>If you want, you can send me the documents beforehand and have me =
+send you a session with all documents uploaded and you select a time that w=
+orks for you and Francis.<br><br>I would be happy to take care of any notar=
+ization needs you may have in the future as well.=C2=A0<br><br>God Bless yo=
+u and your family,<br><br>~Evan McCall<br><br><br><blockquote>On Jul 16, 20=
+25, at 1:54=E2=80=AFPM, NOVA PERSONA &lt;<a href=3D"mailto:npexpresstrust@g=
+mail.com" target=3D"_blank">npexpresstrust@gmail.com</a>&gt; wrote:<br><br>=
+Hi Evan,<br><br>Nice to meet you. We&#39;re experiencing technical difficul=
+ties. Hopefully, we can meet later.<br><br>Best<br><br></blockquote><br></b=
+lockquote></blockquote><br></div></blockquote></div><br></div></div></block=
+quote></div></div>
+</blockquote></div><br></div></div></div></blockquote></div>
+</blockquote></div><br></div></div></div></blockquote></div>
+</blockquote></div>
+</div></blockquote></div><br></div></div></div></div></blockquote></div>
+</div></blockquote></div><br></div></blockquote></div>
+</div></blockquote></div></div></div></div><div style=3D"line-break:after-w=
+hite-space"><div><div><div><blockquote type=3D"cite"><div><span id=3D"m_-45=
+69898232819641497cid:f_md7q4jka0">&lt;RecordedDeclarationOfName&amp;Executo=
+rAppointment.pdf&gt;</span></div></blockquote></div><br></div></div></div><=
+/blockquote></div></div>
+
+--0000000000003e520d063a37b506--

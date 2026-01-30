@@ -1,0 +1,297 @@
+Return-Path: <bounce+9f50c6.f8e01d-admin=emcnotary.com@mg6.ceipalmm.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id KflrLsiMqGiRPgEAQCw0vA
+	(envelope-from <bounce+9f50c6.f8e01d-admin=emcnotary.com@mg6.ceipalmm.com>)
+	for <admin@emcnotary.com>; Fri, 22 Aug 2025 15:29:12 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: **
+X-Spam-Status: No, score=2.0 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DMARC_FAIL_NONE,HTML_MESSAGE,MIME_HTML_ONLY,RCVD_IN_DNSWL_NONE,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	*  2.0 DMARC_FAIL_NONE DMARC check failed (p=none)
+	* -0.1 SPF_PASS SPF check passed
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	*  0.1 MIME_HTML_ONLY BODY: Message only has text/html MIME parts
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	* -0.0 RCVD_IN_DNSWL_NONE RBL: Sender listed at
+	*      https://www.dnswl.org/, no trust
+	*      [159.135.236.80 listed in list.dnswl.org]
+X-Spam-Score: 2.0
+Authentication-Results: box.emcnotary.com; dmarc=fail (p=none dis=none) header.from=jscsolution.com
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=mg6.ceipalmm.com
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (1024-bit key; unprotected) header.d=mg6.ceipalmm.com header.i=@mg6.ceipalmm.com header.a=rsa-sha256 header.s=mailo header.b=fwSjC3mx;
+	dkim-atps=neutral
+Received: from m236-80.mailgun.net (m236-80.mailgun.net [159.135.236.80])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id 6BE263F693
+	for <admin@emcnotary.com>; Fri, 22 Aug 2025 15:29:12 +0000 (UTC)
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg6.ceipalmm.com; q=dns/txt; s=mailo; t=1755876551; x=1755883751;
+ h=Content-Transfer-Encoding: Content-Type: Message-Id: List-Unsubscribe: Reply-To: sender: sender: To: To: From: From: Subject: Subject: Mime-Version: Date;
+ bh=CO2N6Z4Sa2uunP15E0xfEw7Qt3mrFIdYuBM4NvkL8CA=;
+ b=fwSjC3mxgNm8R9WbhgiaLtSPzmyuodzhiPm5vsSFitmdCwetbTlxkso39zHlC0iZbj1fWaw0IfWIw9t/xkLVuQMQySzkdnh7qqYQwC1IGAMluLldX+5eBRT6sFPvXMaNqlqt5oi4PzjHqsJU8c4+TLXPY+NU7V+IMFWoEScWbG0=
+X-Mailgun-Sid: WyJjMzNlZSIsImFkbWluQGVtY25vdGFyeS5jb20iLCJmOGUwMWQiXQ==
+Received: by 16fd09906ee90bdaf8bf1deb31a82cb7b217aae8491967000f37c559b920d6c4 with HTTP
+ id 68a88cc6cacdf95bdba9381d; Fri, 22 Aug 2025 15:29:10 GMT
+X-Mailgun-Sending-Ip-Pool-Name: mg6 pool
+X-Mailgun-Sending-Ip-Pool: 633b9210e961551f13fcc365
+X-Mailgun-Sending-Ip: 159.135.236.80
+X-Mailgun-Batch-Id: 68a88cc61891d450166ad805
+Date: Fri, 22 Aug 2025 15:29:10 +0000
+Mime-Version: 1.0
+Subject: Interview today or Monday:: Helpdesk Support role in Ochopee, FL- Onsite
+From: Anshu Chaudhary <anshu.c@jscsolution.com>
+To: admin@emcnotary.com
+X-Mailgun-Tag: th_company_id_34517
+X-Mailgun-Tag: o:native-send
+X-Mailgun-Tag: o:rewrite-sender-header
+sender: Anshu Chaudhary <anshu.c@jscsolution.com>
+Reply-To: anshu.c@jscsolution.com
+List-Unsubscribe: <unsubscribe.jscsolution.com/users/request_unsubscribe/c0ddf26bc94ef2f32407045bc3d97017fb8ce4f2/2188ff2e8fc471b9c46520359d283cf271694a06/N3Rqa2J2cElrbTBtQXg3K3F0ZVFXd3ozV1pNd0lCcHhvZ3Jxck1TcTRwRT0=>
+X-Mailgun-Variables: {"ref_id": "34517", "user_id": "420166"}
+Message-Id: <20250822152910.bb16573980b323cd@mg6.ceipalmm.com>
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+
+<!DOCTYPE html>
+<html lang=3D"en">
+
+<head>
+    <meta charset=3D"UTF-8">
+    <meta name=3D"x-apple-disable-message-reformatting">=20
+    <meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=
+=3D1.0">   =20
+    <title>Your Email Title</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css?family=3DOpen+Sans:300,40=
+0,500,600,700&display=3Dswap');
+    body{font-size:14px;-webkit-text-size-adjust:100%; -ms-text-size-adjust=
+:100%;font-family:'Open Sans', sans-serif, Arial, sans-serif;}
+    .atsEmail{max-width: 100%;padding:10px;font-family:'Open Sans', sans-se=
+rif, Arial, sans-serif; color:#333;}=20
+    .atsMBlock *{box-sizing: border-box;}=20
+    .atsEmail p{font-size:14px;}
+    .tableBlock table{border-collapse: collapse;}
+    .tableBlock th{ white-space: nowrap;}=20
+    .tableBlock td, .tableBlock th{font-size:14px; padding:5px;}
+    .tableBlock {max-width: 100%; overflow: auto;}
+    .tableBlock img, .atsEmail img{max-width: 99%; width: auto;}
+    .mTitle-1{color:#333; font-size: 22px; line-height: 22px; font-family:'=
+Open Sans', sans-serif, Arial, sans-serif; font-weight:700; float: left; wi=
+dth: 100%;  margin-top: 10px;margin-bottom: 20px;}
+    .mTitle-2{color:#333; font-size: 22px; font-family:'Open Sans', sans-se=
+rif, Arial, sans-serif; font-weight:400; float: left; width: 100%;  margin-=
+top: 10px;margin-bottom: 20px;}
+    .mTitle-3{color:#333; font-size: 14px; font-family:'Open Sans', sans-se=
+rif, Arial, sans-serif; font-weight:600; float: left; width: 100%;  margin-=
+top: 10px;margin-bottom: 10px;}
+    .emTitle-1{font-size: 20px!important; width: 100%;font-family:'Open San=
+s', sans-serif, Arial, sans-serif; color:#333; font-weight: 600;}
+    .emNText{font-size: 14px!important; width: 100%;font-family:'Open Sans'=
+, sans-serif, Arial, sans-serif; color:#333; line-height: 20px;}
+    .emNText-2{font-size: 18px!important; width: 100%;font-family:'Open San=
+s', sans-serif, Arial, sans-serif;color:#333; font-weight: 600; margin-top:=
+0;}
+    .emNText-3{font-family:'Open Sans', sans-serif, Arial, sans-serif;color=
+:#333;font-size: 14px!important; line-height: 20px;}
+    .boxColM{font-family:'Open Sans', sans-serif, Arial, sans-serif;color:#=
+333;line-height: 20px;width: 100%;max-width:49%;float: left; margin:10px 0;=
+ padding-right: 1%;}
+    .mFooterDmc{text-align: left;width: 100%;margin: 25px auto 20px;padding=
+: 15px 0px 0;display:block;clear: both;border-top: solid 1px #ececec;float:=
+ left;}
+    .mBodyText{color:#333; font-size:14px; margin-bottom: 10px;font-family:=
+'Open Sans', sans-serif, Arial, sans-serif;  width:100%;}
+    .mBodyText ul{margin: 0; padding: 0 0 0 20px;}
+    @media screen and (max-width: 600px) {=20
+      .boxColM{max-width: 100%!important; margin-top: 10px!important;paddin=
+g-right: 0!important;font-size:16px!important; width: 100%;}
+      .tableBlock {max-width:530px;}     =20
+      .tableBlock td, .tableBlock th{font-size:16px; }
+      .tableBlock th{ white-space: nowrap;}=20
+      .mTitle-1{font-size:20px!important;}
+      .emTitle-1{font-size:20px!important;}
+      .emNText-2{font-size:18px!important;}
+      .emNText{font-size:16px!important;line-height: 22px !important;}
+      .emNText-3{font-size:16px!important;line-height: 22px !important;}
+      .emNText{font-size:16px!important;}
+  }=20
+   @media screen and (max-width: 500px) {
+      .atsEmail{max-width:460px;}
+      .tableBlock {width:460px!important; overflow: auto;}
+      .tableBlock td, .tableBlock th{font-size:16px!important;}
+  }
+  @media screen and (max-width: 430px) {
+      .tableBlock {width: 410px!important; overflow: auto;}
+      .atsEmail{max-width:410px;}
+      .tableBlock td, .tableBlock th{font-size:16px!important;}
+  }
+    @media screen and (max-width: 400px) {
+      .tableBlock {width:390px!important;overflow: auto;}
+      .atsEmail{max-width:390px;}
+      .tableBlock td, .tableBlock th{font-size:16px!important;}
+     =20
+  } =20
+  </style>
+</head>
+
+<body style=3D"margin: 0; padding: 0; font-family:'Open Sans', sans-serif, =
+Arial, sans-serif; background-color: #fff; line-height: 20px;">
+ =20
+  <div class=3D"atsEmail" style=3D"max-width: 100%;padding:0px;font-family:=
+'Open Sans', sans-serif, Arial, sans-serif; color:#333;width:100%;">
+          =20
+<!--  =3D=3Dbody content start here=3D=3D -->
+    <div class=3D"mBodyText" style=3D"color:#333; font-size:14px; margin-bo=
+ttom: 10px;font-family:'Open Sans', sans-serif, Arial, sans-serif;  width:1=
+00%;">
+                              <br>
+      <div style=3D"max-width:100%; clear:both;">
+        <div><span style=3D"font-size:12px;">Hello&nbsp;Evan&nbsp;Mccall</s=
+pan></div>
+
+<div>&nbsp;</div>
+
+<div><span style=3D"font-size:12px;">My name is Anshu Chaudhary and I am a =
+Staffing Specialist at JS Consulting.&nbsp;I am reaching out to you on an e=
+xciting job opportunity with one of our clients.</span></div>
+
+<div>&nbsp;</div>
+
+<div>
+<p><span style=3D"font-size:12pt"><span style=3D"font-family:Calibri,sans-s=
+erif"><b>Job Title:&nbsp;Level 1 Helpdesk Support</b></span></span></p>
+
+<p><span style=3D"font-size:12pt"><span style=3D"font-family:Calibri,sans-s=
+erif"><b>Job Duration : 3- 6months Contract</b></span></span></p>
+
+<p><span style=3D"font-size:12pt"><span style=3D"font-family:Calibri,sans-s=
+erif"><b>Job Location : Onsite - Miami Dade-Collier Training and Transition=
+ Airport (Ochopee, FL) (Near City candidates accepted)</b></span></span></p=
+>
+
+<p><span style=3D"font-size:12pt"><span style=3D"font-family:Calibri,sans-s=
+erif">Drug screen and background : we need to ask them if they are clear.</=
+span></span></p>
+
+<p><span style=3D"font-size:12pt"><span style=3D"font-family:Calibri,sans-s=
+erif">&nbsp;</span></span></p>
+
+<p><span style=3D"font-size:12pt"><span style=3D"font-family:Calibri,sans-s=
+erif">1<sup>st</sup>&nbsp;shift :8am &ndash; 4:pm EST</span></span></p>
+
+<p><span style=3D"font-size:12pt"><span style=3D"font-family:Calibri,sans-s=
+erif"><b>Job Description:</b></span></span></p>
+
+<p><span style=3D"font-size:12pt"><span style=3D"font-family:Calibri,sans-s=
+erif">We are looking for a friendly and motivated Level 1 Helpdesk Support =
+professional to join our IT team. In this role, you will be the first point=
+ of contact for our users, providing prompt assistance with technical issue=
+s and ensuring smooth daily operations. You will troubleshoot problems, res=
+olve basic issues, and escalate more complex challenges when necessary.</sp=
+an></span></p>
+
+<p><span style=3D"font-size:12pt"><span style=3D"font-family:Calibri,sans-s=
+erif">&nbsp;</span></span></p>
+
+<p><span style=3D"font-size:12pt"><span style=3D"font-family:Calibri,sans-s=
+erif"><b>Key Responsibilities:</b></span></span></p>
+
+<ul>
+	<li><span style=3D"font-size:12pt"><span style=3D"tab-stops:list 18.0pt"><=
+span style=3D"font-family:Calibri,sans-serif">Respond to user inquiries via=
+ phone, email, or chat in a timely manner.</span></span></span></li>
+	<li><span style=3D"font-size:12pt"><span style=3D"tab-stops:list 18.0pt"><=
+span style=3D"font-family:Calibri,sans-serif">Provide basic technical suppo=
+rt for common hardware, software, and connectivity issues.</span></span></s=
+pan></li>
+	<li><span style=3D"font-size:12pt"><span style=3D"tab-stops:list 18.0pt"><=
+span style=3D"font-family:Calibri,sans-serif">Log, monitor, and track suppo=
+rt tickets using our helpdesk system.</span></span></span></li>
+	<li><span style=3D"font-size:12pt"><span style=3D"tab-stops:list 18.0pt"><=
+span style=3D"font-family:Calibri,sans-serif">Escalate unresolved issues to=
+ appropriate IT teams following established procedures.</span></span></span=
+></li>
+	<li><span style=3D"font-size:12pt"><span style=3D"tab-stops:list 18.0pt"><=
+span style=3D"font-family:Calibri,sans-serif">Educate users on basic troubl=
+eshooting steps and best practices.</span></span></span></li>
+	<li><span style=3D"font-size:12pt"><span style=3D"tab-stops:list 18.0pt"><=
+span style=3D"font-family:Calibri,sans-serif">Document solutions and update=
+ knowledge base articles.</span></span></span></li>
+	<li><span style=3D"font-size:12pt"><span style=3D"tab-stops:list 18.0pt"><=
+span style=3D"font-family:Calibri,sans-serif">Maintain a positive, customer=
+-focused attitude with a strong sense of urgency.</span></span></span></li>
+</ul>
+
+<p><span style=3D"font-size:12pt"><span style=3D"font-family:Calibri,sans-s=
+erif">&nbsp;</span></span></p>
+
+<p><span style=3D"font-size:12pt"><span style=3D"font-family:Calibri,sans-s=
+erif"><b>Qualifications:</b></span></span></p>
+
+<ul>
+	<li><span style=3D"font-size:12pt"><span style=3D"tab-stops:list 18.0pt"><=
+span style=3D"font-family:Calibri,sans-serif">Basic understanding of comput=
+er systems, software, and network connectivity.</span></span></span></li>
+	<li><span style=3D"font-size:12pt"><span style=3D"tab-stops:list 18.0pt"><=
+span style=3D"font-family:Calibri,sans-serif">Strong communication skills w=
+ith the ability to explain technical concepts in simple terms.</span></span=
+></span></li>
+	<li><span style=3D"font-size:12pt"><span style=3D"tab-stops:list 18.0pt"><=
+span style=3D"font-family:Calibri,sans-serif">Excellent problem-solving and=
+ customer service abilities.</span></span></span></li>
+	<li><span style=3D"font-size:12pt"><span style=3D"tab-stops:list 18.0pt"><=
+span style=3D"font-family:Calibri,sans-serif">Familiarity with common opera=
+ting systems (e.g., Windows, macOS) and office productivity software.</span=
+></span></span></li>
+	<li><span style=3D"font-size:12pt"><span style=3D"tab-stops:list 18.0pt"><=
+span style=3D"font-family:Calibri,sans-serif">Previous experience in a tech=
+nical support or helpdesk role is a plus.</span></span></span></li>
+</ul>
+
+<p>&nbsp;</p>
+</div>
+&nbsp;
+
+<div id=3D"EditorSignatureID">
+<p><span style=3D"font-size:12pt"><span style=3D"font-family:Calibri,sans-s=
+erif"><b>Thanks & regards</b><br />
+Anshu Chaudhary<br />
+Sr. Technical Recruiter<br />
+<b>Desk:</b> +1 <span style=3D"color:black">(732) 256-1251</span><br />
+<b>JS Consulting Solution</b></span></span></p>
+
+<p><span style=3D"font-size:12pt"><span style=3D"font-family:Calibri,sans-s=
+erif">101 Hudson Street, 21st Floor, Jersey City, NJ 07302<br />
+<u>We enable and provide workforce management solutions</u></span></span></=
+p>
+</div>
+        </div>=20
+            </div>
+=20
+<!-- =3D=3Dbody content end here=3D=3D --> =20
+ =20
+
+        <p style=3D"border:none; padding-left:0px; font-size:11px; font-fam=
+ily:Arial, Helvetica, sans-serif; color:#6b6c72; text-align:left; line-heig=
+ht:18px;"> To unsubscribe from future emails or to update your email prefer=
+ences <a rel=3D"nofollow" href=3D"unsubscribe.jscsolution.com/users/request=
+_unsubscribe/c0ddf26bc94ef2f32407045bc3d97017fb8ce4f2/2188ff2e8fc471b9c4652=
+0359d283cf271694a06/N3Rqa2J2cElrbTBtQXg3K3F0ZVFXd3ozV1pNd0lCcHhvZ3Jxck1TcTR=
+wRT0=3D" style=3D"color:#0077c5; text-decoration:underline"><b> click here =
+</b></a></p></div>
+<img width=3D"1" height=3D"1" alt=3D"" src=3D"http://clicks.mg6.ceipalmm.co=
+m/o/eJw0zLFuwyAQANCvMVss7uAADwz9Egtz5xqp4IjQVPn7qnKzvuFx3INoYCURPFHwjgjUEUF=
+4y0HYB8sOd7eQM8GCXiRh9hlViaiRdEAEwgX0vG3gyJsl6M2gyTxZXT_dnKXc01etcz6r6jFxLW=
+2yWmpu50j9dbnsa-FoLIFXI45jzWe9p_ZaC69vPSfz0dIoT7k9pPG_dPnpZVwk_XZIYunq-yH9b=
+7SowTn1jPgbAAD__6DeRz0"></body>
+
+</html>

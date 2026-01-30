@@ -1,0 +1,150 @@
+Return-Path: <bounces+ad6f70f312c99800@bluenotary.on.crisp.email>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id s52ROwoJzmivkAoAQCw0vA
+	(envelope-from <bounces+ad6f70f312c99800@bluenotary.on.crisp.email>)
+	for <admin@emcnotary.com>; Sat, 20 Sep 2025 01:53:14 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.3 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,HTML_IMAGE_ONLY_32,HTML_MESSAGE,SPF_HELO_NONE,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 DMARC_PASS DMARC check passed
+	* -0.1 SPF_PASS SPF check passed
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 HTML_IMAGE_ONLY_32 BODY: HTML: images with 2800-3200 bytes of
+	*      words
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+X-Spam-Score: -0.3
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=quarantine dis=none) header.from=bluenotary.on.crisp.email
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=bluenotary.on.crisp.email
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (2048-bit key; unprotected) header.d=bluenotary.on.crisp.email header.i=@bluenotary.on.crisp.email header.a=rsa-sha256 header.s=crisp header.b=i8hrpsx7;
+	dkim=pass (2048-bit key; secure) header.d=crisp.email header.i=@crisp.email header.a=rsa-sha256 header.s=platform header.b=TqWrvrUF;
+	dkim-atps=neutral
+X-Greylist: delayed 1215 seconds by postgrey-1.36 at box.emcnotary.com; Sat, 20 Sep 2025 01:53:14 UTC
+Received: from mailer-1x.outbound.crisp.email (mailer-1x.outbound.crisp.email [93.177.84.76])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id 36DD47E623
+	for <admin@emcnotary.com>; Sat, 20 Sep 2025 01:53:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=bluenotary.on.crisp.email; s=crisp; t=1758331978;
+	bh=42oFcN5CwaPISljGWlWBWlVGpn4wPLUDoTJJiXAJj8k=;
+	h=From:To:Reply-To:Subject:Date:From;
+	b=i8hrpsx7FjQHXIe+nUe5JRuurf48SUqBi/IjgpvGWnwpsupiN72oCu/esz70xHgNM
+	 J+9MN3OLd+lRaGZQUWtaMQ770iaZYHdD3UFA4MP1jZtchjE76jYcI9IvFlaWOHAhDn
+	 w5OXSZeH256XAWBOHSfA7x5Jl7iFub7W0yeVoFDWJ1B/kSYteZAtlmbrZ0J3E3MYAo
+	 UycacUCILEGpD2iEk3xy7p6yHr4mjLeJCqvNAHNs/jsANUShvInrorsr3GCwOhiAoA
+	 up5C5UKKnlYs/VJ/imhbslEp4220HO9/9vJxtJqMXkWxSdsDAkAxmVVmd8ADwJLeFD
+	 kc6FBYbcEbDKA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=crisp.email;
+	s=platform; t=1758331978;
+	bh=42oFcN5CwaPISljGWlWBWlVGpn4wPLUDoTJJiXAJj8k=;
+	h=From:To:Reply-To:Subject:Date:From;
+	b=TqWrvrUFqMqoUy2ihLkNPlIGBi5BvB6qLYndVM7w9k8FlLEAmP6xF+Of4VchWNPES
+	 77ONXxkDUNO7/41bBR7Aee5cQokdbqmiBWE0iq2SpOsCCieQPn+CISS5Swdiy4OHK2
+	 fi61EbqG0B3opN/h/OoIX7jMp9sPXipsZxDdDvQcnRXiQtI3A6iszsLBTJrZ3OwY6A
+	 r4CgkUy5KKPxdUrJwGlme3K4Xt9UJ6suI+bXoJ34j2/QvZIl07FpJatQZeRAoLXeG0
+	 677zJUi1bnqRmq0TFc1bxPt43hesZ7/TOcJHl6RVb8aDgm8jIxs/5CATNRADwGBLEj
+	 3Sy44DgE3nSlw==
+X-Universally-Unique-Identifier: 3b4e2e23-7dc8-42c5-877b-dca9ea3c1792
+MIME-Version: 1.0 (Crisp Mailer)
+X-Report-Abuse: Please report spam or abuse to abuse@crisp.chat
+X-Auto-Response-Suppress: All
+X-Crisp-Shard-Type: transactional
+X-Crisp-Website-ID: f5f3357e-d73e-4c9b-93c3-9d7932c502e3
+Feedback-ID:
+ session:f5f3357e-d73e-4c9b-93c3-9d7932c502e3:message_replies:CrispIM
+From: "Cherry - BlueNotary" <cherry@bluenotary.on.crisp.email>
+To: admin@emcnotary.com
+Reply-To: BlueNotary <s.c8b1f6080add4800.i@bluenotary.on.crisp.email>
+Subject: You're welcome! Feel free to reach out if you have any further
+ questions :)
+Message-ID:
+ <de0dc685-2849-c3a4-a68d-2c57b9cf8aac@bluenotary.on.crisp.email>
+Date: Sat, 20 Sep 2025 01:32:57 +0000
+Content-Type: multipart/alternative;
+ boundary="--_NmP-fa7dd862788c89cc-Part_1"
+
+----_NmP-fa7dd862788c89cc-Part_1
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+You're welcome! Feel free to reach out if you have any further questions =
+[https://bluenotary.on.crisp.email/mail/images/smileys/small/small-smile.=
+png]
+
+On Sat, 20 Sep 2025 01:30:50 GMT Evan McCall wrote:
+> perfect, that is what they have as well. thank you very much
+
+On Sat, 20 Sep 2025 01:26:58 GMT Evan McCall wrote:
+> the signer asked me to confirm the email the documents will be sent to =
+after the
+session completes:
+Session #2A9B9
+----_NmP-fa7dd862788c89cc-Part_1
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" =
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html =
+xmlns=3D"http://www.w3.org/1999/xhtml" lang=3D"en" dir=3D"ltr"><head>
+
+<meta http-equiv=3D"Content-Type" content=3D"text/html; =
+charset=3DUTF-8"><meta name=3D"viewport" content=3D"width=3Ddevice-width, =
+initial-scale=3D1"><title>Crisp Email</title></head><body =
+style=3D"font-weight: 400;"><div dir=3D"auto" style=3D"font-size: =
+1em;">You're welcome! Feel free to reach out if you have any further =
+questions <img alt width=3D"16" height=3D"16" src=3D"https://bluenotary.on.=
+crisp.email/mail/images/smileys/small/small-smile.png" =
+style=3D"margin-left: 2px; margin-right: 2px; vertical-align: text-top; =
+width: 16px; height: 16px; display: inline;"></div><br><div><!--[if !=
+plain]-->
+--<br><br><div><!--[if !mso]><!-- --><img alt =
+src=3D"https://bluenotary.on.crisp.email/image/avatar/operator/805cc8de-a1f=
+4-490b-88cd-fc79653820b4/92/?1757609665469" style=3D"background-size: =
+contain; background-repeat: no-repeat; background-position: center; =
+background-color: #EBEBEB; width: 2em; height: 2em; max-width: 30px; =
+max-height: 30px; margin-right: .5em; vertical-align: middle; display: =
+inline-block; border-radius: 2em;"><!--<![endif]--><strong>Cherry</strong><=
+span> </span>from<span> </span><a href=3D"https://bluenotary.us/" =
+target=3D"_blank">BlueNotary</a>.</div><br><div style=3D"margin-top: .75em;=
+ color: #7b7b7b; font-size: .9em;"><div>Reply directly to this email, or =
+go<span> </span><a href=3D"https://bluenotary.on.crisp.=
+email/go/chat/resume/?target_url=3Dhttps%3A%2F%2Fapp.bluenotary.=
+us%2Fnotary%2Fdashboard&amp;session_id=3Dsession_c60c02be-8311-47f9-b089-85=
+450038c0aa" target=3D"_blank" style=3D"color: #7b7b7b;"><strong>to =
+chat</strong></a>.</div><div style=3D"margin-top: .25em;"></div></div></div=
+><!--[endif]--><div style=3D"font-size: .95em; margin-top: 1em;"><br><div =
+style=3D"color: #6B095D; border-left: 1px solid #D0D0D0; margin: 0 .5em; =
+padding: 0 .6em;"><div>On Sat, 20 Sep 2025 01:30:50 GMT Evan McCall =
+wrote:</div><br><blockquote dir=3D"auto" style=3D"font-style: normal; =
+margin: 0; padding: 0;">perfect, that is what they have as well. thank you =
+very much</blockquote><br><div style=3D"color: #6B095D; border-left: 1px =
+solid #D0D0D0; margin: 0 .5em; padding: 0 .6em;"><div>On Sat, 20 Sep 2025 =
+01:26:58 GMT Evan McCall wrote:</div><br><blockquote dir=3D"auto" =
+style=3D"font-style: normal; margin: 0; padding: 0;">the signer asked me to=
+ confirm the email the documents will be sent to after the session =
+completes:<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>Session =
+#2A9B9</blockquote></div></div><br></div><!--[if !plain]-->
+
+<img src=3D"https://bluenotary.on.crisp.email/hooks/email/track/message/?=
+session_id=3Dsession_c60c02be-8311-47f9-b089-85450038c0aa&amp;user_id=3Dses=
+sion_c60c02be-8311-47f9-b089-85450038c0aa&amp;website_id=3Df5f3357e-d73e-4c=
+9b-93c3-9d7932c502e3&amp;direction=3Din&amp;fingerprints=3D%5B1758331857493=
+51%5D&amp;signature=3D15f06886f1032800" alt><!--[endif]--></body></html>
+----_NmP-fa7dd862788c89cc-Part_1--

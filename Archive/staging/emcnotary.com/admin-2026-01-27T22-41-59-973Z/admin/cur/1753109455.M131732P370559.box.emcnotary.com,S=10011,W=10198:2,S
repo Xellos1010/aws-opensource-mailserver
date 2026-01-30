@@ -1,0 +1,187 @@
+Return-Path: <e.mccallvr@gmail.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id G2KtAs5Tfmh/pwUAQCw0vA
+	(envelope-from <e.mccallvr@gmail.com>)
+	for <admin@emcnotary.com>; Mon, 21 Jul 2025 14:50:54 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.3 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,FREEMAIL_FROM,HTML_MESSAGE,RCVD_IN_DNSWL_NONE,
+	RCVD_IN_MSPIKE_H2,SPF_HELO_NONE,SPF_PASS,T_KAM_HTML_FONT_INVALID
+	autolearn=ham autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 SPF_PASS SPF check passed
+	* -0.1 DMARC_PASS DMARC check passed
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 FREEMAIL_FROM Sender email is commonly abused enduser mail
+	*      provider
+	*      [e.mccallvr[at]gmail.com]
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	*  0.0 RCVD_IN_MSPIKE_H2 RBL: Average reputation (+2)
+	*      [209.85.215.175 listed in wl.mailspike.net]
+	* -0.0 RCVD_IN_DNSWL_NONE RBL: Sender listed at
+	*      https://www.dnswl.org/, no trust
+	*      [209.85.215.175 listed in list.dnswl.org]
+	*  0.0 T_KAM_HTML_FONT_INVALID Test for Invalidly Named or Formatted
+	*      Colors in HTML
+X-Spam-Score: -0.3
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (2048-bit key; unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20230601 header.b=a3j+vsLL;
+	dkim-atps=neutral
+Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id BA8203F521
+	for <admin@emcnotary.com>; Mon, 21 Jul 2025 14:50:53 +0000 (UTC)
+Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-b3508961d43so4002486a12.3
+        for <admin@emcnotary.com>; Mon, 21 Jul 2025 07:50:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1753109452; x=1753714252; darn=emcnotary.com;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=lMqbi/2bbFyV4GhNGgxzy2efzNATUjTGQRbNuoo5pA4=;
+        b=a3j+vsLLhefJosJh1wI5VWm2hGDckAp7052d47CwU4GcTjS2VMwzUw9npoTPWxOkzc
+         0DaP2cLQub8FJdRXv6DzUw71R4lGKglThWaJs1Ur+ZdlMk8pOYKcb5xinkv2VZhnNRW+
+         whtPYfBaxI7oAd7dsWSP/PdOXIrE1ReU811FX/IvCgpzT/5CAmr4wFWgHdUHpXrZHaWh
+         j3J/EDZ2zxR6O96ROV8n4Xu2AtydeNmxR257WruBHJKanYdY1on1Khd3J6vC0uQnJsHn
+         L3JxOIM8ZVNf+1vyiLwyBu0llLIcQ7sztmenSaswYTuyOKih7C/7H7isY8j3R1FrQ4KP
+         1xxQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1753109452; x=1753714252;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=lMqbi/2bbFyV4GhNGgxzy2efzNATUjTGQRbNuoo5pA4=;
+        b=l45qebJjmltj3lAFw1tU7Fz77PBbdlRLRCyfrUbmikk04oI5ttrR8fad8DsxoS04ON
+         vZahuAr2WJLL12FMjtNWXIILK3dinL4gei9FMDnnShT3Bt/qKzORBTSv525A4j/jsdVC
+         9zv27ZFybLGf37FhZXtVsWgx+WQc8G9cYYZmv2niVP1CRfJpTa1mCkbnJb1dKMvzL8A2
+         KyBb73KLdU+k51xIn17rgoFGBbR4d7p7ersQ3n6iBiJv0sfnW0XEf6A2p50E5bkf6/ua
+         ggimW02umfIskBLM3lCSGayUZ5Pix11nnB3C0Y75phhkTwV5BkCo6cHVr5VD9LFopU5z
+         2Vuw==
+X-Gm-Message-State: AOJu0Yw6zhTwLA6VoAvLLt/NyGzuFV8PPPq2wuW/y+SK6uWtMy2WfdYd
+	ZZgOUofviW8czgOm7CFrTiNv4ndDTiNGtQhw9U9NzgD4yPLwe/DeS/QATM2NByxJYmPbjmicNVr
+	DJcb3tM9e+LTDITZwIm4/nAtpL0L04mQ=
+X-Gm-Gg: ASbGncvYZpZi3MsLCfG8s9gHNG0yL7I9e6vbxA8EZEZ6GaOr3DyaJsmM4JWhO2lTDvr
+	apsJOUvsNG9aEBYZ6KqAuK7onx95s+9UNpYTnhpNgSjr7nyn09ShsCQF/ejj/FAb9reSrFqqr68
+	4mq1eDPNCfDyDinNwV6xEfe03sWg6xLriuK5I0Amy4ZF+yCLUEO6rjyVs5NTMH1KC21acv6lptH
+	HOm
+X-Google-Smtp-Source: AGHT+IGtLcQwr3+YbXQ9mLZq1RL7HO+il+O7lzXPv4UGWQnIXIO313HYEsx7X2u230oLXnvT7orv+p9hShNPjRc5HPo=
+X-Received: by 2002:a17:90b:50ce:b0:313:5d2f:54fc with SMTP id
+ 98e67ed59e1d1-31cc25429b9mr20636536a91.10.1753109452240; Mon, 21 Jul 2025
+ 07:50:52 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAHxztQ7xQW+Y9FrxUvRWXRB4bCbbXxrTMRRm+uXCH_X09KveBA@mail.gmail.com>
+In-Reply-To: <CAHxztQ7xQW+Y9FrxUvRWXRB4bCbbXxrTMRRm+uXCH_X09KveBA@mail.gmail.com>
+From: Evan McCall <e.mccallvr@gmail.com>
+Date: Mon, 21 Jul 2025 10:50:40 -0400
+X-Gm-Features: Ac12FXxnF01VMe7rYCcl4ILPW1MHxzL2ZsA7gHgLPkStGZkE3b4HADUo0QJzPNw
+Message-ID: <CAAEksvYPTSRJQD3u4SJSMDQvO2H924BP7DKy8qWv8pZMSo6fsQ@mail.gmail.com>
+Subject: =?UTF-8?Q?Re=3A_Today=E2=80=99s_Notary_Call?=
+To: Bobby Mollish <bobby.mollish@docusign.com>
+Cc: admin@emcnotary.com
+Content-Type: multipart/alternative; boundary="000000000000273d25063a719a58"
+
+--000000000000273d25063a719a58
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Good morning,
+
+I look forward to a productive call.
+
+~Evan
+
+On Mon, Jul 21, 2025, 10:27 Bobby Mollish <bobby.mollish@docusign.com>
+wrote:
+
+> Good Morning Evan,
+>
+> Just giving you a friendly reminder for today=E2=80=99s Zoom call at 11am=
+.
+>
+> My specialist will be prepared to answer your questions regarding notary
+> and provide some pricing. Let me know if you have any questions.
+>
+> Thank you!
+>
+> Bobby Mollish | Market Development Representative | DocuSign
+>
+> m: 956.801.9551 | He/Him | LinkedIn
+> <https://www.linkedin.com/in/bobbymollish/>
+>
+> 999 3rd Ave #1000, Seattle, WA 98104
+>
+> *Book time with me
+> <https://click.docusign.com/c/bobby-mollishdocusign-com>*
+>
+> [image: DocuSign]
+>
+
+--000000000000273d25063a719a58
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<p dir=3D"ltr">Good morning,</p>
+<p dir=3D"ltr">I look forward to a productive call.</p>
+<p dir=3D"ltr">~Evan</p>
+<br><div class=3D"gmail_quote gmail_quote_container"><div dir=3D"ltr" class=
+=3D"gmail_attr">On Mon, Jul 21, 2025, 10:27 Bobby Mollish &lt;<a href=3D"ma=
+ilto:bobby.mollish@docusign.com">bobby.mollish@docusign.com</a>&gt; wrote:<=
+br></div><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;borde=
+r-left:1px #ccc solid;padding-left:1ex"><div dir=3D"auto">Good Morning Evan=
+,</div><div dir=3D"auto"><br></div><div dir=3D"auto">Just giving you a frie=
+ndly reminder for today=E2=80=99s Zoom call at 11am.</div><div dir=3D"auto"=
+><br></div><div dir=3D"auto">My specialist will be prepared to answer your =
+questions regarding notary and provide some pricing. Let me know if you hav=
+e any questions.</div><div dir=3D"auto"><br></div><div dir=3D"auto">Thank y=
+ou!<br clear=3D"all"><br clear=3D"all"><div dir=3D"auto"><div dir=3D"ltr" c=
+lass=3D"gmail_signature" data-smartmail=3D"gmail_signature"><div dir=3D"ltr=
+"><p dir=3D"ltr" style=3D"line-height:1.38;margin-top:12pt;margin-bottom:1p=
+t;color:rgb(34,34,34)"><span style=3D"font-size:11pt;font-family:Arial;font=
+-weight:700;vertical-align:baseline;background-color:transparent;color:rgb(=
+0,0,0)">Bobby Mollish</span><span style=3D"vertical-align:baseline;backgrou=
+nd-color:transparent"><font face=3D"Arial" style=3D"font-family:Arial;color=
+:rgb(0,0,0)"><span style=3D"font-family:Arial"><span style=3D"font-size:11p=
+t;font-family:Arial"> |</span> </span></font><font style=3D"color:rgb(34,34=
+,34)">Market Development Representative</font><font face=3D"Arial" style=3D=
+"font-family:Arial;color:rgb(0,0,0)"><span style=3D"font-family:Arial"> <sp=
+an style=3D"font-size:11pt;font-family:Arial">| </span></span></font></span=
+><span style=3D"font-size:11pt;font-family:Arial;font-weight:700;vertical-a=
+lign:baseline;background-color:transparent;color:rgb(0,0,0)">DocuSign</span=
+></p><p dir=3D"ltr" style=3D"line-height:1.38;margin-top:0pt;margin-bottom:=
+0pt;padding:11pt 0pt 12pt;color:rgb(34,34,34)"><span style=3D"font-size:11p=
+t;font-family:Arial;vertical-align:baseline;background-color:transparent;co=
+lor:rgb(0,0,0)">m: 956.801.9551 | </span><span style=3D"font-size:11pt;font=
+-family:Arial;font-style:italic;vertical-align:baseline;background-color:tr=
+ansparent;color:rgb(0,0,0)">He/Him |=C2=A0</span><a href=3D"https://www.lin=
+kedin.com/in/bobbymollish/" style=3D"font-family:Arial;font-size:14.6667px;=
+font-weight:700" target=3D"_blank" rel=3D"noreferrer">LinkedIn</a></p><tabl=
+e cellpadding=3D"0" style=3D"width:481px"><tbody><tr><td style=3D"width:477=
+.8px"><div><div style=3D"width:441.8px;outline:currentcolor;direction:ltr">=
+</div></div></td></tr></tbody></table><p dir=3D"ltr" style=3D"line-height:1=
+.38;margin-top:0pt;margin-bottom:0pt;padding:11pt 0pt 12pt;color:rgb(34,34,=
+34)"><span style=3D"font-family:&quot;YAFlni52MUE 0&quot;,_fb_,auto">999 3r=
+d Ave #1000, Seattle, WA 98104</span><br></p><p dir=3D"ltr" style=3D"line-h=
+eight:1.38;margin-top:0pt;margin-bottom:0pt;padding:11pt 0pt 12pt;color:rgb=
+(34,34,34)"><u style=3D"font-family:Arial;color:rgb(0,0,0)"><font size=3D"4=
+" style=3D"font-family:Arial;color:rgb(0,0,0)"><a href=3D"https://click.doc=
+usign.com/c/bobby-mollishdocusign-com" style=3D"font-family:Arial" target=
+=3D"_blank" rel=3D"noreferrer">Book time with me</a></font></u><br></p><p d=
+ir=3D"ltr" style=3D"line-height:1.38;margin-top:0pt;margin-bottom:0pt;paddi=
+ng:11pt 0pt 12pt;color:rgb(34,34,34)"><img src=3D"https://encrypted-tbn0.gs=
+tatic.com/images?q=3Dtbn:ANd9GcSQS0JZ4szVKB1v8zWEzL4FgOHwpfpl6gwA_Q&amp;s" =
+alt=3D"DocuSign" width=3D"200" height=3D"200"><br></p></div></div></div></d=
+iv>
+</blockquote></div>
+
+--000000000000273d25063a719a58--

@@ -1,0 +1,400 @@
+Return-Path: <paul_hancock@me.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id nVkXM7xZrmjufAAAQCw0vA
+	(envelope-from <paul_hancock@me.com>)
+	for <admin@emcnotary.com>; Wed, 27 Aug 2025 01:05:00 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-1.0 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,FREEMAIL_FROM,HTML_MESSAGE,MIME_QP_LONG_LINE,
+	RCVD_IN_DNSWL_LOW,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 DMARC_PASS DMARC check passed
+	* -0.1 SPF_PASS SPF check passed
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 FREEMAIL_FROM Sender email is commonly abused enduser mail
+	*      provider
+	*      [paul_hancock[at]me.com]
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	*  0.0 MIME_QP_LONG_LINE RAW: Quoted-printable line longer than 76
+	*      chars
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	* -0.7 RCVD_IN_DNSWL_LOW RBL: Sender listed at https://www.dnswl.org/,
+	*       low trust
+	*      [57.103.72.161 listed in list.dnswl.org]
+X-Spam-Score: -1.0
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=quarantine dis=none) header.from=me.com
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=me.com
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (2048-bit key; unprotected) header.d=me.com header.i=@me.com header.a=rsa-sha256 header.s=1a1hai header.b=UOw8xAGf;
+	dkim-atps=neutral
+X-Greylist: delayed 14849 seconds by postgrey-1.36 at box.emcnotary.com; Wed, 27 Aug 2025 01:05:00 UTC
+Received: from outbound.ms.icloud.com (p-west3-cluster3-host1-snip4-10.eps.apple.com [57.103.72.161])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id 8A8DB3F682
+	for <admin@emcnotary.com>; Wed, 27 Aug 2025 01:05:00 +0000 (UTC)
+Received: from outbound.ms.icloud.com (unknown [127.0.0.2])
+	by p00-icloudmta-asmtp-us-west-3a-60-percent-8 (Postfix) with ESMTPS id 06333180048F
+	for <admin@emcnotary.com>; Wed, 27 Aug 2025 01:04:56 +0000 (UTC)
+Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=me.com; s=1a1hai; bh=R4WnmoXKWIOVmkp347Fn5ZVpfO8qaEVsQpwg696ccsw=; h=Content-Type:From:Mime-Version:Date:Subject:Message-Id:To:x-icloud-hme; b=UOw8xAGfWR+hMPCZcT80PcXylnSa6FTYQb3PGAIEBU/uzR5+WsaTwgQWthpsNUDkruA0uBROI6FAwEgU7wdaz/hLHWn6sE7ztizBqlXWEKMP6YCL5ULQnzQxthNtKHUn6KUom5M9fRrSoV+Ob63gD/kK9Fk91TwB3iUPEgq0svbhPYmnRK376X2Wst6aeRWisAEIbtCwyEpWPVtPGZNr93NLf+wRAtySh5ZFtyjFcAZMcV40GAMqTn34peGbnh0BNoETWA5BkVb+MHqcwbyy22kzhne3RtMTDTga6fcbw93pURs0Et2exy3l/Q6psFsKYGl4hAAvW630kMNVq2hW3w==
+Received: from smtpclient.apple (ms-asmtp-me-k8s.p00.prod.me.com [17.57.154.37])
+	by p00-icloudmta-asmtp-us-west-3a-60-percent-8 (Postfix) with ESMTPSA id 86700180013C
+	for <admin@emcnotary.com>; Wed, 27 Aug 2025 01:04:56 +0000 (UTC)
+Content-Type: multipart/alternative; boundary=Apple-Mail-DDAAB837-EF47-48B3-A8D3-AE3511E26F92
+Content-Transfer-Encoding: 7bit
+From: Paul Hancock <paul_hancock@me.com>
+Mime-Version: 1.0 (1.0)
+Date: Tue, 26 Aug 2025 18:04:45 -0700
+Subject: Valid Signatures
+Message-Id: <8D983577-4EA4-410A-96C0-91F8FBFFF490@me.com>
+To: Evan McCall <admin@emcnotary.com>
+X-Mailer: iPhone Mail (22G100)
+X-Proofpoint-ORIG-GUID: tmoWZtobJnDv4qdjr-ENU2lXDAB2NNuT
+X-Proofpoint-GUID: tmoWZtobJnDv4qdjr-ENU2lXDAB2NNuT
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODI3MDAwNSBTYWx0ZWRfX2cJety+7EP6r
+ YfopPKNzkMKUWHVYVKlJbBYrK2sfzzAr0vGD+ktaCXQrIMNqSG5m1yAhVStuwc5WLscuiwESeNC
+ KjQjoZ5+TaTZC8Y8WmTKPESZ+0rp3Vf1FRX/t3mRFrZqxosm7HCkGPlvmbib6jnBuOQBaX/DPj4
+ pXQgOGXOla8E/7VS3nywItUmb8NX8Q7SJBrtgzn9sE/GfFjbU1qnSBrxPf/2Vif9M7zao2l1jR+
+ Q23BySbIXJ88/Y2NIy//P7+sRyKd/5IpGUaAHq3QZOMbfaMgweIRl/3yX6Xzf61O2hB5f7J7Q=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-08-26_02,2025-08-26_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0
+ mlxscore=0 bulkscore=0 clxscore=1015 malwarescore=0 adultscore=0 spamscore=0
+ phishscore=0 mlxlogscore=873 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.22.0-2506270000 definitions=main-2508270005
+X-JNJ: AAAAAAABX2CzXEpl7FBoV31f4bWbx5XeiByfNih2DJsNrS2zFi98ptvJkt+4mhD6gyV2QqX7a4xboH0BWhJnG0FMYI5dqH1zapeWWcG+3+YMYD/9jwT8Uq0ApkofoFCj1ctoROj49D580sy5f0bcZyBRwAacbExMxXZ7EFkdgChmTlP/TAWvbj899Ipw55BnlR7R8fOcqv++KqiT56nPRKsPV5rjBiVKZgY+b29WXck9fIaWHIZN0pcibGGXQ9qcGr/5bXnmALz4+u1vuQhEA9QqlegFitCS1w+TrnRoUJNDnCiCSLApkG83KCZ4X1Mrh7hzufjr0xfiDuLRVyRRGZJyYiCLozSjhEeEswbGrQ==
+
+
+--Apple-Mail-DDAAB837-EF47-48B3-A8D3-AE3511E26F92
+Content-Type: text/plain;
+	charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Hello Evan , how do i need to obtain the signatures my 3 executors for this r=
+evokable trust document, I have 2 documents that need signatures and certifi=
+cation.
+Here is what I found. Thanks Paul=20
+
+=E2=9C=8D=E2=96=A0 Document Signing Checklist
+=E2=96=A0=E2=96=A0 Wet Ink Signature Required
+- Last Will & Testament
+- Codicils (will amendments)
+- Testamentary trusts
+- Powers of Attorney (esp. healthcare/financial)
+- Real estate deeds, mortgages, liens, transfers
+- Court-filed pleadings in many counties
+- =E2=96=A0 Rule: These documents are highly sensitive, and most courts/reco=
+rders will not accept electronic
+signatures.
+=E2=96=A0 Remote Online Notarization (RON) Possible
+- Affidavits
+- Sworn statements
+- Loan documents (sometimes, depends on lender)
+- Business agreements that require notarization
+- Acknowledgments and consent forms
+- =E2=96=A0 Rule: A licensed Nevada notary must verify you via video call. T=
+he system produces a
+tamper-proof, time-stamped record.
+=E2=96=A0 Simple E-Signature is Usually Okay
+- Routine contracts & NDAs
+- Service agreements
+- Invoices & purchase orders
+- Employment or consulting agreements
+- Internal business approvals
+- =E2=96=A0 Rule: Covered by the U.S. E-SIGN Act and UETA. Only risky if the=
+ other party disputes it.
+=E2=96=A0=E2=96=A0 Best Practice
+- Always ask the recipient (bank, court, agency) if they accept electronic s=
+ignatures before signing.
+- If in doubt, use wet ink =E2=80=94 it=E2=80=99s universally valid.
+
+Have a Great Day....=
+
+--Apple-Mail-DDAAB837-EF47-48B3-A8D3-AE3511E26F92
+Content-Type: text/html;
+	charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<html><head><meta http-equiv=3D"content-type" content=3D"text/html; charset=3D=
+utf-8"></head><body dir=3D"auto">Hello Evan , how do i need to obtain the si=
+gnatures my 3 executors for this revokable trust document, I have 2 document=
+s that need signatures and certification.<div>Here is what I found. Thanks P=
+aul&nbsp;</div><div><br></div><div><p style=3D"margin: 0px; font-style: norm=
+al; font-variant-caps: normal; font-width: normal; font-size: 18px; line-hei=
+ght: normal; font-family: Helvetica; font-size-adjust: none; font-kerning: a=
+uto; font-variant-alternates: normal; font-variant-ligatures: normal; font-v=
+ariant-numeric: normal; font-variant-east-asian: normal; font-variant-positi=
+on: normal; font-variant-emoji: normal; font-feature-settings: normal; font-=
+optical-sizing: auto; font-variation-settings: normal; -webkit-text-stroke-w=
+idth: 0px; -webkit-text-stroke-color: rgb(0, 0, 0);"><span style=3D"font-fam=
+ily: &quot;Zapf Dingbats&quot;; font-kerning: none;">=E2=9C=8D=E2=96=A0</spa=
+n><span style=3D"font-weight: bold; font-kerning: none;"> Document Signing C=
+hecklist</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; line-height: normal; font-family: Helvetica; font-size-adjus=
+t: none; font-kerning: auto; font-variant-alternates: normal; font-variant-l=
+igatures: normal; font-variant-numeric: normal; font-variant-east-asian: nor=
+mal; font-variant-position: normal; font-variant-emoji: normal; font-feature=
+-settings: normal; font-optical-sizing: auto; font-variation-settings: norma=
+l; -webkit-text-stroke-width: 0px; -webkit-text-stroke-color: rgb(0, 0, 0);"=
+><span style=3D"font-family: &quot;Zapf Dingbats&quot;; font-kerning: none;"=
+>=E2=96=A0=E2=96=A0</span><span style=3D"font-weight: bold; font-kerning: no=
+ne;"> Wet Ink Signature Required</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- Last Will &amp; Test=
+ament</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- Codicils (will amend=
+ments)</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- Testamentary trusts<=
+/span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- Powers of Attorney (=
+esp. healthcare/financial)</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- Real estate deeds, m=
+ortgages, liens, transfers</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- Court-filed pleading=
+s in many counties</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- </span><span style=3D=
+"font-family: &quot;Zapf Dingbats&quot;; font-kerning: none;">=E2=96=A0</spa=
+n><span style=3D"font-kerning: none;"> Rule: These documents are highly sens=
+itive, and most courts/recorders will not accept electronic</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">signatures.</span></p>=
+
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; line-height: normal; font-family: Helvetica; font-size-adjus=
+t: none; font-kerning: auto; font-variant-alternates: normal; font-variant-l=
+igatures: normal; font-variant-numeric: normal; font-variant-east-asian: nor=
+mal; font-variant-position: normal; font-variant-emoji: normal; font-feature=
+-settings: normal; font-optical-sizing: auto; font-variation-settings: norma=
+l; -webkit-text-stroke-width: 0px; -webkit-text-stroke-color: rgb(0, 0, 0);"=
+><span style=3D"font-family: &quot;Zapf Dingbats&quot;; font-kerning: none;"=
+>=E2=96=A0</span><span style=3D"font-weight: bold; font-kerning: none;"> Rem=
+ote Online Notarization (RON) Possible</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- Affidavits</span></p=
+>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- Sworn statements</sp=
+an></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- Loan documents (some=
+times, depends on lender)</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- Business agreements t=
+hat require notarization</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- Acknowledgments and c=
+onsent forms</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- </span><span style=3D=
+"font-family: &quot;Zapf Dingbats&quot;; font-kerning: none;">=E2=96=A0</spa=
+n><span style=3D"font-kerning: none;"> Rule: A licensed Nevada notary must v=
+erify you via video call. The system produces a</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">tamper-proof, time-sta=
+mped record.</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; line-height: normal; font-family: Helvetica; font-size-adjus=
+t: none; font-kerning: auto; font-variant-alternates: normal; font-variant-l=
+igatures: normal; font-variant-numeric: normal; font-variant-east-asian: nor=
+mal; font-variant-position: normal; font-variant-emoji: normal; font-feature=
+-settings: normal; font-optical-sizing: auto; font-variation-settings: norma=
+l; -webkit-text-stroke-width: 0px; -webkit-text-stroke-color: rgb(0, 0, 0);"=
+><span style=3D"font-family: &quot;Zapf Dingbats&quot;; font-kerning: none;"=
+>=E2=96=A0</span><span style=3D"font-weight: bold; font-kerning: none;"> Sim=
+ple E-Signature is Usually Okay</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- Routine contracts &a=
+mp; NDAs</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- Service agreements</=
+span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- Invoices &amp; purch=
+ase orders</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- Employment or consul=
+ting agreements</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- Internal business ap=
+provals</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- </span><span style=3D=
+"font-family: &quot;Zapf Dingbats&quot;; font-kerning: none;">=E2=96=A0</spa=
+n><span style=3D"font-kerning: none;"> Rule: Covered by the U.S. E-SIGN Act a=
+nd UETA. Only risky if the other party disputes it.</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; line-height: normal; font-family: Helvetica; font-size-adjus=
+t: none; font-kerning: auto; font-variant-alternates: normal; font-variant-l=
+igatures: normal; font-variant-numeric: normal; font-variant-east-asian: nor=
+mal; font-variant-position: normal; font-variant-emoji: normal; font-feature=
+-settings: normal; font-optical-sizing: auto; font-variation-settings: norma=
+l; -webkit-text-stroke-width: 0px; -webkit-text-stroke-color: rgb(0, 0, 0);"=
+><span style=3D"font-family: &quot;Zapf Dingbats&quot;; font-kerning: none;"=
+>=E2=96=A0=E2=96=A0</span><span style=3D"font-weight: bold; font-kerning: no=
+ne;"> Best Practice</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- Always ask the recip=
+ient (bank, court, agency) if they accept electronic signatures before signi=
+ng.</span></p>
+<p style=3D"margin: 0px; font-style: normal; font-variant-caps: normal; font=
+-width: normal; font-size: 17px; line-height: normal; font-family: Helvetica=
+; font-size-adjust: none; font-kerning: auto; font-variant-alternates: norma=
+l; font-variant-ligatures: normal; font-variant-numeric: normal; font-varian=
+t-east-asian: normal; font-variant-position: normal; font-variant-emoji: nor=
+mal; font-feature-settings: normal; font-optical-sizing: auto; font-variatio=
+n-settings: normal; -webkit-text-stroke-width: 0px; -webkit-text-stroke-colo=
+r: rgb(0, 0, 0);"><span style=3D"font-kerning: none;">- If in doubt, use wet=
+ ink =E2=80=94 it=E2=80=99s universally valid.</span></p></div><div><br id=3D=
+"lineBreakAtBeginningOfSignature"><div dir=3D"ltr">Have a Great Day....</div=
+></div></body></html>=
+
+--Apple-Mail-DDAAB837-EF47-48B3-A8D3-AE3511E26F92--

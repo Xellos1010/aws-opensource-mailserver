@@ -1,0 +1,296 @@
+Return-Path: <bounces+ad6f70f312c99800@bluenotary.on.crisp.email>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id IQNuFzI2eWhmQBMAQCw0vA
+	(envelope-from <bounces+ad6f70f312c99800@bluenotary.on.crisp.email>)
+	for <admin@emcnotary.com>; Thu, 17 Jul 2025 17:43:14 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.3 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,HTML_MESSAGE,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 SPF_PASS SPF check passed
+	* -0.1 DMARC_PASS DMARC check passed
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+X-Spam-Score: -0.3
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=quarantine dis=none) header.from=bluenotary.on.crisp.email
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=bluenotary.on.crisp.email
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (2048-bit key; unprotected) header.d=bluenotary.on.crisp.email header.i=@bluenotary.on.crisp.email header.a=rsa-sha256 header.s=crisp header.b=YbW/uAbf;
+	dkim=pass (2048-bit key; secure) header.d=crisp.email header.i=@crisp.email header.a=rsa-sha256 header.s=platform header.b=meTyCazr;
+	dkim-atps=neutral
+Received: from mailer-1x.outbound.crisp.email (mailer-1x.outbound.crisp.email [93.177.84.76])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id 6D6FB4139B
+	for <admin@emcnotary.com>; Thu, 17 Jul 2025 17:43:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=bluenotary.on.crisp.email; s=crisp; t=1752774191;
+	bh=ZE1O+E27n5NsB0QO41BEZpNHQItBuRcJIdz+DIIbZ9g=;
+	h=From:To:Reply-To:Subject:Date:From;
+	b=YbW/uAbfHokmbUFR6JfVPrKbhvzAPtNQ4+WYjEBnlzYeWOtbks+OSMGLR22e/85BQ
+	 nO1FVoEU3yyxz/YaK59OQAteJ0/kjP68ts+lhYQtzcirWYM8TT9A3bEym/gCBE4SBE
+	 kz/LX0d1/v2FUNb8zz2t7OCNw58Dv/ELBI+2oX9smDINFbVo5LZwKIfbiUA4hAgAld
+	 +Kv76McJzuW2Oi9V8SpmiPlbB2tXDVuduR8WDEN/Zclxq7HEPXb1K88bkQ+q81Tgvk
+	 cATFE1MoZtJ846KqZOAqRU6Q+b3QQjOXXjR/F29DnKsyBqhU70RLRuL+0vTrX1W1T0
+	 5mHva3ZarFYyA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=crisp.email;
+	s=platform; t=1752774191;
+	bh=ZE1O+E27n5NsB0QO41BEZpNHQItBuRcJIdz+DIIbZ9g=;
+	h=From:To:Reply-To:Subject:Date:From;
+	b=meTyCazr8X5DXBnVLY3jUCQNEK503IUJOyxPUfbDfL+sn3BX++vDSmUnvTlu/5dSp
+	 w3SPYV3sNbyxZNNTpy2p11G99/NcXa8P9A8vb1JH1cDr4mk5njPUbalpCcR1tWqIHj
+	 DHbGuDJBh3PNWWLt19XM+rLXvTf6bEZUz1n/jqnxjhH7ZNyXjcOwiHgDnhD86dvrt8
+	 TBmeee3AqAA1uGMwwC/dIrxa+yPJ9ZNXn+Mj7RmF7Mu3neh67rzUfEPHa/XB/id/xo
+	 tceMcF9dIOT0E9BkpeTaCogecO6Qe9jyd+47VJbf0xfd0LRNEdEmFFFzvIWf3DvU2+
+	 mA9RXpQWNTO7A==
+X-Universally-Unique-Identifier: 55eed391-bcf0-4aa8-99e8-7ddf98b4bb2b
+MIME-Version: 1.0 (Crisp Mailer)
+X-Report-Abuse: Please report spam or abuse to abuse@crisp.chat
+X-Auto-Response-Suppress: All
+X-Crisp-Shard-Type: transactional
+X-Crisp-Website-ID: f5f3357e-d73e-4c9b-93c3-9d7932c502e3
+Feedback-ID:
+ session:f5f3357e-d73e-4c9b-93c3-9d7932c502e3:message_replies:CrispIM
+From: "Genesis - BlueNotary" <genesis@bluenotary.on.crisp.email>
+To: admin@emcnotary.com
+Reply-To: BlueNotary <s.b6183d8a37ea300.i@bluenotary.on.crisp.email>
+Subject: This information might be best gotten from [Our Facebook
+ Group](https://www.f...
+Message-ID:
+ <949a68e3-40ee-6af9-62a5-6959624ca57a@bluenotary.on.crisp.email>
+Date: Thu, 17 Jul 2025 17:43:11 +0000
+Content-Type: multipart/alternative;
+ boundary="--_NmP-7c23d94c5b68071a-Part_1"
+
+----_NmP-7c23d94c5b68071a-Part_1
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+This information might be best gotten from Our Facebook Group
+[https://www.facebook.com/groups/bluenotary], where we have other Notaries =
+who
+have been through this process and can provide advice.
+This information might be best gotten from Our Facebook Group
+[https://www.facebook.com/groups/bluenotary], where we have other Notaries =
+who
+have been through this process and can provide advice.
+
+On Thu, 17 Jul 2025 17:38:05 GMT Evan McCall wrote:
+> okay
+
+On Thu, 17 Jul 2025 17:37:49 GMT Evan McCall wrote:
+> These were a few questions That were prepared for the meeting:
+Questions for James Bey (Executor of JUSTIN JAMES ANDERSON ESTATE)
+Identity Verification
+"Please present a government-issued photo ID, such as=
+ a passport, for biometric
+verification. Can you confirm that the name on =
+this ID is James Bey, and that
+you are the same individual signing as =
+Executor of the JUSTIN JAMES ANDERSON
+ESTATE?"
+Fiduciary Role Confirmation
+"Do you confirm that you are signing these documents, including the =
+Security
+Agreement and UCC-3 Amendment, in your capacity as Executor of the=
+ JUSTIN JAMES
+ANDERSON ESTATE, and that you are authorized to act in this =
+role?"
+Voluntary Intent
+"Are you executing these documents voluntarily, =
+without any coercion, duress, or
+undue influence from any party?"
+Understanding of Document
+"Do you acknowledge that you are signing the =
+Security Agreement and related
+documents for the purposes stated therein, =
+and that I, as a notary, am not
+providing legal advice or verifying the =
+truthfulness or legality of the
+contents?"
+Questions for Muhoro Francis =
+(Trustee of Nova Persona Express Trust)
+Identity Verification
+"Please present a government-issued photo ID, such as a passport, for =
+biometric
+verification. Can you confirm that the name on this ID is Muhoro =
+Francis, and
+that you are the same individual signing as Trustee of the =
+Nova Persona Express
+Trust?"
+Fiduciary Role Confirmation
+"Do you confirm that you are signing these documents, including the =
+Security
+Agreement, Affidavit of Commercial Bonding, Payment Instruction =
+Notice, Bonded
+Bill of Exchange, and other attached filings, in your =
+capacity as Trustee of the
+Nova Persona Express Trust, and that you are =
+authorized to act in this role?"
+Voluntary Intent
+"Are you executing these =
+documents voluntarily, without any coercion, duress, or
+undue influence from any party?"
+Understanding of Document
+"Do you acknowledge that you are signing the Security Agreement, Affidavit,
+Payment Instruction Notice, Bonded Bill of Exchange, and related documents =
+for
+the purposes stated therein, and that I, as a notary, am not providing =
+legal
+advice or verifying the truthfulness or legality of the contents?"
+
+On Thu, 17 Jul 2025 17:37:19 GMT Evan McCall wrote:
+> also when dealing with fiduciary entities, after they've gone through the
+biometrics and sent trust documents confirming acting authority.
+The FiduciaryID for the executor has a missing photo and signature.
+I was given direction via national notary association that if I verbally
+acknowledge with the signers present their role and that they have the =
+right to
+execute the provided documents that it covers my as a notary but I=
+ wanted to
+make sure there isn't something I Am missing
+
+On Thu, 17 Jul 2025 17:33:47 GMT Evan McCall wrote:
+> But I need to be in the session?
+----_NmP-7c23d94c5b68071a-Part_1
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" =
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html =
+xmlns=3D"http://www.w3.org/1999/xhtml" lang=3D"en" dir=3D"ltr"><head>
+
+<meta http-equiv=3D"Content-Type" content=3D"text/html; =
+charset=3DUTF-8"><meta name=3D"viewport" content=3D"width=3Ddevice-width, =
+initial-scale=3D1"><title>Crisp Email</title></head><body =
+style=3D"font-weight: 400;"><div dir=3D"auto" style=3D"font-size: =
+1em;">This information might be best gotten from <a href=3D"https://www.=
+facebook.com/groups/bluenotary" target=3D"&lowbar;blank">Our Facebook =
+Group</a>, where we have other Notaries who have been through this process =
+and can provide advice.</div><br><div dir=3D"auto" style=3D"font-size: =
+1em;">This information might be best gotten from <a href=3D"https://www.=
+facebook.com/groups/bluenotary" target=3D"&lowbar;blank">Our Facebook =
+Group</a>, where we have other Notaries who have been through this process =
+and can provide advice.</div><br><div><!--[if !plain]-->
+--<br><br><div><!--[if !mso]><!-- --><img alt src=3D"https://bluenotary.on.=
+crisp.email/image/avatar/operator/69967ffc-2c71-41a4-9897-fdb5acd81717/92/?=
+1752051400207" style=3D"background-size: contain; background-repeat: =
+no-repeat; background-position: center; background-color: #EBEBEB; width: =
+2em; height: 2em; max-width: 30px; max-height: 30px; margin-right: .5em; =
+vertical-align: middle; display: inline-block; border-radius: 2em;"><!--<!=
+[endif]--><strong>Genesis</strong><span> </span>from<span> </span><a =
+href=3D"https://bluenotary.us/" target=3D"_blank">BlueNotary</a>.=
+</div><br><div style=3D"margin-top: .75em; font-size: .9em; color: =
+#7b7b7b;"><div>Reply directly to this email, or go<span> </span><a =
+href=3D"https://bluenotary.on.crisp.email/go/chat/resume/?=
+target_url=3Dhttps%3A%2F%2Fapp.bluenotary.us%2Fnotary%2Fdashboard&amp;sessi=
+on_id=3Dsession_2616ae1b-ca85-489b-a963-337f05d4bd20" target=3D"_blank" =
+style=3D"color: #7b7b7b;"><strong>to chat</strong></a>.</div><div =
+style=3D"margin-top: .25em;"></div></div></div><!--[endif]--><div =
+style=3D"font-size: .95em; margin-top: 1em;"><br><div style=3D"color: =
+#6B095D; border-left: 1px solid #D0D0D0; margin: 0 .5em; padding: 0 .=
+6em;"><div>On Thu, 17 Jul 2025 17:38:05 GMT Evan McCall =
+wrote:</div><br><blockquote dir=3D"auto" style=3D"font-style: normal; =
+margin: 0; padding: 0;">okay</blockquote><br><div style=3D"color: #6B095D; =
+border-left: 1px solid #D0D0D0; margin: 0 .5em; padding: 0 .6em;"><div>On =
+Thu, 17 Jul 2025 17:37:49 GMT Evan McCall wrote:</div><br><blockquote =
+dir=3D"auto" style=3D"font-style: normal; margin: 0; padding: 0;">These =
+were a few questions That were prepared for the meeting:<span =
+style=3D"display: block; line-height: .5em;"><br style=3D"display: block; =
+padding: .25em 0;"></span>Questions for James Bey (Executor of JUSTIN JAMES=
+ ANDERSON ESTATE)<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>Identity =
+Verification<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>&quot;Please present a =
+government-issued photo ID, such as a passport, for biometric verification.=
+ Can you confirm that the name on this ID is James Bey, and that you are =
+the same individual signing as Executor of the JUSTIN JAMES ANDERSON ESTATE=
+?&quot;<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>Fiduciary Role =
+Confirmation<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>&quot;Do you confirm =
+that you are signing these documents, including the Security Agreement and =
+UCC-3 Amendment, in your capacity as Executor of the JUSTIN JAMES ANDERSON =
+ESTATE, and that you are authorized to act in this role?&quot;<span =
+style=3D"display: block; line-height: .5em;"><br style=3D"display: block; =
+padding: .25em 0;"></span>Voluntary Intent<span style=3D"display: block; =
+line-height: .5em;"><br style=3D"display: block; padding: .25em =
+0;"></span>&quot;Are you executing these documents voluntarily, without any=
+ coercion, duress, or undue influence from any party?&quot;<span =
+style=3D"display: block; line-height: .5em;"><br style=3D"display: block; =
+padding: .25em 0;"></span>Understanding of Document<span style=3D"display: =
+block; line-height: .5em;"><br style=3D"display: block; padding: .25em =
+0;"></span>&quot;Do you acknowledge that you are signing the Security =
+Agreement and related documents for the purposes stated therein, and that I=
+, as a notary, am not providing legal advice or verifying the truthfulness =
+or legality of the contents?&quot;<span style=3D"display: block; =
+line-height: .5em;"><br style=3D"display: block; padding: .25em =
+0;"></span>Questions for Muhoro Francis (Trustee of Nova Persona Express =
+Trust)<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>Identity =
+Verification<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>&quot;Please present a =
+government-issued photo ID, such as a passport, for biometric verification.=
+ Can you confirm that the name on this ID is Muhoro Francis, and that you =
+are the same individual signing as Trustee of the Nova Persona Express =
+Trust?&quot;<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>Fiduciary Role =
+Confirmation<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>&quot;Do you confirm =
+that you are signing these documents, including the Security Agreement, =
+Affidavit of Commercial Bonding, Payment Instruction Notice, Bonded Bill of=
+ Exchange, and other attached filings, in your capacity as Trustee of the =
+Nova Persona Express Trust, and that you are authorized to act in this role=
+?&quot;<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>Voluntary Intent<span =
+style=3D"display: block; line-height: .5em;"><br style=3D"display: block; =
+padding: .25em 0;"></span>&quot;Are you executing these documents =
+voluntarily, without any coercion, duress, or undue influence from any =
+party?&quot;<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>Understanding of =
+Document<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>&quot;Do you acknowledge=
+ that you are signing the Security Agreement, Affidavit, Payment =
+Instruction Notice, Bonded Bill of Exchange, and related documents for the =
+purposes stated therein, and that I, as a notary, am not providing legal =
+advice or verifying the truthfulness or legality of the contents?=
+&quot;</blockquote><br><div style=3D"color: #6B095D; border-left: 1px solid=
+ #D0D0D0; margin: 0 .5em; padding: 0 .6em;"><div>On Thu, 17 Jul 2025 =
+17:37:19 GMT Evan McCall wrote:</div><br><blockquote dir=3D"auto" =
+style=3D"font-style: normal; margin: 0; padding: 0;">also when dealing with=
+ fiduciary entities, after they've gone through the biometrics and sent =
+trust documents confirming acting authority.<span style=3D"display: block; =
+line-height: .5em;"><br style=3D"display: block; padding: .25em =
+0;"></span>The FiduciaryID for the executor has a missing photo and =
+signature.<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>I was given direction =
+via national notary association that if I verbally acknowledge with the =
+signers present their role and that they have the right to execute the =
+provided documents that it covers my as a notary but I wanted to make sure =
+there isn't something I Am missing</blockquote><br><div style=3D"color: =
+#6B095D; border-left: 1px solid #D0D0D0; margin: 0 .5em; padding: 0 .=
+6em;"><div>On Thu, 17 Jul 2025 17:33:47 GMT Evan McCall =
+wrote:</div><br><blockquote dir=3D"auto" style=3D"font-style: normal; =
+margin: 0; padding: 0;">But I need to be in the session?=
+</blockquote></div></div></div></div><br></div><!--[if !plain]-->
+
+<img src=3D"https://bluenotary.on.crisp.email/hooks/email/track/message/?=
+session_id=3Dsession_2616ae1b-ca85-489b-a963-337f05d4bd20&amp;user_id=3Dses=
+sion_2616ae1b-ca85-489b-a963-337f05d4bd20&amp;website_id=3Df5f3357e-d73e-4c=
+9b-93c3-9d7932c502e3&amp;direction=3Din&amp;fingerprints=3D%5B1752774070356=
+22%5D&amp;signature=3Dd828a6462f94d000" alt><!--[endif]--></body></html>
+----_NmP-7c23d94c5b68071a-Part_1--

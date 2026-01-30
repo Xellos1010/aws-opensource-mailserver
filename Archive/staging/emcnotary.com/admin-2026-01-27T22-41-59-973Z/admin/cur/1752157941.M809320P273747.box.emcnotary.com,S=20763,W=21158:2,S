@@ -1,0 +1,395 @@
+Return-Path: <bounce+0282bf.0c4ef6-admin=emcnotary.com@mg.notarylive.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id VBp1JvTOb2hTLQQAQCw0vA
+	(envelope-from <bounce+0282bf.0c4ef6-admin=emcnotary.com@mg.notarylive.com>)
+	for <admin@emcnotary.com>; Thu, 10 Jul 2025 14:32:20 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.1 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DMARC_PASS,HTML_MESSAGE,MIME_HTML_ONLY,SPF_HELO_NONE,SPF_PASS,
+	T_REMOTE_IMAGE autolearn=ham autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 DMARC_PASS DMARC check passed
+	* -0.1 SPF_PASS SPF check passed
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	*  0.1 MIME_HTML_ONLY BODY: Message only has text/html MIME parts
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	*  0.0 T_REMOTE_IMAGE Message contains an external image
+X-Spam-Score: -0.1
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=quarantine dis=none) header.from=notarylive.com
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=mg.notarylive.com
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (2048-bit key; unprotected) header.d=mg.notarylive.com header.i=@mg.notarylive.com header.a=rsa-sha256 header.s=pdk2 header.b=uoh9gL5R;
+	dkim-atps=neutral
+Received: from m197-228.mailgun.net (m197-228.mailgun.net [161.38.197.228])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id 1C317412E0
+	for <admin@emcnotary.com>; Thu, 10 Jul 2025 14:32:19 +0000 (UTC)
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.notarylive.com; q=dns/txt; s=pdk2; t=1752157938; x=1752165138;
+ h=Content-Transfer-Encoding: Content-Type: Message-Id: To: To: From: From: Subject: Subject: Mime-Version: Date: Sender: Sender;
+ bh=3NTmBZU4cGHQ+fyodFQZkObAzyl2vtBPOlPR3bmBfw0=;
+ b=uoh9gL5RvBOQ9aLsMt+zhu/Yd5nUyFQeHc4cS+1V06ofUdfswDC0c8cIaYob8BfiSP4XnzuEqOzoMwsxWjTpSwGLmx/W+vQJL8lC/L+Qzn0WOaht3rPcLIdfBNyfE/Ykp2sS/xAWfBHCCQ946dJjE7AYJLU1f7BiOR3Vm5imOf9+5PT9ct1Sx/O8+YU+2oLkuLLe39r2eu1AOR+23ATR+Dih9GNj4zWQwdlAvBwYPUbr0huTVMs8d8/NiR6uDLWXGsAw1JUbUAZLYMKVpH64vhDrKZC1QHpQQc667ifhhGv0s58kY2EfcBKctCIgL+oDbI4hPClZ+YCEYaFR/LIwDw==
+X-Mailgun-Sid: WyIyMTAyYiIsImFkbWluQGVtY25vdGFyeS5jb20iLCIwYzRlZjYiXQ==
+Received: by 581d6b2d1e82 with HTTP id 686fceeca4e25773acf3b5cd; Thu, 10 Jul 2025
+ 14:32:12 GMT
+X-Mailgun-Sending-Ip: 161.38.197.228
+Sender: support=notarylive.com@mg.notarylive.com
+Date: Thu, 10 Jul 2025 14:32:12 +0000
+Mime-Version: 1.0
+Subject: Ready to begin!
+From: NotaryLive Support <support@notarylive.com>
+To: admin@emcnotary.com
+X-Mailgun-Variables: {"header_section":"<p>Hello Evan McCall!<\/p> ","middle_section":"\n          
+  <p>\n                Now that your credentials have been approved,
+ you\u2019re all set to start notarizing!\n                As a Bronze notary,
+ you can connect with your signers by sharing your profile link with them.\n  
+              To set up your profile, follow these steps:\n           
+ <\/p>\n\n            <ol>\n                <li>Go to your <a
+ href=\"https:\/\/notarylive.com\/dashboard\">dashboard<\/a><\/li>\n          
+      <li>In the left sidebar, click Profile > My Profile<\/li>\n             
+   <li>Click Edit Profile<\/li>\n                <li>Add a photo and a short
+ bio<\/li>\n                <li>Click Save<\/li>\n            <\/ol>\n        
+    \n            <p>\n                Once your profile page is complete, you
+ can send your signers the link, \n                or even share it on social
+ media platforms using the options at the bottom of the page.\n           
+ <\/p>\n\n            <p>\n                You can also connect with your
+ signers using your unique Friends and Family Discount Code. \n               
+ <b>However, this should only be shared with signers that you know
+ personally<\/b>, \n                as it will permit them to skip the
+ identity verification process.\n            <\/p>\n\n            <p>\n       
+         Finally, if you\u2019re interested, you can schedule a session demo
+ \n                with one of our agents to get to know our platform
+ better.\n            <\/p>\n\n            <br\/>\n            <span>Thank
+ you,<\/span><br\/>\n            <span>Support Staff<\/span><br\/>\n          
+  <span>NotaryLive.com<\/span>\n        "}
+X-Mailgun-Template-Name: general_template_no_cta
+Message-Id: <20250710143212.8095de28436e6af0@mg.notarylive.com>
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html  style=3D"font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif=
+; box-sizing: border-box; font-size: 14px; margin: 0;">
+<head>
+<meta name=3D"viewport" content=3D"width=3Ddevice-width" />
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3DUTF-8" />
+<title>Alerts e.g. approaching your limit</title>
+<style type=3D"text/css">
+img {
+max-width: 100%;
+}
+body {
+-webkit-font-smoothing: antialiased; -webkit-text-size-adjust: none; width:=
+ 100% !important; height: 100%; line-height: 1.6em;
+}
+body {
+background-color: #f6f6f6;
+}
+@media only screen and (max-width: 640px) {
+  body {
+    padding: 0 !important;
+  }
+  h1 {
+    font-weight: 800 !important; margin: 20px 0 5px !important;
+  }
+  h2 {
+    font-weight: 800 !important; margin: 20px 0 5px !important;
+  }
+  h3 {
+    font-weight: 800 !important; margin: 20px 0 5px !important;
+  }
+  h4 {
+    font-weight: 800 !important; margin: 20px 0 5px !important;
+  }
+  h1 {
+    font-size: 22px !important;
+  }
+  h2 {
+    font-size: 18px !important;
+  }
+  h3 {
+    font-size: 16px !important;
+  }
+  .container {
+    padding: 0 !important; width: 100% !important;
+  }
+  .content {
+    padding: 0 !important;
+  }
+  .content-wrap {
+    padding: 10px !important;
+  }
+  .invoice {
+    width: 100% !important;
+  }
+}
+=2Ebtn-main-sm {
+  background-color: #21D6BF;
+  background-image: linear-gradient(100deg, #f9643d, #fe2a77);
+  color: #fff;
+  display: inline-block;
+  letter-spacing: 1px;
+  padding: 10px 40px;
+  border-radius: 4px;
+  text-decoration: none;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 800;
+}
+</style>
+</head>
+
+<body itemscope itemtype=3D"http://schema.org/EmailMessage" style=3D"font-f=
+amily: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box;=
+ font-size: 14px; -webkit-font-smoothing: antialiased; -webkit-text-size-ad=
+just: none; width: 100% !important; height: 100%; line-height: 1.6em; backg=
+round-color: #f6f6f6; margin: 0;" bgcolor=3D"#f6f6f6">
+<svg xmlns=3D"http://www.w3.org/2000/svg" style=3D"display: none;"><symbol =
+id=3D"electronic-signature" viewBox=3D"0 0 64 64"><path xmlns=3D"http://www=
+=2Ew3.org/2000/svg" d=3D"m61 20c0-2.326-=
+1.605-4.27-3.76-4.826l4.017-4.017c1.1=
+24-1.124 1.743-2.618 1.743-4.207 0-3.281-2.669-5.95-5.95-5.95-1.589 0-3.083=
+=2E619-4.207 1.742l-2.115 2.116c-.487-1=
+=2E092-1.579-1.858-2.849-1.858-.822 0-1.=
+626.333-2.207.914l-5.758 5.758c-.59.589-.914 1.373-.914 2.207 0 1.271.766 2=
+=2E362 1.858 2.849l-.272.272h-32.586c-2=
+=2E757 0-5 2.243-5 5v33h-2v5c0 2.757 2.2=
+43 5 5 5h52c2.757 0 5-2.243 5-5v-5h-2zm-10.914-11.672 4.171-4.171c.746-.746=
+ 1.738-1.157 2.793-1.157 2.178 0 3.95 1.772 3.95 3.95 0 1.055-.411 2.047-1.=
+157 2.793l-12.843 12.843-5.586-5.586 2.914-2.914zm-21.379 20.55c-.566.567-.=
+879 1.32-.879 2.122 0 .259.044.509.107.753l-1.535 2.047c-.702.935-1.15 2.04=
+6-1.319 3.2h-.081c-.353 0-.378-.046-.629-.491-.318-.564-.85-1.509-2.371-1.5=
+09-1.454 0-2.241 1.111-2.815 1.922-.52.733-.806 1.078-1.185 1.078-.168 0-.2=
+45 0-.563-.851-.301-.803-.805-2.149-2.437-2.149-1.335 0-2.116.735-2.686 1.2=
+72-.522.492-.795.728-1.314.728v2c1.335 0 2.116-.735 2.686-1.272.522-.492.79=
+5-.728 1.314-.728.168 0 .245 0 .563.851.301.803.805 2.149 2.437 2.149 1.454=
+ 0 2.241-1.111 2.815-1.922.52-.733.806-1.078 1.185-1.078.353 0 .378.046.629=
+=2E491.318.564.85 1.509 2.371 1.509h1c1=
+=2E506 0 2.997-.498 4.199-1.4l2.05-1.537=
+c.247.064.497.107.75.107v10.83h20v-20h-9.586l2.587-2.586 1 1 4.414-4.414h3.=
+586v28h-46v-28h27.586zm.401 4.644 1.369 1.369-1.478 1.109c-.554.417-1.194.7=
+12-1.868.869.157-.674.453-1.314.869-1.869zm5.892 11.478v-9.608c.039-.035.08=
+3-.061.121-.099l6.293-6.293h9.586v16zm6.328-33.914 5.758-5.758c.209-.208.49=
+8-.328.793-.328.618 0 1.121.503 1.121 1.121 0 .299-.116.579-.327.791l-5.76 =
+5.76c-.209.208-.497.328-.792.328-.618 0-1.121-.503-1.121-1.121 0-.3.116-.58=
+1.328-.793zm-.328 8.328 3.586 3.586-10.879 10.878c-.391.391-1.023.39-1.414 =
+0l-2.172-2.172c-.189-.188-.293-.439-.293-.707s.104-.518.293-.707zm-36 .586c=
+0-1.654 1.346-3 3-3h30.586l1 1-1 1h-29.586c-1.103 0-2 .897-2 2v28c0 1.103.8=
+97 2 2 2h46c1.103 0 2-.897 2-2v-28c0-1.103-.897-2-2-2h-1.586l2-2h.586c1.654=
+ 0 3 1.346 3 3v33h-54zm56 38c0 1.654-1.346 3-3 3h-52c-1.654 0-3-1.346-3-3v-=
+3h58z" fill=3D"#fdfafa" data-original=3D"#000000" style=3D"" class=3D""/><p=
+ath xmlns=3D"http://www.w3.org/2000/svg" d=3D"m7 57h2v2h-2z" fill=3D"#fdfaf=
+a" data-original=3D"#000000" style=3D"" class=3D""/><path xmlns=3D"http://w=
+ww.w3.org/2000/svg" d=3D"m11 57h2v2h-2z" fill=3D"#fdfafa" data-original=3D"=
+#000000" style=3D"" class=3D""/><path xmlns=3D"http://www.w3.org/2000/svg" =
+d=3D"m15 57h2v2h-2z" fill=3D"#fdfafa" data-original=3D"#000000" style=3D"" =
+class=3D""/><path xmlns=3D"http://www.w3.org/2000/svg" d=3D"m50.379 9.672h1=
+=2E899v2h-1.899z" transform=3D"matrix(.7=
+07 -.707 .707 .707 7.488 39.421)" fil=
+l=3D"#fdfafa" data-original=3D"#000000" style=3D"" class=3D""/><path xmlns=
+=3D"http://www.w3.org/2000/svg" d=3D"m47.535 12.464h2v2h-2z" transform=3D"m=
+atrix(.707 -.707 .707 .707 4.695 38.263)" fill=3D"#fdfafa" data-original=3D=
+"#000000" style=3D"" class=3D""/><path xmlns=3D"http://www.w3.org/2000/svg"=
+ d=3D"m44.707 15.293h2v2h-2z" transform=3D"matrix(.707 -.707 .707 .707 1.86=
+6 37.092)" fill=3D"#fdfafa" data-original=3D"#000000" style=3D"" class=3D""=
+/><path xmlns=3D"http://www.w3.org/2000/svg" d=3D"m11 23h2v2h-2z" fill=3D"#=
+fdfafa" data-original=3D"#000000" style=3D"" class=3D""/><path xmlns=3D"htt=
+p://www.w3.org/2000/svg" d=3D"m15 23h2v2h-2z" fill=3D"#fdfafa" data-origina=
+l=3D"#000000" style=3D"" class=3D""/><path xmlns=3D"http://www.w3.org/2000/=
+svg" d=3D"m19 23h2v2h-2z" fill=3D"#fdfafa" data-original=3D"#000000" style=
+=3D"" class=3D""/><path xmlns=3D"http://www.w3.org/2000/svg" d=3D"m11 27h14=
+v2h-14z" fill=3D"#fdfafa" data-original=3D"#000000" style=3D"" class=3D""/>=
+<path xmlns=3D"http://www.w3.org/2000/svg" d=3D"m11 31h14v2h-14z" fill=3D"#=
+fdfafa" data-original=3D"#000000" style=3D"" class=3D""/><path xmlns=3D"htt=
+p://www.w3.org/2000/svg" d=3D"m11 45h2v2h-2z" fill=3D"#fdfafa" data-origina=
+l=3D"#000000" style=3D"" class=3D""/><path xmlns=3D"http://www.w3.org/2000/=
+svg" d=3D"m15 45h2v2h-2z" fill=3D"#fdfafa" data-original=3D"#000000" style=
+=3D"" class=3D""/><path xmlns=3D"http://www.w3.org/2000/svg" d=3D"m19 45h2v=
+2h-2z" fill=3D"#fdfafa" data-original=3D"#000000" style=3D"" class=3D""/><p=
+ath xmlns=3D"http://www.w3.org/2000/svg" d=3D"m47 31h2v2h-2z" fill=3D"#fdfa=
+fa" data-original=3D"#000000" style=3D"" class=3D""/><path xmlns=3D"http://=
+www.w3.org/2000/svg" d=3D"m47 35h2v2h-2z" fill=3D"#fdfafa" data-original=3D=
+"#000000" style=3D"" class=3D""/><path xmlns=3D"http://www.w3.org/2000/svg"=
+ d=3D"m47 39h2v2h-2z" fill=3D"#fdfafa" data-original=3D"#000000" style=3D""=
+ class=3D""/></symbol></svg>  =20
+    <table class=3D"body-wrap" style=3D"font-family: 'Helvetica Neue',Helve=
+tica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; width: 100%=
+; background-color: #f6f6f6; margin: 0;" bgcolor=3D"#f6f6f6">
+        <tr style=3D"font-family: 'Helvetica Neue',Helvetica,Arial,sans-ser=
+if; box-sizing: border-box; font-size: 14px; margin: 0;"><td style=3D"font-=
+family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box=
+; font-size: 14px; vertical-align: top; margin: 0;" valign=3D"top"></td>
+            <td class=3D"container" width=3D"600" style=3D"font-family: 'He=
+lvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size=
+: 14px; vertical-align: top; display: block !important; max-width: 600px !i=
+mportant; clear: both !important; margin: 0 auto;" valign=3D"top">
+                <div class=3D"content" style=3D"font-family: 'Helvetica Neu=
+e',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; max=
+-width: 600px; display: block; margin: 0 auto; padding: 20px;">
+                    <table class=3D"main" width=3D"100%" cellpadding=3D"0" =
+cellspacing=3D"0" style=3D"font-family: 'Helvetica Neue',Helvetica,Arial,sa=
+ns-serif; box-sizing: border-box; font-size: 14px; border-radius: 3px; back=
+ground-color: #fff; margin: 0; border: 1px solid #e9e9e9;" bgcolor=3D"#fff"=
+>
+                        <tr style=3D"font-family: 'Helvetica Neue',Helvetic=
+a,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                            <td class=3D"alert alert-warning" style=3D"font=
+-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-bo=
+x; font-size: 16px; vertical-align: top; color: #fff; font-weight: 500; tex=
+t-align: center; background-color: #1f2532; margin: 0; padding: 20px;" alig=
+n=3D"center" bgcolor=3D"#1f2532" valign=3D"top">
+                                <a href=3D"https://notarylive.com/" target=
+=3D"_blank" style=3D"text-decoration:none;">
+                                    <img src=3D"https://res.cloudinary.com/=
+dzex7hjqn/image/upload/v1604001154/EmailTemplateAssets/NL_Logo_with_TM.png"=
+ height=3D"35" border=3D"0" style=3D"display:block; font-family:Arial, sans=
+-serif; font-size:20px; line-height:25px; text-align:center; color:#1e2231;=
+ font-weight:bold; max-width:1000;" class=3D"em_w150" />
+                                </a>
+                            </td>
+                        </tr>
+                       =20
+                        <tr style=3D"font-family: 'Helvetica Neue',Helvetic=
+a,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                            <td class=3D"alert alert-warning" style=3D"font=
+-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-bo=
+x; font-size: 16px; vertical-align: top; color: #fff; font-weight: 500; tex=
+t-align: center; background-color: #1f2532; margin: 0; padding: 20px;" alig=
+n=3D"center" bgcolor=3D"#1f2532" valign=3D"top">
+                                <p>Hello Evan McCall!</p>=20
+                            </td>
+                        </tr>
+
+                        <tr style=3D"font-family: 'Helvetica Neue',Helvetic=
+a,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                            <td class=3D"content-wrap" style=3D"font-family=
+: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font=
+-size: 14px; vertical-align: top; margin: 0; padding: 20px;" valign=3D"top"=
+>
+                                <table width=3D"100%" cellpadding=3D"0" cel=
+lspacing=3D"0" style=3D"font-family: 'Helvetica Neue',Helvetica,Arial,sans-=
+serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                                    <tr style=3D"font-family: 'Helvetica Ne=
+ue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; ma=
+rgin: 0;">
+                                        <td class=3D"content-block" style=
+=3D"font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: b=
+order-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20=
+px;" valign=3D"top">
+                                           =20
+ <p>
+                Now that your credentials have been approved, you=E2=80=99r=
+e all set to start notarizing!
+                As a Bronze notary, you can connect with your signers by sh=
+aring your profile link with them.
+ To set up your profile, follow these steps:
+ </p>
+
+            <ol>
+                <li>Go to your <a href=3D"https://notarylive.com/dashboard"=
+>dashboard</a></li>
+ <li>In the left sidebar, click Profile > My Profile</li>
+ <li>Click Edit Profile</li>
+                <li>Add a photo and a short bio</li>
+                <li>Click Save</li>
+            </ol>
+=20
+            <p>
+                Once your profile page is complete, you can send your signe=
+rs the link,=20
+                or even share it on social media platforms using the option=
+s at the bottom of the page.
+ </p>
+
+            <p>
+                You can also connect with your signers using your unique Fr=
+iends and Family Discount Code.=20
+ <b>However, this should only be shared with signers that you know personal=
+ly</b>,=20
+                as it will permit them to skip the identity verification pr=
+ocess.
+            </p>
+
+            <p>
+ Finally, if you=E2=80=99re interested, you can schedule a session demo=20
+                with one of our agents to get to know our platform better.
+            </p>
+
+            <br/>
+            <span>Thank you,</span><br/>
+            <span>Support Staff</span><br/>
+ <span>NotaryLive.com</span>
+       =20
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    <div class=3D"footer" style=3D"font-family: 'Helvetica =
+Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; =
+width: 100%; clear: both; color: #999; margin: 0; padding: 20px;">
+                      <table width=3D"100%" style=3D"font-family: 'Helvetic=
+a Neue',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px=
+; margin: 0;">
+                            <tr style=3D"font-family: 'Helvetica Neue',Helv=
+etica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;=
+">
+                                <td class=3D"content-block" style=3D"font-f=
+amily: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box;=
+ font-size: 12px; vertical-align: top; color: #999; margin: 0; padding: 0 0=
+ 20px;" valign=3D"top">
+                                   =20
+                                </td>
+                            </tr>
+                           =20
+                            <tr style=3D"font-family: 'Helvetica Neue',Helv=
+etica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;=
+">
+                                <td class=3D"content-block" style=3D"font-f=
+amily: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box;=
+ font-size: 12px; vertical-align: top; color: #999; margin: 0; padding: 0 0=
+ 20px;" valign=3D"top">
+                                    <b>About NotaryLive</b> <br>
+                                    NotaryLive is an innovative online plat=
+form that allows you to notarize your documents remotely. NotaryLive is rev=
+olutionizing how you notarize your documents by allowing you to notarize fr=
+om the comfort of your own home using a desktop or mobile device through ou=
+r secure online notary portal. Now more than ever we realize the importance=
+ of convenience and the capability that technology can provide.
+                                </td>
+                            </tr>
+                           =20
+                            <tr style=3D"font-family: 'Helvetica Neue',Helv=
+etica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;=
+">
+                                <td class=3D"content-block" style=3D"font-f=
+amily: 'Helvetica Neue',Helvetica,Arial,sans-serif; box-sizing: border-box;=
+ font-size: 12px; vertical-align: top; color: #999; margin: 0; padding: 0 0=
+ 20px;" valign=3D"top">
+                                    <b>Recepient Error</b> <br>
+                                    The content of this email is confidenti=
+al and intended for the recipient specified in message only. It is strictly=
+ forbidden to share any part of this message with any third party, without =
+a written consent of the sender. If you received this message by mistake, p=
+lease reply to this message and follow with its deletion, so that we can en=
+sure such a mistake does not occur in the future.
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </td>
+            <td style=3D"font-family: 'Helvetica Neue',Helvetica,Arial,sans=
+-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margi=
+n: 0;" valign=3D"top"></td>
+        </tr>
+    </table>
+</body>
+</html>

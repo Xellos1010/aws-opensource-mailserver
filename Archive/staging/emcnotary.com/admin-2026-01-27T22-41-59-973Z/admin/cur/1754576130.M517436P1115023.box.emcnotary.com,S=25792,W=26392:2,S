@@ -1,0 +1,600 @@
+Return-Path: <0100019884e300ec-aaef49a5-ec54-4777-b49e-7dc78761e539-000000@mail.onenotary.pro>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id Uxt7EwG1lGiPAxEAQCw0vA
+	(envelope-from <0100019884e300ec-aaef49a5-ec54-4777-b49e-7dc78761e539-000000@mail.onenotary.pro>)
+	for <admin@emcnotary.com>; Thu, 07 Aug 2025 14:15:29 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: **
+X-Spam-Status: No, score=2.8 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,HTML_FONT_LOW_CONTRAST,HTML_MESSAGE,
+	PDS_PRO_TLD,SPF_HELO_NONE,SPF_NONE autolearn=no autolearn_force=no
+	version=3.4.6
+X-Spam-Report: 
+	* -0.1 DMARC_PASS DMARC check passed
+	*  2.0 SPF_NONE SPF record not found
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  1.0 PDS_PRO_TLD .pro TLD
+	*      [URI: onenotary.pro (pro)]
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	*  0.0 HTML_FONT_LOW_CONTRAST BODY: HTML font color similar or
+	*      identical to background
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+X-Spam-Score: 2.8
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=quarantine dis=none) header.from=onenotary.pro
+Authentication-Results: box.emcnotary.com; spf=none smtp.mailfrom=mail.onenotary.pro
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (1024-bit key; unprotected) header.d=onenotary.pro header.i=@onenotary.pro header.a=rsa-sha256 header.s=jbd3pcpg4hau56ouk6uzxyypzch3bwga header.b=yYlczFic;
+	dkim=pass (1024-bit key; unprotected) header.d=amazonses.com header.i=@amazonses.com header.a=rsa-sha256 header.s=6gbrjpgwjskckoa6a5zn6fwqkn67xbtw header.b=knmSpwOF;
+	dkim-atps=neutral
+Received: from e228-159.smtp-out.amazonses.com (e228-159.smtp-out.amazonses.com [23.251.228.159])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id EF86D3F51E
+	for <admin@emcnotary.com>; Thu,  7 Aug 2025 14:15:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=jbd3pcpg4hau56ouk6uzxyypzch3bwga; d=onenotary.pro; t=1754576127;
+	h=Message-ID:Date:Subject:From:Reply-To:To:MIME-Version:Content-Type:List-Unsubscribe;
+	bh=P7O3c60UUYVSY2dQgCI4hvI2DVm25FhRG57r+EXra+I=;
+	b=yYlczFic8/N8RqwDqqoVjJZPsekoJd6bnqr8x/Md3boCZKpApxre5LyBoYe8FttH
+	Z9WBJc+tfO0/3JvDBC2wQ2VVtJIKTW8L9qhpztnjOQY/HuYondBzqjJ3aN3y7v+SJXG
+	tVBd+xjVFwXAmIpynW9klUyP2an1wprlYyvd5kM0=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=6gbrjpgwjskckoa6a5zn6fwqkn67xbtw; d=amazonses.com; t=1754576127;
+	h=Message-ID:Date:Subject:From:Reply-To:To:MIME-Version:Content-Type:List-Unsubscribe:Feedback-ID;
+	bh=P7O3c60UUYVSY2dQgCI4hvI2DVm25FhRG57r+EXra+I=;
+	b=knmSpwOFOgOEIAZMEd49gO+fiOmHCgtpW6cLl53cHdkBtWbZkyLx2vzhqUwZFdUf
+	VGxj83TRGe2siIJ7D6+2pkAWFI86DRL4/7ifxwACgPZnpENg/bnoxnYGVtuSa4CWYQw
+	TYnkVY/tvlyBplSN/7k19aORAe27kkKFJf3KmiM4=
+Message-ID: <0100019884e300ec-aaef49a5-ec54-4777-b49e-7dc78761e539-000000@email.amazonses.com>
+Date: Thu, 7 Aug 2025 14:15:27 +0000
+Subject: We are hiring!
+From: OneNotary <hello@onenotary.pro>
+Reply-To: support@onenotary.us
+To: Evan McCall <admin@emcnotary.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="_=_swift_1754574465_e9ca81e5df1e6706da030e04b3de20fa_=_"
+X-EMAIL-ID: 194
+List-Unsubscribe: <https://onenotary.marketing/email/unsubscribe/6894ae8186757372314858>
+Feedback-ID: ::1.us-east-1.1IKQnKz3siGgQTfR5NmIc6uVE/M8Yx5nyM1Rr9tXlcw=:AmazonSES
+X-SES-Outgoing: 2025.08.07-23.251.228.159
+
+
+--_=_swift_1754574465_e9ca81e5df1e6706da030e04b3de20fa_=_
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Great news! OneNotary has an open position for you
+
+Hello Evan,
+
+Thank you for your patience. We're thrilled to invite you to join our platf=
+orm team for an open position.
+
+To proceed please complete the following steps:
+
+1. Test Your Knowledge of Notary Laws:=C2=A0Your first step is to provide m=
+ore information about your experience, schedule and take the theoretical te=
+st, which will help us assess your knowledge. The link to the test is provi=
+ded below.
+https://onenotary.marketing/r/f7772f13c608423fdb234204e?ct=3DYTo1OntzOjY6In=
+NvdXJjZSI7YToyOntpOjA7czoxNDoiY2FtcGFpZ24uZXZlbnQiO2k6MTtpOjk0Nzt9czo1OiJlb=
+WFpbCI7aToxOTQ7czo0OiJzdGF0IjtzOjIyOiI2ODk0YWU4MTg2NzU3MzcyMzE0ODU4IjtzOjQ6=
+ImxlYWQiO3M6NzoiMTQ3ODIxMiI7czo3OiJjaGFubmVsIjthOjE6e3M6NToiZW1haWwiO2k6MTk=
+0O319&
+
+2. Advanced Notary Assignment:=C2=A0After successfully completing the theor=
+etical test, you will be invited to undergo a more in-depth testing session=
+ to demonstrate your skills at a higher level.
+
+If you have any questions or need help, please feel free to reach out to ou=
+r support team.
+We look forward to collaborating with you.
+
+Best Regards,
+OneNotary Team.
+
+--_=_swift_1754574465_e9ca81e5df1e6706da030e04b3de20fa_=_
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<html xmlns=3D"http://www.w3.org/1999/xhtml" lang=3D"en" class=3D" response=
+js " style=3D"">
+  <head>
+    <meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8=
+" />
+    <meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=
+=3D1" />
+    <meta http-equiv=3D"X-UA-Compatible" content=3D"IE=3Dedge" />
+    <meta name=3D"robots" content=3D"noindex, nofollow" />
+    <title>We are hiring!
+    </title>
+    <style type=3D"text/css">
+      body, table, td, a{
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+      }
+      table, td{
+        mso-table-lspace: 0pt;
+        mso-table-rspace: 0pt;
+      }
+      img{
+        border: 0;
+        height: auto;
+        line-height: 100%;
+        outline: none;
+        text-decoration: none;
+        -ms-interpolation-mode: bicubic;
+      }
+      table{
+        border-collapse: collapse !important;
+      }
+      body{
+        font-family:Verdana, Arial, sans-serif;
+        height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+      }
+      div[style*=3D"margin: 16px 0;"] {
+        margin:0 !important;
+      }
+      a[x-apple-data-detectors] {
+        color: inherit !important;
+        text-decoration: none !important;
+        font-size: inherit !important;
+        font-family: inherit !important;
+        font-weight: inherit !important;
+        line-height: inherit !important;
+      }
+      @media only screen and (min-width: 660px) {
+        .shrinker {
+          padding: 0 55px !important;
+        }
+        .c4 {
+          width: 35% !important;
+          float: left !important;
+          display: block !important;
+        }
+        .c8 {
+          width: 60% !important;
+          padding-left: 5% !important;
+          float: left !important;
+          display: block !important;
+        }
+        .header-split {
+          display: block;
+          width: 50%;
+          float: left;
+        }
+        .header-split.right p, .header-split.right td, .header-split.right =
+{
+          text-align: right !important;
+          float: right !important;
+        }
+      }
+      @media only screen and (max-width: 660px) {
+        .shrinker {
+          width: 100% !important;
+        }
+        .c1,.c2,.c3,.c4,.c5,.c6,.c7,.c8,.c10,.c11,.c12 {
+          width: 100% !important;
+          float: left !important;
+          display: block;
+          padding: 0 !important;
+          margin: 10px 0;
+        }
+        .header-split td {
+          padding: 5px 0 !important;
+          width: 100% !important;
+          text-align: center !important;
+        }
+        .header-split a, .header-split p {
+          text-align: center !important;
+        }
+      }
+    </style>
+    <!--[if !mso]><!---->
+    <!--<![endif]-->
+  </head>
+  <body style=3D"margin: 0px; padding: 0px; background-color: #F8FAFD; over=
+flow: visible; background-position: initial initial; background-repeat: ini=
+tial initial;" class=3D"ui-sortable">
+    <!--[if mso]>
+<style type=3D"text/css">
+body, table, td {font-family:Verdana, Arial, sans-serif; !important;}
+</style>
+<![endif]-->
+    <table width=3D"100%" height=3D"100%" cellpadding=3D"0" cellspacing=3D"=
+0" border=3D"0" align=3D"center">
+      <tbody>
+        <tr>
+          <td width=3D"100%" valign=3D"top" align=3D"center">
+            <center>
+              <!-- START SECTION 1 -->
+              <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" heigh=
+t=3D"100%" width=3D"100%" data-section-wrapper=3D"1">
+                <tbody>
+                  <tr data-section=3D"1">
+                    <td align=3D"center" height=3D"100%" valign=3D"top" wid=
+th=3D"100%">
+                      <!--[if (gte mso 9)|(IE)]>
+<table align=3D"center" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" wi=
+dth=3D"660">
+<tr>
+<td align=3D"center" valign=3D"top" width=3D"660">
+<![endif]-->
+                      <table align=3D"center" border=3D"0" cellpadding=3D"0=
+" cellspacing=3D"0" width=3D"100%" style=3D"max-width:660px;" bgcolor=3D"#F=
+8FAFD">
+                        <tbody>
+                          <tr>
+                            <td height=3D"15" style=3D"font-size: 15px; lin=
+e-height: 30px;">=C2=A0
+                            </td>
+                          </tr>
+                          <tr>
+                            <td align=3D"center" style=3D"font-family:Verda=
+na, Arial, sans-serif; background:#F8FAFD; color:#212121; padding: 0 15px;"=
+ class=3D"shrinker ui-sortable" data-slot-container=3D"1">
+                              <div data-slot=3D"text" class=3D"">
+                                <table align=3D"center" border=3D"0" cellpa=
+dding=3D"0" cellspacing=3D"0" style=3D"max-width:550px; background: #ffffff=
+" width=3D"100%">
+                                  <tbody>
+                                    <tr>
+                                      <td align=3D"center" style=3D"padding=
+: 0; text-align: center;" valign=3D"top">
+                                        <div style=3D"text-align: left; pad=
+ding:30px;">
+                                          <img src=3D"https://onenotary.mar=
+keting/media/images/365dcfac669a794050333ad165f87e28.png" class=3D"fr-fic f=
+r-dib" style=3D"width: 170px;" width=3D"170" height=3D"30" />
+                                        </div>
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <td align=3D"left" style=3D"padding: =
+0 30px; text-align: left;" valign=3D"top">
+                                        <p style=3D"text-align: left; font-=
+family: Verdana, Arial, Sans-serif; font-size:28px; line-height:36px; font-=
+weight:400; color:rgb(33,33,33); padding:0px; margin:0px;">
+                                          <strong>Join Us =E2=80=94 We=
+=E2=80=99re Hiring Full-Time Notaries!
+                                          </strong>
+                                        </p>
+                                        <br>
+                                        <p style=3D"text-align: left; font-=
+family: Verdana, Arial, Sans-serif; font-size:14px; line-height:24px; font-=
+weight:400; color:rgb(33,33,33); padding:10px 0px; margin:0px;">Hello Evan!
+                                        </p>
+                                        <p style=3D"text-align: left; font-=
+family: Verdana, Arial, Sans-serif; font-size:14px; line-height:24px; font-=
+weight:400; color:rgb(33,33,33); padding:10px 0px; margin:0px;">Looking for=
+ exciting opportunities as a notary? Join OneNotary, where technology meets=
+ professionalism!</p>
+
+<p  <title></title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        h2 {
+            color: #333;
+            text-align: center;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        ul li {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+        }
+        ul li img {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+        }
+        ul li span {
+            font-size: 16px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class=3D"container">
+        <h2>=E2=9C=A8 Why Choose OneNotary? =E2=9C=A8</h2>
+        <ul>
+            <li>
+                <img src=3D"https://img.icons8.com/emoji/48/000000/house-em=
+oji.png" alt=3D"House Icon">
+                <span><strong>Work From Home:</strong> No commute=E2=80=
+=94build your career from the comfort of your home!</span>
+            </li>
+            <li>
+                <img src=3D"https://img.icons8.com/emoji/48/000000/alarm-cl=
+ock-emoji.png" alt=3D"Clock Icon">
+                <span><strong>Flexible Schedule:</strong> Be your own boss=
+=E2=80=94choose when and how much you work.</span>
+            </li>
+            <li>
+                <img src=3D"https://img.icons8.com/emoji/48/000000/money-ba=
+g-emoji.png" alt=3D"Money Bag Icon">
+                <span><strong>Steady Income:</strong> Enjoy consistent oppo=
+rtunities and grow your earnings on your terms.</span>
+            </li>
+        </ul>
+    </div>
+<img height=3D"1" width=3D"1" src=3D"https://onenotary.marketing/email/6894=
+ae8186757372314858.gif" alt=3D"" /></body></p>
+                                        <p style=3D"text-align: left; font-=
+family: Verdana, Arial, Sans-serif; font-size:14px; line-height:24px; font-=
+weight:400; color:rgb(33,33,33); padding:10px 0px; margin:0px;">Take a quic=
+k survey to highlight your experience, and we'll create opportunities just =
+for you!
+
+</p><button style=3D"border:0; align:center; background:#477EF7; -webkit-bo=
+rder-radius: 4px; -moz-border-radius: 4px; border-radius: 4px;mso-hide:all"=
+;><a class=3D"fr-strong" href=3D"https://onenotary.marketing/r/808ea9d887b2=
+d4d3b4aef8725?ct=3DYTo1OntzOjY6InNvdXJjZSI7YToyOntpOjA7czoxNDoiY2FtcGFpZ24u=
+ZXZlbnQiO2k6MTtpOjk0Nzt9czo1OiJlbWFpbCI7aToxOTQ7czo0OiJzdGF0IjtzOjIyOiI2ODk=
+0YWU4MTg2NzU3MzcyMzE0ODU4IjtzOjQ6ImxlYWQiO3M6NzoiMTQ3ODIxMiI7czo3OiJjaGFubm=
+VsIjthOjE6e3M6NToiZW1haWwiO2k6MTk0O319&" rel=3D"noopener noreferrer" style=
+=3D"font-size: 14px; font-family:Verdana, Arial, sans-serif; color: #ffffff=
+; text-decoration: none; text-decoration: none; padding: 16px 25px; display=
+: inline-block; font-weight: bold; letter-spacing: 1px;" target=3D"_blank">=
+Take a Test</a></button><br><br>                                      =20
+                                        <p style=3D"text-align: left; font-=
+family: Verdana, Arial, Sans-serif; font-size:14px; line-height:24px; font-=
+weight:400; color:rgb(33,33,33); padding:10px 0px; margin:0px;">If you have=
+ any questions or need help, please feel free to reach out to our support t=
+eam.</p>
+                                        <p style=3D"text-align: left; font-=
+family: Verdana, Arial, Sans-serif; font-size:14px; line-height:24px; font-=
+weight:400; color:rgb(33,33,33); padding:10px 0px; margin:0px;">We are wait=
+ing for you!</p>
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <td align=3D"left" style=3D"text-alig=
+n: left; padding:0 30px; padding-bottom: 20px">
+                                        <table align=3D"left" border=3D"0" =
+cellpadding=3D"0" cellspacing=3D"0">
+                                          <tbody>
+                                            <tr>
+                                              <td>
+                                                <table align=3D"center" bor=
+der=3D"0" cellpadding=3D"0" cellspacing=3D"0">
+                                                  <tbody>
+                                                    <tr>
+                                                      <td>
+
+                                                        <p style=3D"text-al=
+ign: left; font-family:verdana,arial,sans-serif; font-size:14px; line-heigh=
+t:24px; font-weight:400; color:rgb(33,33,33); padding:0px; margin:0px;">
+                                                          -
+                                                          <br>
+                                                          Best Regards,
+                                                          <br>
+                                                          OneNotary Team   =
+                                 =20
+                                                        </p>
+                                                    </tr>
+                                                  </tbody>
+                                                </table>
+                                              </td>
+                                            </tr>
+                                          </tbody>
+                                        </table>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td height=3D"15" style=3D"font-size: 15px; lin=
+e-height: 15px;">=C2=A0
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <!--[if (gte mso 9)|(IE)]>
+</td>
+</tr>
+</table>
+<![endif]-->
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <!-- END SECTION 1-->
+              <!-- START SECTION 2 -->
+              <!-- END SECTION 2-->
+              <!-- START SECTION 3 -->
+              <!-- END SECTION 3-->
+              <!-- START COMPANY INFO -->
+              <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" heigh=
+t=3D"100%" width=3D"100%" data-section-wrapper=3D"1">
+                <tbody>
+                  <tr data-section=3D"1">
+                    <td align=3D"center" height=3D"100%" valign=3D"top" wid=
+th=3D"100%">
+                      <!--[if (gte mso 9)|(IE)]>
+<table align=3D"center" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" wi=
+dth=3D"660">
+<tr>
+<td align=3D"center" valign=3D"top" width=3D"660">
+<![endif]-->
+                      <table align=3D"center" border=3D"0" cellpadding=3D"0=
+" cellspacing=3D"0" width=3D"100%" style=3D"max-width:660px;" bgcolor=3D"#F=
+8FAFD">
+                        <tbody>
+                          <tr>
+                            <td height=3D"15" style=3D"font-size: 15px; lin=
+e-height: 15px;">=C2=A0
+                            </td>
+                          </tr>
+                          <tr>
+                            <td align=3D"center" style=3D"font-family:Verda=
+na, Arial, sans-serif; color:#212121; text-transform: uppercase;" data-slot=
+-container=3D"1" class=3D"ui-sortable">
+                              <div data-slot=3D"text">
+                                <span style=3D"color: rgb(71, 85, 119);">
+                                  <a href=3D"https://onenotary.marketing/r/=
+c338a4ca555abb15c0acf1acd?ct=3DYTo1OntzOjY6InNvdXJjZSI7YToyOntpOjA7czoxNDoi=
+Y2FtcGFpZ24uZXZlbnQiO2k6MTtpOjk0Nzt9czo1OiJlbWFpbCI7aToxOTQ7czo0OiJzdGF0Ijt=
+zOjIyOiI2ODk0YWU4MTg2NzU3MzcyMzE0ODU4IjtzOjQ6ImxlYWQiO3M6NzoiMTQ3ODIxMiI7cz=
+o3OiJjaGFubmVsIjthOjE6e3M6NToiZW1haWwiO2k6MTk0O319&" rel=3D"noopener norefe=
+rrer" style=3D"font-family:Verdana, Arial, sans-serif; font-size:10px; colo=
+r: rgb(71, 85, 119); line-height:20px; text-transform: uppercase; text-deco=
+ration:underline;" target=3D"_blank">OneNotary.US</a>=20
+                                  <span style=3D"font-family: arial, sans-s=
+erif; font-size: 10px; line-height: 20px;">=C2=A0|=C2=A0
+                                  </span>=20
+                                  <a href=3D"https://onenotary.marketing/r/=
+cb4ed9efe2f55f1330a2b3712?ct=3DYTo1OntzOjY6InNvdXJjZSI7YToyOntpOjA7czoxNDoi=
+Y2FtcGFpZ24uZXZlbnQiO2k6MTtpOjk0Nzt9czo1OiJlbWFpbCI7aToxOTQ7czo0OiJzdGF0Ijt=
+zOjIyOiI2ODk0YWU4MTg2NzU3MzcyMzE0ODU4IjtzOjQ6ImxlYWQiO3M6NzoiMTQ3ODIxMiI7cz=
+o3OiJjaGFubmVsIjthOjE6e3M6NToiZW1haWwiO2k6MTk0O319&" rel=3D"noopener norefe=
+rrer" style=3D"font-family:Verdana, Arial, sans-serif; font-size:10px; colo=
+r: rgb(71, 85, 119); line-height:20px; text-transform: uppercase; text-deco=
+ration:underline;" target=3D"_blank">LINKEDIN
+                                  </a>=20
+                                  <span style=3D"font-family: arial, sans-s=
+erif; font-size: 10px; line-height: 20px;">=C2=A0|=C2=A0
+                                  <a href=3D"https://onenotary.marketing/r/=
+d6607f1901b648b23ea8963a6?ct=3DYTo1OntzOjY6InNvdXJjZSI7YToyOntpOjA7czoxNDoi=
+Y2FtcGFpZ24uZXZlbnQiO2k6MTtpOjk0Nzt9czo1OiJlbWFpbCI7aToxOTQ7czo0OiJzdGF0Ijt=
+zOjIyOiI2ODk0YWU4MTg2NzU3MzcyMzE0ODU4IjtzOjQ6ImxlYWQiO3M6NzoiMTQ3ODIxMiI7cz=
+o3OiJjaGFubmVsIjthOjE6e3M6NToiZW1haWwiO2k6MTk0O319&" rel=3D"noopener norefe=
+rrer" style=3D"font-family:Verdana, Arial, sans-serif; font-size:10px; colo=
+r: rgb(71, 85, 119); line-height:20px; text-transform: uppercase; text-deco=
+ration:underline;" target=3D"_blank">HELPDESK
+                                  </a>=20
+                                  <span style=3D"font-family: arial, sans-s=
+erif; font-size: 10px; line-height: 20px;">=C2=A0|=C2=A0
+                                  </span>=20
+                                  <a href=3D"https://onenotary.marketing/em=
+ail/unsubscribe/6894ae8186757372314858" style=3D"font-family:Verdana, Arial=
+, sans-serif; font-size:10px; color: rgb(71, 85, 119); line-height:20px; te=
+xt-transform: uppercase; text-decoration:underline;" target=3D"_blank">Unsu=
+bscribe
+                                  </a>
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td height=3D"15" style=3D"font-size: 15px; lin=
+e-height: 15px;">=C2=A0
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <!--[if (gte mso 9)|(IE)]>
+</td>
+</tr>
+</table>
+<![endif]-->
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <!-- END COMPANY INFO -->
+              <!-- START COPYRIGHT -->
+              <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" heigh=
+t=3D"100%" width=3D"100%" data-section-wrapper=3D"1">
+                <tbody>
+                  <tr data-section=3D"1">
+                    <td align=3D"center" height=3D"100%" valign=3D"top" wid=
+th=3D"100%">
+                      <!--[if (gte mso 9)|(IE)]>
+<table align=3D"center" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" wi=
+dth=3D"660">
+<tr>
+<td align=3D"center" valign=3D"top" width=3D"660">
+<![endif]-->
+                      <table align=3D"center" border=3D"0" cellpadding=3D"0=
+" cellspacing=3D"0" width=3D"100%" style=3D"max-width:660px;" bgcolor=3D"#F=
+8FAFD">
+                        <tbody>
+                          <tr>
+                            <td align=3D"center" style=3D"font-family:Verda=
+na, Arial, sans-serif; color:#212121; text-transform: uppercase;" data-slot=
+-container=3D"1" class=3D"ui-sortable">
+                              <div data-slot=3D"text">
+                                <span style=3D"color: rgb(71, 85, 119);">
+                                  <span style=3D"font-family: Verdana,Genev=
+a,sans-serif;">
+                                    <span style=3D"font-size: 10px;">Copyri=
+ght =C2=A9 2025 OneNotary Inc., All rights reserved
+                                    </span>
+                                  </span>
+                                </span>
+                                <div data-empty=3D"true">
+                                  <br style=3D"line-height: 18px; height: 1=
+8px; font-size: 18px;" />
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td height=3D"20" style=3D"font-size: 20px; lin=
+e-height: 20px;">=C2=A0
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <!--[if (gte mso 9)|(IE)]>
+</td>
+</tr>
+</table>
+<![endif]-->
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <!-- END COPYRIGHT -->
+              <!-- START SOCIAL -->
+              <!-- END SOCIAL -->
+              <!--[if (gte mso 9)|(IE)]>
+</td>
+</tr>
+</table>
+<![endif]-->
+            </center>
+          </td>
+        </tr>
+      </tbody>
+    </table>             =20
+    <div style=3D"display:none; white-space:nowrap; font:15px courier; line=
+-height:0;">
+    </div>
+  <img height=3D"1" width=3D"1" src=3D"https://onenotary.marketing/email/68=
+94ae8186757372314858.gif" alt=3D"" /></body>
+</html>
+
+--_=_swift_1754574465_e9ca81e5df1e6706da030e04b3de20fa_=_--

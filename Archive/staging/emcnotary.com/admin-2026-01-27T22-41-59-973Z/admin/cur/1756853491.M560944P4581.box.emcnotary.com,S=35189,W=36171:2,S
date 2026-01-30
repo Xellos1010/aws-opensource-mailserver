@@ -1,0 +1,982 @@
+Return-Path: <010001990ca0d0e0-270cf6d8-915c-4246-906c-d09f84ecbc23-000000@bounce.stripe.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id REaGIPJ0t2jlEQAAQCw0vA
+	(envelope-from <010001990ca0d0e0-270cf6d8-915c-4246-906c-d09f84ecbc23-000000@bounce.stripe.com>)
+	for <admin@emcnotary.com>; Tue, 02 Sep 2025 22:51:30 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.3 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,HTML_FONT_LOW_CONTRAST,HTML_MESSAGE,
+	RCVD_IN_DNSWL_NONE,RCVD_IN_MSPIKE_H5,RCVD_IN_MSPIKE_WL,SPF_HELO_NONE,
+	SPF_PASS,T_KAM_HTML_FONT_INVALID,T_REMOTE_IMAGE autolearn=ham
+	autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 SPF_PASS SPF check passed
+	* -0.1 DMARC_PASS DMARC check passed
+	* -0.0 RCVD_IN_DNSWL_NONE RBL: Sender listed at
+	*      https://www.dnswl.org/, no trust
+	*      [54.240.37.197 listed in list.dnswl.org]
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	*  0.0 HTML_FONT_LOW_CONTRAST BODY: HTML font color similar or
+	*      identical to background
+	*  0.0 RCVD_IN_MSPIKE_H5 RBL: Excellent reputation (+5)
+	*      [54.240.37.197 listed in wl.mailspike.net]
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	*  0.0 T_KAM_HTML_FONT_INVALID Test for Invalidly Named or Formatted
+	*      Colors in HTML
+	*  0.0 RCVD_IN_MSPIKE_WL Mailspike good senders
+	*  0.0 T_REMOTE_IMAGE Message contains an external image
+X-Spam-Score: -0.3
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=reject dis=none) header.from=stripe.com
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=bounce.stripe.com
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (1024-bit key; unprotected) header.d=stripe.com header.i=@stripe.com header.a=rsa-sha256 header.s=qwdu5i442cpi2twyvw6abpgxgtxmt7x7 header.b=cnG5TW5E;
+	dkim=pass (1024-bit key; unprotected) header.d=amazonses.com header.i=@amazonses.com header.a=rsa-sha256 header.s=6gbrjpgwjskckoa6a5zn6fwqkn67xbtw header.b=eyuO02gr;
+	dkim-atps=neutral
+Received: from a37-197.smtp-out.amazonses.com (a37-197.smtp-out.amazonses.com [54.240.37.197])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id 496673F635
+	for <admin@emcnotary.com>; Tue,  2 Sep 2025 22:51:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=qwdu5i442cpi2twyvw6abpgxgtxmt7x7; d=stripe.com; t=1756853490;
+	h=Date:From:Reply-To:To:Message-ID:Subject:Mime-Version:Content-Type;
+	bh=yVgnT4WTjCGOA7TlbMvUR5fl//Ux7+z8F89z/fVg6eI=;
+	b=cnG5TW5ELJ+yEMqyJy4bkCJ2SBf7O43/vYexFoKSl9Gsfg9Dc/TrALJ6lFJeVfJm
+	xdyaqP3QW/sXpJdVNJbFby7NY7tcQXdpkOjTawkpUBK7w2557F8CEzlpBhE9QI2JN/A
+	mD6WMsV80nW6m4d2FORGYp7rXKcmNtM1rVAw2YIs=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=6gbrjpgwjskckoa6a5zn6fwqkn67xbtw; d=amazonses.com; t=1756853490;
+	h=Date:From:Reply-To:To:Message-ID:Subject:Mime-Version:Content-Type:Feedback-ID;
+	bh=yVgnT4WTjCGOA7TlbMvUR5fl//Ux7+z8F89z/fVg6eI=;
+	b=eyuO02graPbnPtdet96lJy5y9PbmPH4aD23X4Wej/m25Np3/gO2IrLUfDNpT02xB
+	s5WsotxtVY870UD5K93rPRPqFtlLz8diuCIiBG0dYcvUfm6RDlDqWbjjc4B6CUOhUfz
+	hwbZXTnjzRB3xoeDJaypUn1C+KibJK4Ur6dF/yJQ=
+Date: Tue, 2 Sep 2025 22:51:29 +0000
+From: Stripe <express@stripe.com>
+Reply-To: Stripe <express@stripe.com>
+To: admin@emcnotary.com
+Message-ID: <010001990ca0d0e0-270cf6d8-915c-4246-906c-d09f84ecbc23-000000@email.amazonses.com>
+Subject: Confirm your email address for your Stripe account with Blue Notary
+ LLC
+Mime-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="--==_mimepart_68b774f0dd4d6_3bf6e2d8c2735c"
+X-Stripe-EID: em_7nc0t2sfnti3rriiueufvrnsttbffb
+BIMI-Selector: v=BIMI1; s=transactional;
+Feedback-ID: ::1.us-east-1.6vykjbak2H2Lt+NlcYSHGaJaFAs9E9RhPW9H9+Jrv7M=:AmazonSES
+X-SES-Outgoing: 2025.09.02-54.240.37.197
+
+----==_mimepart_68b774f0dd4d6_3bf6e2d8c2735c
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+Confirm your email address with Stripe
+
+Thank you for setting up your Stripe account with Blue Notary LLC. To help us protect your account, please confirm your email address.
+
+Confirm your email : https://connect.stripe.com/express/acct_1RbuXKC4kX646cn2/cQpjtlLU3tQ0#email_confirm
+
+By signing up for a Stripe account with Blue Notary LLC, you gain access to a secure platform used by thousands of businesses to send payments to users around the world.
+
+===
+This email relates to your Emcnotary Stripe account.
+Account ID: acct_1RbuXKC4kX646cn2
+
+Need to refer to this message? Use this ID: em_7nc0t2sfnti3rriiueufvrnsttbffb
+
+Stripe, 354 Oyster Point Blvd, South San Francisco, CA 94080
+----==_mimepart_68b774f0dd4d6_3bf6e2d8c2735c
+Content-Type: text/html;
+ charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.=
+w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns=3D"http://www.w3.org/1999/xhtml" lang=3D"en" xml:lang=3D"en">
+  <head>
+    <meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8=
+">
+    <meta name=3D"viewport" content=3D"width=3Ddevice-width">
+    <meta name=3D"robots" content=3D"noindex">
+  <title>Confirm your email address for your Stripe account with Blue Notar=
+y LLC</title><style>/**
+  * IMPORTANT:
+  * Please read before changing anything, CSS involved in our HTML emails i=
+s
+  * extremely specific and written a certain way for a reason. It might not=
+ make
+  * sense in a normal setting but Outlook loves it this way.
+  *
+  * !!! div[style*=3D"margin: 16px 0"] allows us to target a weird margin
+  * !!! bug in Android's email client.
+  * !!! Do not remove.
+  *
+  * Also, the img files are hosted on S3. Please don't break these URLs!
+  * The images are also versioned by date, so please update the URLs accord=
+ingly
+  * if you create new versions
+  *
+***/
+
+/**
+  * # Root
+  * - CSS resets and general styles go here.
+**/
+
+html,
+body,
+a,
+span,
+div[style*=3D'margin: 16px 0'] {
+  border: 0 !important;
+  margin: 0 !important;
+  outline: 0 !important;
+  padding: 0 !important;
+  text-decoration: none !important;
+}
+
+a,
+span,
+td,
+th {
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/**
+  * # Delink
+  * - Classes for overriding clients which creates links out of things like
+  *   emails, addresses, phone numbers, etc.
+**/
+
+span.st-Delink a {
+  color: #414552 !important;
+  text-decoration: none !important;
+}
+
+/** Modifier: preheader */
+span.st-Delink.st-Delink--preheader a {
+  color: #ffffff !important;
+  text-decoration: none !important;
+}
+/** */
+
+/** Modifier: title */
+span.st-Delink.st-Delink--title a {
+  color: #414552 !important;
+  text-decoration: none !important;
+}
+/** */
+
+/** Modifier: footer */
+span.st-Delink.st-Delink--footer a {
+  color: #687385 !important;
+  text-decoration: none !important;
+}
+/** */
+
+/**
+  * # Header
+**/
+
+table.st-Header td.st-Header-background div.st-Header-area {
+  height: 76px !important;
+  width: 600px !important;
+  background-repeat: no-repeat !important;
+  background-size: 600px 76px !important;
+}
+
+table.st-Header td.st-Header-logo div.st-Header-area {
+  height: 29px !important;
+  width: 70px !important;
+  background-repeat: no-repeat !important;
+  background-size: 70px 29px !important;
+}
+
+table.st-Header td.st-Header-logo.st-Header-logo--atlasAzlo div.st-Header-a=
+rea {
+  height: 21px !important;
+  width: 216px !important;
+  background-repeat: no-repeat !important;
+  background-size: 216px 21px !important;
+}
+
+/**
+  * # Retina
+  * - Targets high density displays and devices smaller than 768px.
+  *
+  * ! For mobile specific styling, see `# Mobile`.
+**/
+
+@media (-webkit-min-device-pixel-ratio: 1.25),
+  (min-resolution: 120dpi),
+  all and (max-width: 768px) {
+  /**
+    * # Target
+    * - Hides images in these devices to display the larger version as a
+    *   background image instead.
+  **/
+
+  /** Modifier: mobile */
+  div.st-Target.st-Target--mobile img {
+    display: none !important;
+    margin: 0 !important;
+    max-height: 0 !important;
+    min-height: 0 !important;
+    mso-hide: all !important;
+    padding: 0 !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+  }
+  /** */
+
+  /**
+    * # Header
+  **/
+
+  table.st-Header td.st-Header-background div.st-Header-area {
+    background-image: url('https://stripe-images.s3.amazonaws.com/html_emai=
+ls/2017-08-21/header/Header-background.png') !important;
+  }
+
+  /** Modifier: white */
+  table.st-Header.st-Header--white td.st-Header-background div.st-Header-ar=
+ea {
+    background-image: url('https://stripe-images.s3.amazonaws.com/html_emai=
+ls/2017-08-21/header/Header-background--white.png') !important;
+  }
+  /** */
+
+  /** Modifier: simplified */
+  table.st-Header.st-Header--simplified td.st-Header-logo div.st-Header-are=
+a {
+    background-image: url('https://stripe-images.s3.amazonaws.com/html_emai=
+ls/2023-03-30/header/stripe_logo_blurple_email_highres.png') !important;
+  }
+  /** */
+
+  /** Modifier: simplified + atlasAzlo */
+  table.st-Header.st-Header--simplified
+    td.st-Header-logo.st-Header-logo--atlasAzlo
+    div.st-Header-area {
+    background-image: url('https://stripe-images.s3.amazonaws.com/html_emai=
+ls/2018-05-02/header/Header-logo--atlasAzlo.png') !important;
+  }
+  /** */
+}
+
+/**
+  * # Mobile
+  * - This affects emails views in clients less than 600px wide.
+**/
+
+@media only screen and (max-width: 600px) {
+  /**
+    * # Wrapper
+  **/
+
+  table.st-Wrapper,
+  table.st-Width.st-Width--mobile {
+    min-width: 100% !important;
+    width: 100% !important;
+    border-radius: 0px !important;
+  }
+
+  .st-SandboxRibbon {
+    text-align: left !important; /* Align text to the left on mobile */
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+
+  /**
+    * # Spacer
+  **/
+
+  /** Modifier: gutter */
+  td.st-Spacer.st-Spacer--gutter {
+    width: 16px !important;
+  }
+  /** */
+
+  /** Modifier: td.kill */
+  td.st-Spacer.st-Spacer--kill {
+    width: 0 !important;
+  }
+  td.st-Spacer.st-Spacer--height {
+    height: 0 !important;
+  }
+  /** */
+
+  /** Modifier: div.kill */
+  div.st-Spacer.st-Spacer--kill {
+    height: 0px !important;
+  }
+  /** */
+
+  /** Modifier: footer */
+  .st-Mobile--footer {
+    text-align: left !important;
+  }
+  /** */
+
+  /**
+    * # Font
+  **/
+
+  /** Modifier: title */
+  td.st-Font.st-Font--title,
+  td.st-Font.st-Font--title span,
+  td.st-Font.st-Font--title a {
+    font-size: 20px !important;
+    line-height: 28px !important;
+    font-weight: 700 !important;
+  }
+  /** */
+
+  /** Modifier: header */
+  td.st-Font.st-Font--header,
+  td.st-Font.st-Font--header span,
+  td.st-Font.st-Font--header a {
+    font-size: 16px !important;
+    line-height: 24px !important;
+  }
+  /** */
+
+  /** Modifier: body */
+  td.st-Font.st-Font--body,
+  td.st-Font.st-Font--body span,
+  td.st-Font.st-Font--body a {
+    font-size: 16px !important;
+    line-height: 24px !important;
+  }
+  /** */
+
+  /** Modifier: caption */
+  td.st-Font.st-Font--caption,
+  td.st-Font.st-Font--caption span,
+  td.st-Font.st-Font--caption a {
+    font-size: 12px !important;
+    line-height: 16px !important;
+  }
+  /** */
+
+  /**
+    * # Header
+  **/
+  table.st-Header td.st-Header-background div.st-Header-area {
+    margin: 0 !important;
+    width: auto !important;
+    background-position: 0 0 !important;
+  }
+
+  table.st-Header td.st-Header-background div.st-Header-area {
+    background-image: url('https://stripe-images.s3.amazonaws.com/html_emai=
+ls/2017-08-21/header/Header-background--mobile.png') !important;
+  }
+
+  /** Modifier: white */
+  table.st-Header.st-Header--white td.st-Header-background div.st-Header-ar=
+ea {
+    background-image: url('https://stripe-images.s3.amazonaws.com/html_emai=
+ls/2017-08-21/header/Header-background--white--mobile.png') !important;
+  }
+  /** */
+
+  /** Modifier: simplified */
+  table.st-Header.st-Header--simplified td.st-Header-logo {
+    width: auto !important;
+  }
+
+  table.st-Header.st-Header--simplified td.st-Header-spacing {
+    width: 0 !important;
+  }
+
+  table.st-Header.st-Header--simplified td.st-Header-logo div.st-Header-are=
+a {
+    margin: 0 !important;
+    background-image: url('https://stripe-images.s3.amazonaws.com/html_emai=
+ls/2023-03-30/header/stripe_logo_blurple_email_highres.png') !important;
+  }
+
+  table.st-Header.st-Header--simplified
+    td.st-Header-logo.st-Header-logo--atlasAzlo
+    div.st-Header-area {
+    margin: 0 auto !important;
+    background-image: url('https://stripe-images.s3.amazonaws.com/html_emai=
+ls/2018-05-02/header/Header-logo--atlasAzlo.png') !important;
+  }
+  /** */
+
+  /**
+    * # Divider
+  **/
+
+  table.st-Divider td.st-Spacer.st-Spacer--gutter,
+  tr.st-Divider td.st-Spacer.st-Spacer--gutter {
+    background-color: #e6ebf1;
+  }
+
+  /**
+    * # Blocks
+  **/
+
+  table.st-Blocks table.st-Blocks-inner {
+    border-radius: 0 !important;
+  }
+
+  table.st-Blocks
+    table.st-Blocks-inner
+    table.st-Blocks-item
+    td.st-Blocks-item-cell {
+    display: block !important;
+  }
+
+  /**
+    * # Hero Units
+  **/
+
+  /* Hides dividers in hero units so that vertical spacing remains consiste=
+nt */
+  table.st-Hero-Container td.st-Spacer--divider {
+    display: none !important;
+    margin: 0 !important;
+    max-height: 0 !important;
+    min-height: 0 !important;
+    mso-hide: all !important;
+    padding: 0 !important;
+
+    font-size: 0 !important;
+    line-height: 0 !important;
+  }
+
+  table.st-Hero-Responsive {
+    margin: 16px auto !important;
+  }
+
+  /**
+    * # Button
+  **/
+
+  table.st-Button td.st-Button-area,
+  table.st-Button td.st-Button-area a.st-Button-link,
+  table.st-Button td.st-Button-area span.st-Button-internal {
+    height: 40px !important;
+    line-height: 24px !important;
+    font-size: 16px !important;
+  }
+}
+
+@media (-webkit-min-device-pixel-ratio: 1.25),
+  (min-resolution: 120dpi),
+  all and (max-width: 768px) {
+  /**
+    * # mobile image
+   **/
+  div.st-Target.st-Target--mobile img {
+    display: none !important;
+    margin: 0 !important;
+    max-height: 0 !important;
+    min-height: 0 !important;
+    mso-hide: all !important;
+    padding: 0 !important;
+
+    font-size: 0 !important;
+    line-height: 0 !important;
+  }
+
+  /**
+    * # document-list-item image
+   **/
+  div.st-Icon.st-Icon--document {
+    background-image: url('https://stripe-images.s3.amazonaws.com/notificat=
+ions/icons/document--16--regular.png') !important;
+  }
+}
+</style></head>
+  <body class=3D"st-Email" bgcolor=3D"#f6f9fc" style=3D"border: 0; margin: =
+0; padding: 0; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; =
+min-width: 100%; width: 100%;" override=3D"fix">
+
+      <!-- PREHEADER_SWAP_TAG -->
+
+      <!-- SANDBOX_WARNING_BANNER_SWAP_TAG -->
+
+      <!-- Background -->
+      <table class=3D"st-Background" bgcolor=3D"#f6f9fc" border=3D"0" cellp=
+adding=3D"0" cellspacing=3D"0" width=3D"100%" style=3D"border: 0; margin: 0=
+; padding: 0;">
+        <tbody>
+          <tr>
+            <td class=3D"st-Spacer st-Spacer--kill st-Spacer--height" heigh=
+t=3D"64">
+              <div class=3D"st-Spacer st-Spacer--kill">&nbsp;</div>
+            </td>
+          </tr>
+
+          <tr>
+            <td style=3D"border: 0; margin: 0; padding: 0;">
+              <!-- Wrapper -->
+              <table class=3D"st-Wrapper" align=3D"center" bgcolor=3D"#ffff=
+ff" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"600" style=3D=
+"border-top-left-radius: 16px; border-top-right-radius: 16px; margin: 0 aut=
+o; min-width: 600px;">
+                <tbody>
+                  <tr>
+                    <td style=3D"border: 0; margin: 0; padding: 0;">
+                     =20
+
+  <!-- STRIPE_PREHEADER_START_TAG -->
+<table class=3D"st-Preheader st-Width st-Width--mobile" border=3D"0" cellpa=
+dding=3D"0" cellspacing=3D"0" width=3D"600" style=3D"min-width: 600px;">
+  <tbody>
+    <tr>
+      <td align=3D"center" height=3D"0" style=3D"border: 0; margin: 0; padd=
+ing: 0; color: #ffffff; display: none !important; font-size: 1px; line-heig=
+ht: 1px; max-height: 0; max-width: 0; mso-hide: all !important; opacity: 0;=
+ overflow: hidden; visibility: hidden;">
+        <span class=3D"st-Delink st-Delink--preheader" style=3D"color: #fff=
+fff; text-decoration: none;">
+
+         =20
+    This helps us protect your account.
+ =20
+
+          <!-- Prevents elements showing up in email client preheader text,=
+ fyi https://parcel.io/blog/preheader-spacing -->
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F
+          =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD
+          =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD
+          =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD
+          =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD
+          =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD
+          =C2=A0
+
+        </span>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<!-- STRIPE_PREHEADER_END_TAG -->
+
+  <table class=3D"st-Header st-Header--simplified st-Width st-Width--mobile=
+" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"600" style=3D"m=
+in-width: 600px;">
+  <tbody>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--divider" colspan=3D"4" height=3D"48=
+" style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1=
+px; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"48">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+      <td class=3D"st-Header-logo" align=3D"left" height=3D"29" width=3D"70=
+" style=3D"border: 0; margin: 0; padding: 0;">
+        <a style=3D"border: 0; margin: 0; padding: 0; text-decoration: none=
+;" href=3D"https://58.email.stripe.com/CL0/https:%2F%2Fstripe.com/1/0100019=
+90ca0d0e0-270cf6d8-915c-4246-906c-d09f84ecbc23-000000/BLKQOcXrqTWlcEbjEh69N=
+2ZPV4p65mru4L1uhFIZtSw=3D421">
+          <img alt=3D"Stripe" border=3D"0" class=3D"st-Header-source" heigh=
+t=3D"29" width=3D"70" style=3D"border: 0; margin: 0; padding: 0; color: #67=
+72e5; display: block; font-family: -apple-system, 'SF Pro Display', 'SF Pro=
+ Text', 'Helvetica', sans-serif; font-size: 12px; font-weight: normal;" src=
+=3D"https://stripe-images.s3.amazonaws.com/html_emails/2023-03-30/header/st=
+ripe_logo_blurple_email_highres.png">
+        </a>
+      </td>
+      <td class=3D"st-Header-spacing" width=3D"423" style=3D"border: 0; mar=
+gin: 0; padding: 0;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"48">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--divider" colspan=3D"4" height=3D"32=
+" style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1=
+px; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <table class=3D"st-Copy st-Copy--title st-Width st-Width--mobile" border=
+=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"600" style=3D"min-width=
+: 600px;">
+  <tbody>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"3" height=3D"8"=
+ style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1p=
+x; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"48">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+      <td class=3D"st-Font st-Font--title" style=3D"border: 0; margin: 0; p=
+adding: 0; color: #414552; font-family: -apple-system, 'SF Pro Display', 'S=
+F Pro Text', 'Helvetica', sans-serif; font-weight:bold !important; sans-ser=
+if; font-size: 28px; line-height: 36px;">
+
+        <span class=3D"st-Delink st-Delink--title" style=3D"border: 0; marg=
+in: 0; padding: 0; color: #414552; text-decoration: none; font-family: -app=
+le-system, 'SF Pro Display', 'SF Pro Text', 'Helvetica', sans-serif; font-s=
+ize: 28px; line-height: 36px; font-weight: 700 !important;">
+         =20
+    Confirm your email address with Stripe
+ =20
+        </span>
+      </td>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"48">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"3" height=3D"8"=
+ style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1p=
+x; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <table class=3D"st-Copy st-Width st-Width--mobile" border=3D"0" cellpaddi=
+ng=3D"0" cellspacing=3D"0" width=3D"600" style=3D"min-width: 600px;">
+  <tbody>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"3" height=3D"8"=
+ style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1p=
+x; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"48">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+      <td style=3D"border: 0; margin: 0; padding: 0; color: #414552 !import=
+ant; font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'Helvetic=
+a', sans-serif; font-weight:400; font-size: 16px; line-height: 24px;">
+
+     =20
+      Thank you for setting up your Stripe account with Blue Notary LLC. To=
+ help us protect your account, please confirm your email address.
+ =20
+
+      </td>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"48">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"3" height=3D"8"=
+ style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1p=
+x; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <table class=3D"st-Copy st-Width st-Width--mobile" border=3D"0" cellpaddi=
+ng=3D"0" cellspacing=3D"0" width=3D"600" style=3D"min-width: 600px;">
+  <tbody>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"3" height=3D"24=
+" style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1=
+px; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"48">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+      <td class=3D"st-Font st-Font--body" style=3D"border: 0; margin: 0; pa=
+dding: 0; color: #414552; font-family: -apple-system, 'SF Pro Display', 'SF=
+ Pro Text', 'Helvetica', sans-serif; font-size: 16px; line-height: 30px;" a=
+lign=3D"left">
+
+        <!-- Button -->
+        <table class=3D"st-Button" border=3D"0" cellpadding=3D"0" cellspaci=
+ng=3D"0">
+          <tbody>
+            <tr>
+              <td align=3D"center" class=3D"st-Button-area" height=3D"36" s=
+tyle=3D"border: 0; margin: 0; padding: 0; background-color: #625afa; border=
+-radius: 4px; text-align: center;">
+                <a class=3D"st-Button-link" style=3D"border: 0; margin: 0; =
+padding: 0; color: #ffffff; height: 28px; text-align: center; text-decorati=
+on: none;" href=3D"https://58.email.stripe.com/CL0/https:%2F%2Fconnect.stri=
+pe.com%2Fexpress%2Facct_1RbuXKC4kX646cn2%2FcQpjtlLU3tQ0%23email_confirm/1/0=
+10001990ca0d0e0-270cf6d8-915c-4246-906c-d09f84ecbc23-000000/N-1fNdmEPJxhNrS=
+fa0tMyZP5Oo3GXUGjH8GG0r4TcPU=3D421">
+                  <span class=3D"st-Button-internal" style=3D"border: 0; ma=
+rgin: 0; padding: 0; color: #ffffff; font-family: -apple-system, 'SF Pro Di=
+splay', 'SF Pro Text', 'Helvetica', sans-serif; font-size: 16px; font-weigh=
+t: bold; height: 36px; line-height: 30px; mso-line-height-rule: exactly; te=
+xt-decoration: none; white-space: nowrap; width: 100%;">=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0
+    Confirm your email
+  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0</span>
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <!-- /Button -->
+
+      </td>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"48">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"3" height=3D"24=
+" style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1=
+px; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <table class=3D"st-Copy st-Width st-Width--mobile" border=3D"0" cellpaddi=
+ng=3D"0" cellspacing=3D"0" width=3D"600" style=3D"min-width: 600px;">
+  <tbody>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"3" height=3D"8"=
+ style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1p=
+x; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"48">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+      <td style=3D"border: 0; margin: 0; padding: 0; color: #414552 !import=
+ant; font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'Helvetic=
+a', sans-serif; font-weight:400; font-size: 16px; line-height: 24px;">
+
+     =20
+      By signing up for a Stripe account with Blue Notary LLC, you gain acc=
+ess to a secure platform used by thousands of businesses to send payments t=
+o users around the world.
+ =20
+
+      </td>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"48">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"3" height=3D"8"=
+ style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1p=
+x; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <div style=3D"background-color: #f6f9fc">
+  <table class=3D"st-Footer st-Width st-Width--mobile st-Layout-Wrapper" bo=
+rder=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"600" style=3D"min-w=
+idth: 600px; border-bottom-right-radius: 16px; border-bottom-left-radius: 1=
+6px;" bgcolor=3D"#ffffff">
+    <tbody>
+      <tr>
+        <td class=3D"st-Spacer st-Spacer--wrapper" height=3D"40">
+          <div class=3D"st-Spacer">=C2=A0</div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<table class=3D"st-Footer st-Width st-Width--mobile" border=3D"0" cellpaddi=
+ng=3D"0" cellspacing=3D"0" width=3D"600" style=3D"min-width: 600px;" bgcolo=
+r=3D"#f6f9fc">
+  <tbody>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--wrapper" height=3D"32">
+        <div class=3D"st-Spacer">=C2=A0</div>
+      </td>
+    </tr>
+
+
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"48">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+      <td class=3D"st-Font st-Font--caption st-Mobile--footer" style=3D"bor=
+der: 0; margin: 0; padding: 0; color: #687385; font-family: -apple-system, =
+'SF Pro Display', 'SF Pro Text', 'Helvetica', sans-serif; font-size: 12px; =
+line-height: 20px;
+      text-align: left;">
+        <span style=3D"border: 0; margin: 0; padding: 0; color: #687385; te=
+xt-decoration: none;">
+              This email relates to your <a style=3D"border: 0; margin: 0; =
+padding: 0; color: #625afa !important; font-weight: bold; text-decoration: =
+none;  " href=3D"https://58.email.stripe.com/CL0/https:%2F%2Fdashboard.stri=
+pe.com%2Fb%2Facct_1RbuXKC4kX646cn2%3Fdestination=3D%252F/1/010001990ca0d0e0=
+-270cf6d8-915c-4246-906c-d09f84ecbc23-000000/LzDkud3IOrJRpmn2iXbbGC73Zzi4AV=
+ZnpwobRxSQ18k=3D421">Emcnotary</a> Stripe account.<br>
+              Account ID: acct_1RbuXKC4kX646cn2<br>
+
+            Need to refer to this message? Use this ID: em_7nc0t2sfnti3rrii=
+ueufvrnsttbffb
+        </span>
+      </td>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"48">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--wrapper" height=3D"15">
+        <div class=3D"st-Spacer">=C2=A0</div>
+      </td>
+    </tr>
+
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"48">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+      <td class=3D"st-Font st-Font--caption st-Mobile--footer" style=3D"bor=
+der: 0; margin: 0; padding: 0; color: #687385; font-family: -apple-system, =
+'SF Pro Display', 'SF Pro Text', 'Helvetica', sans-serif; font-size: 12px; =
+line-height: 20px;
+      text-align: left;">
+        <span class=3D"st-Delink st-Delink--footer" style=3D"border: 0; mar=
+gin: 0; padding: 0; color: #687385; text-decoration: none;">
+          Stripe, 354 Oyster Point Blvd, South San Francisco, CA 94080
+        </span>
+      </td>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"48">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--wrapper" height=3D"15">
+        <div class=3D"st-Spacer">=C2=A0</div>
+      </td>
+    </tr>
+
+
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--wrapper" height=3D"32">
+        <div class=3D"st-Spacer st-Spacer--kill">=C2=A0</div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <!-- Wrapper -->
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <!-- /Background -->
+  <img alt=3D"" src=3D"http://58.email.stripe.com/CI0/010001990ca0d0e0-270c=
+f6d8-915c-4246-906c-d09f84ecbc23-000000/h0PXloxNUiegiBSnpzmplmqf2JvEbhBAyZ7=
+80VnYigs=3D421" style=3D"display: none; width: 1px; height: 1px;">
+</body>
+</html>
+----==_mimepart_68b774f0dd4d6_3bf6e2d8c2735c--

@@ -1,0 +1,980 @@
+Return-Path: <01000198d1c39885-3ff9210d-4dfc-4b27-98e7-e80000f52e3c-000000@bounce.link.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id lzF4HDpjqGgk/QAAQCw0vA
+	(envelope-from <01000198d1c39885-3ff9210d-4dfc-4b27-98e7-e80000f52e3c-000000@bounce.link.com>)
+	for <admin@emcnotary.com>; Fri, 22 Aug 2025 12:31:54 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.3 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,HTML_FONT_LOW_CONTRAST,HTML_MESSAGE,
+	RCVD_IN_DNSWL_NONE,SPF_HELO_NONE,SPF_PASS,T_KAM_HTML_FONT_INVALID,
+	T_REMOTE_IMAGE autolearn=ham autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.0 RCVD_IN_DNSWL_NONE RBL: Sender listed at
+	*      https://www.dnswl.org/, no trust
+	*      [54.240.72.130 listed in list.dnswl.org]
+	* -0.1 SPF_PASS SPF check passed
+	* -0.1 DMARC_PASS DMARC check passed
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	*  0.0 HTML_FONT_LOW_CONTRAST BODY: HTML font color similar or
+	*      identical to background
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	*  0.0 T_KAM_HTML_FONT_INVALID Test for Invalidly Named or Formatted
+	*      Colors in HTML
+	*  0.0 T_REMOTE_IMAGE Message contains an external image
+X-Spam-Score: -0.3
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=reject dis=none) header.from=link.com
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=bounce.link.com
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (2048-bit key; unprotected) header.d=link.com header.i=@link.com header.a=rsa-sha256 header.s=s55desilyiw7yxkfwd22a2tiu6jyzf6h header.b=qD0xx4Iu;
+	dkim=pass (1024-bit key; unprotected) header.d=amazonses.com header.i=@amazonses.com header.a=rsa-sha256 header.s=6gbrjpgwjskckoa6a5zn6fwqkn67xbtw header.b=AMrjUVAf;
+	dkim-atps=neutral
+Received: from a72-130.smtp-out.amazonses.com (a72-130.smtp-out.amazonses.com [54.240.72.130])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id 1F1613F69D
+	for <admin@emcnotary.com>; Fri, 22 Aug 2025 12:31:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=s55desilyiw7yxkfwd22a2tiu6jyzf6h; d=link.com; t=1755865913;
+	h=Date:From:Reply-To:To:Message-ID:Subject:Mime-Version:Content-Type;
+	bh=AXX7xoYuRFsPDD/D/PY90ym+GQWPFCXbYU4HB9xoPVM=;
+	b=qD0xx4IusPCf+VF5/Zip+wDJzEeoa1cIfWSSr4qhyKSvUstcEYnGlhBxonb6zd7Y
+	hUUpN5WsYJRQF7hZD+lkhBxX9gZEcN+XSsem5sdIe3ksKeUlVu9W7Y2OSL6RnAahfQy
+	3W1GaQTk1VEycRXWIOv/FKLlZe5tE3u/7sURZlb3QKvkyxNvYfBrnDPTmQB5bS54agL
+	x+INsEE0DteX29w+CZRb7jYXWgnwCO43uyxX5yZifnltz5zog29EYvihMFItmsXNyUi
+	KC7XZqZkIGXvhly77xnxirT/C6ulQ2wYhZuPtqUKxXKPbESKvCDTpCYOuZ9r8h8bGHX
+	NZ/6A+4LhQ==
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=6gbrjpgwjskckoa6a5zn6fwqkn67xbtw; d=amazonses.com; t=1755865913;
+	h=Date:From:Reply-To:To:Message-ID:Subject:Mime-Version:Content-Type:Feedback-ID;
+	bh=AXX7xoYuRFsPDD/D/PY90ym+GQWPFCXbYU4HB9xoPVM=;
+	b=AMrjUVAfmZXVdURnfrMb9JLDDEb5sYyk6pJ5aJqLrfRU/ojNs2+EzJIKpQdlzz2c
+	Bm81uaDU8dTpK+FujBWRMDE44JlmE3kKAw3sSvQ6YnaYytDNJXgTs+GhkqUKMbL3OWt
+	iCXxGZODxxdSqyXuwNmkyhu514B24bJ55ertg+OE=
+Date: Fri, 22 Aug 2025 12:31:53 +0000
+From: Link <notifications@link.com>
+Reply-To: Link <notifications@link.com>
+To: admin@emcnotary.com
+Message-ID: <01000198d1c39885-3ff9210d-4dfc-4b27-98e7-e80000f52e3c-000000@email.amazonses.com>
+Subject: Your purchase from BLUE NOTARY
+Mime-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="--==_mimepart_68a863387bb48_1dc7b57065203177c"
+X-Stripe-EID: em_vn4cchdyl5jegradkmri1pamqzkkay
+Feedback-ID: ::1.us-east-1.6vykjbak2H2Lt+NlcYSHGaJaFAs9E9RhPW9H9+Jrv7M=:AmazonSES
+X-SES-Outgoing: 2025.08.22-54.240.72.130
+
+----==_mimepart_68a863387bb48_1dc7b57065203177c
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+(BLUE NOTARY logo [https://files.stripe.com/files/MDB8YWNjdF8xS1FnME1DMm9=
+keHI2RlZpfGZfbGl2ZV9idnMzWXJoWUh0bk5rR3ZOdlJnOTdBeFk00L4malYhN])
+BLUE NOTARY
+$15.00
+View purchase : https://app.link.com/purchases/cltxn_1Ryu8GRr8jKF8N8i7zKm=
+hbgM?ref=3Dlink_branded_purchase_receipt&fromEmail=3Dadmin@emcnotary.com
+
+Payment
+CHASE Bank =E2=80=A2=E2=80=A28902
+
+Name
+EVAN MCCALL
+
+Date
+August 22, 2025
+
+Need support?
+
+For questions or concerns about your purchase, contact BLUE NOTARY (https=
+://bluenotary.crisp.help).
+
+
+You authorized BLUE NOTARY to make debits under these terms (https://link=
+.com/terms/ach-authorization).
+
+We may verify your account by depositing a penny (https://link.com/terms/=
+ach-authorization) into your connected bank account.
+
+
+Terms (https://link.com/terms)
+Privacy (https://link.com/privacy)=
+
+----==_mimepart_68a863387bb48_1dc7b57065203177c
+Content-Type: text/html;
+ charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.=
+w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns=3D"http://www.w3.org/1999/xhtml" lang=3D"en" xml:lang=3D"en">
+  <head>
+    <meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8=
+">
+    <meta name=3D"viewport" content=3D"width=3Ddevice-width">
+  <title>Your purchase from BLUE NOTARY</title><style>/**
+ * These initial styles are copied from lib/letter/private/email/component/=
+stripe_email_layout/style.css
+**/
+
+html,
+body,
+td,
+a,
+span,
+div[style*=3D'margin: 16px 0'] {
+  border: 0 !important;
+  margin: 0 !important;
+  outline: 0 !important;
+  text-decoration: none !important;
+  /* Keep in sync with Letter::Private::Core::Theme::Font::LinkFontFamily *=
+/
+  font-family: 'SF Pro Text', 'Noto Sans', 'Helvetica Neue', Helvetica, Ari=
+al,
+    sans-serif;
+}
+
+td {
+  color: #1d3944 !important;
+}
+
+.st-Delink--title {
+  color: #1d3944 !important;
+}
+
+a,
+span,
+td,
+th {
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/**
+ * main content
+ **/
+.st-Wrapper {
+  margin: 0 auto;
+  min-width: 480px;
+  width: 480px;
+}
+
+/* Responsive Layout */
+.st-Link-Responsive {
+  min-width: 360px;
+  max-width: 424px;
+  width: 400px;
+}
+
+@media screen and (min-width: 424px) {
+  .st-Link-Responsive {
+    width: 424px;
+  }
+}
+
+@media screen and (max-width: 424px) and (min-width: 360px) {
+  .st-Link-Responsive {
+    width: 100%;
+  }
+}
+
+@media screen and (max-width: 360px) {
+  .st-Link-Responsive {
+    width: 360px;
+  }
+}
+
+/* Text */
+
+.link-Footer--row td {
+  text-align: center;
+  font-family: 'SF Pro Text', 'Noto Sans', 'Helvetica Neue', Helvetica, Ari=
+al,
+    sans-serif;
+}
+
+.link-Footer--row span {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.st-LinkTextBlock a,
+.link-Footer--row a {
+  font-weight: inherit !important;
+  text-decoration: underline !important;
+  text-underline-offset: 1.5px;
+}
+</style></head>
+  <body class=3D"st-Email" bgcolor=3D"#f6f8fa" style=3D"border: 0; margin: =
+0; padding: 0; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; =
+min-width: 100%; width: 100%;">
+
+    <!-- Background -->
+    <table class=3D"st-Background" bgcolor=3D"#f6f8fa" border=3D"0" cellpad=
+ding=3D"0" cellspacing=3D"0" width=3D"100%" style=3D"border: 0; margin: 0; =
+padding: 0;">
+      <tbody>
+        <tr>
+          <td class=3D"st-Spacer st-Spacer--emailStart" height=3D"32" style=
+=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; mso=
+-line-height-rule: exactly;">
+            <div class=3D"st-Spacer st-Spacer--filler">&nbsp;</div>
+          </td>
+        </tr>
+
+        <tr>
+          <td align=3D"center" style=3D"border: 0; margin: 0; padding: 0;">
+              <!-- if basic don't wrap -->
+             =20
+ =20
+
+  <!-- STRIPE_PREHEADER_START_TAG -->
+<table class=3D"st-Preheader st-Width st-Width--mobile" border=3D"0" cellpa=
+dding=3D"0" cellspacing=3D"0" width=3D"360" style=3D"min-width: 360px;">
+  <tbody>
+    <tr>
+      <td align=3D"center" height=3D"0" style=3D"border: 0; margin: 0; padd=
+ing: 0; color: #ffffff; display: none !important; font-size: 1px; line-heig=
+ht: 1px; max-height: 0; max-width: 0; mso-hide: all !important; opacity: 0;=
+ overflow: hidden; visibility: hidden;">
+        <span class=3D"st-Delink st-Delink--preheader" style=3D"color: #fff=
+fff; text-decoration: none;">
+
+         =20
+    View purchase
+ =20
+
+          <!-- Prevents elements showing up in email client preheader text,=
+ fyi https://parcel.io/blog/preheader-spacing -->
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=
+=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F
+          =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =E2=80=87=CD=8F =
+=E2=80=87=CD=8F =E2=80=87=CD=8F
+          =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD
+          =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD
+          =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD
+          =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=
+=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD
+          =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =
+=C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD =C2=AD
+          =C2=A0
+
+        </span>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<!-- STRIPE_PREHEADER_END_TAG -->
+
+  <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" class=3D"st-Copy =
+st-Copy--header st-Width st-Link-Responsive" style=3D"min-width: 360px; max=
+-width: 424px">
+  <tbody>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--divider" colspan=3D"4" height=3D"0"=
+ style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1p=
+x; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"18">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+      <td class=3D"st-Header-logo" align=3D"left" style=3D"border: 0; margi=
+n: 0; padding: 0;" colspan=3D"2">
+        <div class=3D"st-Header-area st-Target st-Target--mobile">
+          <a role=3D"link" style=3D"border: 0; margin: 0; padding: 0; text-=
+decoration: none;" href=3D"https://58.email.stripe.com/CL0/https:%2F%2Fapp.=
+link.com/1/01000198d1c39885-3ff9210d-4dfc-4b27-98e7-e80000f52e3c-000000/YvI=
+O9MPOr1Ko3UCVRxwgoV1zIOGQfIKLGZGq--gTQAU=3D419">
+            <img alt=3D"Link" border=3D"0" class=3D"st-Header-source" width=
+=3D"88" style=3D"color: #171717; border: 0; margin: 0; padding: 0; display:=
+ block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,=
+ 'Helvetica Neue', Ubuntu, sans-serif; font-size: 12px; font-weight: normal=
+;" src=3D"https://stripe-images.s3.us-west-1.amazonaws.com/html_emails/2024=
+-08-06/link/logos/link_logo_secondary_512h.png">
+          </a>
+        </div>
+      </td>
+
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"24">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--divider" colspan=3D"4" height=3D"32=
+" style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1=
+px; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" class=3D"st-Width=
+ st-Width--mobile st-Link-Responsive" style=3D"min-width: 360px; max-width:=
+ 424px">
+  <tbody>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"3" height=3D"0"=
+ style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1p=
+x; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"24">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+      <td style=3D"border: 0; margin: 0; padding: 0;">
+
+        <table bgcolor=3D"#ffffff" border=3D"0" cellpadding=3D"0" cellspaci=
+ng=3D"0" style=3D"border-radius: 32px; margin: auto; width:100%;  ;" width=
+=3D"100%">
+          <tr>
+            <td class=3D"st-Spacer st-Spacer--blocksItemEnds" colspan=3D"3"=
+ height=3D"32" style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; l=
+ine-height: 1px; mso-line-height-rule: exactly;">
+              <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+            </td>
+          </tr>
+          <tr>
+            <td style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; =
+line-height: 1px; mso-line-height-rule: exactly;" width=3D"32">
+              <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+            </td>
+            <td style=3D"font-size: 16px; text-align: center; line-height: =
+24px; color:#171717">
+             =20
+
+   =20
+    <img src=3D"https://files.stripe.com/files/MDB8YWNjdF8xS1FnME1DMm9keHI2=
+RlZpfGZfbGl2ZV9idnMzWXJoWUh0bk5rR3ZOdlJnOTdBeFk00L4malYhN" width=3D"56" hei=
+ght=3D"56" style=3D"border: 1px solid #12121e0d; margin: 0 auto; padding: 0=
+; display: block; border-radius: 16px; margin: 0 auto;" alt=3D"BLUE NOTARY =
+logo">
+
+    <table class=3D"st-Width" border=3D"0" cellpadding=3D"0" cellspacing=3D=
+"0" width=3D"100%" style=3D"min-width: 100%">
+  <tbody>
+    <tr>
+      <td style=3D"border: 0; margin: 0; padding: 0;">
+        <div style=3D"line-height: 16px; height: 16px; max-height: 16px">
+          =C2=A0
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+    <table class=3D"st-LinkTextBlock st-Copy st-Copy st-Width st-Copy--subd=
+ueLinks" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"100%" st=
+yle=3D"text-align: center; min-width: 100%">
+  <tbody>
+    <tr>
+      <td style=3D"border: 0; margin: 0; padding: 0;">
+        <div style=3D"font-size: 18px; font-weight: 600; color: #171717; li=
+ne-height: 28px;">
+         =20
+        BLUE NOTARY
+   =20
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+
+    <table class=3D"st-Width" border=3D"0" cellpadding=3D"0" cellspacing=3D=
+"0" width=3D"100%" style=3D"min-width: 100%">
+  <tbody>
+    <tr>
+      <td style=3D"border: 0; margin: 0; padding: 0;">
+        <div style=3D"line-height: 4px; height: 4px; max-height: 4px">
+          =C2=A0
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+    <table class=3D"st-LinkTextBlock st-Copy st-Copy st-Width st-Copy--subd=
+ueLinks" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"100%" st=
+yle=3D"text-align: center; min-width: 100%">
+  <tbody>
+    <tr>
+      <td style=3D"border: 0; margin: 0; padding: 0;">
+        <div style=3D"font-size: 28px; font-weight: 700; color: #171717; li=
+ne-height: 36px;">
+         =20
+      $15.00
+   =20
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+    <table class=3D"st-Copy st-Width st-Width--mobile" border=3D"0" cellpad=
+ding=3D"0" cellspacing=3D"0" width=3D"100%" style=3D"min-width: 100%;">
+  <tbody>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"0">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+      <td class=3D"st-Font st-Font--body" style=3D"border: 0; margin: 0; pa=
+dding: 0; color: #f6f8fa; font-family: -apple-system, BlinkMacSystemFont, '=
+Segoe UI', Roboto, 'Helvetica Neue', Ubuntu, sans-serif; font-size: 16px; l=
+ine-height: 24px;">
+
+        <!-- Button & Modifier: fullWidth -->
+        <table class=3D"st-Button st-Button--fullWidth" border=3D"0" cellpa=
+dding=3D"0" cellspacing=3D"0" width=3D"100%" style=3D"min-width: 100%">
+          <tbody>
+            <tr>
+              <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"3" heig=
+ht=3D"24" style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-h=
+eight: 1px; mso-line-height-rule: exactly;">
+                <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+              </td>
+            </tr>
+            <tr>
+              <td align=3D"center" class=3D"st-Button-area" height=3D"38" v=
+align=3D"middle" style=3D"border: 0; margin: 0; padding: 0; background-colo=
+r: #f6f8fa; border-radius: 16px; text-align: center;">
+                <a role=3D"button" class=3D"st-Button-link" style=3D"border=
+: 0; margin: 0; padding: 0; color: #171717; display: block; height: 56px; t=
+ext-align: center; text-decoration: none;" href=3D"https://58.email.stripe.=
+com/CL0/https:%2F%2Fapp.link.com%2Fpurchases%2Fcltxn_1Ryu8GRr8jKF8N8i7zKmhb=
+gM%3Fref=3Dlink_branded_purchase_receipt%26fromEmail=3Dadmin@emcnotary.com/=
+1/01000198d1c39885-3ff9210d-4dfc-4b27-98e7-e80000f52e3c-000000/f1wvU-3CQjHm=
+VFIL1x-OTK3XGLssyU3PLoNxpjuwXJU=3D419">
+                  <span class=3D"st-Button-internal" style=3D"border: 0; ma=
+rgin: 0; padding: 0; color: #171717; font-family: -apple-system, BlinkMacSy=
+stemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Ubuntu, sans-serif; font-si=
+ze: 16px; font-weight: 500; height: 56px; line-height: 56px; mso-line-heigh=
+t-rule: exactly; text-decoration: none; vertical-align: middle; white-space=
+: nowrap; width: 100%;">=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0View<span style=3D"bo=
+rder: 0; margin: 0; padding: 0; color: #f6f8fa; font-size: 12px; text-decor=
+ation: none;">=E2=80=91</span>purchase=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0</span>
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"3" heig=
+ht=3D"24" style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-h=
+eight: 1px; mso-line-height-rule: exactly;">
+                <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <!-- /Button & Modifier: fullWidth -->
+
+      </td>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"0">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"3" height=3D"0p=
+x" style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: =
+1px; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+    <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" style=3D"border=
+: 0; margin: auto; max-width: 300px; display: block;" width=3D"100%">
+  <tr>
+    <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"6" height=3D"16px=
+" style=3D"border: 0; margin: 50%; padding: 0; font-size: 1px; line-height:=
+ 1px; mso-line-height-rule: exactly;">
+      <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+    </td>
+  </tr>
+  <tr>
+    <td style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-hei=
+ght: 1px; mso-line-height-rule: exactly; display: block; min-width: 8px" wi=
+dth=3D"8">
+      <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+    </td>
+    <td style=3D"border: 0; margin: 0; padding: 0; width: 100%" align=3D"le=
+ft">
+      <div style=3D"font-size: 14px; font-weight: 400; color: #171717; line=
+-height: 20px;">
+        Payment
+      </div>
+    </td>
+    <td style=3D"border: 0; margin: 0; padding: 0; min-width: 75px;">
+      <div style=3D"font-size: 14px; font-weight: 400; color: #707070; line=
+-height: 20px; text-align: right; width: 200px;">
+          CHASE Bank =E2=80=A2=E2=80=A28902
+      </div>
+    </td>
+    <td style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-hei=
+ght: 1px; mso-line-height-rule: exactly; display: block; min-width: 8px" wi=
+dth=3D"8">
+      <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+    </td>
+  </tr>
+  <tr>
+    <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"6" height=3D"8px"=
+ style=3D"border: 0; margin: 50%; padding: 0; font-size: 1px; line-height: =
+1px; mso-line-height-rule: exactly;">
+      <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+    </td>
+  </tr>
+  <tr>
+    <td style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-hei=
+ght: 1px; mso-line-height-rule: exactly; display: block; min-width: 8px" wi=
+dth=3D"8">
+      <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+    </td>
+    <td style=3D"border: 0; margin: 0; padding: 0; width: 100%" align=3D"le=
+ft">
+      <div style=3D"font-size: 14px; font-weight: 400; color: #171717; line=
+-height: 20px;">
+        Name
+      </div>
+    </td>
+    <td style=3D"border: 0; margin: 0; padding: 0; min-width: 75px;">
+      <div style=3D"font-size: 14px; font-weight: 400; color: #707070; line=
+-height: 20px; text-align: right; width: 200px;">
+        EVAN MCCALL
+      </div>
+    </td>
+    <td style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-hei=
+ght: 1px; mso-line-height-rule: exactly; display: block; min-width: 8px" wi=
+dth=3D"8">
+      <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+    </td>
+  </tr>
+  <tr>
+    <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"6" height=3D"8px"=
+ style=3D"border: 0; margin: 50%; padding: 0; font-size: 1px; line-height: =
+1px; mso-line-height-rule: exactly;">
+      <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+    </td>
+  </tr>
+  <tr>
+    <td style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-hei=
+ght: 1px; mso-line-height-rule: exactly; display: block; min-width: 8px" wi=
+dth=3D"8">
+      <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+    </td>
+    <td style=3D"border: 0; margin: 0; padding: 0; width: 100%" align=3D"le=
+ft">
+      <div style=3D"font-size: 14px; font-weight: 400; color: #171717; line=
+-height: 20px;">
+        Date
+      </div>
+    </td>
+    <td style=3D"border: 0; margin: 0; padding: 0; min-width: 75px;">
+      <div style=3D"font-size: 14px; font-weight: 400; color: #707070; line=
+-height: 20px; text-align: right; width: 200px;">
+        August 22, 2025
+      </div>
+    </td>
+    <td style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-hei=
+ght: 1px; mso-line-height-rule: exactly; display: block; min-width: 8px" wi=
+dth=3D"8">
+      <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+    </td>
+  </tr>
+  <tr>
+    <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"6" height=3D"16px=
+" style=3D"border: 0; margin: 50%; padding: 0; font-size: 1px; line-height:=
+ 1px; mso-line-height-rule: exactly;">
+      <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+    </td>
+  </tr>
+</table>
+
+ =20
+            </td>
+            <td style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; =
+line-height: 1px; mso-line-height-rule: exactly;" width=3D"32">
+              <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+            </td>
+          </tr>
+<tr>
+            <td class=3D"st-Spacer st-Spacer--blocksItemEnds" colspan=3D"3"=
+ height=3D"32" style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; l=
+ine-height: 1px; mso-line-height-rule: exactly;">
+              <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"24">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"3" height=3D"0"=
+ style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1p=
+x; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" class=3D"st-Width=
+ st-Width--mobile st-Link-Responsive" style=3D"min-width: 360px; max-width:=
+ 424px">
+  <tbody>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"3" height=3D"16=
+" style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1=
+px; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"24">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+      <td style=3D"border: 0; margin: 0; padding: 0;">
+
+        <table bgcolor=3D"#ffffff" border=3D"0" cellpadding=3D"0" cellspaci=
+ng=3D"0" style=3D"border-radius: 32px; margin: auto; width:100%;  ;" width=
+=3D"100%">
+          <tr>
+            <td class=3D"st-Spacer st-Spacer--blocksItemEnds" colspan=3D"3"=
+ height=3D"32" style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; l=
+ine-height: 1px; mso-line-height-rule: exactly;">
+              <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+            </td>
+          </tr>
+          <tr>
+            <td style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; =
+line-height: 1px; mso-line-height-rule: exactly;" width=3D"32">
+              <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+            </td>
+            <td style=3D"font-size: 16px; text-align: center; line-height: =
+24px; color:#171717">
+             =20
+
+
+    <table class=3D"st-LinkTextWithIcon st-Copy st-Copy st-Width st-Copy--s=
+ubdueLinks" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"100%"=
+ style=3D"text-align: initial;">
+  <tbody>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"3" height=3D"8"=
+ style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1p=
+x; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td style=3D"border: 0; margin: 0; padding: 0; vertical-align: top;">
+        <div style=3D"height: 20px; display: flex; flex-direction: column; =
+justify-content: center;">
+            <img src=3D"https://b.stripecdn.com/link-email/assets/help.png"=
+ style=3D"border: 0; margin: 0 auto; padding: 0; display: block;" height=3D=
+"20" width=3D"20" alt=3D"Question bubble icon">
+        </div>
+      </td>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"16">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+      <td style=3D"border: 0; margin: 0; padding: 0;">
+        <div style=3D"font-size: 14px; font-weight: initial;">
+         =20
+      <table class=3D"st-LinkTextBlock st-Copy st-Copy st-Width st-Copy--su=
+bdueLinks" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"100%" =
+style=3D"text-align: initial; min-width: 100%">
+  <tbody>
+    <tr>
+      <td style=3D"border: 0; margin: 0; padding: 0;">
+        <div style=3D"font-size: 14px; font-weight: 600; color: #171717; li=
+ne-height: 20px;">
+         =20
+        Need support?
+     =20
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+      <table class=3D"st-Width" border=3D"0" cellpadding=3D"0" cellspacing=
+=3D"0" width=3D"100%" style=3D"min-width: 100%">
+  <tbody>
+    <tr>
+      <td style=3D"border: 0; margin: 0; padding: 0;">
+        <div style=3D"line-height: 2px; height: 2px; max-height: 2px">
+          =C2=A0
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+      <table class=3D"st-LinkTextBlock st-Copy st-Copy st-Width st-Copy--su=
+bdueLinks" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"100%" =
+style=3D"text-align: initial; min-width: 100%">
+  <tbody>
+    <tr>
+      <td style=3D"border: 0; margin: 0; padding: 0;">
+        <div style=3D"font-size: 14px; font-weight: 400; color: #707070; li=
+ne-height: 20px;">
+         =20
+        <p style=3D"border: 0; margin: 0; padding: 0; font-family: 'SF Pro =
+Text', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial,
+    sans-serif;">For questions or concerns about your purchase, <a style=3D=
+"border: 0; margin: 0; padding: 0; color: inherit !important; font-weight: =
+bold; text-decoration: none;  " href=3D"https://bluenotary.crisp.help">cont=
+act BLUE NOTARY</a>.</p>
+ =20
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+   =20
+      </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+ =20
+            </td>
+            <td style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; =
+line-height: 1px; mso-line-height-rule: exactly;" width=3D"32">
+              <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+            </td>
+          </tr>
+<tr>
+            <td class=3D"st-Spacer st-Spacer--blocksItemEnds" colspan=3D"3"=
+ height=3D"32" style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; l=
+ine-height: 1px; mso-line-height-rule: exactly;">
+              <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+      <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; margin:=
+ 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exa=
+ctly;" width=3D"24">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--stacked" colspan=3D"3" height=3D"0"=
+ style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1p=
+x; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" class=3D"st-Foote=
+r st-Width st-Width--mobile st-Link-Responsive" style=3D"min-width: 360px; =
+max-width: 424px">
+  <tbody>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--divider" colspan=3D"3" height=3D"32=
+" style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1=
+px; max-height: 1px; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+      <!-- New inner content -->
+        <tr class=3D"link-Footer--row">
+          <td class=3D"st-Spacer st-Spacer--gutter" style=3D"font-size: 1px=
+; line-height: 1px; mso-line-height-rule: exactly;" width=3D"24">
+            <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+          </td>
+          <td colspan=3D"3">
+            <span style=3D"color: #707070;">
+             =20
+      <table class=3D"st-LinkTextBlock st-Copy st-Copy st-Width st-Copy--su=
+bdueLinks" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"100%" =
+style=3D"text-align: center; min-width: 100%">
+  <tbody>
+    <tr>
+      <td style=3D"border: 0; margin: 0; padding: 0;">
+        <div style=3D"font-size: 12px; font-weight: 400; color: #707070; li=
+ne-height: 16px;">
+         =20
+        <br>
+        You authorized BLUE NOTARY to make debits under these <a style=3D"b=
+order: 0; margin: 0; padding: 0; color: inherit !important; font-weight: bo=
+ld; text-decoration: none;  " href=3D"https://58.email.stripe.com/CL0/https=
+:%2F%2Flink.com%2Fterms%2Fach-authorization/1/01000198d1c39885-3ff9210d-4df=
+c-4b27-98e7-e80000f52e3c-000000/Nqe2mjy_9yRAg4B8Dq-KwCUTVt1toYyjbpvbHMKROEs=
+=3D419">terms</a>.
+        <br>
+     =20
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+      <table class=3D"st-LinkTextBlock st-Copy st-Copy st-Width st-Copy--su=
+bdueLinks" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"100%" =
+style=3D"text-align: center; min-width: 100%">
+  <tbody>
+    <tr>
+      <td style=3D"border: 0; margin: 0; padding: 0;">
+        <div style=3D"font-size: 12px; font-weight: 400; color: #707070; li=
+ne-height: 16px;">
+         =20
+        <br>
+        We may verify your account by <a style=3D"border: 0; margin: 0; pad=
+ding: 0; color: inherit !important; font-weight: bold; text-decoration: non=
+e;  " href=3D"https://58.email.stripe.com/CL0/https:%2F%2Flink.com%2Fterms%=
+2Fach-authorization/2/01000198d1c39885-3ff9210d-4dfc-4b27-98e7-e80000f52e3c=
+-000000/_T5ykQijOfoGPtwzFEo7LHcTt2kndaaKG6kqUpgxvDU=3D419">depositing a pen=
+ny</a> into your connected bank account.
+        <br>
+     =20
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+ =20
+            </span>
+          </td>
+          <td class=3D"st-Spacer st-Spacer--gutter" style=3D"font-size: 1px=
+; line-height: 1px; mso-line-height-rule: exactly;" width=3D"24">
+            <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+          </td>
+        </tr>
+      <!-- New address, terms and privacy policy -->
+        <!-- Link Terms  Privacy Policy -->
+        <tr class=3D"link-Footer--row">
+          <td class=3D"st-Spacer st-Spacer--gutter" style=3D"font-size: 1px=
+; line-height: 1px; mso-line-height-rule: exactly;" width=3D"24">
+            <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+          </td>
+          <td colspan=3D"3" style=3D"color: #707070;">
+              <div style=3D"line-height: 16px;"><br></div>
+              <div style=3D"line-height: 16px; font-weight: 400; font-size:=
+ 12px;">
+                <a role=3D"link" style=3D"color: #707070 !important;" href=
+=3D"https://58.email.stripe.com/CL0/https:%2F%2Flink.com%2Fterms/1/01000198=
+d1c39885-3ff9210d-4dfc-4b27-98e7-e80000f52e3c-000000/570AIB2ZkK6-UuftUajWD5=
+EFXFNaNZD82GuK31t807w=3D419">Terms</a>
+                =C2=A0=C2=A0
+                <a role=3D"link" style=3D"color: #707070 !important;" href=
+=3D"https://58.email.stripe.com/CL0/https:%2F%2Flink.com%2Fprivacy/1/010001=
+98d1c39885-3ff9210d-4dfc-4b27-98e7-e80000f52e3c-000000/aM_XYNChivNlEXu3VhMB=
+Km8d1dhThuP6_DABhvFqke8=3D419">Privacy</a>
+              </div>
+          </td>
+          <td class=3D"st-Spacer st-Spacer--gutter" style=3D"border: 0; mar=
+gin: 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule:=
+ exactly;" width=3D"24">
+            <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+          </td>
+        </tr>
+    <tr>
+      <td class=3D"st-Spacer st-Spacer--emailEnd" colspan=3D"3" height=3D"6=
+4" style=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: =
+1px; mso-line-height-rule: exactly;">
+        <div class=3D"st-Spacer st-Spacer--filler">=C2=A0</div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+
+          </td>
+        </tr>
+        <tr>
+          <td class=3D"st-Spacer st-Spacer--emailEnd" height=3D"64" style=
+=3D"border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; mso=
+-line-height-rule: exactly;">
+            <div class=3D"st-Spacer st-Spacer--filler">&nbsp;</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <!-- /Background -->
+
+<img alt=3D"" src=3D"http://58.email.stripe.com/CI0/01000198d1c39885-3ff921=
+0d-4dfc-4b27-98e7-e80000f52e3c-000000/S0CiclH2vDLqZJ1n0W7zsw1aGK8NtFN_LB5K3=
+KHrCuw=3D419" style=3D"display: none; width: 1px; height: 1px;">
+</body></html>
+----==_mimepart_68a863387bb48_1dc7b57065203177c--

@@ -1,0 +1,352 @@
+Return-Path: <npexpresstrust@gmail.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id HHh+AM4ZiGiocxUAQCw0vA
+	(envelope-from <npexpresstrust@gmail.com>)
+	for <admin@emcnotary.com>; Tue, 29 Jul 2025 00:46:06 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.3 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,FREEMAIL_FROM,HTML_MESSAGE,RCVD_IN_DNSWL_NONE,
+	RCVD_IN_MSPIKE_H2,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 SPF_PASS SPF check passed
+	* -0.1 DMARC_PASS DMARC check passed
+	*  0.0 FREEMAIL_FROM Sender email is commonly abused enduser mail
+	*      provider
+	*      [npexpresstrust[at]gmail.com]
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 RCVD_IN_MSPIKE_H2 RBL: Average reputation (+2)
+	*      [209.85.166.178 listed in wl.mailspike.net]
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	* -0.0 RCVD_IN_DNSWL_NONE RBL: Sender listed at
+	*      https://www.dnswl.org/, no trust
+	*      [209.85.166.178 listed in list.dnswl.org]
+X-Spam-Score: -0.3
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (2048-bit key; unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20230601 header.b=G6UvL5iV;
+	dkim-atps=neutral
+Received: from mail-il1-f178.google.com (mail-il1-f178.google.com [209.85.166.178])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id B9CD73F5C2
+	for <admin@emcnotary.com>; Tue, 29 Jul 2025 00:46:05 +0000 (UTC)
+Received: by mail-il1-f178.google.com with SMTP id e9e14a558f8ab-3e3d2ad9180so13000385ab.1
+        for <admin@emcnotary.com>; Mon, 28 Jul 2025 17:46:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1753749965; x=1754354765; darn=emcnotary.com;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=bA4hlpeSOT2aTxH9nxxbSEU06lfbryG6Vf/VfdvZ8ws=;
+        b=G6UvL5iVVZEO40w0kfUxbAZNKO4DBE3WKXqRKqG9xmISFH7Xess7GWveq7xFZk5c6b
+         Ftk/DNnvC09cx7Xrm+gzmGU+qQqNRbp3EItBavYMOj/xN1ZF/wekjjZzZHheKriPl29I
+         7GYH0WciZIfWkrfvyulnqLQnoAzbfRfrsHb4uVmqL9K41V67z5YoKyDKwqqj5+AS5cJj
+         Fs0cPTP+QJT9pQeajdCk15O0SPdrB0a8KgU8Uo4t9onfJkBrtYR7qipd8trQMIWtZRKP
+         dL+MZ7zZCuyxhMpe17nasWSmgSOBx3kuNNTm7jBBWfo2xxMaWcH2xYuApZKXlNij+7Py
+         Q3Aw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1753749965; x=1754354765;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=bA4hlpeSOT2aTxH9nxxbSEU06lfbryG6Vf/VfdvZ8ws=;
+        b=VegY89gwSmCoZzujQ+nusVKRhQNPkiT7uTXds2/EiCOmKrZ3CdUuNzGs5Q8ifOih6H
+         iCG/8gPVhuADrrw8On0uRYPbGgv+Jvh/A82YVsN5RkdqMeKp9fGUvLEhj2bWxy0314+V
+         9uqvPEmDcJeH3TsAGWBWLMahfrD0LrZloNesZe/GbxrBfuA4zv7owSm/8ZHvZyffJQqV
+         jzhr0Gi+0OhKxyKXLnYTyOkbuvzFwLswhWzspFcNIFIcuyyulTNRjm5NGumF8AsoC4+b
+         FcDSCIOcH0l1JihV5fokvyjpeA4Qs/AA1fgNc2B19XvMttQPffUt87RAJ1K4v+wenZiu
+         ukNw==
+X-Gm-Message-State: AOJu0YwfVjpkiJb9Gv5F2V7+7HIlzTdxZ5ri5zw4wLTIV+++hsh6Hpec
+	7HBRWtjc27a0Zl8rxmftIY4rupoY28aGdRkbb2qIHjOW9Sh5ryDa1RT50NahBC6OroisEz3m/zH
+	n5Da+tpqBmFhIDBoKxXqgk6RoAmQZZRg2Qw==
+X-Gm-Gg: ASbGncs/GTVQv2Oo0jzq9gqdDkE3lDvFlAphYxGphCvHxBa4MM1PSHa7GDb9j/tI8tL
+	q5YXLw5hFmJ/AOMNcnsnA6PjvApAQRYgAQlXQodyyMwQqGQ2qLJs+gcai21gKF5GGcCftKk+Ntk
+	bIKIfweYFH/G0BiCyn4g/++5pnEfeYyQ5voPsSpY6jkXsAG5zmyzLXW26Dg92mCFOAG6R00LOif
+	j0+G/ijBBDbZnGvHCcqy7Poa1KTIC6z29uH+Etw
+X-Google-Smtp-Source: AGHT+IHtLU3VSfmZiQn57XtOqur70tObwt1oKzTuVFmoBTwcPHT9fu7cCr1toQZu5vAj/SPCZd1Me1j1Puo6N1hr7+M=
+X-Received: by 2002:a05:6e02:19ce:b0:3df:4159:8fe5 with SMTP id
+ e9e14a558f8ab-3e3c525add1mr222276455ab.4.1753749964524; Mon, 28 Jul 2025
+ 17:46:04 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAMc2w5qTnZ8P6=8QOEpLLaw+ahpWi1s5Z2Ni0trvTU5KY7oYcQ@mail.gmail.com>
+ <010001985213c894-b6c57346-0715-406f-8ab6-2282aaa1c9be-000000@email.amazonses.com>
+ <CAMc2w5oxt4b9RZbc6boVR017YYnkk_XpLZ7CR5BL1Uv_fZE8NA@mail.gmail.com>
+ <010001985230eddf-a58589de-37d5-4eee-844a-20456c95a4e4-000000@email.amazonses.com>
+ <CAMc2w5qBWQf3PjKAhGaLYVN0Y2bDALgfMMUUU+MNvOhYZhtuWw@mail.gmail.com>
+In-Reply-To: <CAMc2w5qBWQf3PjKAhGaLYVN0Y2bDALgfMMUUU+MNvOhYZhtuWw@mail.gmail.com>
+From: NOVA PERSONA <npexpresstrust@gmail.com>
+Date: Mon, 28 Jul 2025 20:39:08 -0400
+X-Gm-Features: Ac12FXy-Jx0ImTbvADpOkcn4ROW7p-KM1289BbT38PR9NKxZq1b1h7hVyYJrQN8
+Message-ID: <CAMc2w5rRDWkGf44gVyF1yHTCkwGBJCitG=EbhYUofUaLvp-59Q@mail.gmail.com>
+Subject: Re: Notary Session
+To: Admin EMC Notary <admin@emcnotary.com>
+Content-Type: multipart/alternative; boundary="000000000000a9114d063b06bb3a"
+
+--000000000000a9114d063b06bb3a
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hey Evan,
+
+Are we on for tomorrow at 1pm EST? Let me know.
+
+Best,
+
+On Mon, Jul 28, 2025 at 2:59=E2=80=AFPM NOVA PERSONA <npexpresstrust@gmail.=
+com>
+wrote:
+
+> Hey Evan,
+>
+> Teams meeting:
+> https://teams.microsoft.com/l/meetup-join/19%3ameeting_MWNlODIzZTktMWJmZi=
+00YmRiLWEwMDEtOThjM2Q0MTczY2Rh%40thread.v2/0?context=3D%7b%22Tid%22%3a%2240=
+a5ad40-594c-45c2-82c9-2c02614257a0%22%2c%22Oid%22%3a%2287984284-7b10-48f8-a=
+0fe-ba45a1fd1c0c%22%7d
+>
+> Meeting ID: 264 011 098 565 9
+> Passcode: QV9gt3qD
+>
+> On Mon, Jul 28, 2025 at 1:59=E2=80=AFPM Admin EMC Notary <admin@emcnotary=
+.com>
+> wrote:
+>
+>> I can move the time.
+>>
+>> Quick question:
+>>
+>> Does the original trust instrument require witnesses for amendments?
+>>
+>> Can provide the original trust instrument it in this email chain?
+>>
+>> This will affect whether I need 2 witnesses in the session.
+>>
+>> ~Evan McCall
+>>
+>> EMC Notary
+>>
+>> On Jul 28, 2025, at 1:31=E2=80=AFPM, NOVA PERSONA <npexpresstrust@gmail.=
+com>
+>> wrote:
+>>
+>> Sounds good. Do you mind if we push it out 30 minutes so I can fit in a
+>> few more docs? If not it=E2=80=99s fine. We=E2=80=99ll just do another s=
+ession another day
+>>
+>> On Mon, Jul 28, 2025 at 1:28=E2=80=AFPM Administrator EMC Notary <
+>> admin@emcnotary.com> wrote:
+>>
+>>> I'll be ready for 2pm
+>>>
+>>> On Jul 27, 2025 22:48, NOVA PERSONA <npexpresstrust@gmail.com> wrote:
+>>>
+>>> Thank you. God bless.
+>>>
+>>> On Sun, Jul 27, 2025 at 10:27=E2=80=AFPM Administrator EMC Notary <
+>>> admin@emcnotary.com> wrote:
+>>>
+>>> Perfect.
+>>>
+>>> I will upload the docs and send the session.
+>>>
+>>> Have a great night and God Bless you,
+>>>
+>>> ~Evan McCall
+>>> EMC Notary
+>>>
+>>> On Jul 27, 2025 21:27, NOVA PERSONA <npexpresstrust@gmail.com> wrote:
+>>>
+>>> Hey Evan,
+>>>
+>>> Understood. Tomorrow at 2 works
+>>>
+>>> Best
+>>>
+>>> On Sun, Jul 27, 2025 at 6:49=E2=80=AFPM Admin EMC Notary <admin@emcnota=
+ry.com>
+>>> wrote:
+>>>
+>>> Hey Justin,
+>>>
+>>> I had a personal matter come up last minute and I just got home.
+>>>
+>>> If you still have availability tonight I will be glad to take care of
+>>> you or tomorrow at the same time.
+>>>
+>>> Have a great day and be well,
+>>>
+>>> ~Evan McCall
+>>> EMC Notary
+>>>
+>>> > On Jul 27, 2025, at 1:48=E2=80=AFPM, NOVA PERSONA <npexpresstrust@gma=
+il.com>
+>>> wrote:
+>>> >
+>>> > Hi,
+>>> >
+>>> > Here's the docs for the notary session. Might be a few more. Are we
+>>> still on for 2?
+>>> >
+>>> > Cheers,
+>>> > Justin
+>>> > <LivingTrustSecurityAgreement.docx><Certificate of Non-Response.docx>
+>>>
+>>>
+>>>
+>>>
+>>>
+>>
+
+--000000000000a9114d063b06bb3a
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"auto">Hey Evan,=C2=A0</div><div dir=3D"auto"><br></div><div dir=
+=3D"auto">Are we on for tomorrow at 1pm EST? Let me know.</div><div dir=3D"=
+auto"><br></div><div dir=3D"auto">Best,</div><div><br><div class=3D"gmail_q=
+uote gmail_quote_container"><div dir=3D"ltr" class=3D"gmail_attr">On Mon, J=
+ul 28, 2025 at 2:59=E2=80=AFPM NOVA PERSONA &lt;<a href=3D"mailto:npexpress=
+trust@gmail.com">npexpresstrust@gmail.com</a>&gt; wrote:<br></div><blockquo=
+te class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-left-widt=
+h:1px;border-left-style:solid;padding-left:1ex;border-left-color:rgb(204,20=
+4,204)"><div dir=3D"ltr"><div dir=3D"auto">Hey Evan,=C2=A0</div><div dir=3D=
+"auto"><br></div><div dir=3D"auto">Teams meeting:=C2=A0<a href=3D"https://t=
+eams.microsoft.com/l/meetup-join/19%3ameeting_MWNlODIzZTktMWJmZi00YmRiLWEwM=
+DEtOThjM2Q0MTczY2Rh%40thread.v2/0?context=3D%7b%22Tid%22%3a%2240a5ad40-594c=
+-45c2-82c9-2c02614257a0%22%2c%22Oid%22%3a%2287984284-7b10-48f8-a0fe-ba45a1f=
+d1c0c%22%7d" target=3D"_blank">https://teams.microsoft.com/l/meetup-join/19=
+%3ameeting_MWNlODIzZTktMWJmZi00YmRiLWEwMDEtOThjM2Q0MTczY2Rh%40thread.v2/0?c=
+ontext=3D%7b%22Tid%22%3a%2240a5ad40-594c-45c2-82c9-2c02614257a0%22%2c%22Oid=
+%22%3a%2287984284-7b10-48f8-a0fe-ba45a1fd1c0c%22%7d</a></div><div dir=3D"au=
+to"><br></div><div dir=3D"auto"><div style=3D"border:0px;font-variant-numer=
+ic:inherit;font-variant-east-asian:inherit;font-variant-alternates:inherit;=
+font-size:15px;line-height:inherit;font-family:&quot;Segoe UI&quot;,&quot;H=
+elvetica Neue&quot;,Helvetica,Arial,sans-serif;font-size-adjust:inherit;fon=
+t-kerning:inherit;font-feature-settings:inherit;margin:0px 0px 6px;padding:=
+0px;vertical-align:baseline;color:rgb(36,36,36)"><span style=3D"border:0px;=
+font-style:inherit;font-variant-ligatures:inherit;font-variant-caps:inherit=
+;font-variant-alternates:inherit;font-variant-numeric:inherit;font-variant-=
+east-asian:inherit;font-weight:inherit;font-size:14px;line-height:inherit;f=
+ont-family:&quot;Segoe UI&quot;,&quot;Helvetica Neue&quot;,Helvetica,Arial,=
+sans-serif;font-size-adjust:inherit;font-kerning:inherit;font-feature-setti=
+ngs:inherit;margin:0px;padding:0px;vertical-align:baseline;color:rgb(97,97,=
+97)">Meeting ID:=C2=A0</span><span style=3D"border:0px;font-style:inherit;f=
+ont-variant-ligatures:inherit;font-variant-caps:inherit;font-variant-altern=
+ates:inherit;font-variant-numeric:inherit;font-variant-east-asian:inherit;f=
+ont-weight:inherit;font-size:14px;line-height:inherit;font-family:&quot;Seg=
+oe UI&quot;,&quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif;font-size=
+-adjust:inherit;font-kerning:inherit;font-feature-settings:inherit;margin:0=
+px;padding:0px;vertical-align:baseline">264 011 098 565 9</span></div><div =
+style=3D"border:0px;font-variant-numeric:inherit;font-variant-east-asian:in=
+herit;font-variant-alternates:inherit;font-size:15px;line-height:inherit;fo=
+nt-family:&quot;Segoe UI&quot;,&quot;Helvetica Neue&quot;,Helvetica,Arial,s=
+ans-serif;font-size-adjust:inherit;font-kerning:inherit;font-feature-settin=
+gs:inherit;margin:0px 0px 24px;padding:0px;vertical-align:baseline;color:rg=
+b(36,36,36)"><span style=3D"border:0px;font-style:inherit;font-variant-liga=
+tures:inherit;font-variant-caps:inherit;font-variant-alternates:inherit;fon=
+t-variant-numeric:inherit;font-variant-east-asian:inherit;font-weight:inher=
+it;font-size:14px;line-height:inherit;font-family:&quot;Segoe UI&quot;,&quo=
+t;Helvetica Neue&quot;,Helvetica,Arial,sans-serif;font-size-adjust:inherit;=
+font-kerning:inherit;font-feature-settings:inherit;margin:0px;padding:0px;v=
+ertical-align:baseline;color:rgb(97,97,97)">Passcode:=C2=A0</span><span sty=
+le=3D"border:0px;font-style:inherit;font-variant-ligatures:inherit;font-var=
+iant-caps:inherit;font-variant-alternates:inherit;font-variant-numeric:inhe=
+rit;font-variant-east-asian:inherit;font-weight:inherit;font-size:14px;line=
+-height:inherit;font-family:&quot;Segoe UI&quot;,&quot;Helvetica Neue&quot;=
+,Helvetica,Arial,sans-serif;font-size-adjust:inherit;font-kerning:inherit;f=
+ont-feature-settings:inherit;margin:0px;padding:0px;vertical-align:baseline=
+">QV9gt3qD</span></div></div></div><div><br><div class=3D"gmail_quote"><div=
+ dir=3D"ltr" class=3D"gmail_attr">On Mon, Jul 28, 2025 at 1:59=E2=80=AFPM A=
+dmin EMC Notary &lt;<a href=3D"mailto:admin@emcnotary.com" target=3D"_blank=
+">admin@emcnotary.com</a>&gt; wrote:<br></div><blockquote class=3D"gmail_qu=
+ote" style=3D"margin:0px 0px 0px 0.8ex;border-left-width:1px;border-left-st=
+yle:solid;padding-left:1ex;border-left-color:rgb(204,204,204)"><div><p dir=
+=3D"auto" style=3D"white-space:pre-wrap">I can move the time.</p><p dir=3D"=
+auto" style=3D"white-space:pre-wrap">Quick question:</p><p dir=3D"auto" sty=
+le=3D"white-space:pre-wrap">Does the original trust instrument require witn=
+esses for amendments?</p><p dir=3D"auto" style=3D"white-space:pre-wrap">Can=
+ provide the original trust instrument it in this email chain?</p><p dir=3D=
+"auto" style=3D"white-space:pre-wrap">This will affect whether I need 2 wit=
+nesses in the session.</p><p dir=3D"auto" style=3D"white-space:pre-wrap">~E=
+van McCall</p></div><div><p dir=3D"auto" style=3D"white-space:pre-wrap">EMC=
+ Notary</p><div><br><blockquote type=3D"cite"><div>On Jul 28, 2025, at 1:31=
+=E2=80=AFPM, NOVA PERSONA &lt;<a href=3D"mailto:npexpresstrust@gmail.com" t=
+arget=3D"_blank">npexpresstrust@gmail.com</a>&gt; wrote:</div><br><div><div=
+ dir=3D"auto">Sounds good. Do you mind if we push it out 30 minutes so I ca=
+n fit in a few more docs? If not it=E2=80=99s fine. We=E2=80=99ll just do a=
+nother session another day</div><div><br><div class=3D"gmail_quote"><div di=
+r=3D"ltr" class=3D"gmail_attr">On Mon, Jul 28, 2025 at 1:28=E2=80=AFPM Admi=
+nistrator EMC Notary &lt;<a href=3D"mailto:admin@emcnotary.com" target=3D"_=
+blank">admin@emcnotary.com</a>&gt; wrote:<br></div><blockquote class=3D"gma=
+il_quote" style=3D"margin:0px 0px 0px 0.8ex;border-left-width:1px;border-le=
+ft-style:solid;padding-left:1ex;border-left-color:rgb(204,204,204)"><div di=
+r=3D"auto">I&#39;ll be ready for 2pm</div><div class=3D"gmail_extra"><br><d=
+iv class=3D"gmail_quote">On Jul 27, 2025 22:48, NOVA PERSONA &lt;<a href=3D=
+"mailto:npexpresstrust@gmail.com" target=3D"_blank">npexpresstrust@gmail.co=
+m</a>&gt; wrote:<br type=3D"attribution"><blockquote style=3D"margin:0px 0p=
+x 0px 0.8ex;border-left-width:1px;border-left-style:solid;padding-left:1ex;=
+border-left-color:rgb(204,204,204)"><div dir=3D"auto">Thank you. God bless.=
+=C2=A0</div><div><br><div><div dir=3D"ltr">On Sun, Jul 27, 2025 at 10:27=E2=
+=80=AFPM Administrator EMC Notary &lt;<a href=3D"mailto:admin@emcnotary.com=
+" target=3D"_blank">admin@emcnotary.com</a>&gt; wrote:<br></div><blockquote=
+ style=3D"margin:0px 0px 0px 0.8ex;border-left-width:1px;border-left-style:=
+solid;padding-left:1ex;border-left-color:rgb(204,204,204)"><div dir=3D"auto=
+">Perfect.=C2=A0<div dir=3D"auto"><br></div><div dir=3D"auto">I will upload=
+ the docs and send the session.<div dir=3D"auto"><br></div><div dir=3D"auto=
+">Have a great night and God Bless you,</div><div dir=3D"auto"><br></div><d=
+iv dir=3D"auto">~Evan McCall</div><div dir=3D"auto"></div></div></div><div =
+dir=3D"auto"><div dir=3D"auto"><div dir=3D"auto">EMC Notary=C2=A0<div dir=
+=3D"auto"><div dir=3D"auto"><br><div>On Jul 27, 2025 21:27, NOVA PERSONA &l=
+t;<a href=3D"mailto:npexpresstrust@gmail.com" target=3D"_blank">npexpresstr=
+ust@gmail.com</a>&gt; wrote:<br type=3D"attribution"><blockquote style=3D"m=
+argin:0px 0px 0px 0.8ex;border-left-width:1px;border-left-style:solid;paddi=
+ng-left:1ex;border-left-color:rgb(204,204,204)"><div dir=3D"auto">Hey Evan,=
+=C2=A0</div><div dir=3D"auto"><br></div><div dir=3D"auto">Understood. Tomor=
+row at 2 works=C2=A0</div><div dir=3D"auto"><br></div><div dir=3D"auto">Bes=
+t</div><div><br><div><div dir=3D"ltr">On Sun, Jul 27, 2025 at 6:49=E2=80=AF=
+PM Admin EMC Notary &lt;<a href=3D"mailto:admin@emcnotary.com" target=3D"_b=
+lank">admin@emcnotary.com</a>&gt; wrote:<br></div><blockquote style=3D"marg=
+in:0px 0px 0px 0.8ex;border-left-width:1px;border-left-style:solid;padding-=
+left:1ex;border-left-color:rgb(204,204,204)">Hey Justin,<br>
+<br>
+I had a personal matter come up last minute and I just got home.<br>
+<br>
+If you still have availability tonight I will be glad to take care of you o=
+r tomorrow at the same time.<br>
+<br>
+Have a great day and be well,<br>
+<br>
+~Evan McCall<br>
+EMC Notary<br>
+<br>
+&gt; On Jul 27, 2025, at 1:48=E2=80=AFPM, NOVA PERSONA &lt;<a href=3D"mailt=
+o:npexpresstrust@gmail.com" target=3D"_blank">npexpresstrust@gmail.com</a>&=
+gt; wrote:<br>
+&gt; <br>
+&gt; Hi,<br>
+&gt; <br>
+&gt; Here&#39;s the docs for the notary session. Might be a few more. Are w=
+e still on for 2?<br>
+&gt; <br>
+&gt; Cheers,<br>
+&gt; Justin<br>
+&gt; &lt;LivingTrustSecurityAgreement.docx&gt;&lt;Certificate of Non-Respon=
+se.docx&gt;<br>
+<br>
+</blockquote></div></div>
+</blockquote></div><br><br></div></div></div></div></div></blockquote></div=
+></div>
+</blockquote></div><br></div></blockquote></div></div>
+</div></blockquote></div><br></div></blockquote></div></div>
+</blockquote></div></div>
+
+--000000000000a9114d063b06bb3a--

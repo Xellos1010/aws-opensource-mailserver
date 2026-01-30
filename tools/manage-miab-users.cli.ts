@@ -364,7 +364,8 @@ async function manageUsers(options: ManageUsersOptions): Promise<void> {
         const ssmCredentials = fromIni({ profile });
         const ssmClient = new SSMClient({ region, credentials: ssmCredentials });
         
-        const listCommand = `cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && sudo -u user-data /opt/mailinabox/management/cli.py user 2>&1 || sudo -u user-data /opt/mailinabox/management/users.py list 2>&1`;
+        const hostname = `box.${resolvedDomain}`;
+        const listCommand = `grep -q "${hostname}" /etc/hosts || echo "127.0.0.1 ${hostname}" >> /etc/hosts; cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && /opt/mailinabox/management/cli.py user 2>&1`;
         
         const listResult = await ssmClient.send(
           new SendCommandCommand({
@@ -649,4 +650,3 @@ Examples:
 }
 
 export { manageUsers, listUsers, addUser, removeUser, addAdminPrivilege, removeAdminPrivilege };
-

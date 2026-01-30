@@ -1,0 +1,181 @@
+Return-Path: <npexpresstrust@gmail.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id cIKcJaEOeGg5ZBEAQCw0vA
+	(envelope-from <npexpresstrust@gmail.com>)
+	for <admin@emcnotary.com>; Wed, 16 Jul 2025 20:42:09 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.3 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,FREEMAIL_FROM,HTML_MESSAGE,RCVD_IN_DNSWL_NONE,
+	RCVD_IN_MSPIKE_H2,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	*  0.0 RCVD_IN_MSPIKE_H2 RBL: Average reputation (+2)
+	*      [209.85.166.44 listed in wl.mailspike.net]
+	* -0.0 RCVD_IN_DNSWL_NONE RBL: Sender listed at
+	*      https://www.dnswl.org/, no trust
+	*      [209.85.166.44 listed in list.dnswl.org]
+	* -0.1 DMARC_PASS DMARC check passed
+	* -0.1 SPF_PASS SPF check passed
+	*  0.0 FREEMAIL_FROM Sender email is commonly abused enduser mail
+	*      provider
+	*      [npexpresstrust[at]gmail.com]
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+X-Spam-Score: -0.3
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (2048-bit key; unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20230601 header.b=D6dASmq7;
+	dkim-atps=neutral
+Received: from mail-io1-f44.google.com (mail-io1-f44.google.com [209.85.166.44])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id 78C3145ED6
+	for <admin@emcnotary.com>; Wed, 16 Jul 2025 20:42:09 +0000 (UTC)
+Received: by mail-io1-f44.google.com with SMTP id ca18e2360f4ac-87afea355deso21687739f.0
+        for <admin@emcnotary.com>; Wed, 16 Jul 2025 13:42:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1752698529; x=1753303329; darn=emcnotary.com;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Cv2KYY3USaLMBgxFe0EYoibkleQYNGOEj7rl889RNqk=;
+        b=D6dASmq7odwhXubbFWHupBlZVnT04OlBZwk9x1XaAVvq0zkaW72SW55nn7xhN+P7I9
+         NCJDg1uSZvAIbzGTRyAgXx+VG0N8PI/yaLKuJqFOj4AhrNneTaeLOpM3RcD4M+MUg3Nq
+         Iyqp48YB7N0AlLRQKj6pICVD4/7lxEgeGBi9XgUBXFx+EU9h3vS7QT1Pz8FnA6Zt1ci4
+         rFfTjjPAOtdHJgMHLNYRjfNsySR8ycJ7pvN+npE0FvMk0BVg6lqEc3QbAaRxuYA12Sk0
+         IE3Z1UJGmcDIq3t3L1L3nKR2zgxQJ24cipG351cxv/G5xltVVJsGqGhpsZ0uhNc8l7sj
+         0XeA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1752698529; x=1753303329;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Cv2KYY3USaLMBgxFe0EYoibkleQYNGOEj7rl889RNqk=;
+        b=u+vuvgm3j17pp9uBRP5BxZqtMV0n3LdLiHS/mJijiEE5XueXofiFz1KkVmNiiKlnh2
+         6s3AnwhT569xTSkeRcW9cMyQus4qjDJWNYU7+jK7ltwG5fEZegK4IEIHxXPhlXAO02AV
+         2+nuWepGvNamusxaXzVIo/z0cPMnkuHKpvHdPE9p17vDU1FPb+aIr3X654KIphu7ldk2
+         SDp/jR+bevjpUEXQ9m8clSoSS4TfzAWmSwekvG4rdG33IK5mm4d23ZPvXjL62D83rkNH
+         WtbP5/c/RofyCFGNXyrlAqL1l33eOpVcd+s4L08BxN1rb2Pi03fiyLyZ7leY2jmyP1kh
+         OzTg==
+X-Gm-Message-State: AOJu0YyKRk0sxRe0ok/XhqFJSkpJJ351zvrcsQMUfbfrlHkYQQY29fhV
+	mgQ84l8ydel14SanjGBbArwjoeGaW4H4A+aeSq9RRS4MACnIHZ2ZH+XikFGxihNI+uyZbBWPd1G
+	JtrmrgQlBxcfv1+VZKJvrck4HV1ojtXRdmA==
+X-Gm-Gg: ASbGnctfXt+H8IzidRH1ZbNdzje3VW5BZGnXH7tqiaNwfqog6dPeq9uo8Pb+QfZ798J
+	4xpVXYMdKv+lNovpKiQsORFDVSLaMXTcemkp2aOeboU+IVtIuGZiiEtCmRLmGODTJmfIl4PGt3Q
+	QPtKSlXU5sPQWA6Os9Ko8yvHRfaT5DYGrrrgnFvPMBXRPyxzL0qLL67/1izailVG9nd6hLdSTU5
+	ATNujuk6LF6CppUyY+bprnZac+H1M2WwN+7/QCJsavB
+X-Google-Smtp-Source: AGHT+IGUzyT6MtlborIfQ15d9d3cP3EbTwLixcx3G9vPS7OImVKQVTqebAPYewYw2H4Num4wdPCpunwIxMkp8ChOJAs=
+X-Received: by 2002:a05:6602:6b07:b0:861:d8ca:3587 with SMTP id
+ ca18e2360f4ac-879c29170cdmr497473939f.4.1752698528771; Wed, 16 Jul 2025
+ 13:42:08 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAMc2w5o1rYhaHm_f-L7x184foXh6deDXERmyK+5LO9Na_tSbXg@mail.gmail.com>
+ <01000198148e6542-e8032273-5d9f-4413-b4b1-78a4da47098f-000000@email.amazonses.com>
+In-Reply-To: <01000198148e6542-e8032273-5d9f-4413-b4b1-78a4da47098f-000000@email.amazonses.com>
+From: NOVA PERSONA <npexpresstrust@gmail.com>
+Date: Wed, 16 Jul 2025 16:41:57 -0400
+X-Gm-Features: Ac12FXxoaXGEAw2en5c9sp-7cS2k5qT4c-GvfDsMe7gzuWGib4OpjXoQHvXDmyU
+Message-ID: <CAMc2w5o_hLaadJJ2hht7GuRgqWWObv8ccucf_a-8mZ1mg+XXaw@mail.gmail.com>
+Subject: Re: Notary
+To: Admin EMC Notary <admin@emcnotary.com>
+Content-Type: multipart/alternative; boundary="00000000000034b5fc063a11edca"
+
+--00000000000034b5fc063a11edca
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+It was a pleasure meeting you as well. What=E2=80=99s a good time for you t=
+omorrow
+? Muhoro is free around the same time.
+
+On Wed, Jul 16, 2025 at 2:45=E2=80=AFPM Admin EMC Notary <admin@emcnotary.c=
+om>
+wrote:
+
+> It was great meeting you.
+>
+> Thank you for your consideration regarding my time. I appreciate you. Whe=
+n
+> you have the document modifications made to move forward let me know.
+>
+> As we get to know each other I can offer first hand knowledge when
+> applicable to serve as identify verification with the caveat that foreign
+> principals and documents may still require that biometrics verification f=
+or
+> legally binding authority and we will take that on a case by case basis.
+>
+> My website is https://emcnotary.com/
+>
+> If you want, you can send me the documents beforehand and have me send yo=
+u
+> a session with all documents uploaded and you select a time that works fo=
+r
+> you and Francis.
+>
+> I would be happy to take care of any notarization needs you may have in
+> the future as well.
+>
+> God Bless you and your family,
+>
+> ~Evan McCall
+>
+>
+> On Jul 16, 2025, at 1:54=E2=80=AFPM, NOVA PERSONA <npexpresstrust@gmail.c=
+om>
+> wrote:
+>
+> Hi Evan,
+>
+> Nice to meet you. We're experiencing technical difficulties. Hopefully, w=
+e
+> can meet later.
+>
+> Best
+>
+>
+>
+
+--00000000000034b5fc063a11edca
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"auto">It was a pleasure meeting you as well. What=E2=80=99s a g=
+ood time for you tomorrow ? Muhoro is free around the same time.</div><div>=
+<br><div class=3D"gmail_quote gmail_quote_container"><div dir=3D"ltr" class=
+=3D"gmail_attr">On Wed, Jul 16, 2025 at 2:45=E2=80=AFPM Admin EMC Notary &l=
+t;<a href=3D"mailto:admin@emcnotary.com">admin@emcnotary.com</a>&gt; wrote:=
+<br></div><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8=
+ex;border-left-width:1px;border-left-style:solid;padding-left:1ex;border-le=
+ft-color:rgb(204,204,204)"><div style=3D"line-break:after-white-space">It w=
+as great meeting you.<div><br></div><div>Thank you for your consideration r=
+egarding my time. I appreciate you. When you have the document modification=
+s made to move forward let me know.</div><div><br></div><div>As we get to k=
+now each other I can offer first hand knowledge when applicable to serve as=
+ identify verification with the caveat that foreign principals and document=
+s may still require that biometrics verification for legally binding author=
+ity and we will take that on a case by case basis.</div><div><br></div><div=
+>My website is=C2=A0<a href=3D"https://emcnotary.com/" target=3D"_blank">ht=
+tps://emcnotary.com/</a></div><div><br></div><div>If you want, you can send=
+ me the documents beforehand and have me send you a session with all docume=
+nts uploaded and you select a time that works for you and Francis.</div><di=
+v><br></div><div>I would be happy to take care of any notarization needs yo=
+u may have in the future as well.=C2=A0</div><div><br></div><div>God Bless =
+you and your family,</div><div><br></div><div>~Evan McCall</div></div><div =
+style=3D"line-break:after-white-space"><div><br id=3D"m_-105078416002745978=
+1lineBreakAtBeginningOfMessage"><div><br><blockquote type=3D"cite"><div>On =
+Jul 16, 2025, at 1:54=E2=80=AFPM, NOVA PERSONA &lt;<a href=3D"mailto:npexpr=
+esstrust@gmail.com" target=3D"_blank">npexpresstrust@gmail.com</a>&gt; wrot=
+e:</div><br><div><div dir=3D"ltr">Hi Evan,<div><br></div><div>Nice to meet =
+you. We&#39;re experiencing technical difficulties. Hopefully, we can meet =
+later.</div><div><br></div><div>Best</div><div><br></div></div>
+</div></blockquote></div><br></div></div></blockquote></div></div>
+
+--00000000000034b5fc063a11edca--

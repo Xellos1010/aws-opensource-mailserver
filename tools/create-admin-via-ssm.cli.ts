@@ -56,7 +56,7 @@ async function createAdminViaSsm(options: CreateAdminViaSsmOptions): Promise<voi
     region,
     profile,
   });
-  const adminEmail = `admin@${resolvedDomain}`;
+  const adminEmail = adminCreds.email;
   const adminPassword = adminCreds.password;
 
   console.log('👤 Create Admin Account via SSM');
@@ -70,7 +70,8 @@ async function createAdminViaSsm(options: CreateAdminViaSsmOptions): Promise<voi
 
   // Check if user already exists
   console.log('📋 Step 1: Checking if admin@domain exists...');
-  const checkCommand = `cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && sudo -u user-data /opt/mailinabox/management/cli.py user 2>&1 | grep -i "${adminEmail}" || sudo -u user-data /opt/mailinabox/management/users.py list 2>&1 | grep -i "${adminEmail}" || echo "NOT_FOUND"`;
+  const hostname = `box.${resolvedDomain}`;
+  const checkCommand = `grep -q "${hostname}" /etc/hosts || echo "127.0.0.1 ${hostname}" >> /etc/hosts; cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && /opt/mailinabox/management/cli.py user 2>&1 | grep -i "${adminEmail}" || echo "NOT_FOUND"`;
   
   const checkResult = await ssmClient.send(
     new SendCommandCommand({
@@ -114,7 +115,7 @@ async function createAdminViaSsm(options: CreateAdminViaSsmOptions): Promise<voi
   const emailB64 = Buffer.from(adminEmail).toString('base64');
   const passwordB64 = Buffer.from(adminPassword).toString('base64');
   
-  const createCommand = `cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && EMAIL=\$(echo "${emailB64}" | base64 -d) && PASS=\$(echo "${passwordB64}" | base64 -d) && sudo -u user-data /opt/mailinabox/management/cli.py user add "\$EMAIL" "\$PASS" admin 2>&1 || sudo -u user-data /opt/mailinabox/management/users.py add "\$EMAIL" "\$PASS" admin 2>&1`;
+  const createCommand = `grep -q "${hostname}" /etc/hosts || echo "127.0.0.1 ${hostname}" >> /etc/hosts; cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && EMAIL=\$(echo "${emailB64}" | base64 -d) && PASS=\$(echo "${passwordB64}" | base64 -d) && /opt/mailinabox/management/cli.py user add "\$EMAIL" "\$PASS" admin 2>&1`;
   
   const createResult = await ssmClient.send(
     new SendCommandCommand({
@@ -225,4 +226,3 @@ Options:
 }
 
 export { createAdminViaSsm };
-

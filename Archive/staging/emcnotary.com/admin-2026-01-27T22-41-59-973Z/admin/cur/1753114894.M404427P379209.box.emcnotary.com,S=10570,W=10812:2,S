@@ -1,0 +1,242 @@
+Return-Path: <bounces+us.1.1778772.39112-support=onenotary.freshdesk.com@emailus.freshdesk.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id b+IkGwxpfmhJyQUAQCw0vA
+	(envelope-from <bounces+us.1.1778772.39112-support=onenotary.freshdesk.com@emailus.freshdesk.com>)
+	for <admin@emcnotary.com>; Mon, 21 Jul 2025 16:21:32 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.2 required=5.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DMARC_PASS,HTML_FONT_LOW_CONTRAST,HTML_MESSAGE,
+	RCVD_IN_MSPIKE_H5,RCVD_IN_MSPIKE_WL,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 SPF_PASS SPF check passed
+	* -0.1 DMARC_PASS DMARC check passed
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 RCVD_IN_MSPIKE_H5 RBL: Excellent reputation (+5)
+	*      [44.192.35.21 listed in wl.mailspike.net]
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	*  0.0 HTML_FONT_LOW_CONTRAST BODY: HTML font color similar or
+	*      identical to background
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	*  0.0 RCVD_IN_MSPIKE_WL Mailspike good senders
+	* -0.0 DKIMWL_WL_MED DKIMwl.org - Medium trust sender
+X-Spam-Score: -0.2
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=reject dis=none) header.from=onenotary.freshdesk.com
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=emailus.freshdesk.com
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (2048-bit key; unprotected) header.d=freshdesk.com header.i=@freshdesk.com header.a=rsa-sha256 header.s=fdusmail header.b=oklUvRd2;
+	dkim-atps=neutral
+Received: from mail-usn22.freshemail.io (mail-usn22.freshemail.io [44.192.35.21])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id 3A1563F59B
+	for <admin@emcnotary.com>; Mon, 21 Jul 2025 16:21:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1753114892;
+	s=fdusmail; d=freshdesk.com;
+	h=MIME-Version:Date:From:Reply-To:To:Cc:Message-ID:In-Reply-To:References:Subject:Content-Type:Content-Transfer-Encoding;
+	bh=llquzc49eWz1u3pcWQApxohZJKIjOb/29DX6i0FIjWE=;
+	b=oklUvRd2WnywkTPx28isuhzC2tKQNg15p248GgTr8wMpoVgje/Px3qw45OFcp1hn
+	ODB1+mKPDJ2yY5QI4YYwYdTNiukuXjx6E9DMmqrXUJba7DZX78YDYRO3c/3AmnXD8Rw
+	TQvhiwWxeKnu13i+RCyRlspiW4vja84gpiQAalwLmvfZbb3HZ0MulIlt1tLcCNInGW6
+	g8cbEzviIflDNxN+C7SYXbt54yglAn3tonglQ9JyFS43iqok7N+VqySbHt0tn8IG23K
+	FZxrJgpTbNqMz8jTZ2puj01samaKL2IynQ8lUVQWBd/DQww+GoACOivX4nva1W5m0xi
+	q/Wl0UTvUg==
+MIME-Version: 1.0
+X-Received: from ip-172-16-180-36.ec2.internal (EHLO freshdesk.com) ([172.16.180.36])
+          by smtpout.freshdesk.com (Freshworks SMTP Server) with ESMTPA ID 4b2e8b95.;
+          Mon, 21 Jul 2025 16:21:30 +0000 (UTC)
+Date: Mon, 21 Jul 2025 16:21:30 +0000
+From: OneNotary Team <support@onenotary.freshdesk.com>
+Reply-To: OneNotary Team <support@onenotary.freshdesk.com>
+To: admin@emcnotary.com
+Cc: support@onenotary.us
+Message-ID: <687e690a69120_105d03fa84f4a732416747449.sidekiq-frequent-fd-poduseast1-main5-blue-85bb78fb87-rd42d@email.freshdesk.com>
+In-Reply-To: <010001982d9d6a46-466418c9-b88a-4947-bb79-ea147a7ce2db-000000@email.amazonses.com>
+References: <010001982d9d6a46-466418c9-b88a-4947-bb79-ea147a7ce2db-000000@email.amazonses.com>
+Subject: Re: Profile in Review for a month
+Content-Type: multipart/alternative;
+ boundary="--==_mimepart_687e690a72781_105d03fa84f4a7324167475b1";
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+sent-on: 2025-07-21 16:21:30 +0000
+X-FUP-PRIORITY: 5
+X-SDS-INFO: ZWzkxk0pd73Jiwghj5KWSKfNBfGAHmussTXeGKlp98bnIWJTknFBnFOgf7VaO8F7njnB8MdZXuODexsx3aErJWRmqSIOpH3f6IwDy-Cru4bZZ1elZoGekFPJYMfRiaFzRc8binYlYtZgkfb-NSUxekl8AS5d3LTdVQrzR8nWTVhcGQOwQhWuSYKno2tNaokv
+X-MESSAGEID: pqLJjPCKHx7iGDj3wF+6ZbqagN0TK36zp/PXKPzNFWTysQfKeQGbYXP0X52r/BOV87CGAxtIKRdnLRhvyPnh5THLZ9A1k1YF+q4h6Z9ED5asZdqLr9ZuLAr/UU9HbujUHzeNmZIlutKPBQs6Z+xEB27Qi2vIbjnWuE5mZT7DIAY=
+
+
+----==_mimepart_687e690a72781_105d03fa84f4a7324167475b1
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+Hello Evan,       Thank you for reaching out.  We want to inform you that=
+ your profile has been approved and you will get a confirmation letter sh=
+ortly.  We'll be happy to see you on our platform.  Let us know if you ha=
+ve any additional questions.   _ Best Regards, OneNotary Team.  =
+
+                           =
+
+                            On
+                            Mon, Jul 21 at 11:34 AM
+                            ,  OneNotary Team <support@onenotary.freshdes=
+k.com>  wrote:
+                             =
+
+ =
+
+ Hello Evan,   =
+
+ =
+
+ Thank you for reaching out. =C2=A0 =
+
+   =
+
+ We have forwarded your request to the Notary Onboarding Team.=C2=A0 =
+
+ We will get in touch with you as soon as we receive an answer.=C2=A0 =
+
+   =
+
+ _ =
+
+ Thank you, =
+
+ OneNotary Team =
+
+ =
+
+ =
+
+ =
+
+                           =
+
+                            On
+                            Mon, Jul 21 at 11:33 AM
+                            ,  Admin EMC Notary <admin@emcnotary.com>  wr=
+ote:
+                             I added One Notary for my Florida State Remo=
+te Notary tools but it has been almost a month since getting confirmation=
+ that the tool was added and my profile is still in review.  What steps d=
+o I need to take to finalize the review of my profile?  I just had a call=
+ with Docusign to inquire regarding your partnership with them to receive=
+ notarial sessions.  Thank you and God Bless you, ~Evan Remote Notary, Bo=
+ca Raton, FL
+
+
+
+
+
+
+----==_mimepart_687e690a72781_105d03fa84f4a7324167475b1
+Content-Type: text/html;
+ charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div style=3D"font-family:-apple-system, BlinkMacSystemFont, Segoe UI, Ro=
+boto, Helvetica Neue, Arial, sans-serif; font-size:14px;">
+	<div style=3D"font-family:-apple-system, BlinkMacSystemFont, Segoe UI, R=
+oboto, Helvetica Neue, Arial, sans-serif; font-size:14px">
+<div dir=3D"ltr">
+<div dir=3D"ltr">Hello Evan,<br>
+</div>
+<div><br dir=3D"ltr"></div>
+</div>
+<div dir=3D"ltr">Thank you for reaching out.<br><br>We want to inform you=
+ that your profile has been approved and you will get a confirmation lett=
+er shortly.<br><br>We'll be happy to see you on our platform.<br><br>Let =
+us know if you have any additional questions.</div>
+<div dir=3D"ltr">
+<br>_<br>Best Regards,<br>OneNotary Team.</div>
+<div class=3D"freshdesk_quote">
+                          <blockquote class=3D"freshdesk_quote">
+                            On
+                            Mon, Jul 21 at 11:34 AM
+                            <span class=3D"separator">,  OneNotary Team &=
+lt;support@onenotary.freshdesk.com&gt;  wrote:
+                            <div style=3D"font-family:-apple-system, Blin=
+kMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif; font=
+-size:14px">
+<div dir=3D"ltr">
+<div dir=3D"ltr"><span style=3D"color: rgb(0, 0, 0)">Hello Evan,<br><br><=
+/span></div>
+<div dir=3D"ltr">
+<div dir=3D"ltr"><span style=3D"color: rgb(0, 0, 0)">Thank you for reachi=
+ng out. =C2=A0</span></div>
+<div dir=3D"ltr" style=3D'box-sizing: border-box; word-break: break-word;=
+ overflow-wrap: break-word; color: rgb(24, 50, 71); font-family: -apple-s=
+ystem, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, s=
+ans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: n=
+ormal; font-variant-caps: normal; font-weight: 400; letter-spacing: norma=
+l; orphans: 2; text-align: start; text-indent: 0px; text-transform: none;=
+ white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-w=
+idth: 0px;  text-decoration-thickness: initial; text-decoration-style: in=
+itial; text-decoration-color: initial'><span style=3D"color: rgb(0, 0, 0)=
+"><br style=3D"box-sizing: border-box"></span></div>
+<div dir=3D"ltr"><span style=3D"color: rgb(0, 0, 0)">We have forwarded yo=
+ur request to the Notary Onboarding Team.=C2=A0</span></div>
+<div dir=3D"ltr"><span style=3D"color: rgb(0, 0, 0)">We will get in touch=
+ with you as soon as we receive an answer.=C2=A0</span></div>
+<div dir=3D"ltr"><span style=3D"color: rgb(0, 0, 0)"><br></span></div>
+<div dir=3D"ltr" style=3D'box-sizing: border-box; word-break: break-word;=
+ overflow-wrap: break-word; color: rgb(24, 50, 71); font-family: -apple-s=
+ystem, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, s=
+ans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: n=
+ormal; font-variant-caps: normal; font-weight: 400; letter-spacing: norma=
+l; orphans: 2; text-align: start; text-indent: 0px; text-transform: none;=
+ white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-w=
+idth: 0px;  text-decoration-thickness: initial; text-decoration-style: in=
+itial; text-decoration-color: initial'><span style=3D"color: rgb(0, 0, 0)=
+">_</span></div>
+<div dir=3D"ltr"><span style=3D"color: rgb(0, 0, 0)">Thank you,</span></d=
+iv>
+<div dir=3D"ltr"><span style=3D"color: rgb(0, 0, 0)">OneNotary Team</span=
+></div>
+</div>
+</div>
+<div class=3D"freshdesk_quote">
+                          <blockquote class=3D"freshdesk_quote">
+                            On
+                            Mon, Jul 21 at 11:33 AM
+                            <span class=3D"separator">,  Admin EMC Notary=
+ &lt;admin@emcnotary.com&gt;  wrote:
+                            <div>I added One Notary for my Florida State =
+Remote Notary tools but it has been almost a month since getting confirma=
+tion that the tool was added and my profile is still in review.<br><br>Wh=
+at steps do I need to take to finalize the review of my profile?<br><br>I=
+ just had a call with Docusign to inquire regarding your partnership with=
+ them to receive notarial sessions.<br><br>Thank you and God Bless you,<b=
+r>~Evan<br>Remote Notary, Boca Raton, FL</div>
+
+                          </span>
+</blockquote>
+                        </div>
+</div>
+                          </span>
+</blockquote>
+                        </div>
+</div>
+
+
+	=
+
+
+
+
+
+
+
+<span title=3D"fd_tkt_identifier" style=3D'font-size:0px; font-family:"fd=
+tktid"; min-height:0px; height:0px; opacity:0; max-height:0px; line-heigh=
+t:0px; color:#ffffff'>39112:1778772</span>
+
+</div>=
+
+----==_mimepart_687e690a72781_105d03fa84f4a7324167475b1--

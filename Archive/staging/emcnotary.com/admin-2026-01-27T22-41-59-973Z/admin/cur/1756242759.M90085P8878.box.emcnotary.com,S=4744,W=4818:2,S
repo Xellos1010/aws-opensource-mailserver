@@ -1,0 +1,74 @@
+Return-Path: <paul_hancock@me.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id YiehDkUjrmiuIgAAQCw0vA
+	(envelope-from <paul_hancock@me.com>)
+	for <admin@emcnotary.com>; Tue, 26 Aug 2025 21:12:37 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.3 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,FREEMAIL_FROM,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 DMARC_PASS DMARC check passed
+	* -0.1 SPF_PASS SPF check passed
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 FREEMAIL_FROM Sender email is commonly abused enduser mail
+	*      provider
+	*      [paul_hancock[at]me.com]
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+X-Spam-Score: -0.3
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=quarantine dis=none) header.from=me.com
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=me.com
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (2048-bit key; unprotected) header.d=me.com header.i=@me.com header.a=rsa-sha256 header.s=1a1hai header.b=xxd6iM59;
+	dkim-atps=neutral
+X-Greylist: delayed 600 seconds by postgrey-1.36 at box.emcnotary.com; Tue, 26 Aug 2025 21:12:36 UTC
+Received: from outbound.ms.icloud.com (p-west3-cluster2-host8-snip4-2.eps.apple.com [57.103.74.35])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id DFC6A402A1
+	for <admin@emcnotary.com>; Tue, 26 Aug 2025 21:12:36 +0000 (UTC)
+Received: from outbound.ms.icloud.com (unknown [127.0.0.2])
+	by p00-icloudmta-asmtp-us-west-3a-60-percent-0 (Postfix) with ESMTPS id 472261800475;
+	Tue, 26 Aug 2025 20:57:29 +0000 (UTC)
+Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=me.com; s=1a1hai; bh=guJyWHFSh9uUyrYX957mt/EeDZW1uNctu+9soYI6qLE=; h=Content-Type:From:Mime-Version:Date:Subject:Message-Id:To:x-icloud-hme; b=xxd6iM59+uoXbjh2ac13dWwd3i2PVI0UoSwouRMyG+k40CiCVq3+MKscXEVZC6WbLPWxqp52LNwv+P74Dv/PQGhl0qr9TzKAYBFocZDLuP5fsG30hQiH8mf1dFc7z6Z7LJp5hoHH+OtINV5XlfMjYLybZuC4Ub8TMAf47WDLwF8wrPVPhMOGtF+rbxo9kYxFrwZ6bBb7dVb62szNxcw8u4vzKvrosNshwjmvGPlYuW+CUHtEKFcQTfchp4tzTZR9dKGobjpW+7P5n65CwsIwwS6NHgzF2e79Mcx1S/15vayMRuD6fE+8KtYGPAfdv8iFrNceCqMFaP6xUwcHfPtdTg==
+Received: from smtpclient.apple (ms-asmtp-me-k8s.p00.prod.me.com [17.57.154.37])
+	by p00-icloudmta-asmtp-us-west-3a-60-percent-0 (Postfix) with ESMTPSA id B22BC18000D7;
+	Tue, 26 Aug 2025 20:57:28 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
+From: Paul Hancock <paul_hancock@me.com>
+Mime-Version: 1.0 (1.0)
+Date: Tue, 26 Aug 2025 13:31:37 -0700
+Subject: Document Notary
+Message-Id: <79AF4C6D-36D1-4B4E-B22C-7D7CA9DCE811@me.com>
+Cc: Paul Hancock <senior-paul@hotmail.com>
+To: admin@emcnotary.com
+X-Mailer: iPhone Mail (22G100)
+X-Proofpoint-ORIG-GUID: jafnJf3it-TVAdHkJL4wI7aFyDiWlkzm
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODI2MDE4NCBTYWx0ZWRfXyp60buupyR7C
+ lKUs+yhCd6ZJ4S8UDUPZUasCHSxs6YjU3nUFkeed/zECnGuT5OaSfA0pNcuYvHcATR3SmbWorS4
+ +mXXFw/uxthB5UG4Jn6KrSV8sb3Qxs24Yn1wmuiK8kmETmoJniYJsa7DraB31YyibhSN+YqsOIs
+ ikiouKZH90Hx8AVkCqFS44u8Ex3O2WnlHQ3MiyW+u8uzQnf5LIcSavfghgJaLShWvfkrQdiR5BZ
+ tPbs0+HP/AXgVYQQ/Jq/nwWE/FFzd4wyoPK3xdDatcd2VwwhjlnWVPWmCvb2b+v26Qw1uFPDw=
+X-Proofpoint-GUID: jafnJf3it-TVAdHkJL4wI7aFyDiWlkzm
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-08-26_02,2025-08-26_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0
+ bulkscore=0 phishscore=0 mlxscore=0 spamscore=0 mlxlogscore=478
+ suspectscore=0 adultscore=0 clxscore=1011 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.22.0-2506270000 definitions=main-2508260184
+X-JNJ: AAAAAAABuQQcc55hzy2P45hpehhsYf6HGx4sD5deE5QeN6Nnp1mcm0xjlpdsTPtAQcmbhGLqDMtKkQ3EgtId5EoDOfV6ApVA4q20DuaePKp++Ta7IuC5inPU5k6Mup6RQA16obS7uCpOIXQoFJF6uv0m0dNfJL1YIV6zlG+LcYVu7swI1QPsd8ZmXRaLF/Ch/jL2doe16hdbZD9IaaGE0x12LpAXAiQTNp4tuPc9i11GrMbSDwL/JITQYaWDZDiFJzyACpEfPctvYFOZkujMH2qjkOo1nMHqlId87OBkO2YyOcfjZpPlHykdI8drEpyZQ4g0g6xDpt1rcRBYvuIpdW/D09J1G+3n7h78tKwUi0fUMoPU6jJI1veV
+
+Hi, Evan please schedule a convenient time to notarize my revokable trust fo=
+r my bank deposit box. Thanks
+Paul Hancock=20
+Have a Great Day....=

@@ -1,0 +1,488 @@
+Return-Path: <msprvs1=20291GCbejX7P=bounces-280172-715@bounces.rover.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id i0YCMkmYdmjLCA8AQCw0vA
+	(envelope-from <msprvs1=20291GCbejX7P=bounces-280172-715@bounces.rover.com>)
+	for <admin@emcnotary.com>; Tue, 15 Jul 2025 18:04:57 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-7.8 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,HTML_MESSAGE,SPF_HELO_NONE,SPF_PASS,
+	USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 SPF_PASS SPF check passed
+	* -0.1 DMARC_PASS DMARC check passed
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	* -7.5 USER_IN_DEF_DKIM_WL From: address is in the default DKIM
+	*      welcome-list
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+X-Spam-Score: -7.8
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=reject dis=none) header.from=e.rover.com
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=bounces.rover.com
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (1024-bit key; unprotected) header.d=e.rover.com header.i=@e.rover.com header.a=rsa-sha256 header.s=scph1221 header.b=Vf2+1ihR;
+	dkim-atps=neutral
+Received: from mta-174-81-80.rover.com.sparkpostmail.com (mta-174-81-80.rover.com.sparkpostmail.com [192.174.81.80])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id 719824128E
+	for <admin@emcnotary.com>; Tue, 15 Jul 2025 18:04:57 +0000 (UTC)
+X-MSFBL: to+lm2/ZvPEokHD7fYRZF4wCHIOCN431YA5YDhEZuiA=|eyJtZXNzYWdlX2lkIjo
+	iNjg3MTRkOTM3NjY4NzY1ZTEzMDAiLCJyIjoiYWRtaW5AZW1jbm90YXJ5LmNvbSI
+	sInN1YmFjY291bnRfaWQiOiI3MTUiLCJjdXN0b21lcl9pZCI6IjI4MDE3MiIsInR
+	lbmFudF9pZCI6InNwYyJ9
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=e.rover.com;
+	s=scph1221; t=1752601421; i=@e.rover.com;
+	bh=adiVMU+KAg3an4TKfOhtYH8eRh+hN6XLT4BD6DcvlLg=;
+	h=To:Message-ID:Date:Content-Type:From:Subject:From:To:Cc:Subject;
+	b=Vf2+1ihR68DD7mkEkQNC5v15T8AH0aGc94pnbDF7SfAwe74+JAFQI1KIw65CFutZW
+	 c/U2rDVXjYE4vf4j2SBeVdNxKULlx0QMa0SUW8Q1KbULzISAiCIEu681bqo05HYa8k
+	 Awl8QTrtlPHWlzy7PjYd2Ew+/Qzh6pz0X7kkB1l0=
+Received: from [10.90.1.225] ([10.90.1.225])
+	by i-06394c5e8117d8b24.mta1vrest.sd.prd.sparkpost (ecelerity 5.0.0.74550 r(msys-ecelerity:tags/5.0.0.13)) with REST
+	id 00/39-23876-D4396786; Tue, 15 Jul 2025 17:43:41 +0000
+To: "Evan" <admin@emcnotary.com>
+Message-ID: <00.39.23876.D4396786@i-06394c5e8117d8b24.mta1vrest.sd.prd.sparkpost>
+Date: Tue, 15 Jul 2025 17:43:41 +0000
+Content-Type: multipart/alternative; boundary="_----xyn8TV31x1scPDHT/j/EJw===_4F/29-23876-D4396786"
+MIME-Version: 1.0
+Reply-To: support@rover.com
+X-Campaign-ID: 4019201
+From: "Rover.com" <rover@e.rover.com>
+Subject: Welcome to Rover!
+X-Message-ID: b77fa62212a14196b0752b0c757346b3
+X-Feedback-ID: 5472360:4019201:55122:iterable
+Feedback-ID: 5472360:4019201:55122:iterable
+
+--_----xyn8TV31x1scPDHT/j/EJw===_4F/29-23876-D4396786
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
+
+Get the deets on how Rover works This quick overview will help answer your =
+=0Aquestions. =0A=0A=0A=0A=0A=0A=0A <https://www.rover.com/> =0A=0A=0A=0A <=
+https://www.rover.com/account/> =0A=0A <https://www.rover.com/account/> =0A=
+=0A=0A=0ARover is more than just a place for pet owners to find 5-star pet =
+care=E2=80=94we also =0Ahelp sitters like you build a business from the gro=
+und up. From your profile =0Acreation to closing your first booking, we=E2=
+=80=99ll give you the support you need to =0Arun a successful pet sitting b=
+usiness. =0A=0A=0AHere=E2=80=99s how it works: =0A=0A=0A=0ACreate a stand-o=
+ut profile =0AYour profile will be viewed by thousands of pet parents looki=
+ng for pet care, =0Aso don=E2=80=99t be shy-this is your opportunity to mak=
+e a great first impression and =0Ashowcase your awesome pet sitting skills.=
+ =0A=0A=0AYour profile will be viewed by thousands of pet parents looking f=
+or pet care, =0Aso don=E2=80=99t be shy-this is your opportunity to make a =
+great first impression and =0Ashowcase your awesome pet sitting skills. =0A=
+=0A=0A=0A=0ABecome visible in search results =0AOnce your profile is approv=
+ed, pet parents will be able to find you when =0Asearching for pet care. Yo=
+ur profile will appear in an owner=E2=80=99s search results =0Aif you=E2=80=
+=99re in their area, are available on the dates they need, and offer the =
+=0Aservices they=E2=80=99re looking for. =0A=0A=0AOnce your profile is appr=
+oved, pet parents will be able to find you when =0Asearching for pet care. =
+Your profile will appear in an owner=E2=80=99s search results =0Aif you=E2=
+=80=99re in their area, are available on the dates they need, and offer the=
+ =0Aservices they=E2=80=99re looking for. =0A=0A=0A=0A=0A=0ABook business =
+=0APet parents will contact you via the site if they think you=E2=80=99d be=
+ a good fit to =0Acare for their pet. Once you both decide it=E2=80=99s a m=
+atch, congrats=E2=80=94you=E2=80=99ve just =0Amade a booking! Your payment =
+is convenient, safe, secure and available online. =0A=0A=0APet parents will=
+ contact you via the site if they think you=E2=80=99d be a good fit to =0Ac=
+are for their pet. Once you both decide it=E2=80=99s a match, congrats=E2=
+=80=94you=E2=80=99ve just =0Amade a booking! Your payment is convenient, sa=
+fe, secure and available online. =0A=0A=0ASound good=3F Get started by fini=
+shing your profile and get ready for business. =0A=0A=0AFinish your profile=
+ <https://www.rover.com/account/> =0A=0A=0A=0A=0A=0A=0A=0APlease add rover@=
+e4.rover.com <mailto:rover@e4.rover.com> to your address book =0Ato make su=
+re our emails are delivered to your inbox.=0A=0A Rover is an online marketp=
+lace that connects pet parents and local pet care =0Aproviders. Pet care pr=
+oviders are neither employed nor endorsed by Rover.=0A=0AA Place for Rover,=
+ Inc. <https://www.rover.com/> =0ARover.com <https://www.rover.com> | 711 C=
+apitol Way S., Suite 204 | Olympia, =0AWashington 98501 | USA =0AUnsubscrib=
+e =0A<https://links.rover.com/e/eh=3F_t=3D8c2eaae8d6cb4882a21332c885701eba&=
+_m=3Db77fa62212a14196b0752b0c757346b3&_e=3Dkkv4Rh4qMp2I1ykHt1cN46dhTnqg7XGF=
+k8Yt_Iy1Sbb69taL95pHhfwoZRumJA8cqmL_SlxzUbw065noPD5oaYEGWUtjfFhhYVQFKdKdEqt=
+kwxZHDUJdcPlw7_VnDdGn5AwvxenaggsLALfgED7rVhZ9P61HxSUZsIeg93Dokzrs5UMZLNe13O=
+CMSr8qbwYuqYz3Qxzkd5JGBcHVy-JD1NDU7JmowL6c1abla1wO1N6jU9uHDae0W_Hn84R0CD_wM=
+3GB62uAI1q1WzHKr57TzNufpWygS2lqBTdnuGyNWoM%3D>=0APrivacy Statement <https:/=
+/www.rover.com/terms/privacy/> Contact Us =0A<https://support.rover.com/hc/=
+en-us/>
+--_----xyn8TV31x1scPDHT/j/EJw===_4F/29-23876-D4396786
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset="UTF-8"
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.=
+w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> <html style=3D"opacity: 1;" =
+xmlns=3D"http://www.w3.org/1999/xhtml"> <head> <title>Get the deets on how =
+Rover works</title> <meta content=3D"text/html; charset=3Dutf-8" http-equiv=
+=3D"Content-Type"/><meta content=3D"IE=3Dedge" http-equiv=3D"X-UA-Compatibl=
+e"/><meta content=3D"width=3Ddevice-width, initial-scale=3D1.0 " name=3D"vi=
+ewport"/><meta content=3D"telephone=3Dno" name=3D"format-detection"/><!--[i=
+f !mso]><!--> <link href=3D"http://fonts.googleapis.com/css=3Ffamily=3DOpen=
++Sans:400,600,700" rel=3D"stylesheet" type=3D"text/css"/><!--<![endif]--> <=
+style type=3D"text/css">body{margin:0!important;padding:0!important;-webkit=
+-text-size-adjust:100%!important;-ms-text-size-adjust:100%!important;-webki=
+t-font-smoothing:antialiased!important}img{border:0!important;outline:none!=
+important}p{margin:0!important;padding:0!important}table{border-collapse:co=
+llapse;mso-table-lspace:0;mso-table-rspace:0}td,a,span{border-collapse:coll=
+apse;mso-line-height-rule:exactly}.ExternalClass *{line-height:100%}.em_whi=
+te a{color:#fff;text-decoration:none}.em_green a{color:#77c045;text-decorat=
+ion:underline}.em_grey a{color:#a8a8a8;text-decoration:none}.em_grey1 a{col=
+or:#a8a8a8;text-decoration:underline}@media only screen and (min-width:550p=
+x) and (max-width:659px){.em_main_table{width:100%!important}.em_wrapper{wi=
+dth:100%!important}.em_hide{display:none!important}.em_full_img{width:100%!=
+important;height:auto!important;max-width:100%!important}.em_hide_desktop{d=
+isplay:table!important;float:none!important;width:100%!important;overflow:v=
+isible!important;height:auto!important}.em_aside1{padding:0 30px!important}=
+.em_aside2{padding:0 30px!important}.em_w{width:56px!important}.em_color{b=
+ackground-color:#f6f6f6!important}.em_h{height:45px!important}.em_aside3{pa=
+dding:25px 30px 0 30px!important}.em_h30{height:30px!important}.em_h25{heig=
+ht:25px!important}}@media only screen and (min-width:470px) and (max-width:=
+549px){.em_main_table{width:100%!important}.em_wrapper{width:100%!important=
+}.em_hide{display:none!important}.em_full_img{width:100%!important;height:a=
+uto!important;max-width:100%!important}.em_hide_desktop{display:table!impor=
+tant;float:none!important;width:100%!important;overflow:visible!important;h=
+eight:auto!important}.em_aside1{padding:0 30px!important}.em_aside2{padding=
+:0 30px!important}.em_w{width:56px!important}.em_color{background-color:#f6=
+f6f6!important}.em_h{height:45px!important}.em_aside3{padding:25px 30px 0 3=
+0px!important}.em_h30{height:30px!important}.em_h25{height:25px!important}}=
+@media only screen and (min-width:421px) and (max-width:469px){.em_main_tab=
+le{width:100%!important}.em_wrapper{width:100%!important}.em_hide{display:n=
+one!important}.em_full_img{width:100%!important;height:auto!important;max-w=
+idth:100%!important}.em_hide_desktop{display:table!important;float:none!imp=
+ortant;width:100%!important;overflow:visible!important;height:auto!importan=
+t}.em_aside1{padding:0 30px!important}.em_aside2{padding:0 30px!important}.=
+em_w{width:56px!important}.em_color{background-color:#f6f6f6!important}.em_=
+h{height:45px!important}.em_aside3{padding:25px 30px 0 30px!important}.em_h=
+30{height:30px!important}.em_h25{height:25px!important}}@media only screen =
+and (max-width:420px){.em_main_table{width:100%!important}.em_wrapper{width=
+:100%!important}.em_hide{display:none!important}.em_hide1{display:none!impo=
+rtant}.em_full_img{width:100%!important;height:auto!important;max-width:100=
+%!important}.em_hide_desktop{display:table!important;float:none!important;w=
+idth:100%!important;overflow:visible!important;height:auto!important}.em_hi=
+de_desktop1{display:table!important;float:none!important;width:100%!importa=
+nt;overflow:visible!important;height:auto!important}.em_aside1{padding:0 30=
+px!important}.em_aside2{padding:0 30px!important}.em_w{width:56px!important=
+}.em_color{background-color:#f6f6f6!important}.em_h{height:45px!important}.=
+em_aside3{padding:25px 30px 0 30px!important}.em_h30{height:30px!important}=
+.em_h25{height:25px!important}}</style> <style type=3D"text/css">.preheade=
+r{display:none!important}</style> </head> <body bgcolor=3D"#f2f2f2" style=
+=3D"margin: 0px; padding: 0px;">=0D=0A<div style=3D"color:transparent;visib=
+ility:hidden;opacity:0;font-size:0px;border:0;max-height:1px;width:1px;marg=
+in:0px;padding:0px;border-width:0px!important;display:none!important;line-h=
+eight:0px!important;"><img border=3D"0" width=3D"1" height=3D"1" src=3D"htt=
+p://tracksp.rover.com/q/mVvVliH8QSiPCfCx18wPZQ~~/AARGbBA~/wxb89t7YXYXPPHbja=
+-E00Hc5yD-DTJix6NplOzjoWpxLsvuTL6kK3h7HuSD-z9vLnHRjpP4smgRiG4SzVERIgA~~" al=
+t=3D""/></div>=0D=0A<span style=3D"color:transparent;visibility:hidden;disp=
+lay:none;opacity:0;height:0;width:0;font-size:0;"></span><img src=3D"https:=
+//links.rover.com/e/eo=3F_t=3D8c2eaae8d6cb4882a21332c885701eba&amp;_m=3Db77=
+fa62212a14196b0752b0c757346b3&amp;_e=3DqlvdHPgPWbFMqcPiHeyu5qkUi3cK1p71pozz=
+wgT6u_4a1cTY4x8cngJUq7LotD0YsmSQDLnL3T_Biyq1SA6zQH1_Z2gKcnEj_KKyG2n2-OL00aO=
+eZK-cNU7p-_lQowjFJRYuPQb8lFh6M52Yd6a4fQ%3D%3D" style=3D"border:0;width:1px;=
+height:1px;border-width:0px!important;display:none!important;line-height:0!=
+important;" width=3D"1" height=3D"1"/> <div class=3D"preheader" style=3D"fo=
+nt-size: 1px; display: none !important;">This quick overview will help answ=
+er your questions.</div> <!--Full width table start--> <table bgcolor=3D"#f=
+2f2f2" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"100%"> <tb=
+ody> <tr> </tr> </tbody> </table> <table align=3D"center" border=3D"0" cell=
+padding=3D"0" cellspacing=3D"0" class=3D"em_main_table" style=3D"table-layo=
+ut:fixed;" width=3D"660"> <tbody> <tr> <td bgcolor=3D"#f2f2f2" class=3D"em_=
+hide" height=3D"1" style=3D"line-height:1px; min-width: 660px;"><img border=
+=3D"0" height=3D"1" style=3D"max-height:1px; min-height:1px; display:block;=
+ width:660px; min-width:660px;" width=3D"660" alt=3D"" src=3D"https://d15k2=
+d11r6t6rl.cloudfront.net/public/users/Integrators/669d5713-9b6a-46bb-bd7e-c=
+542cff6dd6a/8c2eaae8d6cb4882a21332c885701eba/Body/Transactional/SO_T_2%20Ro=
+ver%20Signup%20Confirmation/empty.gif"/></td> </tr> <tr> <td> <table border=
+=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"100%"> <tbody> <tr> <td=
+ class=3D"em_hide" width=3D"10"></td> <td> <table border=3D"0" cellpadding=
+=3D"0" cellspacing=3D"0" width=3D"100%"> <tbody> <tr> <td height=3D"15" sty=
+le=3D"line-height:0px;font-size:0px;"></td> </tr> <tr> <td class=3D"em_hide=
+" height=3D"3" style=3D"line-height:0px;font-size:0px;"></td> </tr> <!--=3D=
+=3D=3D HEADER SECTION=3D=3D=3D --> <tr> <td align=3D"center" valign=3D"top"=
+><a target=3D"_blank" style=3D"text-decoration:none;" href=3D"https://links=
+.rover.com/u/click=3F_t=3D8c2eaae8d6cb4882a21332c885701eba&_m=3Db77fa62212=
+a14196b0752b0c757346b3&_e=3DgYiUsovRtH3DZ8Fc_Q62B-3L8dNonkeQWGnU3mL3t_kdACb=
+DzwSuIwNaCEYOcs1x3jaugv3-5PhS7QW4NHDPj_z0lYwO9vww8rbCq8REtsbdYlAZoDsWaztZAy=
+263VEaEa8tJ6sk_Cu6qYdrTRbMj6Q5tQm_CmtmIyZ-Klfa6CMnWl4-QWPQJjMvO3ctg7yjWT6OF=
+SoyESjbJ0P74hjmagH_fDoYsM4apwuSFcNFRXrrftiFxJ4smqgOoH3xy92yT93UxWyMyWq9NiGN=
+cYl8XE5Ihu7dBfplrggx_84BVqAdFv2-87lw7vbQtk9bW2aEfhw7GR8KSOMF5rSCoc52cPxPbes=
+9M4Q4WbvGBo_Z9rZtAgfGDocQ7eCGAM1phwCw"><img width=3D"134" alt=3D"Rover=C2=
+=AE" style=3D"display:block; max-width:134px; font-family:Arial, sans-serif=
+; font-size:24px; line-height:28px; color:#00bd70; font-weight:bold;" class=
+=3D"em_g_img em_logo" border=3D"0" src=3D"https://d15k2d11r6t6rl.cloudfront=
+.net/public/users/Integrators/669d5713-9b6a-46bb-bd7e-c542cff6dd6a/8c2eaae=
+8d6cb4882a21332c885701eba/Header/rover.com/Transactional_LetterStyle_EmailU=
+pdates_logo.png"/></a></td> </tr> <!--=3D=3D=3D //HEADER SECTION=3D=3D=3D -=
+-> <tr> <td height=3D"15" style=3D"line-height:0px;font-size:0px;"></td> </=
+tr> <tr> <td class=3D"em_hide" height=3D"2" style=3D"line-height:0px;font-s=
+ize:0px;"></td> </tr> <!--=3D=3D=3D BODY SECTION=3D=3D=3D --> <tr> <td bgco=
+lor=3D"#ffffff"> <table bgcolor=3D"#ffffff" border=3D"0" cellpadding=3D"0" =
+cellspacing=3D"0" width=3D"100%"><!--=3D=3D=3D IMAGE=3D=3D=3D --> <tbody> <=
+tr> <td align=3D"center" valign=3D"top" class=3D"em_hide1"><a target=3D"_bl=
+ank" style=3D"text-decoration:none;" href=3D"https://links.rover.com/u/clic=
+k=3F_t=3D8c2eaae8d6cb4882a21332c885701eba&_m=3Db77fa62212a14196b0752b0c7573=
+46b3&_e=3DgYiUsovRtH3DZ8Fc_Q62B8q7bGm9ugrtodkJ59svS81ksnSpBzGdHjC__qqSU7HFE=
+hXaaBgospNhxp6JIOek_VyUMk7yi1o11euukDb_AH3y8ApDwM9sABq9lBwsZol8brbABn6Zh7dZ=
+Ye_myAFZ7K7DNMU2BpdNv9Qv0P28tOGBusK6SWdL6wKP8QTs5WP6y2OmzmLMull0vRttn2OtUSM=
+tCcV1iuveDeBmmy-FjxA2PMdlZo0fSq31G9oPt51-c5KTI9sGRBzT7iLQ1CM_Ddthg2WDvG8yyx=
+nBoJTMqs32lA81eJ0q5ru7qE5Gk9iu5e5TKol49PB-UOgzmt28-kBnu56uBl4wGP4QAgX-SyUtj=
+ZO34GJl3YkTWpzreEGtHOUvW8Fl6kZKsKfVNCzDzQ%3D%3D"><img width=3D"640" height=
+=3D"270" alt=3D"This is how you Rover" style=3D"display:block;max-width:640=
+px;font-family:Arial, sans-serif; font-size:15px; line-height:20px; color:#=
+000000;" border=3D"0" class=3D"em_full_img" src=3D"https://d15k2d11r6t6rl.c=
+loudfront.net/public/users/Integrators/669d5713-9b6a-46bb-bd7e-c542cff6dd6a=
+/8c2eaae8d6cb4882a21332c885701eba/Body/Transactional/SO_T_2%20Rover%20Signu=
+p%20Confirmation/640x270_hero.jpg"/></a></td> </tr> <!--[if !mso]><!--> <tr=
+> <td height=3D"0"> <div class=3D"em_hide_desktop1" style=3D"display:none;w=
+idth:0;overflow:hidden;max-height:0!important"> <table width=3D"100%" borde=
+r=3D"0" cellspacing=3D"0" cellpadding=3D"0" align=3D"center"> <tbody> <tr> =
+<td align=3D"center"><a target=3D"_blank" style=3D"text-decoration:none;" h=
+ref=3D"https://links.rover.com/u/click=3F_t=3D8c2eaae8d6cb4882a21332c885701=
+eba&_m=3Db77fa62212a14196b0752b0c757346b3&_e=3DgYiUsovRtH3DZ8Fc_Q62B8q7bGm9=
+ugrtodkJ59svS81ksnSpBzGdHjC__qqSU7HFEhXaaBgospNhxp6JIOek_VyUMk7yi1o11euukDb=
+_AH3y8ApDwM9sABq9lBwsZol8brbABn6Zh7dZYe_myAFZ7K7DNMU2BpdNv9Qv0P28tOGBusK6SW=
+dL6wKP8QTs5WP6y2OmzmLMull0vRttn2OtUSMtCcV1iuveDeBmmy-FjxA2PMdlZo0fSq31G9oPt=
+51-IWvQDQ42V-qvb2pejlmoUOPvKSGNPu1zCrakGf92S09p2_JuqWsC8UZzDu2TY2jKP3HFKmUo=
+sb4prmyv1XkoxAyr9kLFVCGgiD79FwVRiVb4qndmJHacIHbeOqm0tULCj-coHX5xeZBNrUT3x1s=
+eUg%3D%3D"><img alt=3D"This is how you Rover" width=3D"320" class=3D"em_ful=
+l_img" style=3D"display:block;max-width:320x;font-family:Arial, sans-serif;=
+ font-size:15px; line-height:20px; color:#000000;" border=3D"0" src=3D"http=
+s://d15k2d11r6t6rl.cloudfront.net/public/users/Integrators/669d5713-9b6a-46=
+bb-bd7e-c542cff6dd6a/8c2eaae8d6cb4882a21332c885701eba/Body/Transactional/SO=
+_T_2%20Rover%20Signup%20Confirmation/320x178_hero.jpg"/></a></td> </tr> </t=
+body> </table> </div> </td> </tr> <!--<![endif]--><!--=3D=3D=3D //IMAGE =3D=
+=3D=3D --><!--=3D=3D=3D SECTION 1=3D=3D=3D --> <tr> <td> <table border=3D"0=
+" cellpadding=3D"0" cellspacing=3D"0" width=3D"100%"> <tbody> <tr> <td clas=
+s=3D"em_hide" width=3D"40"></td> <td align=3D"center" valign=3D"top"> <tabl=
+e align=3D"center" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=
+=3D"100%"> <tbody> <tr> <td height=3D"52" style=3D"line-height:0px;font-siz=
+e:0px;" class=3D"em_h30"></td> </tr> <tr> <td align=3D"left" valign=3D"top"=
+ class=3D"em_aside1" style=3D"font-family:'Avenir', 'Open Sans', Arial, san=
+s-serif;font-size:18px;line-height:28px;color:#555555;">Rover is more than =
+just a place for pet owners to find 5-star pet care=E2=80=94we also help si=
+tters like you build a business from the ground up. From your profile creat=
+ion to closing your first booking, we=E2=80=99ll give you the support you n=
+eed to run a successful pet sitting business.</td> </tr> <tr> <td height=3D=
+"28" style=3D"line-height:0px;font-size:0px;"></td> </tr> <tr> <td align=3D=
+"center" valign=3D"top" class=3D"em_color"> <table width=3D"100%" border=3D=
+"0" cellspacing=3D"0" cellpadding=3D"0" align=3D"center"> <tbody> <tr> <td =
+align=3D"left" valign=3D"top" class=3D"em_aside3" style=3D"font-family:'Ave=
+nir', 'Open Sans', Arial, sans-serif;font-size:16px;line-height:26px;color:=
+#555555;">Here=E2=80=99s how it works:</td> </tr> <tr> <td height=3D"25" st=
+yle=3D"line-height:0px;font-size:0px;"></td> </tr> <tr> <td valign=3D"top" =
+class=3D"em_aside2"> <table width=3D"100%" border=3D"0" cellspacing=3D"0" c=
+ellpadding=3D"0"> <tbody> <tr> <td width=3D"67" align=3D"left" class=3D"em_=
+w" valign=3D"top" style=3D"width:67px;"><img alt=3D"1" width=3D"46" height=
+=3D"46" style=3D"display:block;font-family:'Avenir', 'Open Sans', Arial, sa=
+ns-serif;font-size:16px;line-height:26px;color:#555555;" border=3D"0" src=
+=3D"https://d15k2d11r6t6rl.cloudfront.net/public/users/Integrators/669d5713=
+-9b6a-46bb-bd7e-c542cff6dd6a/8c2eaae8d6cb4882a21332c885701eba/Body/Transact=
+ional/SO_T_2%20Rover%20Signup%20Confirmation/image_1.png"/></td> <td align=
+=3D"left" valign=3D"top"> <table width=3D"100%" border=3D"0" cellspacing=3D=
+"0" cellpadding=3D"0"> <tbody> <tr> <td align=3D"left" valign=3D"middle" cl=
+ass=3D"em_h" style=3D"font-family:'Avenir', 'Open Sans', Arial, sans-serif;=
+font-size:16px;line-height:24px;color:#555555; font-weight:bold;">Create a =
+stand-out profile</td> </tr> <tr> <td align=3D"left" valign=3D"top" class=
+=3D"em_hide" style=3D"font-family:'Avenir', 'Open Sans', Arial, sans-serif;=
+font-size:16px;line-height:24px;color:#555555;">Your profile will be viewed=
+ by thousands of pet parents looking for pet care, so don=E2=80=99t be shy-=
+this is your opportunity to make a great first impression and showcase your=
+ awesome pet sitting skills.</td> </tr> </tbody> </table> </td> </tr> </tbo=
+dy> </table> </td> </tr> <!--[if !mso]><!--> <tr> <td height=3D"0"> <div cl=
+ass=3D"em_hide_desktop" style=3D"display:none;width:0;overflow:hidden;max-h=
+eight:0!important"> <table width=3D"100%" border=3D"0" cellspacing=3D"0" ce=
+llpadding=3D"0" align=3D"center"> <tbody> <tr> <td height=3D"15" style=3D"f=
+ont-size:1px; line-height:1px;"></td> </tr> <tr> <td align=3D"left" valign=
+=3D"top" style=3D"font-family:'Avenir', 'Open Sans', Arial, sans-serif;font=
+-size:16px;line-height:24px;color:#555555; padding:0px 30px;">Your profile =
+will be viewed by thousands of pet parents looking for pet care, so don=E2=
+=80=99t be shy-this is your opportunity to make a great first impression an=
+d showcase your awesome pet sitting skills.</td> </tr> <tr> <td height=3D"2=
+5" style=3D"font-size:1px; line-height:1px;"></td> </tr> </tbody> </table> =
+</div> </td> </tr> <!--<![endif]--> </tbody> </table> </td> </tr> <tr> <td =
+height=3D"18" style=3D"font-size:1px; line-height:1px;" class=3D"em_h25"></=
+td> </tr> <tr> <td valign=3D"top" class=3D"em_aside2"> <table width=3D"100%=
+" border=3D"0" cellspacing=3D"0" cellpadding=3D"0"> <tbody> <tr> <td width=
+=3D"67" class=3D"em_w" align=3D"left" valign=3D"top" style=3D"width:67px;">=
+<img alt=3D"2" width=3D"46" height=3D"46" style=3D"display:block;font-famil=
+y:'Avenir', 'Open Sans', Arial, sans-serif;font-size:16px;line-height:26px;=
+color:#555555;" border=3D"0" src=3D"https://d15k2d11r6t6rl.cloudfront.net/p=
+ublic/users/Integrators/669d5713-9b6a-46bb-bd7e-c542cff6dd6a/8c2eaae8d6cb48=
+82a21332c885701eba/Body/Transactional/SO_T_2%20Rover%20Signup%20Confirmatio=
+n/image_2.png"/></td> <td align=3D"left" valign=3D"top"> <table width=3D"10=
+0%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0"> <tbody> <tr> <td alig=
+n=3D"left" valign=3D"middle" class=3D"em_h" style=3D"font-family:'Avenir', =
+'Open Sans', Arial, sans-serif;font-size:16px;line-height:24px;color:#55555=
+5; font-weight:bold;">Become visible in search results</td> </tr> <tr> <td =
+align=3D"left" valign=3D"top" class=3D"em_hide" style=3D"font-family:'Aveni=
+r', 'Open Sans', Arial, sans-serif;font-size:16px;line-height:24px;color:#5=
+55555;">Once your profile is approved, pet parents will be able to find you=
+ when searching for pet care. Your profile will appear in an owner=E2=80=99=
+s search results if you=E2=80=99re in their area, are available on the date=
+s they need, and offer the services they=E2=80=99re looking for.</td> </tr>=
+ </tbody> </table> </td> </tr> </tbody> </table> </td> </tr> <!--[if !mso]>=
+<!--> <tr> <td height=3D"0"> <div class=3D"em_hide_desktop" style=3D"displa=
+y:none;width:0;overflow:hidden;max-height:0!important"> <table width=3D"100=
+%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" align=3D"center"> <tbod=
+y> <tr> <td height=3D"15" style=3D"font-size:1px; line-height:1px;"></td> <=
+/tr> <tr> <td align=3D"left" valign=3D"top" style=3D"font-family:'Avenir', =
+'Open Sans', Arial, sans-serif;font-size:16px;line-height:24px;color:#55555=
+5; padding:0px 30px;">Once your profile is approved, pet parents will be ab=
+le to find you when searching for pet care. Your profile will appear in an =
+owner=E2=80=99s search results if you=E2=80=99re in their area, are availab=
+le on the dates they need, and offer the services they=E2=80=99re looking f=
+or.</td> </tr> <tr> <td height=3D"25" style=3D"font-size:1px; line-height:1=
+px;"></td> </tr> </tbody> </table> </div> </td> </tr> <!--<![endif]--> <tr>=
+ <td align=3D"center" valign=3D"top" class=3D"em_color"> <table width=3D"10=
+0%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" align=3D"center"> <tbo=
+dy> <tr> <td height=3D"18" style=3D"font-size:1px; line-height:1px;" class=
+=3D"em_h25"></td> </tr> <tr> <td valign=3D"top" class=3D"em_aside2"> <table=
+ width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0"> <tbody> <=
+tr> <td width=3D"67" class=3D"em_w" align=3D"left" valign=3D"top" style=3D"=
+width:67px;"><img alt=3D"3" width=3D"46" height=3D"46" style=3D"display:blo=
+ck;font-family:'Avenir', 'Open Sans', Arial, sans-serif;font-size:16px;line=
+-height:26px;color:#555555;" border=3D"0" src=3D"https://d15k2d11r6t6rl.clo=
+udfront.net/public/users/Integrators/669d5713-9b6a-46bb-bd7e-c542cff6dd6a/8=
+c2eaae8d6cb4882a21332c885701eba/Body/Transactional/SO_T_2%20Rover%20Signup%=
+20Confirmation/image_3.png"/></td> <td align=3D"left" valign=3D"top"> <tabl=
+e width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0"> <tbody> =
+<tr> <td align=3D"left" valign=3D"middle" class=3D"em_h" style=3D"font-fami=
+ly:'Avenir', 'Open Sans', Arial, sans-serif;font-size:16px;line-height:24px=
+;color:#555555; font-weight:bold;">Book business</td> </tr> <tr> <td align=
+=3D"left" valign=3D"top" class=3D"em_hide" style=3D"font-family:'Avenir', '=
+Open Sans', Arial, sans-serif;font-size:16px;line-height:24px;color:#555555=
+;">Pet parents will contact you via the site if they think you=E2=80=99d be=
+ a good fit to care for their pet. Once you both decide it=E2=80=99s a matc=
+h, congrats=E2=80=94you=E2=80=99ve just made a booking! Your payment is con=
+venient, safe, secure and available online.</td> </tr> </tbody> </table> </=
+td> </tr> </tbody> </table> </td> </tr> <!--[if !mso]><!--> <tr> <td height=
+=3D"0"> <div class=3D"em_hide_desktop" style=3D"display:none;width:0;overfl=
+ow:hidden;max-height:0!important"> <table width=3D"100%" border=3D"0" cells=
+pacing=3D"0" cellpadding=3D"0" align=3D"center"> <tbody> <tr> <td height=3D=
+"15" style=3D"font-size:1px; line-height:1px;"></td> </tr> <tr> <td align=
+=3D"left" valign=3D"top" style=3D"font-family:'Avenir', 'Open Sans', Arial,=
+ sans-serif;font-size:16px;line-height:24px;color:#555555; padding:0px 30px=
+;">Pet parents will contact you via the site if they think you=E2=80=99d be=
+ a good fit to care for their pet. Once you both decide it=E2=80=99s a matc=
+h, congrats=E2=80=94you=E2=80=99ve just made a booking! Your payment is con=
+venient, safe, secure and available online.</td> </tr> <tr> <td height=3D"2=
+5" style=3D"font-size:1px; line-height:1px;"></td> </tr> </tbody> </table> =
+</div> </td> </tr> <!--<![endif]--> </tbody> </table> </td> </tr> <tr> <td =
+height=3D"22" style=3D"line-height:0px;font-size:0px;"></td> </tr> <tr> <td=
+ align=3D"left" valign=3D"top" class=3D"em_aside1" style=3D"font-family:'Av=
+enir', 'Open Sans', Arial, sans-serif;font-size:16px;line-height:24px;color=
+:#555555;">Sound good=3F Get started by finishing your profile and get read=
+y for business.</td> </tr> <tr> <td height=3D"20" style=3D"font-size:1px; l=
+ine-height:1px;"></td> </tr> <!-- Button --> <tr> <td align=3D"center" vali=
+gn=3D"top"> <table width=3D"156" border=3D"0" cellspacing=3D"0" cellpadding=
+=3D"0" align=3D"center" style=3D"width:156px;"> <tbody> <tr> <td align=3D"c=
+enter" height=3D"45" valign=3D"middle" bgcolor=3D"#00BD70" style=3D"backgro=
+und-color:#00BD70;border-radius:4px;color:#ffffff;font-family:'Avenir', 'Op=
+en sans', Arial, sans-serif;font-size:14px;font-weight:bold;text-align:cent=
+er;text-decoration:none;width:156px; height:45px;"><a style=3D"color:#fffff=
+f;display:block;line-height:45px;text-decoration:none;" target=3D"_blank" h=
+ref=3D"https://links.rover.com/u/click=3F_t=3D8c2eaae8d6cb4882a21332c885701=
+eba&_m=3Db77fa62212a14196b0752b0c757346b3&_e=3DgYiUsovRtH3DZ8Fc_Q62B8q7bGm9=
+ugrtodkJ59svS81ksnSpBzGdHjC__qqSU7HFEhXaaBgospNhxp6JIOek_VyUMk7yi1o11euukDb=
+_AH3y8ApDwM9sABq9lBwsZol8brbABn6Zh7dZYe_myAFZ7K7DNMU2BpdNv9Qv0P28tOGBusK6SW=
+dL6wKP8QTs5WP6y2OmzmLMull0vRttn2OtUSMtCcV1iuveDeBmmy-FjxA2PMdlZo0fSq31G9oPt=
+51-uoJdgBYrJeQTSTjmJj1z0DrGEUb8zueximBXcQRikaspV_adrvcIO9gO8oCJL2MKfANEiKEv=
+G6lhkCjTphrwImBWbrwD8X7bB-upxcSReQKxkKXA-yFqqnw4iUinj0oUm5u44Wh9G_qwhMth6H0=
+sNw%3D%3D">Finish your profile</a></td> </tr> </tbody> </table> </td> </tr>=
+ <!-- END Button --> <tr> <td height=3D"50" class=3D"em_h30" style=3D"font-=
+size:1px; line-height:1px;"></td> </tr> </tbody> </table> </td> <td class=
+=3D"em_hide" width=3D"30"></td> </tr> </tbody> </table> </td> </tr> <!--=3D=
+=3D=3D //SECTION 1=3D=3D=3D --> </tbody> </table> </td> </tr> <!--=3D=3D=3D=
+ //BODY SECTION=3D=3D=3D --> <tr> <td height=3D"16" class=3D"em_hide" style=
+=3D"line-height:0px;font-size:0px;"></td> </tr> <!--=3D=3D=3D FOOTER SECTIO=
+N=3D=3D=3D --> <tr> <td> <table border=3D"0" cellpadding=3D"0" cellspacing=
+=3D"0" width=3D"100%"> <tbody> <tr> <td width=3D"20"></td> <td><!-- =3D=3D =
+Footer Section=3D=3D --> <table class=3D"em_full_wrap em_bg_main" width=3D"=
+100%" cellspacing=3D"0" cellpadding=3D"0" border=3D"0" bgcolor=3D"#f2f2f2">=
+ <tbody> <tr> <td valign=3D"top" align=3D"center"> <table class=3D"em_main_=
+table em_black" style=3D"width:640px;table-layout:fixed;" width=3D"640" cel=
+lspacing=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center"> <tbody> <tr=
+> <td style=3D"width:20px;" class=3D"em_side20" width=3D"20"> </td> <td val=
+ign=3D"top" align=3D"center"> <table width=3D"100%" cellspacing=3D"0" cellp=
+adding=3D"0" border=3D"0" align=3D"center"> <tbody> <tr> <td style=3D"heigh=
+t:22px; font-size:0px; line-height:0px;" class=3D"em_h30" height=3D"22"> </=
+td> </tr> <tr> <td class=3D"em_grey em_dm_txt_white" style=3D"font-family:'=
+Helvetica', Arial, sans-serif; font-size:10px; line-height:15px; color:#404=
+347;" valign=3D"top" align=3D"center">Please add <span style=3D"text-decora=
+tion:underline; color:#404347;"><a style=3D"text-decoration:underline; colo=
+r:#404347;" href=3D"mailto:rover@e4.rover.com">rover@e4.rover.com</a></span=
+> to your address book to make sure our emails are delivered to your inbox.=
+ <br/> <br/> Rover is an online marketplace that connects pet parents and l=
+ocal pet care providers. Pet care providers are neither employed nor endors=
+ed by&nbsp;Rover. <br/> <br/> <span class=3D"em_grey em_dm_txt_white" style=
+=3D"text-decoration:none; color:#404347;"><a style=3D"text-decoration:none;=
+ color:#404347;" href=3D"https://links.rover.com/u/click=3F_t=3D8c2eaae8d6c=
+b4882a21332c885701eba&_m=3Db77fa62212a14196b0752b0c757346b3&_e=3DgYiUsovRtH=
+3DZ8Fc_Q62B-3L8dNonkeQWGnU3mL3t_kdACbDzwSuIwNaCEYOcs1x3jaugv3-5PhS7QW4NHDPj=
+_z0lYwO9vww8rbCq8REtsbdYlAZoDsWaztZAy263VEaEa8tJ6sk_Cu6qYdrTRbMj6Q5tQm_Cmtm=
+IyZ-Klfa6CMnWl4-QWPQJjMvO3ctg7yjWT6OFSoyESjbJ0P74hjmagH_fDoYsM4apwuSFcNFRXq=
+xp_9Frf05jO6bS8RKsQc_zGOhMW4KmybvRpVeJ4_SWSYxWn4EiJJdX2S6FXMnS3hDDomgIfGDl3=
+nk49nzOlsRIoxN8Y5h5ZleqTwFnXapt0hjsfhCzKGU5Y0HpNmfzbD41rZ6KHXLQhp8G-yG4GbW"=
+>A Place for Rover, Inc.</a> <br/> <a class=3D"em_grey em_dm_txt_white" sty=
+le=3D"text-decoration:none; color:#404347;" target=3D"_blank" href=3D"https=
+://links.rover.com/u/click=3F_t=3D8c2eaae8d6cb4882a21332c885701eba&_m=3Db77=
+fa62212a14196b0752b0c757346b3&_e=3DgYiUsovRtH3DZ8Fc_Q62B1ZsexD8D-OTXmnsBM7X=
+rXN3nkc-M6N4-1nfUf2cB6_aJX41kivKzPs6-3IHdRwhxL6xNnO5nsxjZ0nSQnCYg_MllQLrzrK=
+JMF5K2lrI_Eduyh18bSgv5tQEftpp6H7LAnqT6swTmmY25_tON1g36S9T0qSH3-EpSFQJ1ysOFC=
+GyDmATUeP15gRrvokfIP454p16hPPmnKlrNEwrpG7v0P6NTBuW4077ivgVRMkXuprmEKgZS3-nu=
+RkV5NLx4nHnO5g808Iuk_NkToeGvERBWkWxK78jkCB07cq_1TW0tnyRlhUAmaEts1YcELpvNc3B=
+byRPi_DoK_NINzz3nrcCPwm1Ps2M87jMiynPLz3qrw7L">Rover.com</a> <span class=3D"=
+em_grey em_dm_txt_white" style=3D"text-decoration:none; color:#404347;">| 7=
+11 Capitol Way S., Suite 204 | Olympia, Washington 98501 | USA</span></span=
+> </td> </tr> <tr> <td class=3D"em_grey em_dm_txt_white" style=3D"font-fami=
+ly:'Helvetica', Arial, sans-serif; font-size:10px; line-height:15px; color:=
+#404347;" valign=3D"top" align=3D"center"><span style=3D"text-decoration:un=
+derline; color:#404347;"><a style=3D"text-decoration:underline; color:#4043=
+47;" target=3D"_blank" href=3D"https://links.rover.com/e/eh=3F_t=3D8c2eaae8=
+d6cb4882a21332c885701eba&_m=3Db77fa62212a14196b0752b0c757346b3&_e=3Dkkv4Rh4=
+qMp2I1ykHt1cN46dhTnqg7XGFk8Yt_Iy1Sbb69taL95pHhfwoZRumJA8cqmL_SlxzUbw065noPD=
+5oaYEGWUtjfFhhYVQFKdKdEqtkwxZHDUJdcPlw7_VnDdGn5AwvxenaggsLALfgED7rVhZ9P61Hx=
+SUZsIeg93Dokzp3wmVLjFoXZdkmuEPkfhuhFUkm9z-q1FXOm-YEvRqHk9bcCQGC7KaIdfvmR_aw=
+B7eD7H6vHtzzUx07aldbEVf7vDl2aLbHMz7r4xY8n0hMBxNh2hYI4CiQAumgxSLkkYF3ilixfB4=
+M1bKNfj-E-QY2qmSLgJF_0Pg4GAd356c6lD0FkxFjge1Ie_3MjoCy6tTuYFvaF-eVnOjGLVNRmH=
+awIV70o7nqTGxID-P2ya4uYoMwqttI__e6HaE0fGyUHXYZvzjjGJNb5FLd9kshqYismr07-kLiG=
+4YBsGqpl1njz_5_4cCSPaDbnain_vx_0KQ%3D">Unsubscribe</a></span>&nbsp;&nbsp;&n=
+bsp;&nbsp;&nbsp;<span style=3D"text-decoration:underline; color:#404347;"><=
+a style=3D"text-decoration:underline; color:#404347;" target=3D"_blank" hre=
+f=3D"https://links.rover.com/u/click=3F_t=3D8c2eaae8d6cb4882a21332c885701eb=
+a&_m=3Db77fa62212a14196b0752b0c757346b3&_e=3DgYiUsovRtH3DZ8Fc_Q62B151DrvICw=
+_lEfV4U_6qaM59qiLbx-J84aS7WTXZh-EbwOJ3Ia21mQtss8P9cHy2eH-3r0zayTPQFe8L7nntK=
+v2kX7MPR5Xjh-WLjY_Yr6sEpIkL2Gel3-Zb10HB3yfMYII4QlPGujNSv4bWqwTpjhEUDrd5f1TZ=
+JziNFN4Nna9HTiuqpnOVMlwApVWP0XyYYczw2ONpTn9Ij3_hsRs7nlPNAFWnZfULIjgKRXT7260=
+z8op7LySDFuOINoAij3YKNS2CcqurXk0DHPcDeRlYyEeg6pbhMaX0Usvecv7duspczYhd-4azSO=
+Y3RoekXpFKg2YxOrmaGGpMoxjaedS4YGDq3s7SPbtCjgIvsYw4XYqCdAX0dWHCB4Y8O12lwEC6k=
+Q%3D%3D">Privacy Statement</a></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span st=
+yle=3D"text-decoration:underline; color:#404347;"><a style=3D"text-decorati=
+on:underline; color:#404347;" target=3D"_blank" href=3D"https://links.rover=
+.com/u/click=3F_t=3D8c2eaae8d6cb4882a21332c885701eba&_m=3Db77fa62212a14196=
+b0752b0c757346b3&_e=3DgYiUsovRtH3DZ8Fc_Q62B-ldKROOJivMzXQKpP1obxrF3ANlHYmqw=
+S2Z72rxDLrTMaaDvkewUkG6lF8jzZQHOCLovDihuMFfD5MEBex66x-vidmdSbhogt-tNCQMEIpw=
+osSwIJbJOsiJVZop_vmJ-ebIOq2om6faV6HTaJoL2N7x9hUN2jpBNNX4X0VGjNnqvLNOI7xMIQx=
+rrnGhlswPhvhrtLIfjMGTA7SHyC1Im0V0nIU_64QYNh3YPF9-BpVPTeKHexkJW89-TEA9SXfEwf=
+datSNKXpZh0wSkYaDP_uEn6Ng7P57rFUnHl4SL7DggvpbSZZwEu6XTKMKy197lCXOCuZjfTsPeh=
+rxj0t9KfMS6AqTLno1dGbyTN3eRBnNB3S8rA9UbFNHi8XlewEWpWg%3D%3D">Contact Us</a>=
+</span> </td> </tr> <tr> <td style=3D"height:45px; font-size:0px; line-heig=
+ht:0px;" class=3D"em_h30" height=3D"45"> </td> </tr> </tbody> </table> </td=
+> <td style=3D"width:20px;" class=3D"em_side20" width=3D"20"> </td> </tr> <=
+/tbody> </table> </td> </tr> </tbody> </table> <!-- =3D=3D //Footer Section=
+=3D=3D --></td> <td width=3D"20"></td> </tr> </tbody> </table> </td> </tr> =
+</tbody> </table> </td> <td class=3D"em_hide" width=3D"10"></td> </tr> </tb=
+ody> </table> </td> </tr> </tbody> </table> <!--Template Body End--><!--Ful=
+l width table End--> <div style=3D"display:none; white-space:nowrap; font:2=
+0px courier; color:#f2f2f2;background-color:#f2f2f2;">&nbsp; &nbsp; &nbsp; =
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp=
+; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</div> <custom name=3D"opencounter" typ=
+e=3D"tracking"> </custom>=0D=0A<img border=3D"0" width=3D"1" height=3D"1" a=
+lt=3D"" src=3D"http://tracksp.rover.com/q/VrCcXKhkUQL104FRpbMmHg~~/AARGbBA~=
+/hLgHgJT-30HfSC55h9T33hBZ3ZBGfldBVL4Z-HEf5uSuD-6xgqVDf0KFQSKPcD-0J2BJFyAaeZ=
+jvCufGp8To6A~~">=0D=0A</body> </html>
+--_----xyn8TV31x1scPDHT/j/EJw===_4F/29-23876-D4396786--

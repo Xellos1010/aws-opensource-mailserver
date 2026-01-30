@@ -1,0 +1,165 @@
+Return-Path: <support-reply=stripe.com__0-40r21saw05o3bo.ui49d2d2so1j2rn6@mjoi37pewbebvmtd.9qiepda.5e-11viyea2.usa686.bnc.salesforce.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id RMXMJkh5t2hdGAAAQCw0vA
+	(envelope-from <support-reply=stripe.com__0-40r21saw05o3bo.ui49d2d2so1j2rn6@mjoi37pewbebvmtd.9qiepda.5e-11viyea2.usa686.bnc.salesforce.com>)
+	for <admin@emcnotary.com>; Tue, 02 Sep 2025 23:10:00 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.2 required=5.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,DMARC_PASS,HELO_STATIC_HOST,HTML_MESSAGE,
+	RCVD_IN_DNSWL_NONE,RCVD_IN_MSPIKE_H4,RCVD_IN_MSPIKE_WL,SPF_HELO_PASS,
+	SPF_PASS,TO_IN_SUBJ autolearn=ham autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 SPF_PASS SPF check passed
+	* -0.1 DMARC_PASS DMARC check passed
+	* -0.0 SPF_HELO_PASS SPF: HELO matches SPF record
+	*  0.0 RCVD_IN_MSPIKE_H4 RBL: Very Good reputation (+4)
+	*      [52.43.135.108 listed in wl.mailspike.net]
+	* -0.0 RCVD_IN_DNSWL_NONE RBL: Sender listed at
+	*      https://www.dnswl.org/, no trust
+	*      [52.43.135.108 listed in list.dnswl.org]
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	* -0.0 HELO_STATIC_HOST Relay HELO'd using static hostname
+	*  0.0 RCVD_IN_MSPIKE_WL Mailspike good senders
+	*  0.1 TO_IN_SUBJ To address is in Subject
+	* -0.0 DKIMWL_WL_HIGH DKIMwl.org - High trust sender
+X-Spam-Score: -0.2
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=reject dis=none) header.from=stripe.com
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=mjoi37pewbebvmtd.9qiepda.5e-11viyea2.usa686.bnc.salesforce.com
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (1024-bit key; unprotected) header.d=stripe.com header.i=@stripe.com header.a=rsa-sha256 header.s=salesforce-support-stripe-alt header.b=A/a7+Bhn;
+	dkim-atps=neutral
+X-Greylist: delayed 252 seconds by postgrey-1.36 at box.emcnotary.com; Tue, 02 Sep 2025 23:10:00 UTC
+Received: from smtp-06a7e6ac80a36ab33.core2.sfdc-lywfpd.mta.salesforce.com (smtp-06a7e6ac80a36ab33.core2.sfdc-lywfpd.mta.salesforce.com [52.43.135.108])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id 4D7923F63E
+	for <admin@emcnotary.com>; Tue,  2 Sep 2025 23:10:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=stripe.com;
+	s=salesforce-support-stripe-alt; t=1756854347;
+	bh=Caggd0jeJ9t3W1yqi9OJ597kTQGap5kHqwrcBhk3OxI=;
+	h=Date:From:To:Subject:MIME-Version:Content-Type;
+	b=A/a7+BhnDxwON5WPfjjvKdjs9MCPUf+/JQ2HJY0e3W3DaqtkRSvF36zfeZt4Q/7Ku
+	 cOJhlt1Ftr/9j9jvId152HBI3/hTVyl+9nquvjgijQ+CCfOJHmJmMv50se5kcUIozB
+	 6gQ+QZNEFlyQqc0pzCOEr1vRip0vRsBfJ1eY20QI=
+Received: from [127.0.0.1] ([127.0.0.1:34582] helo=eaas-15.eaas.emailinfra.svc.cluster.local)
+	by mx1.core2.sfdc-lywfpd.mta.salesforce.com (envelope-from <support-reply=stripe.com__0-40r21saw05o3bo.ui49d2d2so1j2rn6@mjoi37pewbebvmtd.9qiepda.5e-11viyea2.usa686.bnc.salesforce.com>)
+	(ecelerity 4.7.0.20111 r(msys-ecelerity:tags/4.7.0-ga^0)) with ESMTP
+	id CD/1A-00821-B4877B86; Tue, 02 Sep 2025 23:05:47 +0000
+Received: from 127.0.0.1 (localhost. [127.0.0.1]) by eaas-15 (EaaS) id
+  <d04IF000000000000000000000000000000000000000000000T1ZHHL00NmeTjqbZSfSbchcpZGAF-A@sfdc.net>
+  for <"admin@emcnotary.com" <admin@emcnotary.com>> Tue, 2 Sep 2025 23:05:47
+  GMT (GMT)
+Date: Tue, 2 Sep 2025 23:05:47 +0000 (GMT)
+From: Stripe Support <support-reply@stripe.com>
+To: "admin@emcnotary.com" <admin@emcnotary.com>
+Message-ID: <d04IF000000000000000000000000000000000000000000000T1ZHHL00NmeTjqbZSfSbchcpZGAF-A@sfdc.net>
+Subject: Request-a-call from admin@emcnotary.com
+MIME-Version: 1.0
+Content-Type: multipart/mixed; 
+	boundary="----=_Part_19017_650805252.1756854347479"
+X-Priority: 3
+X-SFDC-LK: 00D5e0000011VIY
+X-SFDC-User: 0058W00000EePud
+X-Sender: postmaster@salesforce.com
+X-mail_abuse_inquiries: http://www.salesforce.com/company/abuse.jsp
+X-SFDC-TLS-NoRelay: 1
+X-SFDC-CORRELATION-ID: 00007enlw7csa5q7
+X-SFDC-Binding: 1WrIRBV94myi25uB
+X-SFDC-App: coreapp
+X-SFDC-EmailCategory: apiSingleMailViaApex
+X-SFDC-EntityId: 500VN00000VG1mJ
+X-SFDC-Interface: internal
+
+------=_Part_19017_650805252.1756854347479
+Content-Type: multipart/alternative; 
+	boundary="----=_Part_19016_326311306.1756854347479"
+
+------=_Part_19016_326311306.1756854347479
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+Hi Evan,=C2=A0=C2=A0Thanks for reaching out to Stripe. I know how important=
+ it is for you to receive your funds promptly.=C2=A0
+As we have discussed, I can see that the payout of $203.50 USD should have =
+been posted on 03 Sep 2025, though banks may take a few days to actually po=
+st the funds to the bank account.
+
+If you cannot see the payout posted on your bank account within 5 days of t=
+hat date I confirmed above, the next best step would be to reach out to you=
+r bank about the payout. You'll want to provide the amount and date of the =
+payout, and you can provide this trace ID as well:
+
+Payout Trace ID: 111000023916895
+
+If the bank representative is not able to find the payout with the provided=
+ trace number, you may want to contact the bank's transfer or treasury depa=
+rtment to help locate it.
+
+You can learn more about frequently asked questions (FAQs) about=C2=A0payou=
+ts=C2=A0here:=C2=A0
+
+https://support.stripe.com/questions/payouts-faq
+=C2=A0If after waiting and consulting the bank and yet the bank is still un=
+able to locate your payout, could you ask your bank for reference numbers a=
+nd/or a written statement that your payout hasn't arrived? If your bank sen=
+t the funds back to us, they should have a record of this. All extra inform=
+ation would help us trace the funds on our end as it currently shows in our=
+ systems that your payout was paid to your bank.=C2=A0Once obtained, you ma=
+y upload them through the link below:https://support.stripe.com/filepickup/=
+ut_live_x8ZWpnX94v94xEaLs7Eyyf8=C2=A0=C2=A0I'll continue to monitor your is=
+sue in case you have any further questions about the above. Feel free to re=
+ply if you need any further assistance.=C2=A0If you need me to call you bac=
+k, let me know your preferred date and time along with your phone number so=
+ I can assist you in real time.=C2=A0Warmly,=C2=A0Jeremy=C2=A0=C2=A0=C2=A0
+------=_Part_19016_326311306.1756854347479
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<html><p style=3D'margin: 0'>Hi Evan,&nbsp;</p><p style=3D'margin: 0'>&nbsp=
+;</p><p style=3D'margin: 0'>Thanks for reaching out to Stripe. I know how i=
+mportant it is for you to receive your funds promptly.&nbsp;</p><p style=3D=
+'margin: 0'><br>As we have discussed, I can see that the payout of <strong>=
+$203.50 USD</strong> should have been posted on <strong>03 Sep 2025</strong=
+>, though banks may take a few days to actually post the funds to the bank =
+account.<br><br>If you cannot see the payout posted on your bank account wi=
+thin <strong>5 days of that date</strong> I confirmed above, the next best =
+step would be to reach out to your bank about the payout. You'll want to pr=
+ovide the amount and date of the payout, and you can provide this trace ID =
+as well:<br><br><strong>Payout Trace ID: 111000023916895</strong><br><br>If=
+ the bank representative is not able to find the payout with the provided t=
+race number, you may want to contact the bank's transfer or treasury depart=
+ment to help locate it.<br><br>You can learn more about frequently asked qu=
+estions (FAQs) about&nbsp;payouts&nbsp;here:&nbsp;<br><br><a href=3D"https:=
+//support.stripe.com/questions/payouts-faq">https://support.stripe.com/ques=
+tions/payouts-faq</a><br>&nbsp;</p><p style=3D'margin: 0'>If after waiting =
+and consulting the bank and yet the bank is still unable to locate your pay=
+out, could you ask your bank for <i><strong>reference numbers and/or a writ=
+ten statement </strong></i>that your payout hasn't arrived? If your bank se=
+nt the funds back to us, they should have a record of this. All extra infor=
+mation would help us trace the funds on our end as it currently shows in ou=
+r systems that your payout was paid to your bank.</p><p style=3D'margin: 0'=
+>&nbsp;</p><p style=3D'margin: 0'>Once obtained, you may upload them throug=
+h the link below:</p><p style=3D'margin: 0'><a href=3D"https://support.stri=
+pe.com/filepickup/ut_live_x8ZWpnX94v94xEaLs7Eyyf8">https://support.stripe.c=
+om/filepickup/ut_live_x8ZWpnX94v94xEaLs7Eyyf8</a>&nbsp;</p><p style=3D'marg=
+in: 0'>&nbsp;</p><p style=3D'margin: 0'>I'll continue to monitor your issue=
+ in case you have any further questions about the above. Feel free to reply=
+ if you need any further assistance.</p><p style=3D'margin: 0'>&nbsp;</p><p=
+ style=3D'margin: 0'>If you need me to call you back, let me know your pref=
+erred date and time along with your phone number so I can assist you in rea=
+l time.</p><p style=3D'margin: 0'>&nbsp;</p><p style=3D'margin: 0'>Warmly,&=
+nbsp;</p><p style=3D'margin: 0'>Jeremy</p><p style=3D'margin: 0'>&nbsp;</p>=
+<p style=3D'margin: 0'>&nbsp;</p><p style=3D'margin: 0'>&nbsp;</p><br><br><=
+br></html>
+------=_Part_19016_326311306.1756854347479--
+
+------=_Part_19017_650805252.1756854347479--

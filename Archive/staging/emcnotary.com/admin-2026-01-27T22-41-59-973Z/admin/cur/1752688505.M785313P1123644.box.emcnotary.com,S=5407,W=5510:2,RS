@@ -1,0 +1,103 @@
+Return-Path: <npexpresstrust@gmail.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id UuM7Gnjnd2g8JREAQCw0vA
+	(envelope-from <npexpresstrust@gmail.com>)
+	for <admin@emcnotary.com>; Wed, 16 Jul 2025 17:55:04 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.3 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,FREEMAIL_FROM,HTML_MESSAGE,RCVD_IN_DNSWL_NONE,
+	RCVD_IN_MSPIKE_H2,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 DMARC_PASS DMARC check passed
+	* -0.1 SPF_PASS SPF check passed
+	*  0.0 FREEMAIL_FROM Sender email is commonly abused enduser mail
+	*      provider
+	*      [npexpresstrust[at]gmail.com]
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	*  0.0 RCVD_IN_MSPIKE_H2 RBL: Average reputation (+2)
+	*      [209.85.166.52 listed in wl.mailspike.net]
+	* -0.0 RCVD_IN_DNSWL_NONE RBL: Sender listed at
+	*      https://www.dnswl.org/, no trust
+	*      [209.85.166.52 listed in list.dnswl.org]
+X-Spam-Score: -0.3
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (2048-bit key; unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20230601 header.b=OwaXFeKb;
+	dkim-atps=neutral
+Received: from mail-io1-f52.google.com (mail-io1-f52.google.com [209.85.166.52])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id 2AAF8413B4
+	for <admin@emcnotary.com>; Wed, 16 Jul 2025 17:55:03 +0000 (UTC)
+Received: by mail-io1-f52.google.com with SMTP id ca18e2360f4ac-86d0c598433so3674039f.3
+        for <admin@emcnotary.com>; Wed, 16 Jul 2025 10:55:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1752688502; x=1753293302; darn=emcnotary.com;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=NLJDuGGZgbTI4brwiNANUwKV01Cu6+5AtntGX3C6YMI=;
+        b=OwaXFeKb/IdggdMIcfWHrmHhrnxI4sQtZD6WbOq4sqM2W8ytaG3dswI4DasUPB6fZw
+         YG/sLh5XymYSrnnQz/PItn8RlVeU8nG+GlhZAXnkFGDUNmrDubdHVzo6ns+2yZtINSpc
+         jK8up/Zs9kYkpaZvmYieqi2cKuWXgrWI8DkWVvjXa9sDSJX27MOYDsIH2eXgsO6zTHPC
+         7q9DB92i9q9z+Ug0mz1sGZcwFY3ZOu9umbRaBjQa/ztA6b0xAlGBz4AsdmvFe9LarY/y
+         pabav4nXGY3HHV4AShrc/2Q0P3RMajNedEEwQ3aMl1oiw7NS/Hxw3piC3WIOLVgYUS/U
+         seSg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1752688502; x=1753293302;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=NLJDuGGZgbTI4brwiNANUwKV01Cu6+5AtntGX3C6YMI=;
+        b=jvXK7ovldjghSkFEMIwYD9P8dXubW0wxXgGhpwoGyI/6FCeAenOQnG7alacrzldtxg
+         5HV5aotoQKJY8s+KTdJLTMhoFaezeSl9h+cJFSeQ88S/XEafeOrutkuH3nBeCCGzInQJ
+         PqgWU8Z5moVoYxFLTD1piTg4Et9LIgz+/LMJ8eE8QI3OIXTDzkGiYVhYjncC7Ow/P7+9
+         4BKfZ7Ft7XwCDz7P6kcMIEKCnzETcKbgY8Yp2K+Ec6wdSz4k6xPOKnWav0n2cRImABQu
+         F1Fx43BTGsPVEkfNxIpVdt9tlAN6IB+xMskD9JsTDr+REaOiTV0BG/jIVICKm/wR9MRK
+         W3nA==
+X-Gm-Message-State: AOJu0YzAMGzwKnXA0L5UQ9yzTUpRPmL3+/wwmLVZpi2P0zZ9eKuW+SW1
+	BoPv2q2zkbzUJqgj2dv/HYQlF+zEaiZ0CZiXRZpufX9//CfoBXitukLViyubsLaxLv5Pyig3jk2
+	DWaJGXYbrSbjz95yDCXEWkAwhN9Yp9YY4RQ==
+X-Gm-Gg: ASbGncsUa9WlSNLOqGIiaWPR5ZomXpG/lHD6B+c5UYsFBmkmo6zYzEt0G2gE8b3rBh4
+	Sx8XhcxPYH7vFCtbaxGJGD86sjFR7XZAMylknsNCU9vja3Ag7j37LP0if3WAMW1oBss3OsVif4c
+	AtmIadFXlmCYzuVFZn6fi5ISk/9n/o3vBIj1BL9HWfuAhHgCOdmLUvlFVTJb6754uVwXsHtX7Zm
+	MCBpvXhU5LMb64GxtC66hSyfLZ02r+pqIhrOmDkMKMQNKZ/wCZ03MNI
+X-Google-Smtp-Source: AGHT+IEyBdR1jRrXFhiTCisIPPyB+yxch5GF3c9Q0+HqaXWF3xInAuo7RimEEpvNxisBUL/gh0+6v7xeGZcECmDk5tc=
+X-Received: by 2002:a05:6602:6016:b0:875:bc7e:26ce with SMTP id
+ ca18e2360f4ac-879c2519d3amr359392539f.0.1752688502452; Wed, 16 Jul 2025
+ 10:55:02 -0700 (PDT)
+MIME-Version: 1.0
+From: NOVA PERSONA <npexpresstrust@gmail.com>
+Date: Wed, 16 Jul 2025 13:54:51 -0400
+X-Gm-Features: Ac12FXyNdcDKhmrW2ZSbYAh8F4cs0s_ltJKuo6G2d-Y0JppZrRhb8IMoePc8NgA
+Message-ID: <CAMc2w5o1rYhaHm_f-L7x184foXh6deDXERmyK+5LO9Na_tSbXg@mail.gmail.com>
+Subject: Notary
+To: admin@emcnotary.com
+Content-Type: multipart/alternative; boundary="0000000000009736d9063a0f9735"
+
+--0000000000009736d9063a0f9735
+Content-Type: text/plain; charset="UTF-8"
+
+Hi Evan,
+
+Nice to meet you. We're experiencing technical difficulties. Hopefully, we
+can meet later.
+
+Best
+
+--0000000000009736d9063a0f9735
+Content-Type: text/html; charset="UTF-8"
+
+<div dir="ltr">Hi Evan,<div><br></div><div>Nice to meet you. We&#39;re experiencing technical difficulties. Hopefully, we can meet later.</div><div><br></div><div>Best</div><div><br></div></div>
+
+--0000000000009736d9063a0f9735--

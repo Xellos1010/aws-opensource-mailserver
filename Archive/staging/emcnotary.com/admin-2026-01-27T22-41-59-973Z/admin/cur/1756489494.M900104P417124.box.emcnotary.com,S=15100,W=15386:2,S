@@ -1,0 +1,286 @@
+Return-Path: <bounces+ad6f70f312c99800@bluenotary.on.crisp.email>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id CWPzDxXnsWhkXQYAQCw0vA
+	(envelope-from <bounces+ad6f70f312c99800@bluenotary.on.crisp.email>)
+	for <admin@emcnotary.com>; Fri, 29 Aug 2025 17:44:53 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.3 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,HTML_MESSAGE,RCVD_IN_MSPIKE_H5,
+	RCVD_IN_MSPIKE_WL,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 SPF_PASS SPF check passed
+	* -0.1 DMARC_PASS DMARC check passed
+	*  0.0 RCVD_IN_MSPIKE_H5 RBL: Excellent reputation (+5)
+	*      [93.177.84.76 listed in wl.mailspike.net]
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	*  0.0 RCVD_IN_MSPIKE_WL Mailspike good senders
+X-Spam-Score: -0.3
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=quarantine dis=none) header.from=bluenotary.on.crisp.email
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=bluenotary.on.crisp.email
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (2048-bit key; unprotected) header.d=bluenotary.on.crisp.email header.i=@bluenotary.on.crisp.email header.a=rsa-sha256 header.s=crisp header.b=vtJKYyAs;
+	dkim=pass (2048-bit key; secure) header.d=crisp.email header.i=@crisp.email header.a=rsa-sha256 header.s=platform header.b=Xc3rLjtG;
+	dkim-atps=neutral
+Received: from mailer-1x.outbound.crisp.email (mailer-1x.outbound.crisp.email [93.177.84.76])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id 49DDC3F709
+	for <admin@emcnotary.com>; Fri, 29 Aug 2025 17:44:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=bluenotary.on.crisp.email; s=crisp; t=1756489490;
+	bh=YvR9LjL9TdUxbNPSwzLBAMojbkcogMCAlblt/FzCU5k=;
+	h=From:To:Reply-To:Subject:Date:From;
+	b=vtJKYyAsBs8Y/AUH2YEBWZb1NGIjJKHypj/1YWFPdGsE2gbsnb0LukeV7m2hcaJf/
+	 15lyOBLLCfd1RYvZL6LNN1v+LRd+GRCsHmpcqfVbQmh0CRWvAGDO8ZFUuiEaHc4NWs
+	 tON6FFmzK8lti2WSDjCsC/ruol6MN2eM2JkjVU8uoaeG0WUOP6gWDy9leUIt6+L4Ig
+	 nh00WDsOfLpXN5FIQRvBe2+dv35Ih2MEteI0Xe0aC9YDmaxGTE2S0XlSvTBPUlNdqt
+	 SvaQyMHT6FMkdoNcF34txyp3ntunVviByUXjDFl6+J9fj75sWwyHuB5jyKQLnRg1TM
+	 jti/rZHAEMw8g==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=crisp.email;
+	s=platform; t=1756489490;
+	bh=YvR9LjL9TdUxbNPSwzLBAMojbkcogMCAlblt/FzCU5k=;
+	h=From:To:Reply-To:Subject:Date:From;
+	b=Xc3rLjtGP7+l6LPmNq3saJi+qCMYkvYsdv7vf9Xv5cunn8aZCjw6ytrL/H014Lu0L
+	 djrDvLsctMKeDwM66kqkRia9F4mH7suioaFXm0gPTJ7TR15R03J4cmOnFP+d+PkyQP
+	 t8SprrWX8iA07c7BFzcfZ6zMQYQP6x/7rjE/2LYYu8WjNU96J6WHS4UzHA4C2k7dJf
+	 FajxihVZR4hnQf5oXo1t52hIFc2UFQFPkh8Ezgcey/zZMJ4HMFcuXGp9oCcMT4/94O
+	 fQTFuskPxYJHWtBaN0kL9i3XIYerXpPdpyV/haHzvZHp+2702YXI213ocPeYL4PAu5
+	 4kGX+SwvvfSxw==
+X-Universally-Unique-Identifier: 9b335d26-c883-4621-8cf5-f3cbbdc3aa94
+MIME-Version: 1.0 (Crisp Mailer)
+X-Report-Abuse: Please report spam or abuse to abuse@crisp.chat
+X-Auto-Response-Suppress: All
+X-Crisp-Shard-Type: transactional
+X-Crisp-Website-ID: f5f3357e-d73e-4c9b-93c3-9d7932c502e3
+Feedback-ID:
+ session:f5f3357e-d73e-4c9b-93c3-9d7932c502e3:message_replies:CrispIM
+From: "Tzushein - BlueNotary" <tzushein@bluenotary.on.crisp.email>
+To: admin@emcnotary.com
+Reply-To: BlueNotary <s.3aca4747378a3400.i@bluenotary.on.crisp.email>
+Subject: The payout usually takes 48 hours after the session is complete,
+ you can chec...
+Message-ID:
+ <de3e2fdf-f3dc-32eb-6a17-7931d00fef88@bluenotary.on.crisp.email>
+Date: Fri, 29 Aug 2025 17:44:50 +0000
+Content-Type: multipart/alternative;
+ boundary="--_NmP-b49a1af0cb14d78d-Part_1"
+
+----_NmP-b49a1af0cb14d78d-Part_1
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+The payout usually takes 48 hours after the session is complete, you can =
+check
+your payout through your accounts. Can I have a screenshot as well of=
+ the
+receipt?
+
+On Fri, 29 Aug 2025 17:38:00 GMT Evan McCall wrote:
+> and I don't know if my invoice was cashed to my account or if I was paid =
+out
+from open calls
+
+On Fri, 29 Aug 2025 17:37:30 GMT Evan McCall wrote:
+> so I need to figure out a timeline and budget accordingly.
+
+On Fri, 29 Aug 2025 17:37:23 GMT Evan McCall wrote:
+> Is some instances Even if I have confirmation from the client and when I =
+click
+the invoice and click the pay option in the invoice it responsed with=
+ date and
+time the invoice was paid. Blue Notary charges me before the =
+invoice cash's to
+my account.=20
+I don't want to be in a position to have =
+an outstanding balance or compromise
+the integrity of my account
+
+On Fri, 29 Aug 2025 17:36:22 GMT Evan McCall wrote:
+> and for 4478B I will be charged for the session yes.
+I need to figure out when I get paid out so that I can cover the cost of =
+the
+session
+
+On Fri, 29 Aug 2025 17:35:40 GMT Evan McCall wrote:
+> Its just that the dashboard says all these invoices are open. For =
+Instance:
+1) If the Archive Session Feature doesn't delete an unpaid =
+invoice what is the
+SoP for removing this invoice.
+2) When an invoice is =
+paid when is it's state updated and how long does it take
+for me to get paid out?
+3) if there is a manual state edit required would I=
+ perform that or blue notary?
+4) would I need to log into stripe to manage =
+the payout cycle or to figure out
+an expectation of when to get paid out on=
+ invoices
+5) How do I see that an invoice was paid to my account and when
+
+On Fri, 29 Aug 2025 17:33:48 GMT Evan McCall wrote:
+> For the 129FC session I have the receipt as well:
+Paid on Aug 28, 2025
+Summary
+Topaul_hancock@me.com [paul_hancock@me.com]
+From Emcnotary
+Invoice #EGMBAAVN-0004
+Memo Charge for session #68b072bfcac09cafd3b129fc
+Items
+Notary Session Fee
+Qty 1
+$45.00
+Total due
+$45.00
+Amount paid
+$45.00
+Amount remaining
+$0.00
+
+On Fri, 29 Aug 2025 17:32:59 GMT Evan McCall wrote:
+> it hasn't processed or has it failed and stripe didn't update?
+
+It is a little confusing for me
+----_NmP-b49a1af0cb14d78d-Part_1
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" =
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html =
+xmlns=3D"http://www.w3.org/1999/xhtml" lang=3D"en" dir=3D"ltr"><head>
+
+<meta http-equiv=3D"Content-Type" content=3D"text/html; =
+charset=3DUTF-8"><meta name=3D"viewport" content=3D"width=3Ddevice-width, =
+initial-scale=3D1"><title>Crisp Email</title></head><body =
+style=3D"font-weight: 400;"><div dir=3D"auto" style=3D"font-size: 1em;">The=
+ payout usually takes 48 hours after the session is complete, you can check=
+ your payout through your accounts. Can I have a screenshot as well of the =
+receipt?</div><br><div><!--[if !plain]-->
+--<br><br><div><!--[if !mso]><!--=
+ --><img alt src=3D"https://bluenotary.on.crisp.email/image/avatar/operator=
+/e6f6c6ef-79c4-44fe-ad6a-fdc96b768f5f/92/?1755775242448" =
+style=3D"background-size: contain; background-repeat: no-repeat; =
+background-position: center; background-color: #EBEBEB; width: 2em; height:=
+ 2em; max-width: 30px; max-height: 30px; margin-right: .5em; =
+vertical-align: middle; display: inline-block; border-radius: 2em;"><!--<!=
+[endif]--><strong>Tzushein</strong><span> </span>from<span> </span><a =
+href=3D"https://bluenotary.us/" target=3D"_blank">BlueNotary</a>.=
+</div><br><div style=3D"margin-top: .75em; color: #7b7b7b; font-size: .=
+9em;"><div>Reply directly to this email, or go<span> </span><a =
+href=3D"https://bluenotary.on.crisp.email/go/chat/resume/?=
+target_url=3Dhttps%3A%2F%2Fapp.bluenotary.us%2Fsign-in&amp;session_id=3Dses=
+sion_d9fa54f9-6165-4773-9ce5-09b3eb4540e0" target=3D"_blank" =
+style=3D"color: #7b7b7b;"><strong>to chat</strong></a>.</div><div =
+style=3D"margin-top: .25em;"></div></div></div><!--[endif]--><div =
+style=3D"font-size: .95em; margin-top: 1em;"><br><div style=3D"color: =
+#6B095D; border-left: 1px solid #D0D0D0; margin: 0 .5em; padding: 0 .=
+6em;"><div>On Fri, 29 Aug 2025 17:38:00 GMT Evan McCall =
+wrote:</div><br><blockquote dir=3D"auto" style=3D"font-style: normal; =
+margin: 0; padding: 0;">and I don't know if my invoice was cashed to my =
+account or if I was paid out from open calls</blockquote><br><div =
+style=3D"color: #6B095D; border-left: 1px solid #D0D0D0; margin: 0 .5em; =
+padding: 0 .6em;"><div>On Fri, 29 Aug 2025 17:37:30 GMT Evan McCall =
+wrote:</div><br><blockquote dir=3D"auto" style=3D"font-style: normal; =
+margin: 0; padding: 0;">so I need to figure out a timeline and budget =
+accordingly.</blockquote><br><div style=3D"color: #6B095D; border-left: 1px=
+ solid #D0D0D0; margin: 0 .5em; padding: 0 .6em;"><div>On Fri, 29 Aug 2025 =
+17:37:23 GMT Evan McCall wrote:</div><br><blockquote dir=3D"auto" =
+style=3D"font-style: normal; margin: 0; padding: 0;">Is some instances Even=
+ if I have confirmation from the client and when I click the invoice and =
+click the pay option in the invoice it responsed with date and time the =
+invoice was paid. Blue Notary charges me before the invoice cash's to my =
+account. <span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>I don't want to be in a =
+position to have an outstanding balance or compromise the integrity of my =
+account</blockquote><br><div style=3D"color: #6B095D; border-left: 1px =
+solid #D0D0D0; margin: 0 .5em; padding: 0 .6em;"><div>On Fri, 29 Aug 2025 =
+17:36:22 GMT Evan McCall wrote:</div><br><blockquote dir=3D"auto" =
+style=3D"font-style: normal; margin: 0; padding: 0;">and for 4478B I will =
+be charged for the session yes.<span style=3D"display: block; line-height: =
+.5em;"><br style=3D"display: block; padding: .25em 0;"></span>I need to =
+figure out when I get paid out so that I can cover the cost of the =
+session</blockquote><br><div style=3D"color: #6B095D; border-left: 1px =
+solid #D0D0D0; margin: 0 .5em; padding: 0 .6em;"><div>On Fri, 29 Aug 2025 =
+17:35:40 GMT Evan McCall wrote:</div><br><blockquote dir=3D"auto" =
+style=3D"font-style: normal; margin: 0; padding: 0;">Its just that the =
+dashboard says all these invoices are open. For Instance:<span =
+style=3D"display: block; line-height: .5em;"><br style=3D"display: block; =
+padding: .25em 0;"></span>1) If the Archive Session Feature doesn't delete =
+an unpaid invoice what is the SoP for removing this invoice.<span =
+style=3D"display: block; line-height: .5em;"><br style=3D"display: block; =
+padding: .25em 0;"></span>2) When an invoice is paid when is it's state =
+updated and how long does it take for me to get paid out?<span =
+style=3D"display: block; line-height: .5em;"><br style=3D"display: block; =
+padding: .25em 0;"></span>3) if there is a manual state edit required would=
+ I perform that or blue notary?<span style=3D"display: block; line-height: =
+.5em;"><br style=3D"display: block; padding: .25em 0;"></span>4) would I =
+need to log into stripe to manage the payout cycle or to figure out an =
+expectation of when to get paid out on invoices<span style=3D"display: =
+block; line-height: .5em;"><br style=3D"display: block; padding: .25em =
+0;"></span>5) How do I see that an invoice was paid to my account and =
+when</blockquote><br><div style=3D"color: #6B095D; border-left: 1px solid =
+#D0D0D0; margin: 0 .5em; padding: 0 .6em;"><div>On Fri, 29 Aug 2025 =
+17:33:48 GMT Evan McCall wrote:</div><br><blockquote dir=3D"auto" =
+style=3D"font-style: normal; margin: 0; padding: 0;">For the 129FC session =
+I have the receipt as well:<span style=3D"display: block; line-height: .=
+5em;"><br style=3D"display: block; padding: .25em 0;"></span>Paid on Aug 28=
+, 2025<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>Summary<span =
+style=3D"display: block; line-height: .5em;"><br style=3D"display: block; =
+padding: .25em 0;"></span>To	<a href=3D"mailto:paul_hancock@me.=
+com">paul_hancock@me.com</a><span style=3D"display: block; line-height: .=
+5em;"><br style=3D"display: block; padding: .25em 0;"></span>From	=
+Emcnotary<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>Invoice	=
+#EGMBAAVN-0004<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>Memo	Charge for session =
+#68b072bfcac09cafd3b129fc<span style=3D"display: block; line-height: .=
+5em;"><br style=3D"display: block; padding: .25em 0;"></span>Items<span =
+style=3D"display: block; line-height: .5em;"><br style=3D"display: block; =
+padding: .25em 0;"></span>Notary Session Fee<span style=3D"display: block; =
+line-height: .5em;"><br style=3D"display: block; padding: .25em =
+0;"></span>Qty 1<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>$45.00<span =
+style=3D"display: block; line-height: .5em;"><br style=3D"display: block; =
+padding: .25em 0;"></span>Total due<span style=3D"display: block; =
+line-height: .5em;"><br style=3D"display: block; padding: .25em =
+0;"></span>$45.00<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>Amount paid<span =
+style=3D"display: block; line-height: .5em;"><br style=3D"display: block; =
+padding: .25em 0;"></span>$45.00<span style=3D"display: block; line-height:=
+ .5em;"><br style=3D"display: block; padding: .25em 0;"></span>Amount =
+remaining<span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>$0.=
+00</blockquote><br><div style=3D"color: #6B095D; border-left: 1px solid =
+#D0D0D0; margin: 0 .5em; padding: 0 .6em;"><div>On Fri, 29 Aug 2025 =
+17:32:59 GMT Evan McCall wrote:</div><br><blockquote dir=3D"auto" =
+style=3D"font-style: normal; margin: 0; padding: 0;">it hasn't processed or=
+ has it failed and stripe didn't update?<span style=3D"display: block; =
+line-height: .5em;"><br style=3D"display: block; padding: .25em =
+0;"></span><span style=3D"display: block; line-height: .5em;"><br =
+style=3D"display: block; padding: .25em 0;"></span>It is a little confusing=
+ for me</blockquote></div></div></div></div></div></div></div><br></div><!=
+--[if !plain]-->
+
+<img src=3D"https://bluenotary.on.crisp.=
+email/hooks/email/track/message/?session_id=3Dsession_d9fa54f9-6165-4773-9c=
+e5-09b3eb4540e0&amp;user_id=3Dsession_d9fa54f9-6165-4773-9ce5-09b3eb4540e0&=
+amp;website_id=3Df5f3357e-d73e-4c9b-93c3-9d7932c502e3&amp;direction=3Din&am=
+p;fingerprints=3D%5B175648937068469%5D&amp;signature=3D3956df4547a2d800" =
+alt><!--[endif]--></body></html>
+----_NmP-b49a1af0cb14d78d-Part_1--

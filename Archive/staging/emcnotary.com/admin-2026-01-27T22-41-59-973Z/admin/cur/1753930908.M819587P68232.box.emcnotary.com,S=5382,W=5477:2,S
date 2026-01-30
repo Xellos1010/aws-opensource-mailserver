@@ -1,0 +1,95 @@
+Return-Path: <administrator@box.emcnotary.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id P9EWM5rcimiICgEAQCw0vA
+	(envelope-from <administrator@box.emcnotary.com>)
+	for <admin@emcnotary.com>; Thu, 31 Jul 2025 03:01:46 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-1.0 required=5.0 tests=ALL_TRUSTED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HTML_MESSAGE,PDS_FRNOM_TODOM_NAKED_TO,
+	PDS_FROM_NAME_TO_DOMAIN autolearn=ham autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -1.0 ALL_TRUSTED Passed through trusted hosts only via SMTP
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	*  0.1 PDS_FROM_NAME_TO_DOMAIN From:name looks like To:domain
+	*  0.0 PDS_FRNOM_TODOM_NAKED_TO Naked to From name equals to Domain
+X-Spam-Score: -1.0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=box.emcnotary.com;
+	s=mail; t=1753930906;
+	bh=Jytd2OagAR4DnEpSGSR4wJdkRJqhifSkO2b2MVaiT+0=;
+	h=From:To:Subject:Date:From;
+	b=T+YcXSDoR3dm6//uulFJP1vZGNb0K+8lB5eBopH4tFx5qYQMtGb2LzVX+vE40vtsy
+	 PIQ6+FtU+cCcF5qVJpdsJcW5QSjbUk+zPjy+I/krAnbZxS0E48ofHFGM+8OnwKLGMB
+	 AUDacJa7wuh+GDuS1YJOpcp90xyPEAb8N51s3jBreBDYOWhJH8viPUBy35IoAwxYi6
+	 /XEiDkzr4ALfOaqDa6yVuqEKxDNuJ5LR8Hb4b50mkmRd8aqXhSkhauIZwCE3XRxLF0
+	 teungT7cziHcsJjKZjVSw4Pt47dveRhFbO8vWK5w14vSteKjs2gBOfmCA2+OQyuhN1
+	 amCNRDWwBAQzg==
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by box.emcnotary.com (Postfix) with ESMTP id AFCA33F45D
+	for <administrator@box.emcnotary.com>; Thu, 31 Jul 2025 03:01:46 +0000 (UTC)
+Content-Type: multipart/alternative; boundary="===============7680400684766370613=="
+MIME-Version: 1.0
+From: "box.emcnotary.com" <administrator@box.emcnotary.com>
+To: administrator@box.emcnotary.com
+Subject: [box.emcnotary.com] Status Checks Change Notice
+Message-Id: <20250731030146.AFCA33F45D@box.emcnotary.com>
+Date: Thu, 31 Jul 2025 03:01:46 +0000 (UTC)
+
+--===============7680400684766370613==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+
+U3lzdGVtIC0tIFByZXZpb3VzbHk6Cj09PT09PT09PT09PT09PT09PT09PQrinJYgIFN5c3RlbSB1
+cGRhdGVzIGhhdmUgYmVlbiBpbnN0YWxsZWQgYW5kIGEgcmVib290IG9mIHRoZSBtYWNoaW5lIGlz
+IHJlcXVpcmVkLgoKU3lzdGVtIC0tIEN1cnJlbnRseToKPT09PT09PT09PT09PT09PT09PT0K4pyW
+ICBUaGVyZSBhcmUgMTQgc29mdHdhcmUgcGFja2FnZXMgdGhhdCBjYW4gYmUgdXBkYXRlZC4KICAg
+bGlicGVybDUuMzQgKDUuMzQuMC0zdWJ1bnR1MS41KQogICBwZXJsICg1LjM0LjAtM3VidW50dTEu
+NSkKICAgcGVybC1iYXNlICg1LjM0LjAtM3VidW50dTEuNSkKICAgcGVybC1tb2R1bGVzLTUuMzQg
+KDUuMzQuMC0zdWJ1bnR1MS41KQogICBzcWxpdGUzICgzLjM3LjItMnVidW50dTAuNSkKICAgbGli
+c3FsaXRlMy0wICgzLjM3LjItMnVidW50dTAuNSkKICAgdWJ1bnR1LXByby1jbGllbnQtbDEwbiAo
+MzZ1YnVudHUwfjIyLjA0KQogICB1YnVudHUtcHJvLWNsaWVudCAoMzZ1YnVudHUwfjIyLjA0KQog
+ICB1YnVudHUtYWR2YW50YWdlLXRvb2xzICgzNnVidW50dTB+MjIuMDQpCiAgIGxpYm15c3FsY2xp
+ZW50MjEgKDguMC40Mi0wdWJ1bnR1MC4yMi4wNC4yKQogICBsaW51eC1saWJjLWRldiAoNS4xNS4w
+LTE1MS4xNjEpCiAgIG15c3FsLWNsaWVudC1jb3JlLTguMCAoOC4wLjQyLTB1YnVudHUwLjIyLjA0
+LjIpCiAgIG15c3FsLWNsaWVudC04LjAgKDguMC40Mi0wdWJ1bnR1MC4yMi4wNC4yKQogICBwZXJs
+LWRvYyAoNS4zNC4wLTN1YnVudHUxLjUpCgpTeXN0ZW0gLS0gUHJldmlvdXNseToKPT09PT09PT09
+PT09PT09PT09PT09CuKckyAgVGhlIGRpc2sgaGFzIG1vcmUgdGhhbiAzMCUgZnJlZSBzcGFjZS4K
+4pyWICBTeXN0ZW0gZnJlZSBtZW1vcnkgaXMgYmVsb3cgMTAlLgoKU3lzdGVtIC0tIEN1cnJlbnRs
+eToKPT09PT09PT09PT09PT09PT09PT0KPyAgVGhlIGRpc2sgaGFzIGxlc3MgdGhhbiAzMCUgZnJl
+ZSBzcGFjZS4KPyAgU3lzdGVtIGZyZWUgbWVtb3J5IGlzIGJlbG93IDIwJS4=
+
+--===============7680400684766370613==
+Content-Type: text/html; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+
+PGh0bWw+PGJvZHk+PHByZSBzdHlsZT0ib3ZlcmZsb3cteDogc2Nyb2xsOyB3aGl0ZS1zcGFjZTog
+cHJlOyI+U3lzdGVtIC0tIFByZXZpb3VzbHk6Cj09PT09PT09PT09PT09PT09PT09PQrinJYgIFN5
+c3RlbSB1cGRhdGVzIGhhdmUgYmVlbiBpbnN0YWxsZWQgYW5kIGEgcmVib290IG9mIHRoZSBtYWNo
+aW5lIGlzIHJlcXVpcmVkLgoKU3lzdGVtIC0tIEN1cnJlbnRseToKPT09PT09PT09PT09PT09PT09
+PT0K4pyWICBUaGVyZSBhcmUgMTQgc29mdHdhcmUgcGFja2FnZXMgdGhhdCBjYW4gYmUgdXBkYXRl
+ZC4KICAgbGlicGVybDUuMzQgKDUuMzQuMC0zdWJ1bnR1MS41KQogICBwZXJsICg1LjM0LjAtM3Vi
+dW50dTEuNSkKICAgcGVybC1iYXNlICg1LjM0LjAtM3VidW50dTEuNSkKICAgcGVybC1tb2R1bGVz
+LTUuMzQgKDUuMzQuMC0zdWJ1bnR1MS41KQogICBzcWxpdGUzICgzLjM3LjItMnVidW50dTAuNSkK
+ICAgbGlic3FsaXRlMy0wICgzLjM3LjItMnVidW50dTAuNSkKICAgdWJ1bnR1LXByby1jbGllbnQt
+bDEwbiAoMzZ1YnVudHUwfjIyLjA0KQogICB1YnVudHUtcHJvLWNsaWVudCAoMzZ1YnVudHUwfjIy
+LjA0KQogICB1YnVudHUtYWR2YW50YWdlLXRvb2xzICgzNnVidW50dTB+MjIuMDQpCiAgIGxpYm15
+c3FsY2xpZW50MjEgKDguMC40Mi0wdWJ1bnR1MC4yMi4wNC4yKQogICBsaW51eC1saWJjLWRldiAo
+NS4xNS4wLTE1MS4xNjEpCiAgIG15c3FsLWNsaWVudC1jb3JlLTguMCAoOC4wLjQyLTB1YnVudHUw
+LjIyLjA0LjIpCiAgIG15c3FsLWNsaWVudC04LjAgKDguMC40Mi0wdWJ1bnR1MC4yMi4wNC4yKQog
+ICBwZXJsLWRvYyAoNS4zNC4wLTN1YnVudHUxLjUpCgpTeXN0ZW0gLS0gUHJldmlvdXNseToKPT09
+PT09PT09PT09PT09PT09PT09CuKckyAgVGhlIGRpc2sgaGFzIG1vcmUgdGhhbiAzMCUgZnJlZSBz
+cGFjZS4K4pyWICBTeXN0ZW0gZnJlZSBtZW1vcnkgaXMgYmVsb3cgMTAlLgoKU3lzdGVtIC0tIEN1
+cnJlbnRseToKPT09PT09PT09PT09PT09PT09PT0KPyAgVGhlIGRpc2sgaGFzIGxlc3MgdGhhbiAz
+MCUgZnJlZSBzcGFjZS4KPyAgU3lzdGVtIGZyZWUgbWVtb3J5IGlzIGJlbG93IDIwJS48L3ByZT48
+L2JvZHk+PC9odG1sPg==
+
+--===============7680400684766370613==--

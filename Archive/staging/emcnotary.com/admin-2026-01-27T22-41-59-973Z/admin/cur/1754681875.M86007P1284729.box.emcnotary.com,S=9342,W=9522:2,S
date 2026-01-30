@@ -1,0 +1,180 @@
+Return-Path: <bounces+ad6f70f312c99800@bluenotary.on.crisp.email>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id excVLBFSlmh5mhMAQCw0vA
+	(envelope-from <bounces+ad6f70f312c99800@bluenotary.on.crisp.email>)
+	for <admin@emcnotary.com>; Fri, 08 Aug 2025 19:37:53 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.3 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,HTML_MESSAGE,RCVD_IN_MSPIKE_H5,
+	RCVD_IN_MSPIKE_WL,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 DMARC_PASS DMARC check passed
+	* -0.1 SPF_PASS SPF check passed
+	*  0.0 RCVD_IN_MSPIKE_H5 RBL: Excellent reputation (+5)
+	*      [93.177.84.76 listed in wl.mailspike.net]
+	*  0.0 SPF_HELO_NONE SPF: HELO does not publish an SPF Record
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	*  0.0 RCVD_IN_MSPIKE_WL Mailspike good senders
+X-Spam-Score: -0.3
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=quarantine dis=none) header.from=bluenotary.on.crisp.email
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=bluenotary.on.crisp.email
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (2048-bit key; unprotected) header.d=bluenotary.on.crisp.email header.i=@bluenotary.on.crisp.email header.a=rsa-sha256 header.s=crisp header.b=fb4xPYm+;
+	dkim=pass (2048-bit key; secure) header.d=crisp.email header.i=@crisp.email header.a=rsa-sha256 header.s=platform header.b=xZ4Snf9T;
+	dkim-atps=neutral
+Received: from mailer-1x.outbound.crisp.email (mailer-1x.outbound.crisp.email [93.177.84.76])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id C482B3F770
+	for <admin@emcnotary.com>; Fri,  8 Aug 2025 19:37:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=bluenotary.on.crisp.email; s=crisp; t=1754681871;
+	bh=DDgfI9+oidIaGArH4tDt5DJeDV1bZTqePnZsfYt3CWk=;
+	h=From:To:Reply-To:Subject:Date:From;
+	b=fb4xPYm+ojBNb+qgaORmjABdkFCe3VY93UupfXlHWvQQfPgSVcFzcAZbQTtBwi6QO
+	 dpFyEx9zz56+/R0d0nANLfwUbMU8vBt7whHR1YrlRgHIfgkVsokPNjLmTyuiEUBFo8
+	 WZMQi8R798TlalyfPGuGK3BKfTrolC9fAW0BsU9qz4fSnXxOQFsX+WDJWUuWN6v+pu
+	 1f/QJDVw8UnKBcsPaZByrbN6G4+AF6kuYSl2++yi5XpGNbD52FgpqRAJGfL9Q3GMCT
+	 Jazo+r/KuTIc5fnUKwpSlBTvQ3vdIWrxNp7hds6xTv1DMf3a0zMVwpYdN0mD5Df8lG
+	 W6PqPt5tjgWMQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=crisp.email;
+	s=platform; t=1754681871;
+	bh=DDgfI9+oidIaGArH4tDt5DJeDV1bZTqePnZsfYt3CWk=;
+	h=From:To:Reply-To:Subject:Date:From;
+	b=xZ4Snf9TtG/pNLqGyJPcAYA5eXX4eY/gpQBag0+Ny4jZTMr2a1T0DwmrISOWS/zH0
+	 TG4Dv7JQOiqLgzpgRvH5xQy2kcI2zhqyQ/gCHrkargOA2twP8gFR7ngo4qT6EUwWGO
+	 wmdP83PKsBJvzl6xvVFK0A05/3cLo7l9zvEx1Tei4ibiTgi7QZuotSo5+Bl2/QktSL
+	 uG+Mn4rF6qfFAxYG7cimWvdQ/b71WQoBdwIkRYIdg/aKxZG9Q87lGjMHmyF4aSIUmh
+	 PltOzmh0P4Gz7SCWFIpkBfs5NRUZPzM5GD4DS8/i3I6uvEtigX+MsW8gCM8CVYD3MG
+	 6r+f4HQC5+9xA==
+X-Universally-Unique-Identifier: 59b78639-985d-4ac6-a2f9-bcda83e0bd77
+MIME-Version: 1.0 (Crisp Mailer)
+X-Report-Abuse: Please report spam or abuse to abuse@crisp.chat
+X-Auto-Response-Suppress: All
+X-Crisp-Shard-Type: transactional
+X-Crisp-Website-ID: f5f3357e-d73e-4c9b-93c3-9d7932c502e3
+Feedback-ID:
+ session:f5f3357e-d73e-4c9b-93c3-9d7932c502e3:message_replies:CrispIM
+From: "Jessica - BlueNotary" <jessica@bluenotary.on.crisp.email>
+To: admin@emcnotary.com
+Reply-To: BlueNotary <s.fc28a50179c30800.i@bluenotary.on.crisp.email>
+Subject: Re: Understood! You can let her know that even when the first 2
+ boxes are greyed ...
+Message-ID:
+ <9aa6f48f-9243-8abf-5d9f-83c606891225@bluenotary.on.crisp.email>
+Date: Fri, 08 Aug 2025 19:37:51 +0000
+Content-Type: multipart/alternative;
+ boundary="--_NmP-80f887f1c3c77ecb-Part_1"
+
+----_NmP-80f887f1c3c77ecb-Part_1
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Which specific issue are you facing trying to do so?
+
+On Fri, 08 Aug 2025 19:33:54 GMT Evan McCall wrote:
+> It's not allowing me to place a signature field for the signers
+
+On Fri, 08 Aug 2025 19:18:33 GMT Evan McCall wrote:
+> Thank you very much
+
+On Fri, 08 Aug 2025 19:17:39 GMT Evan McCall wrote:
+> can you please send me the link for peters so I can send it to him in =
+chat to
+copy and paste in his browser
+
+On Fri, 08 Aug 2025 19:17:23 GMT =
+Evan McCall wrote:
+> thank you. I need to get peter to come back into the =
+session with his account
+then I will be all good
+
+On Fri, 08 Aug 2025 =
+19:17:10 GMT Evan McCall wrote:
+> perfect
+
+On Fri, 08 Aug 2025 19:16:46 GMT=
+ Evan McCall wrote:
+> So heather can affix a digital signature from her =
+phone on the document?
+----_NmP-80f887f1c3c77ecb-Part_1
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" =
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html =
+xmlns=3D"http://www.w3.org/1999/xhtml" lang=3D"en" dir=3D"ltr"><head>
+
+<meta http-equiv=3D"Content-Type" content=3D"text/html; =
+charset=3DUTF-8"><meta name=3D"viewport" content=3D"width=3Ddevice-width, =
+initial-scale=3D1"><title>Crisp Email</title></head><body =
+style=3D"font-weight: 400;"><div dir=3D"auto" style=3D"font-size: =
+1em;">Which specific issue are you facing trying to do so?</div><br><div><!=
+--[if !plain]-->
+--<br><br><div><!--[if !mso]><!-- --><img alt =
+src=3D"https://bluenotary.on.crisp.email/image/avatar/operator/bc41b715-351=
+1-4994-bda7-b53826624aa2/92/?1754579370960" style=3D"background-size: =
+contain; background-repeat: no-repeat; background-position: center; =
+background-color: #EBEBEB; width: 2em; height: 2em; max-width: 30px; =
+max-height: 30px; margin-right: .5em; vertical-align: middle; display: =
+inline-block; border-radius: 2em;"><!--<![endif]--><strong>Jessica</strong>=
+<span> </span>from<span> </span><a href=3D"https://bluenotary.us/" =
+target=3D"_blank">BlueNotary</a>.</div><br><div style=3D"margin-top: .75em;=
+ font-size: .9em; color: #7b7b7b;"><div>Reply directly to this email, or =
+go<span> </span><a href=3D"https://bluenotary.on.crisp.=
+email/go/chat/resume/?target_url=3Dhttps%3A%2F%2Fapp.bluenotary.=
+us%2Fpdf_edit%2Fsessions_new%2F68963876257986a63ec136f7&amp;session_id=3Dse=
+ssion_eea8bd89-652b-4444-8910-b90f5ef70ab0" target=3D"_blank" =
+style=3D"color: #7b7b7b;"><strong>to chat</strong></a>.</div><div =
+style=3D"margin-top: .25em;"></div></div></div><!--[endif]--><div =
+style=3D"font-size: .95em; margin-top: 1em;"><br><div style=3D"color: =
+#6B095D; border-left: 1px solid #D0D0D0; margin: 0 .5em; padding: 0 .=
+6em;"><div>On Fri, 08 Aug 2025 19:33:54 GMT Evan McCall =
+wrote:</div><br><blockquote dir=3D"auto" style=3D"font-style: normal; =
+margin: 0; padding: 0;">It's not allowing me to place a signature field for=
+ the signers</blockquote><br><div style=3D"color: #6B095D; border-left: 1px=
+ solid #D0D0D0; margin: 0 .5em; padding: 0 .6em;"><div>On Fri, 08 Aug 2025 =
+19:18:33 GMT Evan McCall wrote:</div><br><blockquote dir=3D"auto" =
+style=3D"font-style: normal; margin: 0; padding: 0;">Thank you very =
+much</blockquote><br><div style=3D"color: #6B095D; border-left: 1px solid =
+#D0D0D0; margin: 0 .5em; padding: 0 .6em;"><div>On Fri, 08 Aug 2025 =
+19:17:39 GMT Evan McCall wrote:</div><br><blockquote dir=3D"auto" =
+style=3D"font-style: normal; margin: 0; padding: 0;">can you please send me=
+ the link for peters so I can send it to him in chat to copy and paste in =
+his browser</blockquote><br><div style=3D"color: #6B095D; border-left: 1px =
+solid #D0D0D0; margin: 0 .5em; padding: 0 .6em;"><div>On Fri, 08 Aug 2025 =
+19:17:23 GMT Evan McCall wrote:</div><br><blockquote dir=3D"auto" =
+style=3D"font-style: normal; margin: 0; padding: 0;">thank you. I need to =
+get peter to come back into the session with his account then I will be all=
+ good</blockquote><br><div style=3D"color: #6B095D; border-left: 1px solid =
+#D0D0D0; margin: 0 .5em; padding: 0 .6em;"><div>On Fri, 08 Aug 2025 =
+19:17:10 GMT Evan McCall wrote:</div><br><blockquote dir=3D"auto" =
+style=3D"font-style: normal; margin: 0; padding: 0;">perfect</blockquote><b=
+r><div style=3D"color: #6B095D; border-left: 1px solid #D0D0D0; margin: 0 .=
+5em; padding: 0 .6em;"><div>On Fri, 08 Aug 2025 19:16:46 GMT Evan McCall =
+wrote:</div><br><blockquote dir=3D"auto" style=3D"font-style: normal; =
+margin: 0; padding: 0;">So heather can affix a digital signature from her =
+phone on the document?</blockquote></div></div></div></div></div></div><br>=
+</div><!--[if !plain]-->
+
+<img src=3D"https://bluenotary.on.crisp.=
+email/hooks/email/track/message/?session_id=3Dsession_eea8bd89-652b-4444-89=
+10-b90f5ef70ab0&amp;user_id=3Dsession_eea8bd89-652b-4444-8910-b90f5ef70ab0&=
+amp;website_id=3Df5f3357e-d73e-4c9b-93c3-9d7932c502e3&amp;direction=3Din&am=
+p;fingerprints=3D%5B175468175071529%5D&amp;signature=3Db2777a44bf465000" =
+alt><!--[endif]--></body></html>
+----_NmP-80f887f1c3c77ecb-Part_1--

@@ -1,0 +1,348 @@
+Return-Path: <bounces-156562858-3408123834@sib.bluenotary.us>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id oD7JKt9ismjeJwcAQCw0vA
+	(envelope-from <bounces-156562858-3408123834@sib.bluenotary.us>)
+	for <admin@emcnotary.com>; Sat, 30 Aug 2025 02:33:03 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.3 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,DMARC_PASS,HTML_MESSAGE,SPF_HELO_PASS,SPF_PASS,
+	T_KAM_HTML_FONT_INVALID autolearn=ham autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -0.1 SPF_PASS SPF check passed
+	* -0.1 DMARC_PASS DMARC check passed
+	* -0.0 SPF_HELO_PASS SPF: HELO matches SPF record
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	*  0.0 T_KAM_HTML_FONT_INVALID Test for Invalidly Named or Formatted
+	*      Colors in HTML
+X-Spam-Score: -0.3
+Authentication-Results: box.emcnotary.com; dmarc=pass (p=none dis=none) header.from=bluenotary.us
+Authentication-Results: box.emcnotary.com; spf=pass smtp.mailfrom=sib.bluenotary.us
+Authentication-Results: box.emcnotary.com;
+	dkim=pass (1024-bit key; unprotected) header.d=bluenotary.us header.i=@bluenotary.us header.a=rsa-sha256 header.s=mail header.b=bmWYeyEt;
+	dkim-atps=neutral
+Received: from sib.bluenotary.us (sib.bluenotary.us [212.146.253.32])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by box.emcnotary.com (Postfix) with ESMTPS id 168123F9BA
+	for <admin@emcnotary.com>; Sat, 30 Aug 2025 02:33:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bluenotary.us;
+ q=dns/txt; s=mail; bh=InQMLclFtEcv9kTyjPv7TblzkEtk2v3bNuFXVwGQXZk=;
+ h=from:reply-to:subject:date:to:mime-version:content-type:list-unsubscribe:x-csa-complaints:list-unsubscribe-post:message-id:x-sib-id:feedback-id;
+        b=bmWYeyEtqEsd8qdJ4fbPPkpOUzfQnSbM5sP7hC9BYb69p3FCKnihr+O1FKnBhSjzlKorkNk6eb+1
+        OQ33wSUVzJZtd/ettSHIHIeT95zB2LN2W4AjQJTkuCFUb68OeRziWUSY2L8gKN0KPG18GOXrPUJ7
+        w4ZLRgT7BDdKm1Zi8L4=
+X-CSA-Complaints: csa-complaints@eco.de
+X-Mailin-EID: MTU2NTYyODU4fmFkbWluQGVtY25vdGFyeS5jb21%2BPDIwMjUwODMwMDIzMi45NDEzOTY5NzI1N0BzbXRwLXJlbGF5Lm1haWxpbi5mcj5%2Bc2liLmJsdWVub3RhcnkudXM%3D
+To: "Evan McCall" <admin@emcnotary.com>
+Subject: URGENT: Notarization Meeting Alert
+X-sib-id: S1lY0aWEcK_AsyPrZpUMz0mVAYWS20nZiw-hLnfpX1_YBNdeXHgYgjQeApK2D36XxpSoDgIR309IjmtObftjNT70m1fU1KCS67DPWfV9fRfOTqRQXIP-PnbIonAjMIZA27B5NsZSDqUGqxVGjtilcZNYmDS-R21NsOiPC-WpX9vc
+Message-Id: <202508300232.94139697257@smtp-relay.mailin.fr>
+Origin-messageId: <202508300232.94139697257@smtp-relay.mailin.fr>
+Reply-To: <info@bluenotary.us>
+Date: Sat, 30 Aug 2025 02:32:59 +0000
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+Feedback-ID: 212.146.253.32:4452360_-1:4452360:Sendinblue
+From: "BlueNotary" <info@bluenotary.us>
+List-Unsubscribe: <https://r.sib.bluenotary.us/tr/un/li/hicvNuhOWthlvWnrvVkA4ADxLX4bKYYEu1f7S_n9YEEMHU0l3VSI4U98oBwEwlrD6z-QIjwr8sqeBVOiq7etaxGvp0A0p0-KWA5Jqxc6STXmnc2-8fsBwN-8t9IuF_xIFd3pUkSxTpjJZwC3R9ruBawcAFzQZXYVR1V8uPf71o8rPg9NaMdQcgFPzDdGASLJ7CZwaXWWoffMazlLpjyrf4GqpqXQIC68>
+Mime-Version:1.0
+Content-Type:multipart/alternative; boundary="--_SiB-5ba504955aba02eb-Part_1"
+
+----_SiB-5ba504955aba02eb-Part_1
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+
+[ View in browser](https://r.sib.bluenotary.us/tr/mr/plcrbbMjAGsU6dIekTx4Ly=
+6EuwTq_Ez_0PehQ89-DmAGI_ZIpmEwE5IO57YV7U-4YLG9vbo4guXdKP_pkBKjS__HxFWP2mjJo=
+hc-RUH4I76K3Fvn5tGpKElb-OL0PO2sQgEXeUEuUsxkrxz8sceapSyvXLc9l_-hpvm9DblgNN6r=
+R16gwDuvYhkkFJ9Xahz1nBGFyPqc1ugMCy62ntL3_CRdI08r9bK0JVyw8Q)
+
+Join the live notarization meeting.
+-----------------------------------
+
+
+Evan McCall,
+
+The signer is **currently waiting**for you in the live notarization #4503D=
+=C2=A0meeting. Join by logging in to your dashboard.
+
+
+[ Go to Dashboard](https://app.bluenotary.us/sign-mail/sign-in?type=3Dnotar=
+y&email=3Dadmin@emcnotary.com&password=3D$2a$10$A18bFb2GvZ/7UIJ8PIx0...L9J1=
+DpDKWOHiDrcaC160098lqMRv5.&loginViaEmail=3Dtrue&sessionid=3D68b1214fa4b27ba=
+fe5a4503d&routetype=3DpdfEdit&autosubmit=3Dtrue)
+
+
+If you don't recognize this email address, simply ignore this message.
+
+=C2=A0
+
+If you experience any issues with the button above, copy and paste the URL =
+below into your web browser.
+
+=C2=A0
+
+https://app.bluenotary.us/sign-mail/sign-in?type=3Dnotary&email=3Dadmin@emc=
+notary.com&password=3D$2a$10$A18bFb2GvZ/7UIJ8PIx0...L9J1DpDKWOHiDrcaC160098=
+lqMRv5.&loginViaEmail=3Dtrue&sessionid=3D68b1214fa4b27bafe5a4503d&routetype=
+=3DpdfEdit&autosubmit=3Dtrue
+
+
+----_SiB-5ba504955aba02eb-Part_1
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset=utf-8
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org=
+/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns=3D"http://www.w3.org/1999/xht=
+ml" xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-micros=
+oft-com:office:office"><head><meta http-equiv=3D"Content-Type" content=3D"t=
+ext/html; charset=3Dutf-8"/><meta http-equiv=3D"X-UA-Compatible" content=3D=
+"IE=3Dedge"/><meta name=3D"format-detection" content=3D"telephone=3Dno"/><m=
+eta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=3D1.0"=
+/><title>URGENT: Notarization Meeting Alert</title><style type=3D"text/css"=
+ emogrify=3D"no">#outlook a { padding:0; } .ExternalClass { width:100%; } .=
+ExternalClass, .ExternalClass p, .ExternalClass span, .ExternalClass font, =
+.ExternalClass td, .ExternalClass div { line-height: 100%; } table td { bor=
+der-collapse: collapse; mso-line-height-rule: exactly; } .editable.image { =
+font-size: 0 !important; line-height: 0 !important; } .nl2go_preheader { di=
+splay: none !important; mso-hide:all !important; mso-line-height-rule: exac=
+tly; visibility: hidden !important; line-height: 0px !important; font-size:=
+ 0px !important; } body { width:100% !important; -webkit-text-size-adjust:1=
+00%; -ms-text-size-adjust:100%; margin:0; padding:0; } img { outline:none; =
+text-decoration:none; -ms-interpolation-mode: bicubic; } a img { border:non=
+e; } table { border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspa=
+ce:0pt; } th { font-weight: normal; text-align: left; } *[class=3D"gmail-fi=
+x"] { display: none !important; } </style><style type=3D"text/css" emogrify=
+=3D"no"> @media (max-width: 600px) { .gmx-killpill { content: ' \03D1';} } =
+</style><style type=3D"text/css" emogrify=3D"no">@media (max-width: 600px) =
+{ .gmx-killpill { content: ' \03D1';} .r0-o { border-style: solid !importan=
+t; margin: 0 auto 0 auto !important; width: 100% !important } .r1-i { backg=
+round-color: transparent !important } .r2-c { box-sizing: border-box !impor=
+tant; text-align: center !important; valign: top !important; width: 320px !=
+important } .r3-o { border-style: solid !important; margin: 0 auto 0 auto !=
+important; width: 320px !important } .r4-i { padding-bottom: 5px !important=
+; padding-top: 5px !important } .r5-c { box-sizing: border-box !important; =
+display: block !important; valign: top !important; width: 100% !important }=
+ .r6-o { border-style: solid !important; width: 100% !important } .r7-i { p=
+adding-left: 0px !important; padding-right: 0px !important } .r8-c { box-si=
+zing: border-box !important; padding-left: 10px !important; padding-right: =
+10px !important; text-align: center !important; width: 100% !important } .r=
+9-o { background-size: auto !important; border-style: solid !important; mar=
+gin: 0 auto 0 0 !important; width: 20% !important } .r10-i { padding-bottom=
+: 15px !important; padding-left: 20px !important; padding-top: 15px !import=
+ant } .r11-c { box-sizing: border-box !important; text-align: center !impor=
+tant; valign: top !important; width: 100% !important } .r12-i { background-=
+color: #ffffff !important; padding-bottom: 20px !important; padding-left: 1=
+5px !important; padding-right: 15px !important; padding-top: 20px !importan=
+t } .r13-c { box-sizing: border-box !important; padding-top: 15px !importan=
+t; text-align: left !important; valign: top !important; width: 100% !import=
+ant } .r14-c { box-sizing: border-box !important; padding-bottom: 15px !imp=
+ortant; padding-top: 15px !important; text-align: left !important; valign: =
+top !important; width: 100% !important } .r15-c { box-sizing: border-box !i=
+mportant; padding: 0 !important; text-align: center !important; valign: top=
+ !important; width: 100% !important } .r16-o { border-style: solid !importa=
+nt; margin: 0 auto 0 auto !important; margin-bottom: 15px !important; margi=
+n-top: 15px !important; width: 100% !important } .r17-i { padding: 0 !impor=
+tant; text-align: center !important } .r18-r { background-color: #0000ff !i=
+mportant; border-radius: 0px !important; border-width: 0px !important; box-=
+sizing: border-box; height: initial !important; padding: 0 !important; padd=
+ing-bottom: 12px !important; padding-left: 5px !important; padding-right: 5=
+px !important; padding-top: 12px !important; text-align: center !important;=
+ width: 100% !important } body { -webkit-text-size-adjust: none } .nl2go-re=
+sponsive-hide { display: none } .nl2go-body-table { min-width: unset !impor=
+tant } .mobshow { height: auto !important; overflow: visible !important; ma=
+x-height: unset !important; visibility: visible !important; border: none !i=
+mportant } .resp-table { display: inline-table !important } .magic-resp { d=
+isplay: table-cell !important } } </style><!--[if !mso]><!--><style type=3D=
+"text/css" emogrify=3D"no">@import url("https://fonts.googleapis.com/css2?f=
+amily=3DMontserrat"); </style><!--<![endif]--><style type=3D"text/css">p, h=
+1, h2, h3, h4, ol, ul, li { margin: 0; } a, a:link { color: #0092ff; text-d=
+ecoration: underline } .nl2go-default-textstyle { color: #3b3f44; font-fami=
+ly: arial,helvetica,sans-serif; font-size: 16px; line-height: 1.5; word-bre=
+ak: break-word } .default-button { color: #ffffff; font-family: arial,helve=
+tica,sans-serif; font-size: 16px; font-style: normal; font-weight: normal; =
+line-height: 1.15; text-decoration: none; word-break: break-word } .default=
+-heading1 { color: #1F2D3D; font-family: arial,helvetica,sans-serif; font-s=
+ize: 36px; word-break: break-word } .default-heading2 { color: #1F2D3D; fon=
+t-family: arial,helvetica,sans-serif; font-size: 32px; word-break: break-wo=
+rd } .default-heading3 { color: #1F2D3D; font-family: arial,helvetica,sans-=
+serif; font-size: 24px; word-break: break-word } .default-heading4 { color:=
+ #1F2D3D; font-family: arial,helvetica,sans-serif; font-size: 18px; word-br=
+eak: break-word } a[x-apple-data-detectors] { color: inherit !important; te=
+xt-decoration: inherit !important; font-size: inherit !important; font-fami=
+ly: inherit !important; font-weight: inherit !important; line-height: inher=
+it !important; } .no-show-for-you { border: none; display: none; float: non=
+e; font-size: 0; height: 0; line-height: 0; max-height: 0; mso-hide: all; o=
+verflow: hidden; table-layout: fixed; visibility: hidden; width: 0; } </sty=
+le><!--[if mso]><xml> <o:OfficeDocumentSettings> <o:AllowPNG/> <o:PixelsPer=
+Inch>96</o:PixelsPerInch> </o:OfficeDocumentSettings> </xml><![endif]--><st=
+yle type=3D"text/css">a:link{color: #0092ff; text-decoration: underline;}</=
+style></head><body text=3D"#3b3f44" link=3D"#0092ff" yahoo=3D"fix"><img wid=
+th=3D"1" height=3D"1" src=3D"https://r.sib.bluenotary.us/tr/op/CbwTJ-phnSsn=
+zqmeHwD6mUpi37T_EpIngH_yJaJFs6gEc848NMuJXObDqwasBUDEADj4URUuu9pyS15okLLjNsp=
+bwSGhBtSXbttmJHL-yzdF2Tr9EkVSmJHcPE6a4J3pAsogHw1igZTZSuEM01Qi8dWbxpEWwh-IcI=
+hUT63Y8Imp4Wn3sZTHlAD3y9LomAfg_JtgOhwyoNeSQvwRy28PYQ" style=3D"mso-hide:all=
+"/><table cellpadding=3D"0" border=3D"0" cellspacing=3D"0" style=3D" mso-hi=
+de: all; display: none;"><tbody><tr><td>Signer is waiting for you to join t=
+he live notarization meeting</td></tr></tbody></table> <table cellspacing=
+=3D"0" cellpadding=3D"0" border=3D"0" role=3D"presentation" class=3D"nl2go-=
+body-table" width=3D"100%" style=3D"width: 100%;"><tbody><tr><td> <table ce=
+llspacing=3D"0" cellpadding=3D"0" border=3D"0" role=3D"presentation" width=
+=3D"100%" align=3D"center" class=3D"r0-o" style=3D"table-layout: fixed; wid=
+th: 100%;"><tbody><tr><td valign=3D"top" class=3D"r1-i" style=3D"background=
+-color: transparent;"> <table cellspacing=3D"0" cellpadding=3D"0" border=3D=
+"0" role=3D"presentation" width=3D"600" align=3D"center" class=3D"r3-o" sty=
+le=3D"table-layout: fixed;"><tbody><tr><td class=3D"r4-i" style=3D"padding-=
+bottom: 5px; padding-top: 5px;"> <table width=3D"100%" cellspacing=3D"0" ce=
+llpadding=3D"0" border=3D"0" role=3D"presentation"><tbody><tr><th width=3D"=
+100%" valign=3D"top" class=3D"r5-c" style=3D"font-weight: normal;"> <table =
+cellspacing=3D"0" cellpadding=3D"0" border=3D"0" role=3D"presentation" widt=
+h=3D"100%" class=3D"r6-o" style=3D"table-layout: fixed; width: 100%;"><tbod=
+y><tr><td valign=3D"top" class=3D"r7-i" style=3D"padding-left: 10px; paddin=
+g-right: 10px;"> <table width=3D"100%" cellspacing=3D"0" cellpadding=3D"0" =
+border=3D"0" role=3D"presentation"><tbody><tr><td class=3D"r8-c nl2go-defau=
+lt-textstyle" align=3D"center" style=3D"color: #3b3f44; font-family: arial,=
+helvetica,sans-serif; font-size: 16px; word-break: break-word; line-height:=
+ 16px; padding-left: 30px; padding-right: 30px; text-align: center;"> <div>=
+<p style=3D"margin: 0;"><a href=3D"https://r.sib.bluenotary.us/tr/cl/omqUsw=
+_1qE1edYZu-fPxSywaQ39Ogami5IXMjSpmSgYUoOixBh3Cm79TT1OK6VKry1778jDQ99VKa_H1A=
+xkBi2kRKDWU8JYKMzHwXVC_WKkEVsUNe4urnDMxQy1pRNlhRHUobFbyG7M-VfFXhzZWijzLPPPs=
+bX21YyutojVoXyUKkNR0KTH6Bqpr0-ibxDoIHTtWlE72W_Nnr0gGiyGMvpsa9kapb1REQVRy0YG=
+BIY0cLnsvc1mLkvGrFFn15oqvgGqIC50J17Tg1C6wNKeU4sggqJGjkB2sxeA4NQ13bXUMLrnYKi=
+5825P5ckCMta-a-eVZjv1WgQnYXfKdDTFTJM2pdQpMZRBmusCmDTtCVz_1v0fTlM8wRedELm2zW=
+ZiTdKLxfEizBBSERf8VQKNwOoH7jEMDmK8pmO7UZ8ze-wRINj2AsmAWlmDhQWzAIpW56YzsLbvc=
+-dGHSa3WRFJ2Snhf190fJ2A5KRbobi7moGSpzt3m3XcCkiO_pkiImCpZ0qjvW1-_KNmPiqT4QMR=
+4kTE5qKvI3xaNdIbSw4QJEjclLs26m9mj3yUtpAM_obZbmOHUvFhke7agqkC9" style=3D"col=
+or: #0092ff; text-decoration: underline;"> <span style=3D"font-family: aria=
+l,helvetica,sans-serif; color: #858588; font-size: 12px; text-decoration: u=
+nderline;"> View in browser</span></a></p></div> </td> </tr></tbody></table=
+></td> </tr></tbody></table></th> </tr></tbody></table></td> </tr></tbody><=
+/table></td> </tr></tbody></table><table cellspacing=3D"0" cellpadding=3D"0=
+" border=3D"0" role=3D"presentation" width=3D"600" align=3D"center" class=
+=3D"r3-o" style=3D"table-layout: fixed; width: 600px;"><tbody><tr><td valig=
+n=3D"top"> <table cellspacing=3D"0" cellpadding=3D"0" border=3D"0" role=3D"=
+presentation" width=3D"100%" align=3D"center" class=3D"r0-o" style=3D"backg=
+round-color: #ffffff; table-layout: fixed; width: 100%;"><tbody><tr><th wid=
+th=3D"100%" valign=3D"top" class=3D"r5-c" style=3D"font-weight: normal;"> <=
+table cellspacing=3D"0" cellpadding=3D"0" border=3D"0" role=3D"presentation=
+" width=3D"60" align=3D"left" class=3D"r9-o" style=3D"table-layout: fixed; =
+width: 60px;"><tbody><tr><td class=3D"r10-i" style=3D"padding-bottom: 15px;=
+ padding-top: 15px;"> <img src=3D"https://r.sib.bluenotary.us/im/4452360/e8=
+e2175ced4541c655956d88c29f1553c581e7a75fa227dc71b23f4ff574f859.png?e=3DkCKV=
+baWy-S2MuDBj1_ePb3Pkk5MLjYEd-g92D8ktUwKFZD3CbKJpOZ4i5kUFaYoJKmn44GArbD5Xkum=
+0LzRi9a7jaEPynFNl7p3UzJ1XqImx0LIeuLdXhJn6wfZLvLf3FbH2cDpqNyHFX6RPSXgjXkoSaN=
+9V1FRjNRbnAeYVXTa6UEb3Q2oUEWoBi_j5nbS6Uq25BnuLrlsgttKj7G2sEeJr4KGz4IwxHPb2d=
+LdKcwqkthw0p0Q57MJ1_pPvghDVj2dA2xhH12UR7JFOJ4JPhEYtlrw5b9sBcAzz1RIP8-yj5IT0=
+R8QhpF2j8Q" width=3D"60" alt=3D"Blue Notary logo" border=3D"0" style=3D"dis=
+play: block; width: 100%;"/></td> </tr></tbody></table></th> </tr></tbody><=
+/table><table cellspacing=3D"0" cellpadding=3D"0" border=3D"0" role=3D"pres=
+entation" width=3D"100%" align=3D"center" class=3D"r0-o" style=3D"table-lay=
+out: fixed; width: 100%;"><tbody><tr><td class=3D"r12-i" style=3D"backgroun=
+d-color: #ffffff; padding-bottom: 20px; padding-top: 20px;"> <table width=
+=3D"100%" cellspacing=3D"0" cellpadding=3D"0" border=3D"0" role=3D"presenta=
+tion"><tbody><tr><th width=3D"100%" valign=3D"top" class=3D"r5-c" style=3D"=
+font-weight: normal;"> <table cellspacing=3D"0" cellpadding=3D"0" border=3D=
+"0" role=3D"presentation" width=3D"100%" class=3D"r6-o" style=3D"table-layo=
+ut: fixed; width: 100%;"><tbody><tr><td valign=3D"top" class=3D"r7-i" style=
+=3D"padding-left: 15px; padding-right: 15px;"> <table width=3D"100%" cellsp=
+acing=3D"0" cellpadding=3D"0" border=3D"0" role=3D"presentation"><tbody><tr=
+><td class=3D"r13-c nl2go-default-textstyle" align=3D"left" style=3D"color:=
+ #3b3f44; font-family: arial,helvetica,sans-serif; font-size: 16px; line-he=
+ight: 1.5; word-break: break-word; padding-top: 15px; text-align: left; val=
+ign: top;"> <div><h2 class=3D"default-heading2" style=3D"margin: 0; color: =
+#1f2d3d; font-family: arial,helvetica,sans-serif; font-size: 32px; word-bre=
+ak: break-word;">Join the live notarization meeting.</h2></div> </td> </tr>=
+</tbody></table></td> </tr></tbody></table></th> </tr></tbody></table></td>=
+ </tr></tbody></table><table cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" role=3D"presentation" width=3D"100%" align=3D"center" class=3D"r0-o" sty=
+le=3D"table-layout: fixed; width: 100%;"><tbody><tr><td class=3D"r12-i" sty=
+le=3D"background-color: #ffffff; padding-bottom: 20px; padding-top: 20px;">=
+ <table width=3D"100%" cellspacing=3D"0" cellpadding=3D"0" border=3D"0" rol=
+e=3D"presentation"><tbody><tr><th width=3D"100%" valign=3D"top" class=3D"r5=
+-c" style=3D"font-weight: normal;"> <table cellspacing=3D"0" cellpadding=3D=
+"0" border=3D"0" role=3D"presentation" width=3D"100%" class=3D"r6-o" style=
+=3D"table-layout: fixed; width: 100%;"><tbody><tr><td valign=3D"top" class=
+=3D"r7-i" style=3D"padding-left: 15px; padding-right: 15px;"> <table width=
+=3D"100%" cellspacing=3D"0" cellpadding=3D"0" border=3D"0" role=3D"presenta=
+tion"><tbody><tr><td class=3D"r14-c nl2go-default-textstyle" align=3D"left"=
+ style=3D"color: #3b3f44; font-family: arial,helvetica,sans-serif; font-siz=
+e: 16px; line-height: 1.5; word-break: break-word; padding-bottom: 15px; pa=
+dding-top: 15px; text-align: left; valign: top;"> <div><p style=3D"margin: =
+0;">Evan McCall,<br/><br/>The signer is <strong>currently waiting </strong>=
+for you in the live notarization #4503D=C2=A0meeting. Join by logging in to=
+ your dashboard.</p></div> </td> </tr></tbody></table></td> </tr></tbody></=
+table></th> </tr></tbody></table></td> </tr></tbody></table><table cellspac=
+ing=3D"0" cellpadding=3D"0" border=3D"0" role=3D"presentation" width=3D"100=
+%" align=3D"center" class=3D"r0-o" style=3D"table-layout: fixed; width: 100=
+%;"><tbody><tr><td class=3D"r12-i" style=3D"background-color: #ffffff; padd=
+ing-bottom: 20px; padding-top: 20px;"> <table width=3D"100%" cellspacing=3D=
+"0" cellpadding=3D"0" border=3D"0" role=3D"presentation"><tbody><tr><th wid=
+th=3D"100%" valign=3D"top" class=3D"r5-c" style=3D"font-weight: normal;"> <=
+table cellspacing=3D"0" cellpadding=3D"0" border=3D"0" role=3D"presentation=
+" width=3D"100%" class=3D"r6-o" style=3D"table-layout: fixed; width: 100%;"=
+><tbody><tr><td valign=3D"top" class=3D"r7-i" style=3D"padding-left: 15px; =
+padding-right: 15px;"> <table width=3D"100%" cellspacing=3D"0" cellpadding=
+=3D"0" border=3D"0" role=3D"presentation"><tbody><tr><td class=3D"r15-c" al=
+ign=3D"center" style=3D"align: center; padding-bottom: 15px; padding-top: 1=
+5px; valign: top;"> <table cellspacing=3D"0" cellpadding=3D"0" border=3D"0"=
+ role=3D"presentation" width=3D"570" class=3D"r16-o" style=3D"background-co=
+lor: #0000ff; border-collapse: separate; border-color: #0000ff; border-radi=
+us: 0px; border-style: solid; border-width: 0px; table-layout: fixed; width=
+: 570px;"><tbody><tr><td height=3D"18" align=3D"center" valign=3D"top" clas=
+s=3D"r17-i nl2go-default-textstyle" style=3D"word-break: break-word; backgr=
+ound-color: #0000ff; border-radius: 0px; color: #ffffff; font-family: arial=
+,helvetica,sans-serif; font-size: 16px; font-style: normal; line-height: 1.=
+15; padding-bottom: 12px; padding-left: 5px; padding-right: 5px; padding-to=
+p: 12px; text-align: center;"> <a href=3D"https://r.sib.bluenotary.us/tr/cl=
+/YCLXhBe7kVT9gK_uIsBOhV-bkXUwGpuAITH3_Pjdf8IwM-ddjLSkIMh7x0eMbn3AYK7scUwXXD=
+wSsvG2fGxHyWjURhePYrjqKn3NCtaL3eqhXcK-HoHj_-aPTN8Rhj4IptdlD5PJIwaY_VEGx5Fk9=
+hkhafn4Zx2nA_tFWQ8HswkWmGYuLNjUB0Cn-ZO1FWCMtuOL14cUna_3Jb6tB3DQRw1JSIMdmEK6=
+tweCIgyo7AUgALmaHR1ZTL1VVs6HI-jU5f8An5DHFYNp9LuAY_GbRAmIgk_UBtC4l79QEf2-ZtD=
+Uk52t3SFHti0E7pFRVSnh-3Uq7Nmw-fnffV-VV85X1LiGYF_n24LeTwpcEkOiBJaa6dMqc8iE1O=
+xHk5-luqV--vtWLnvh9b0b49Sx5K7-hJ0-zEH-3j6TW1rpNzVWDCh97l9QrV6dJ8xkwZCpOKBIG=
+S5D4URTL2AF1sQ0NAMV4LpT_cCqOaARW5GH8dblryOSWKnpY0ljLB1cwqwlf7OwUaxNZIyHAMIg=
+8GPpaLM4j7x8bvqVOKeNU4F4Qg7YGc8kHuHEFrOFwh2U0oKVsyq8YY7lkqptMsjqSxUj2BeumjQ=
+c5Sv_JmTRWGIw1MXz5uh-v6PAyF1V7tOpSbpVPlQF9ISYhfNYu2jngHMdTiM0G3HuYdlNSPQfpj=
+ufQP88kiKfPyIghiJ421J66IY2R5T7-muQ-AaZYzQ" class=3D"r18-r default-button" t=
+arget=3D"_blank" data-btn=3D"1" style=3D"font-style: normal; font-weight: n=
+ormal; line-height: 1.15; text-decoration: none; word-break: break-word; wo=
+rd-wrap: break-word; display: block; -webkit-text-size-adjust: none; color:=
+ #ffffff; font-family: arial,helvetica,sans-serif; font-size: 16px;"> <span=
+>Go to Dashboard</span></a> </td> </tr></tbody></table></td> </tr></tbody><=
+/table></td> </tr></tbody></table></th> </tr></tbody></table></td> </tr></t=
+body></table><table cellspacing=3D"0" cellpadding=3D"0" border=3D"0" role=
+=3D"presentation" width=3D"100%" align=3D"center" class=3D"r0-o" style=3D"t=
+able-layout: fixed; width: 100%;"><tbody><tr><td class=3D"r12-i" style=3D"b=
+ackground-color: #ffffff; padding-bottom: 20px; padding-top: 20px;"> <table=
+ width=3D"100%" cellspacing=3D"0" cellpadding=3D"0" border=3D"0" role=3D"pr=
+esentation"><tbody><tr><th width=3D"100%" valign=3D"top" class=3D"r5-c" sty=
+le=3D"font-weight: normal;"> <table cellspacing=3D"0" cellpadding=3D"0" bor=
+der=3D"0" role=3D"presentation" width=3D"100%" class=3D"r6-o" style=3D"tabl=
+e-layout: fixed; width: 100%;"><tbody><tr><td valign=3D"top" class=3D"r7-i"=
+ style=3D"padding-left: 15px; padding-right: 15px;"> <table width=3D"100%" =
+cellspacing=3D"0" cellpadding=3D"0" border=3D"0" role=3D"presentation"><tbo=
+dy><tr><td class=3D"r14-c nl2go-default-textstyle" align=3D"left" style=3D"=
+color: #3b3f44; font-family: arial,helvetica,sans-serif; font-size: 16px; l=
+ine-height: 1.5; word-break: break-word; padding-bottom: 15px; padding-top:=
+ 15px; text-align: left; valign: top;"> <div><p style=3D"margin: 0;">If you=
+ don&#39;t recognize this email address, simply ignore this message.</p><p =
+style=3D"margin: 0;">=C2=A0</p><p style=3D"margin: 0;">If you experience an=
+y issues with the button above, copy and paste the URL below into your web =
+browser.</p><p style=3D"margin: 0;">=C2=A0</p><p style=3D"margin: 0;">https=
+://app.bluenotary.us/sign-mail/sign-in?type=3Dnotary&amp;email=3Dadmin@emcn=
+otary.com&amp;password=3D$2a$10$A18bFb2GvZ/7UIJ8PIx0...L9J1DpDKWOHiDrcaC160=
+098lqMRv5.&amp;loginViaEmail=3Dtrue&amp;sessionid=3D68b1214fa4b27bafe5a4503=
+d&amp;routetype=3DpdfEdit&amp;autosubmit=3Dtrue</p></div> </td> </tr></tbod=
+y></table></td> </tr></tbody></table></th> </tr></tbody></table></td> </tr>=
+</tbody></table></td> </tr></tbody></table></td> </tr></tbody></table>
+</body></html>
+
+----_SiB-5ba504955aba02eb-Part_1--

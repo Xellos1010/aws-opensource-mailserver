@@ -22,6 +22,7 @@ export type GetCredentialsConfig = {
   domain?: string;
   region?: string;
   profile?: string;
+  adminEmail?: string;
 };
 
 /**
@@ -52,7 +53,11 @@ export async function getAdminCredentials(
     );
   }
 
-  const email = `admin@${stackInfo.domain}`;
+  const defaultEmail =
+    stackInfo.domain === 'k3-frame.com'
+      ? `me@box.${stackInfo.domain}`
+      : `admin@${stackInfo.domain}`;
+  const email = config.adminEmail || process.env['ADMIN_EMAIL'] || defaultEmail;
   const adminUrl = `https://${stackInfo.domain}/admin`;
 
   log('info', 'Retrieved admin credentials', {
@@ -68,4 +73,3 @@ export async function getAdminCredentials(
     adminUrl,
   };
 }
-

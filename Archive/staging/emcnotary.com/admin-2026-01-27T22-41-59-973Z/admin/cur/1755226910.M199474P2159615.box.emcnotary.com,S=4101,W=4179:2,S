@@ -1,0 +1,78 @@
+Return-Path: <administrator@box.emcnotary.com>
+Delivered-To: admin@emcnotary.com
+Received: from box.emcnotary.com ([127.0.0.1])
+	by box.emcnotary.com with LMTP
+	id ubszFhqjnmj/8yAAQCw0vA
+	(envelope-from <administrator@box.emcnotary.com>)
+	for <admin@emcnotary.com>; Fri, 15 Aug 2025 03:01:46 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.6 (2021-04-09) on box.emcnotary.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-1.0 required=5.0 tests=ALL_TRUSTED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HTML_MESSAGE,PDS_FRNOM_TODOM_NAKED_TO,
+	PDS_FROM_NAME_TO_DOMAIN autolearn=ham autolearn_force=no version=3.4.6
+X-Spam-Report: 
+	* -1.0 ALL_TRUSTED Passed through trusted hosts only via SMTP
+	*  0.0 HTML_MESSAGE BODY: HTML included in message
+	* -0.1 DKIM_VALID Message has at least one valid DKIM or DK signature
+	*  0.1 DKIM_SIGNED Message has a DKIM or DK signature, not necessarily
+	*       valid
+	* -0.1 DKIM_VALID_AU Message has a valid DKIM or DK signature from
+	*      author's domain
+	*  0.1 PDS_FROM_NAME_TO_DOMAIN From:name looks like To:domain
+	*  0.0 PDS_FRNOM_TODOM_NAKED_TO Naked to From name equals to Domain
+X-Spam-Score: -1.0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=box.emcnotary.com;
+	s=mail; t=1755226906;
+	bh=jf2LB5sw11m+xs0XKRePvpRJumH9so9zxGZi2hoVbh0=;
+	h=From:To:Subject:Date:From;
+	b=pMHtLdU9KThlS0py2cJmYjpcbR64W5s8mi3SoDMPAtVV7ovUrpR4oV3tn4/YcVmlZ
+	 vmMEqzd64HNln30cFmAxU02nnZL2cNqvMCMsG58A3qd6O3zzIpDswKCK1iiKj1rM70
+	 Kx/ljmRrX/kWgd7Lk71r/U84K4xUazZIc/ZeXEecfzpEF99e/Z3Bep7FIUjSw4ERPo
+	 XOK1mRDBhiDgq1TXF3r24nFTE2Xz6POZWCGY/OmGSLZl8nUAsFwt/XC4XRYQDaz8/P
+	 gsx2HDf43JA41hl90zb6fhtZrNYKcl1Rdk7Br8ifRdHYG5KyFt6T0lCcLGZyryWpAP
+	 NpNVTa9xX23FA==
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by box.emcnotary.com (Postfix) with ESMTP id 3736D413D1
+	for <administrator@box.emcnotary.com>; Fri, 15 Aug 2025 03:01:46 +0000 (UTC)
+Content-Type: multipart/alternative; boundary="===============1994433687488399165=="
+MIME-Version: 1.0
+From: "box.emcnotary.com" <administrator@box.emcnotary.com>
+To: administrator@box.emcnotary.com
+Subject: [box.emcnotary.com] Status Checks Change Notice
+Message-Id: <20250815030146.3736D413D1@box.emcnotary.com>
+Date: Fri, 15 Aug 2025 03:01:46 +0000 (UTC)
+
+--===============1994433687488399165==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+
+U3lzdGVtIC0tIFByZXZpb3VzbHk6Cj09PT09PT09PT09PT09PT09PT09PQrinJYgIFRoZXJlIGFy
+ZSA3IHNvZnR3YXJlIHBhY2thZ2VzIHRoYXQgY2FuIGJlIHVwZGF0ZWQuCgpTeXN0ZW0gLS0gQ3Vy
+cmVudGx5Ogo9PT09PT09PT09PT09PT09PT09PQrinJYgIFRoZXJlIGFyZSA0IHNvZnR3YXJlIHBh
+Y2thZ2VzIHRoYXQgY2FuIGJlIHVwZGF0ZWQuCgpTeXN0ZW0gLS0gUmVtb3ZlZAo9PT09PT09PT09
+PT09PT09PQogICBsaWJteXNxbGNsaWVudDIxICg4LjAuNDMtMHVidW50dTAuMjIuMDQuMSkKICAg
+bXlzcWwtY2xpZW50LWNvcmUtOC4wICg4LjAuNDMtMHVidW50dTAuMjIuMDQuMSkKICAgbXlzcWwt
+Y2xpZW50LTguMCAoOC4wLjQzLTB1YnVudHUwLjIyLjA0LjEpCgpTeXN0ZW0gLS0gUHJldmlvdXNs
+eToKPT09PT09PT09PT09PT09PT09PT09Cj8gIFN5c3RlbSBmcmVlIG1lbW9yeSBpcyBiZWxvdyAy
+MCUuCgpTeXN0ZW0gLS0gQ3VycmVudGx5Ogo9PT09PT09PT09PT09PT09PT09PQrinJYgIFN5c3Rl
+bSBmcmVlIG1lbW9yeSBpcyBiZWxvdyAxMCUu
+
+--===============1994433687488399165==
+Content-Type: text/html; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+
+PGh0bWw+PGJvZHk+PHByZSBzdHlsZT0ib3ZlcmZsb3cteDogc2Nyb2xsOyB3aGl0ZS1zcGFjZTog
+cHJlOyI+U3lzdGVtIC0tIFByZXZpb3VzbHk6Cj09PT09PT09PT09PT09PT09PT09PQrinJYgIFRo
+ZXJlIGFyZSA3IHNvZnR3YXJlIHBhY2thZ2VzIHRoYXQgY2FuIGJlIHVwZGF0ZWQuCgpTeXN0ZW0g
+LS0gQ3VycmVudGx5Ogo9PT09PT09PT09PT09PT09PT09PQrinJYgIFRoZXJlIGFyZSA0IHNvZnR3
+YXJlIHBhY2thZ2VzIHRoYXQgY2FuIGJlIHVwZGF0ZWQuCgpTeXN0ZW0gLS0gUmVtb3ZlZAo9PT09
+PT09PT09PT09PT09PQogICBsaWJteXNxbGNsaWVudDIxICg4LjAuNDMtMHVidW50dTAuMjIuMDQu
+MSkKICAgbXlzcWwtY2xpZW50LWNvcmUtOC4wICg4LjAuNDMtMHVidW50dTAuMjIuMDQuMSkKICAg
+bXlzcWwtY2xpZW50LTguMCAoOC4wLjQzLTB1YnVudHUwLjIyLjA0LjEpCgpTeXN0ZW0gLS0gUHJl
+dmlvdXNseToKPT09PT09PT09PT09PT09PT09PT09Cj8gIFN5c3RlbSBmcmVlIG1lbW9yeSBpcyBi
+ZWxvdyAyMCUuCgpTeXN0ZW0gLS0gQ3VycmVudGx5Ogo9PT09PT09PT09PT09PT09PT09PQrinJYg
+IFN5c3RlbSBmcmVlIG1lbW9yeSBpcyBiZWxvdyAxMCUuPC9wcmU+PC9ib2R5PjwvaHRtbD4=
+
+--===============1994433687488399165==--

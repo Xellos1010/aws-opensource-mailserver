@@ -1,15 +1,1 @@
-2026/01/25 00:05:47 [error] 733#733: *15801 open() "/home/user-data/www/default/.env" failed (2: No such file or directory), client: 45.139.104.168, server: autoconfig.box.emcnotary.com, request: "GET /.env HTTP/1.1", host: "autoconfig.box.emcnotary.com"
-2026/01/25 00:06:42 [error] 733#733: *15815 open() "/home/user-data/www/default/.env" failed (2: No such file or directory), client: 45.139.104.168, server: autoconfig.emcnotary.com, request: "GET /.env HTTP/1.1", host: "autoconfig.emcnotary.com"
-2026/01/25 00:08:52 [error] 733#733: *15852 open() "/home/user-data/www/default/.env" failed (2: No such file or directory), client: 45.139.104.168, server: autodiscover.box.emcnotary.com, request: "GET /.env HTTP/1.1", host: "autodiscover.box.emcnotary.com"
-2026/01/25 00:11:32 [error] 733#733: *15896 open() "/home/user-data/www/default/.env" failed (2: No such file or directory), client: 45.139.104.168, server: autodiscover.emcnotary.com, request: "GET /.env HTTP/1.1", host: "autodiscover.emcnotary.com"
-2026/01/25 00:30:46 [error] 733#733: *16209 open() "/home/user-data/www/default/ab2g" failed (2: No such file or directory), client: 165.22.111.193, server: box.emcnotary.com, request: "GET /ab2g HTTP/1.1", host: "3.229.143.6"
-2026/01/25 00:30:47 [error] 733#733: *16211 open() "/home/user-data/www/default/ab2h" failed (2: No such file or directory), client: 165.22.111.193, server: box.emcnotary.com, request: "GET /ab2h HTTP/1.1", host: "3.229.143.6"
-2026/01/25 00:30:48 [error] 733#733: *16212 open() "/home/user-data/www/default/alive.php" failed (2: No such file or directory), client: 165.22.111.193, server: box.emcnotary.com, request: "GET /alive.php HTTP/1.1", host: "3.229.143.6"
-2026/01/25 00:30:53 [crit] 733#733: *16223 SSL_do_handshake() failed (SSL: error:0A00006C:SSL routines::bad key share) while SSL handshaking, client: 165.22.111.193, server: 0.0.0.0:443
-2026/01/25 00:30:57 [error] 733#733: *16231 open() "/home/user-data/www/default/teorema505" failed (2: No such file or directory), client: 165.22.111.193, server: box.emcnotary.com, request: "GET /teorema505?t=1 HTTP/1.1", host: "3.229.143.6"
-2026/01/25 01:02:21 [crit] 733#733: *16796 SSL_do_handshake() failed (SSL: error:0A00006C:SSL routines::bad key share) while SSL handshaking, client: 159.89.168.95, server: 0.0.0.0:443
-2026/01/25 01:04:36 [error] 733#733: *16835 open() "/home/user-data/www/default/.env" failed (2: No such file or directory), client: 45.139.104.168, server: box.emcnotary.com, request: "GET /.env HTTP/1.1", host: "box.emcnotary.com"
-2026/01/25 01:52:22 [error] 733#733: *17654 access forbidden by rule, client: 77.83.39.162, server: box.emcnotary.com, request: "GET /.git/index HTTP/1.1", host: "3.229.143.6"
-2026/01/25 03:24:50 [error] 733#733: *19183 open() "/home/user-data/www/default/.env" failed (2: No such file or directory), client: 105.101.148.94, server: autoconfig.emcnotary.com, request: "GET /.env HTTP/1.1", host: "autoconfig.emcnotary.com"
-2026/01/25 03:27:45 [notice] 132875#132875: signal process started
-2026/01/25 03:36:15 [notice] 134383#134383: signal process started
+2026/01/27 00:30:40 [error] 752#752: *16414 open() "/home/user-data/www/default/+CSCOE+/logon.html" failed (2: No such file or directory), client: 178.16.55.174, server: box.emcnotary.com, request: "GET /+CSCOE+/logon.html HTTP/1.1", host: "3.229.143.6"

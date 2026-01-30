@@ -341,8 +341,10 @@ else
     echo "Mail-in-a-Box appears to be already configured"
     echo "Checking if setup completed successfully..."
     
-    # Verify key services are running
-    if systemctl is-active --quiet postfix dovecot nginx 2>/dev/null; then
+    # Verify key services are running (check each service individually)
+    if systemctl is-active --quiet postfix 2>/dev/null && \
+       systemctl is-active --quiet dovecot 2>/dev/null && \
+       systemctl is-active --quiet nginx 2>/dev/null; then
       echo "Mail services are running - MIAB setup appears complete"
       echo "Creating completion marker..."
       touch "${MIAB_COMPLETE_MARKER}"
