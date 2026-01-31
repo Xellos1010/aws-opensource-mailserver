@@ -46,7 +46,7 @@ describe('Deploy Schedule Validation E2E', () => {
       }
 
       try {
-        execSync(`FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 DOMAIN=test.example.com pnpm nx run cdk-k3frame-instance:synth`, {
+        execSync(`FEATURE_CDK_k3frame_STACKS_ENABLED=1 DOMAIN=test.example.com pnpm nx run cdk-k3frame-instance:synth`, {
           stdio: 'pipe',
           cwd: process.cwd(),
         });
@@ -71,7 +71,7 @@ describe('Deploy Schedule Validation E2E', () => {
 
       if (!existsSync(templatePath)) {
         try {
-          execSync(`FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 DOMAIN=test.example.com pnpm nx run cdk-k3frame-instance:synth`, {
+          execSync(`FEATURE_CDK_k3frame_STACKS_ENABLED=1 DOMAIN=test.example.com pnpm nx run cdk-k3frame-instance:synth`, {
             stdio: 'pipe',
             cwd: process.cwd(),
           });
@@ -148,7 +148,7 @@ describe('Deploy Schedule Validation E2E', () => {
 
       try {
         execSync(
-          `FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 DOMAIN=test.example.com INSTANCE_NIGHTLY_REBOOT_SCHEDULE="0 9 * * ? *" pnpm nx run cdk-k3frame-instance:synth`,
+          `FEATURE_CDK_k3frame_STACKS_ENABLED=1 DOMAIN=test.example.com INSTANCE_NIGHTLY_REBOOT_SCHEDULE="0 9 * * ? *" pnpm nx run cdk-k3frame-instance:synth`,
           {
             stdio: 'pipe',
             cwd: process.cwd(),
@@ -178,7 +178,7 @@ describe('Deploy Schedule Validation E2E', () => {
 
       if (!existsSync(templatePath)) {
         try {
-          execSync(`FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 DOMAIN=test.example.com pnpm nx run cdk-k3frame-instance:synth`, {
+          execSync(`FEATURE_CDK_k3frame_STACKS_ENABLED=1 DOMAIN=test.example.com pnpm nx run cdk-k3frame-instance:synth`, {
             stdio: 'pipe',
             cwd: process.cwd(),
           });

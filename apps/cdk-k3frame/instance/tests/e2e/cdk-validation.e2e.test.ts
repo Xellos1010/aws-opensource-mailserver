@@ -62,7 +62,7 @@ describe('CDK Synthesis E2E', () => {
         cwd: process.cwd(),
         env: {
           ...process.env,
-          FEATURE_CDK_K3FRAME_STACKS_ENABLED: '1',
+          FEATURE_CDK_k3frame_STACKS_ENABLED: '1',
         },
       });
 
@@ -115,7 +115,7 @@ describe('CDK Synthesis E2E', () => {
           cwd: process.cwd(),
           env: {
             ...process.env,
-            FEATURE_CDK_K3FRAME_STACKS_ENABLED: '1',
+            FEATURE_CDK_k3frame_STACKS_ENABLED: '1',
           },
         });
       } catch (error) {
@@ -162,7 +162,7 @@ describe('CDK Synthesis E2E', () => {
           cwd: process.cwd(),
           env: {
             ...process.env,
-            FEATURE_CDK_K3FRAME_STACKS_ENABLED: '1',
+            FEATURE_CDK_k3frame_STACKS_ENABLED: '1',
           },
         });
       } catch (error) {
@@ -200,7 +200,7 @@ describe('CDK Synthesis E2E', () => {
           cwd: process.cwd(),
           env: {
             ...process.env,
-            FEATURE_CDK_K3FRAME_STACKS_ENABLED: '1',
+            FEATURE_CDK_k3frame_STACKS_ENABLED: '1',
           },
         });
       } catch (error) {
@@ -232,7 +232,7 @@ describe('CDK Synthesis E2E', () => {
           cwd: process.cwd(),
           env: {
             ...process.env,
-            FEATURE_CDK_K3FRAME_STACKS_ENABLED: '1',
+            FEATURE_CDK_k3frame_STACKS_ENABLED: '1',
           },
         });
       } catch (error) {

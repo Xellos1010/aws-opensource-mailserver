@@ -45,6 +45,13 @@
         "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-emc-notary/core node dist/libs/admin/admin-reverse-dns/set-reverse-dns.mjs"
       }
     },
+    "set:k3frame": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-k3frame/instance node dist/libs/admin/admin-reverse-dns/set-reverse-dns.mjs"
+      }
+    },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],

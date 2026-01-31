@@ -1,15 +1,15 @@
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
-import { K3FrameCoreStack } from '../../stacks/core-stack';
+import { k3frameCoreStack } from '../../stacks/core-stack';
 
-describe('K3FrameCoreStack', () => {
+describe('k3frameCoreStack', () => {
   let app: cdk.App;
-  let stack: K3FrameCoreStack;
+  let stack: k3frameCoreStack;
   let template: Template;
 
   beforeEach(() => {
     app = new cdk.App();
-    stack = new K3FrameCoreStack(app, 'TestStack', {
+    stack = new k3frameCoreStack(app, 'TestStack', {
       env: {
         account: '123456789012',
         region: 'us-east-1',
@@ -192,7 +192,7 @@ describe('K3FrameCoreStack', () => {
     it('publishes domain name parameter', () => {
       template.hasResourceProperties('AWS::SSM::Parameter', {
         Name: '/k3frame/core/domainName',
-        Description: 'Domain name for K3 Frame mailserver',
+        Description: 'Domain name for EMC Notary mailserver',
       });
     });
 
@@ -267,7 +267,7 @@ describe('K3FrameCoreStack', () => {
     it('creates alarms topic', () => {
       // TopicName is a string, not a CloudFormation intrinsic function
       template.hasResourceProperties('AWS::SNS::Topic', {
-        DisplayName: 'K3 Frame Mailserver Alarms',
+        DisplayName: 'EMC Notary Mailserver Alarms',
       });
       
       // Verify topic name contains expected pattern

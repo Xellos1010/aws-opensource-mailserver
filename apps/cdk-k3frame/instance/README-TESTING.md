@@ -72,12 +72,11 @@ pnpm nx test cdk-k3frame-instance --coverage
 ### For Unit/Integration Tests
 - No special requirements - tests use CDK assertions library
 - Tests mock SSM parameters from core stack
-- AWS profile defaults to `k3frame` via test setup (override with `AWS_PROFILE`)
 
 ### For E2E Tests (No Deploy)
 - CDK stack must be built: `pnpm nx build cdk-k3frame-instance`
 - CDK synthesis must succeed: `pnpm nx run cdk-k3frame-instance:synth`
-- Feature flag must be set: `FEATURE_CDK_K3FRAME_STACKS_ENABLED=1`
+- Feature flag must be set: `FEATURE_CDK_k3frame_STACKS_ENABLED=1`
 
 ### For E2E Tests (Requires Deploy)
 - **Core stack deployed**: Required for SSM parameters
@@ -197,11 +196,11 @@ Based on comprehensive testing strategy:
 
 The instance stack **requires** the core stack to be deployed first, as it reads SSM parameters:
 
-- `/k3-frame/core/domainName`
-- `/k3-frame/core/backupBucket`
-- `/k3-frame/core/nextcloudBucket`
-- `/k3-frame/core/alarmsTopicArn`
-- `/k3-frame/core/eipAllocationId`
+- `/k3frame/core/domainName`
+- `/k3frame/core/backupBucket`
+- `/k3frame/core/nextcloudBucket`
+- `/k3frame/core/alarmsTopicArn`
+- `/k3frame/core/eipAllocationId`
 
 ### Testing Core Stack Dependencies
 
@@ -293,14 +292,14 @@ Tests should run in CI pipeline:
 ### E2E tests fail
 - Ensure CDK stack is built: `pnpm nx build cdk-k3frame-instance`
 - Run synthesis manually: `pnpm nx run cdk-k3frame-instance:synth`
-- Check that `FEATURE_CDK_K3FRAME_STACKS_ENABLED=1` is set
+- Check that `FEATURE_CDK_k3frame_STACKS_ENABLED=1` is set
 
 ### Deploy validation tests fail
 - Ensure core stack is deployed: `pnpm nx run cdk-k3frame-core:deploy`
 - Verify core stack SSM parameters exist:
   ```bash
-  aws ssm get-parameter --name /k3-frame/core/domainName
-  aws ssm get-parameter --name /k3-frame/core/eipAllocationId
+  aws ssm get-parameter --name /k3frame/core/domainName
+  aws ssm get-parameter --name /k3frame/core/eipAllocationId
   ```
 
 ### Bootstrap tests fail
@@ -351,3 +350,4 @@ If you encounter `Cannot find module '@babel/core'` errors:
    ```
 
 **Note**: This is a known pnpm/Jest compatibility issue. The test files are correct; this is purely an environment configuration problem.
+

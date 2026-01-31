@@ -450,7 +450,7 @@ async function confirmBootstrap(options: ConfirmationOptions): Promise<void> {
     const configCheck = await sshCommand(
       keyPath,
       instanceIp,
-      '[ -f /home/user-data/mailinabox.conf ] && echo "exists" || echo "missing"'
+      '[ -f /etc/mailinabox.conf ] && echo "exists" || echo "missing"'
     );
     if (configCheck.success && configCheck.output === 'exists') {
       checks.push({

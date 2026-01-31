@@ -20,7 +20,27 @@ import { Provider } from 'aws-cdk-lib/custom-resources';
 import { tagStack } from '@mm/infra-shared-constructs';
 import { coreParamPrefix } from '@mm/infra-naming';
 
-export class K3FrameCoreStack extends Stack {
+// Default domain for this stack - used for SSM parameter prefix generation
+const DEFAULT_DOMAIN = 'k3frame.com';
+
+/**
+ * Generate domain-specific SSM parameter paths
+ * This avoids conflicts with other domain deployments (e.g., emcnotary.com)
+ */
+function createCoreParamPaths(domain: string) {
+  const prefix = coreParamPrefix(domain);
+  return {
+    CORE_PARAM_PREFIX: prefix,
+    P_DOMAIN_NAME: `${prefix}/domainName`,
+    P_BACKUP_BUCKET: `${prefix}/backupBucket`,
+    P_NEXTCLOUD_BUCKET: `${prefix}/nextcloudBucket`,
+    P_ALARMS_TOPIC: `${prefix}/alarmsTopicArn`,
+    P_SES_IDENTITY_ARN: `${prefix}/sesIdentityArn`,
+    P_EIP_ALLOCATION_ID: `${prefix}/eipAllocationId`,
+  };
+}
+
+export class k3frameCoreStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
     tagStack(this, 'k3frame-mailserver');
@@ -28,12 +48,17 @@ export class K3FrameCoreStack extends Stack {
     // Domain name parameter (matches CloudFormation template)
     const domainName = new CfnParameter(this, 'DomainName', {
       type: 'String',
-      default: 'k3frame.com',
+      default: DEFAULT_DOMAIN,
       description: 'The domain name for the mail server resources',
       allowedPattern: '^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$',
     });
 
     const domain = domainName.valueAsString;
+
+    // Generate domain-specific SSM parameter paths
+    // Note: We use DEFAULT_DOMAIN for path generation since CfnParameter values
+    // are only resolved at deploy time, but SSM parameter names must be static
+    const paramPaths = createCoreParamPaths(DEFAULT_DOMAIN);
 
     // Elastic IP - persistent across instance updates for hot-swapping
     const eip = new ec2.CfnEIP(this, 'ElasticIP', {
@@ -245,7 +270,7 @@ def lambda_handler(event, context):
     // SNS Alarms topic (matching CloudFormation AlertTopic)
     const alarmsTopic = new sns.Topic(this, 'AlertTopic', {
       topicName: `ec2-memory-events-${this.stackName}`,
-      displayName: 'K3 Frame Mailserver Alarms',
+      displayName: 'EMC Notary Mailserver Alarms',
     });
 
     // CloudWatch Log Group for syslog (matching CloudFormation SyslogGroup)
@@ -482,42 +507,39 @@ def lambda_handler(event, context):
     });
 
     // Publish shared values to SSM for decoupled consumption
-    // Use a concrete prefix at synth-time (SSM parameter names cannot be unresolved tokens)
-    const paramPrefix = coreParamPrefix(
-      this.node.tryGetContext('domain') || process.env['DOMAIN'] || 'k3frame.com'
-    );
+    // Uses domain-specific paths (e.g., /k3frame/core/domainName) to avoid conflicts
     new ssm.StringParameter(this, 'ParamDomainName', {
-      parameterName: `${paramPrefix}/domainName`,
+      parameterName: paramPaths.P_DOMAIN_NAME,
       stringValue: domain,
-      description: 'Domain name for K3 Frame mailserver',
+      description: 'Domain name for k3frame mailserver',
     });
 
     new ssm.StringParameter(this, 'ParamBackupBucket', {
-      parameterName: `${paramPrefix}/backupBucket`,
+      parameterName: paramPaths.P_BACKUP_BUCKET,
       stringValue: backupBucket.bucketName,
       description: 'S3 backup bucket name',
     });
 
     new ssm.StringParameter(this, 'ParamNextcloudBucket', {
-      parameterName: `${paramPrefix}/nextcloudBucket`,
+      parameterName: paramPaths.P_NEXTCLOUD_BUCKET,
       stringValue: nextcloudBucket.bucketName,
       description: 'S3 Nextcloud bucket name',
     });
 
     new ssm.StringParameter(this, 'ParamAlarmsTopic', {
-      parameterName: `${paramPrefix}/alarmsTopicArn`,
+      parameterName: paramPaths.P_ALARMS_TOPIC,
       stringValue: alarmsTopic.topicArn,
       description: 'SNS alarms topic ARN',
     });
 
     new ssm.StringParameter(this, 'ParamSesIdentityArn', {
-      parameterName: `${paramPrefix}/sesIdentityArn`,
+      parameterName: paramPaths.P_SES_IDENTITY_ARN,
       stringValue: identity.emailIdentityArn,
       description: 'SES email identity ARN',
     });
 
     new ssm.StringParameter(this, 'ParamEipAllocationId', {
-      parameterName: `${paramPrefix}/eipAllocationId`,
+      parameterName: paramPaths.P_EIP_ALLOCATION_ID,
       stringValue: eip.attrAllocationId,
       description: 'Elastic IP allocation ID for mail server instance',
     });

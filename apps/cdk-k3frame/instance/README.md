@@ -5,7 +5,7 @@ Instance infrastructure stack for mail servers. This stack contains EC2 instance
 ## Stack Naming
 
 This stack uses canonical naming via `@mm/infra-naming`:
-- **Stack Name**: `k3-frame-com-mailserver-instance` (format: `{domain-tld}-mailserver-instance`)
+- **Stack Name**: `k3frame-com-mailserver-instance` (format: `{domain-tld}-mailserver-instance`)
 - Stack name is automatically derived from the `DOMAIN` environment variable or CDK context
 
 See [ADR-001: Infrastructure Naming Standard](../../docs/adr/001-infra-naming-standard.md) for details.
@@ -38,7 +38,7 @@ This stack **requires** the core stack to be deployed first, as it reads SSM par
 - `{coreParamPrefix}/alarmsTopicArn`
 - `{coreParamPrefix}/eipAllocationId`
 
-For K3 Frame, the `coreParamPrefix` is `/k3-frame/core`.
+For EMC Notary, the `coreParamPrefix` is `/k3frame/core`.
 
 ## Multi-Domain Support
 
@@ -64,13 +64,9 @@ Domain configuration can be provided via:
 
 ### Default Configuration
 
-For backward compatibility, `K3FrameInstanceStack` is provided with hardcoded K3 Frame configuration. For new domains, use `MailServerInstanceStack` with explicit domain configuration.
+For backward compatibility, `k3frameInstanceStack` is provided with hardcoded EMC Notary configuration. For new domains, use `MailServerInstanceStack` with explicit domain configuration.
 
 ## Usage
-
-### AWS Profile
-
-All Nx targets in this project default to `AWS_PROFILE=k3frame` for synth/diff/deploy/destroy and admin/test commands. Override by setting `AWS_PROFILE` explicitly if needed.
 
 ### Build
 
@@ -87,16 +83,16 @@ CDK_DEFAULT_ACCOUNT=<account-id> CDK_DEFAULT_REGION=us-east-1 \
 
 ### Deploy
 
-**K3 Frame (default)**:
+**EMC Notary (default)**:
 ```bash
-FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 \
+FEATURE_CDK_k3frame_STACKS_ENABLED=1 \
   CDK_DEFAULT_ACCOUNT=<account-id> CDK_DEFAULT_REGION=us-east-1 \
   pnpm nx run cdk-k3frame-instance:deploy
 ```
 
 **Different Domain**:
 ```bash
-FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 \
+FEATURE_CDK_k3frame_STACKS_ENABLED=1 \
   DOMAIN=askdaokapra.com \
   CDK_DEFAULT_ACCOUNT=<account-id> CDK_DEFAULT_REGION=us-east-1 \
   pnpm nx run cdk-k3frame-instance:deploy
@@ -143,7 +139,7 @@ Reboots are logged in the Lambda function's CloudWatch logs. Check logs if reboo
 ```bash
 # View recent reboot logs
 aws logs filter-log-events \
-  --log-group-name '/aws/lambda/RebootMailServerInstanceFunction-k3-frame-com-mailserver-instance' \
+  --log-group-name '/aws/lambda/RebootMailServerInstanceFunction-k3frame-com-mailserver-instance' \
   --start-time $(date -v-1H +%s)000 \
   --query 'events[*].{time:from_unixtime(timestamp/1000),message:message}' \
   --output table
@@ -154,7 +150,7 @@ aws logs filter-log-events \
 After deploying the instance stack, bootstrap Mail-in-a-Box via SSM:
 
 ```bash
-FEATURE_INSTANCE_BOOTSTRAP_ENABLED=1 DOMAIN=k3-frame.com \
+FEATURE_INSTANCE_BOOTSTRAP_ENABLED=1 DOMAIN=k3frame.com \
   pnpm nx run ops-runner:instance:bootstrap
 ```
 
@@ -197,5 +193,6 @@ The status check tool:
 
 ## Feature Flags
 
-- **`FEATURE_CDK_K3FRAME_STACKS_ENABLED`**: Controls CDK stack deployment (default: `0`, set to `1` to enable)
+- **`FEATURE_CDK_k3frame_STACKS_ENABLED`**: Controls CDK stack deployment (default: `0`, set to `1` to enable)
 - **`FEATURE_INSTANCE_BOOTSTRAP_ENABLED`**: Controls SSM bootstrap execution (default: enabled unless set to `0`)
+

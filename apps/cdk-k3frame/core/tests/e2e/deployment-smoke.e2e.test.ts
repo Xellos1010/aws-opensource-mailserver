@@ -26,7 +26,7 @@ describe('Core Stack Deployment Smoke Tests', () => {
           cwd: process.cwd(),
           env: {
             ...process.env,
-            FEATURE_CDK_K3FRAME_STACKS_ENABLED: '1',
+            FEATURE_CDK_k3frame_STACKS_ENABLED: '1',
           },
         });
       } catch (error) {
@@ -67,7 +67,7 @@ describe('Core Stack Deployment Smoke Tests', () => {
             cwd: process.cwd(),
             env: {
               ...process.env,
-              FEATURE_CDK_K3FRAME_STACKS_ENABLED: '1',
+              FEATURE_CDK_k3frame_STACKS_ENABLED: '1',
             },
           });
         } catch (error) {
@@ -145,7 +145,7 @@ describe('Core Stack Deployment Smoke Tests', () => {
             cwd: process.cwd(),
             env: {
               ...process.env,
-              FEATURE_CDK_K3FRAME_STACKS_ENABLED: '1',
+              FEATURE_CDK_k3frame_STACKS_ENABLED: '1',
             },
           });
         }

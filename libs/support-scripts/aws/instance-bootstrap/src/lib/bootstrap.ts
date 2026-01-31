@@ -876,9 +876,34 @@ export async function bootstrapInstance(
     console.log('  4. Fetch latest Mail-in-a-Box version from GitHub API');
     console.log('  5. Build environment map with configuration values');
     console.log('  6. Send SSM RunCommand to execute MIAB setup script');
-    console.log('  7. MIAB script will checkout git tag (auto-detected latest)');
-    console.log('  8. MIAB script will verify management directory exists');
-    console.log('  9. MIAB script will run idempotent setup operations');
+    console.log('\n📋 MIAB Setup Script Stages (idempotent, marker-gated):');
+    console.log('  Stage 0: Preflight Configuration (CRITICAL - before MIAB)');
+    console.log('    - Set hostname via hostnamectl');
+    console.log('    - Add PRIMARY_HOSTNAME to /etc/hosts (prevents DNS errors)');
+    console.log('    - Pre-create /var/log/munin/munin-node.log (prevents fail2ban errors)');
+    console.log('    - Marker: /root/.preflight_complete');
+    console.log('  Stage 1: MIAB Installation');
+    console.log('    - Git clone/checkout Mail-in-a-Box repository');
+    console.log('    - Run setup/start.sh installer');
+    console.log('    - Validate services (postfix, dovecot, nginx) before marking complete');
+    console.log('    - Marker: /home/user-data/.miab_setup_complete (only if services healthy)');
+    console.log('  Stage 2: Admin User Creation');
+    console.log('    - Wait for API key generation (up to 5 minutes)');
+    console.log('    - Create admin@domain user with retry logic');
+    console.log('    - Marker: /home/user-data/.admin_user_created');
+    console.log('  Stage 3: Service Validation');
+    console.log('    - Check critical services (postfix, dovecot, nginx)');
+    console.log('    - Auto-restart services if not running');
+    console.log('    - Check for DNS resolution errors in mail.log');
+    console.log('    - Verify fail2ban is running');
+    console.log('    - Marker: /home/user-data/.service_validation_complete');
+    console.log('  Stage 4: Final Bootstrap Validation (GATED)');
+    console.log('    - Only write .bootstrap_complete when ALL conditions pass:');
+    console.log('      * .miab_setup_complete exists');
+    console.log('      * Postfix is active');
+    console.log('      * Dovecot is active');
+    console.log('      * API key exists');
+    console.log('    - Marker: /home/user-data/.bootstrap_complete');
     
     // Fetch version for dry-run display (try with SSM if credentials available)
     try {

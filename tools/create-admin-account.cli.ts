@@ -110,16 +110,10 @@ async function createAdminAccount(options: CreateAdminOptions): Promise<void> {
 
     if (result.success) {
       console.log(`✅ ${result.message}`);
-      if (result.accountExists) {
-        console.log(`   Account exists: ✅`);
-      }
-      if (result.mailboxCreated) {
-        console.log(`   Mailbox created: ✅`);
-      }
-      if (result.passwordSynced) {
-        console.log(`   Password synced: ✅`);
-      }
-          console.log('');
+      console.log(`   Account exists:   ${result.accountExists ? '✅' : '❌'}`);
+      console.log(`   Mailbox created:  ${result.mailboxCreated ? '✅' : '❌'}`);
+      console.log(`   Password synced:  ${result.passwordSynced ? '✅' : '❌'}`);
+      console.log('');
     } else {
       throw new Error(`Failed to create admin account: ${result.message}`);
     }

@@ -23,14 +23,14 @@ import { readFileSync, writeFileSync } from 'fs';
  * Only run on test instances, not production!
  */
 describe('Reboot Integration E2E Tests', () => {
-  // Use AWS profile (defaults to k3frame) for all AWS CLI commands
+  // Use AWS profile (defaults to hepe-admin-mfa) for all AWS CLI commands
   // If AWS_ACCESS_KEY_ID is set, it takes precedence over profile
   const hasAwsAccessKeys =
     process.env['AWS_ACCESS_KEY_ID'] && process.env['AWS_SECRET_ACCESS_KEY'];
   
-  // Default to k3frame profile if no profile or access keys are specified
+  // Default to hepe-admin-mfa profile if no profile or access keys are specified
   if (!hasAwsAccessKeys) {
-    const awsProfile = process.env['AWS_PROFILE'] || process.env['AWS_DEFAULT_PROFILE'] || 'k3frame';
+    const awsProfile = process.env['AWS_PROFILE'] || process.env['AWS_DEFAULT_PROFILE'] || 'hepe-admin-mfa';
     process.env['AWS_PROFILE'] = awsProfile;
   }
   
@@ -64,7 +64,7 @@ describe('Reboot Integration E2E Tests', () => {
     // Only set AWS_PROFILE if access keys are not provided
     const env = { ...process.env };
     if (!hasAwsAccessKeys) {
-      env['AWS_PROFILE'] = process.env['AWS_PROFILE'] || 'k3frame';
+      env['AWS_PROFILE'] = process.env['AWS_PROFILE'] || 'hepe-admin-mfa';
     }
     
     return execSync(command, {

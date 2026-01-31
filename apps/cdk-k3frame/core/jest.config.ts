@@ -34,7 +34,7 @@ export default {
     '^@mm/infra-naming$': '<rootDir>/../../../libs/infra/naming/src/index.ts',
     '^@mm/(.*)$': '<rootDir>/../../../libs/$1/src/index.ts',
   },
-  setupFiles: ['<rootDir>/src/test-setup.ts'],
   // Disable snapshot functionality to avoid babel dependency
   snapshotSerializers: [],
 };
+
