@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-export AWS_PROFILE=${AWS_PROFILE:-k3frame}
-export DOMAIN=${DOMAIN:-k3-frame.com}
+export AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa}
+export DOMAIN=${DOMAIN:-k3frame.com}
 export STACK_NAME="${DOMAIN//./-}-mailserver-instance"
 
 # Get resources

@@ -1,15 +1,15 @@
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
-import { K3FrameCoreStack } from '../stacks/core-stack';
+import { k3frameCoreStack } from '../stacks/core-stack';
 
 describe('Core Stack Resource Integration', () => {
   let app: cdk.App;
-  let stack: K3FrameCoreStack;
+  let stack: k3frameCoreStack;
   let template: Template;
 
   beforeEach(() => {
     app = new cdk.App();
-    stack = new K3FrameCoreStack(app, 'TestStack', {
+    stack = new k3frameCoreStack(app, 'TestStack', {
       env: {
         account: '123456789012',
         region: 'us-east-1',

@@ -68,6 +68,59 @@ export DEFAULT_PRIMARY_HOSTNAME="${PRIMARY_HOSTNAME}"
 export DEFAULT_PUBLIC_IP="${PUBLIC_IP}"
 
 # ==========================================
+# Stage 0: Preflight Configuration (CRITICAL - BEFORE MIAB)
+# ==========================================
+# These operations MUST happen before MIAB installer runs to avoid:
+# - sudo: unable to resolve host errors
+# - Postfix DNS resolution failures
+# - fail2ban startup failures due to missing log files
+PREFLIGHT_MARKER="/root/.preflight_complete"
+if [ ! -f "${PREFLIGHT_MARKER}" ]; then
+  echo "=========================================="
+  echo "Stage 0: Preflight Configuration"
+  echo "=========================================="
+
+  # 0.1 - Set hostname before anything else
+  echo "Setting hostname to ${PRIMARY_HOSTNAME}..."
+  hostnamectl set-hostname "${PRIMARY_HOSTNAME}" || hostname "${PRIMARY_HOSTNAME}"
+
+  # 0.2 - Add /etc/hosts entry (CRITICAL - before MIAB)
+  # This prevents "sudo: unable to resolve host" and Postfix DNS errors
+  if ! grep -q "${PRIMARY_HOSTNAME}" /etc/hosts; then
+    echo "Adding ${PRIMARY_HOSTNAME} to /etc/hosts..."
+    echo "127.0.0.1 ${PRIMARY_HOSTNAME}" >> /etc/hosts
+    echo "::1 ${PRIMARY_HOSTNAME}" >> /etc/hosts
+  else
+    echo "/etc/hosts already contains ${PRIMARY_HOSTNAME}"
+  fi
+
+  # 0.3 - Validate hostname resolves
+  if getent hosts "${PRIMARY_HOSTNAME}" >/dev/null 2>&1; then
+    echo "Hostname ${PRIMARY_HOSTNAME} resolves correctly"
+  else
+    echo "WARNING: ${PRIMARY_HOSTNAME} does not resolve, forcing /etc/hosts..."
+    echo "127.0.0.1 ${PRIMARY_HOSTNAME}" >> /etc/hosts
+  fi
+
+  # 0.4 - Pre-create munin log to prevent fail2ban failure
+  # fail2ban's miab-munin jail fails if /var/log/munin/munin-node.log doesn't exist
+  echo "Pre-creating munin directories and log files..."
+  mkdir -p /var/log/munin
+  touch /var/log/munin/munin-node.log
+  chmod 640 /var/log/munin/munin-node.log
+
+  touch "${PREFLIGHT_MARKER}"
+  echo "Preflight configuration complete"
+else
+  echo "Preflight already completed (marker exists)"
+  # Re-verify /etc/hosts on rerun (in case of reboot or manual cleanup)
+  if ! grep -q "${PRIMARY_HOSTNAME}" /etc/hosts; then
+    echo "Re-adding ${PRIMARY_HOSTNAME} to /etc/hosts..."
+    echo "127.0.0.1 ${PRIMARY_HOSTNAME}" >> /etc/hosts
+  fi
+fi
+
+# ==========================================
 # System Updates & Prerequisites (idempotent)
 # ==========================================
 PACKAGES_MARKER="/root/.miab_packages_installed"
@@ -337,7 +390,7 @@ else
   fi
   
   # Check if MIAB is already configured (check for key files/directories)
-  if [ -f "/home/user-data/mailinabox.conf" ] || [ -d "/home/user-data/ssl" ]; then
+  if [ -f "/etc/mailinabox.conf" ] || [ -d "/home/user-data/ssl" ]; then
     echo "Mail-in-a-Box appears to be already configured"
     echo "Checking if setup completed successfully..."
     
@@ -359,18 +412,59 @@ else
     echo "Running Mail-in-a-Box installer..."
     touch "${MIAB_INSTALLING_MARKER}"
     chown user-data:user-data "${MIAB_INSTALLING_MARKER}"
-    
+
     cd /opt/mailinabox
-    if bash -x setup/start.sh 2>&1 | tee /tmp/mailinabox_debug.log; then
-      # Installation succeeded - create completion marker
-      echo "Mail-in-a-Box installer completed successfully"
+    INSTALL_EXIT_CODE=0
+    bash -x setup/start.sh 2>&1 | tee /tmp/mailinabox_debug.log || INSTALL_EXIT_CODE=$?
+    rm -f "${MIAB_INSTALLING_MARKER}"
+
+    # Enhanced validation: Check services BEFORE creating completion marker
+    echo "Validating MIAB installation..."
+    echo "Waiting for services to stabilize..."
+    sleep 10
+
+    VALIDATION_PASSED=1
+    for SERVICE in postfix dovecot nginx; do
+      if ! systemctl is-active --quiet "${SERVICE}" 2>/dev/null; then
+        VALIDATION_PASSED=0
+        echo "WARNING: ${SERVICE} is not running"
+      else
+        echo "OK: ${SERVICE} is running"
+      fi
+    done
+
+    # Check for API key (indicates MIAB web UI setup completed)
+    API_KEY_PATH="/var/lib/mailinabox/api.key"
+    if [ ! -f "${API_KEY_PATH}" ]; then
+      VALIDATION_PASSED=0
+      echo "WARNING: API key not found at ${API_KEY_PATH}"
+    else
+      echo "OK: API key exists"
+    fi
+
+    # Check for mailinabox.conf (indicates basic setup completed)
+    if [ ! -f "/etc/mailinabox.conf" ]; then
+      VALIDATION_PASSED=0
+      echo "WARNING: mailinabox.conf not found"
+    else
+      echo "OK: mailinabox.conf exists"
+    fi
+
+    # Only create completion marker if ALL validations pass
+    if [ ${VALIDATION_PASSED} -eq 1 ]; then
+      echo "Mail-in-a-Box installation validated successfully"
       touch "${MIAB_COMPLETE_MARKER}"
       chown user-data:user-data "${MIAB_COMPLETE_MARKER}"
-      rm -f "${MIAB_INSTALLING_MARKER}"
+      echo "MIAB_INSTALL_STATUS=SUCCESS" >> "${MIAB_COMPLETE_MARKER}"
+      echo "MIAB_INSTALL_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "${MIAB_COMPLETE_MARKER}"
     else
-      echo "Warning: MIAB installer encountered errors. Check /tmp/mailinabox_debug.log"
-      rm -f "${MIAB_INSTALLING_MARKER}"
-      # Don't exit - continue with other steps that might succeed
+      echo "=========================================="
+      echo "WARNING: MIAB installation validation FAILED!"
+      echo "Installation exit code: ${INSTALL_EXIT_CODE}"
+      echo "Debug log: /tmp/mailinabox_debug.log"
+      echo "=========================================="
+      echo "NOT creating completion marker - bootstrap will retry on next run"
+      # Do NOT exit - continue with other steps that might help
     fi
   fi
 fi
@@ -601,11 +695,13 @@ CFG
     systemctl restart dovecot || true
     systemctl restart opendkim || true
     
-    # Update hosts file
+    # Note: /etc/hosts entry now set in Stage 0 (Preflight)
+    # This is a defensive re-check
     if ! grep -q "${PRIMARY_HOSTNAME}" /etc/hosts; then
+      echo "Re-adding ${PRIMARY_HOSTNAME} to /etc/hosts (was removed unexpectedly)"
       echo "127.0.0.1 ${PRIMARY_HOSTNAME}" >> /etc/hosts
     fi
-    
+
     # Mark SES relay as configured
     touch "${SES_RELAY_MARKER}"
     chown user-data:user-data "${SES_RELAY_MARKER}"
@@ -615,6 +711,100 @@ CFG
       echo "Warning: SES SMTP credentials not found in SSM. Skipping relay configuration."
     fi
   fi
+fi
+
+# ==========================================
+# Stage 3: Service Validation
+# ==========================================
+SERVICE_VALIDATION_MARKER="/home/user-data/.service_validation_complete"
+if [ ! -f "${SERVICE_VALIDATION_MARKER}" ]; then
+  echo "=========================================="
+  echo "Stage 3: Service Validation"
+  echo "=========================================="
+
+  VALIDATION_ISSUES=0
+
+  # 3.1 - Verify all critical services are running
+  echo "Checking critical services..."
+  for SERVICE in postfix dovecot nginx; do
+    if systemctl is-active --quiet "${SERVICE}" 2>/dev/null; then
+      echo "  OK: ${SERVICE} is active"
+    else
+      echo "  WARN: ${SERVICE} is NOT active"
+      VALIDATION_ISSUES=$((VALIDATION_ISSUES + 1))
+
+      # Attempt to start/restart the service
+      echo "  Attempting to restart ${SERVICE}..."
+      systemctl restart "${SERVICE}" 2>/dev/null || true
+      sleep 2
+
+      if systemctl is-active --quiet "${SERVICE}" 2>/dev/null; then
+        echo "  OK: ${SERVICE} started after restart"
+        VALIDATION_ISSUES=$((VALIDATION_ISSUES - 1))
+      else
+        echo "  FAIL: ${SERVICE} could not be started"
+      fi
+    fi
+  done
+
+  # 3.2 - Check for DNS resolution errors in mail log
+  echo "Checking for DNS resolution errors..."
+  MAIL_LOG="/var/log/mail.log"
+  if [ -f "${MAIL_LOG}" ]; then
+    DNS_ERRORS=$(grep -c "Host not found" "${MAIL_LOG}" 2>/dev/null || echo "0")
+    if [ "${DNS_ERRORS}" -gt 0 ]; then
+      echo "  WARN: Found ${DNS_ERRORS} DNS resolution errors in mail.log"
+      echo "  Recent DNS errors:"
+      grep "Host not found" "${MAIL_LOG}" 2>/dev/null | tail -3 || true
+    else
+      echo "  OK: No DNS resolution errors found"
+    fi
+  else
+    echo "  INFO: mail.log not found yet (may be normal for fresh install)"
+  fi
+
+  # 3.3 - Verify hostname resolution works
+  echo "Verifying hostname resolution..."
+  if getent hosts "${PRIMARY_HOSTNAME}" >/dev/null 2>&1; then
+    echo "  OK: ${PRIMARY_HOSTNAME} resolves"
+  else
+    echo "  WARN: ${PRIMARY_HOSTNAME} does not resolve"
+    echo "  Adding to /etc/hosts as fallback..."
+    if ! grep -q "${PRIMARY_HOSTNAME}" /etc/hosts; then
+      echo "127.0.0.1 ${PRIMARY_HOSTNAME}" >> /etc/hosts
+    fi
+    VALIDATION_ISSUES=$((VALIDATION_ISSUES + 1))
+  fi
+
+  # 3.4 - Check fail2ban status (non-critical but informative)
+  echo "Checking fail2ban status..."
+  if systemctl is-active --quiet fail2ban 2>/dev/null; then
+    echo "  OK: fail2ban is running"
+  else
+    echo "  INFO: fail2ban is not running (attempting restart)"
+    # Ensure munin log file exists (defensive re-check)
+    if [ ! -f "/var/log/munin/munin-node.log" ]; then
+      mkdir -p /var/log/munin
+      touch /var/log/munin/munin-node.log
+      chmod 640 /var/log/munin/munin-node.log
+    fi
+    systemctl restart fail2ban 2>/dev/null || true
+  fi
+
+  # Summary
+  echo ""
+  if [ ${VALIDATION_ISSUES} -eq 0 ]; then
+    echo "Service validation passed with no issues"
+  else
+    echo "Service validation completed with ${VALIDATION_ISSUES} issue(s)"
+    echo "These issues are logged but will not block bootstrap completion"
+  fi
+  touch "${SERVICE_VALIDATION_MARKER}"
+  chown user-data:user-data "${SERVICE_VALIDATION_MARKER}"
+  echo "VALIDATION_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "${SERVICE_VALIDATION_MARKER}"
+  echo "VALIDATION_ISSUES=${VALIDATION_ISSUES}" >> "${SERVICE_VALIDATION_MARKER}"
+else
+  echo "Service validation already completed (marker exists)"
 fi
 
 # ==========================================
@@ -693,16 +883,110 @@ if [ -d "${CLEANUP_DIR}" ]; then
 fi
 
 # ==========================================
-# Final Completion Marker
+# Stage 4: Final Bootstrap Validation (GATED)
 # ==========================================
-# Create final completion marker to indicate successful bootstrap
+# Only write .bootstrap_complete when ALL conditions pass:
+# - .miab_setup_complete exists
+# - Postfix + Dovecot are active
+# - API key exists
 BOOTSTRAP_COMPLETE_MARKER="/home/user-data/.bootstrap_complete"
 if [ ! -f "${BOOTSTRAP_COMPLETE_MARKER}" ]; then
-  echo "Creating bootstrap completion marker..."
-  touch "${BOOTSTRAP_COMPLETE_MARKER}"
-  chown user-data:user-data "${BOOTSTRAP_COMPLETE_MARKER}"
-  echo "Bootstrap completed at: $(date)" > "${BOOTSTRAP_COMPLETE_MARKER}"
-  chown user-data:user-data "${BOOTSTRAP_COMPLETE_MARKER}"
+  echo "=========================================="
+  echo "Stage 4: Final Bootstrap Validation"
+  echo "=========================================="
+
+  COMPLETION_BLOCKED=0
+  COMPLETION_REASONS=""
+
+  # Check: MIAB setup complete
+  if [ -f "${MIAB_COMPLETE_MARKER}" ]; then
+    echo "OK: MIAB setup complete marker exists"
+  else
+    echo "BLOCKED: MIAB setup complete marker NOT found"
+    COMPLETION_BLOCKED=1
+    COMPLETION_REASONS="${COMPLETION_REASONS}\n  - .miab_setup_complete marker missing"
+  fi
+
+  # Check: Postfix is running
+  if systemctl is-active --quiet postfix 2>/dev/null; then
+    echo "OK: Postfix is running"
+  else
+    echo "BLOCKED: Postfix is NOT running"
+    COMPLETION_BLOCKED=1
+    COMPLETION_REASONS="${COMPLETION_REASONS}\n  - Postfix service not active"
+  fi
+
+  # Check: Dovecot is running
+  if systemctl is-active --quiet dovecot 2>/dev/null; then
+    echo "OK: Dovecot is running"
+  else
+    echo "BLOCKED: Dovecot is NOT running"
+    COMPLETION_BLOCKED=1
+    COMPLETION_REASONS="${COMPLETION_REASONS}\n  - Dovecot service not active"
+  fi
+
+  # Check: API key exists
+  if [ -f "/var/lib/mailinabox/api.key" ]; then
+    echo "OK: API key exists"
+  else
+    echo "BLOCKED: API key NOT found"
+    COMPLETION_BLOCKED=1
+    COMPLETION_REASONS="${COMPLETION_REASONS}\n  - API key missing (/var/lib/mailinabox/api.key)"
+  fi
+
+  # Check: Admin user marker exists (informational, not blocking)
+  ADMIN_USER_MARKER="/home/user-data/.admin_user_created"
+  if [ -f "${ADMIN_USER_MARKER}" ]; then
+    echo "OK: Admin user creation marker exists"
+  else
+    echo "INFO: Admin user creation marker not found (not blocking)"
+  fi
+
+  # Decision point
+  echo ""
+  if [ ${COMPLETION_BLOCKED} -eq 0 ]; then
+    echo "=========================================="
+    echo "All validation checks passed!"
+    echo "Creating bootstrap completion marker..."
+    echo "=========================================="
+
+    touch "${BOOTSTRAP_COMPLETE_MARKER}"
+    chown user-data:user-data "${BOOTSTRAP_COMPLETE_MARKER}"
+
+    # Write detailed completion info
+    cat >> "${BOOTSTRAP_COMPLETE_MARKER}" << EOF
+Bootstrap completed successfully
+Time: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+Hostname: ${PRIMARY_HOSTNAME}
+Domain: ${DOMAIN_NAME}
+MIAB Version: ${MAILINABOX_VERSION:-unknown}
+Postfix: $(systemctl is-active postfix 2>/dev/null || echo "unknown")
+Dovecot: $(systemctl is-active dovecot 2>/dev/null || echo "unknown")
+Nginx: $(systemctl is-active nginx 2>/dev/null || echo "unknown")
+API Key: $([ -f /var/lib/mailinabox/api.key ] && echo "exists" || echo "missing")
+Admin Created: $([ -f ${ADMIN_USER_MARKER} ] && echo "yes" || echo "no")
+EOF
+
+    echo "Bootstrap completed at: $(date)"
+  else
+    echo "=========================================="
+    echo "BOOTSTRAP COMPLETION BLOCKED"
+    echo "=========================================="
+    echo -e "The following issues prevent marking bootstrap as complete:${COMPLETION_REASONS}"
+    echo ""
+    echo "The bootstrap script will NOT create the .bootstrap_complete marker."
+    echo "This ensures the bootstrap can be re-run to fix these issues."
+    echo ""
+    echo "Troubleshooting:"
+    echo "  1. Check logs: /var/log/mailinabox_setup.log"
+    echo "  2. Check MIAB debug: /tmp/mailinabox_debug.log"
+    echo "  3. Check services: systemctl status postfix dovecot nginx"
+    echo "  4. Re-run bootstrap: pnpm nx run ops-runner:instance:bootstrap"
+  fi
+else
+  echo "Bootstrap already completed (marker exists)"
+  echo "Marker contents:"
+  cat "${BOOTSTRAP_COMPLETE_MARKER}" 2>/dev/null || echo "  (could not read marker)"
 fi
 
 # ==========================================

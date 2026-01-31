@@ -1,0 +1,557 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: System stats reporting Lambda for k3frame.com - Comprehensive system metrics for operational monitoring
+
+Parameters:
+  InstanceId:
+    Type: String
+    Description: EC2 instance ID to monitor (get from mailserver stack RestorePrefix or InstanceId output)
+  Region:
+    Type: String
+    Default: us-east-1
+    Description: AWS region where resources are deployed
+
+Resources:
+  SystemStatsLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub SystemStatsLambda-${AWS::StackName}
+      Description: Role for system stats reporting Lambda
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: SystemStatsLambdaPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:SendCommand
+                  - ssm:GetCommandInvocation
+                  - ssm:DescribeInstanceInformation
+                  - ec2:DescribeInstances
+                  - cloudwatch:PutMetricData
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: 'arn:aws:logs:*:*:*'
+
+  SystemStatsLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Collects and reports comprehensive system statistics for operational monitoring
+      FunctionName: !Sub system-stats-${AWS::StackName}
+      Handler: index.handler
+      MemorySize: 512
+      Role: !GetAtt SystemStatsLambdaRole.Arn
+      Runtime: python3.11
+      Timeout: 60
+      Environment:
+        Variables:
+          INSTANCE_ID: !Ref InstanceId
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import time
+          import os
+          from datetime import datetime
+          
+          ssm = boto3.client('ssm')
+          ec2 = boto3.client('ec2')
+          cloudwatch = boto3.client('cloudwatch')
+          
+          def collect_system_stats(instance_id):
+              """
+              Collect comprehensive system statistics via SSM.
+              Returns detailed metrics for operational monitoring.
+              """
+              
+              stats_script = """
+              set +e
+              
+              echo "=== SYSTEM STATISTICS REPORT ==="
+              echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+              echo ""
+              
+              # Memory Statistics
+              echo "=== MEMORY STATISTICS ==="
+              free -h
+              echo ""
+              MEM_TOTAL=$(free -b | awk '/^Mem:/{print $2}')
+              MEM_USED=$(free -b | awk '/^Mem:/{print $3}')
+              MEM_FREE=$(free -b | awk '/^Mem:/{print $4}')
+              MEM_AVAIL=$(free -b | awk '/^Mem:/{print $7}')
+              MEM_CACHE=$(free -b | awk '/^Mem:/{print $6}')
+              MEM_PERCENT=$((MEM_USED * 100 / MEM_TOTAL))
+              MEM_AVAIL_PERCENT=$((MEM_AVAIL * 100 / MEM_TOTAL))
+              echo "Memory Usage: ${MEM_PERCENT}%"
+              echo "Memory Available: ${MEM_AVAIL_PERCENT}%"
+              echo "Memory Total: ${MEM_TOTAL} bytes"
+              echo "Memory Used: ${MEM_USED} bytes"
+              echo "Memory Free: ${MEM_FREE} bytes"
+              echo "Memory Available: ${MEM_AVAIL} bytes"
+              echo "Memory Cache: ${MEM_CACHE} bytes"
+              echo ""
+              
+              # Disk Statistics
+              echo "=== DISK STATISTICS ==="
+              df -h /
+              echo ""
+              DISK_TOTAL=$(df -B1 / | tail -1 | awk '{print $2}')
+              DISK_USED=$(df -B1 / | tail -1 | awk '{print $3}')
+              DISK_FREE=$(df -B1 / | tail -1 | awk '{print $4}')
+              DISK_PERCENT=$(df / | tail -1 | awk '{print $5}' | sed 's/%//')
+              echo "Disk Usage: ${DISK_PERCENT}%"
+              echo "Disk Total: ${DISK_TOTAL} bytes"
+              echo "Disk Used: ${DISK_USED} bytes"
+              echo "Disk Free: ${DISK_FREE} bytes"
+              echo ""
+              
+              # CPU and Load Statistics
+              echo "=== CPU AND LOAD STATISTICS ==="
+              uptime
+              echo ""
+              LOAD_1=$(uptime | awk -F'load average:' '{print $2}' | awk '{print $1}' | sed 's/,//')
+              LOAD_5=$(uptime | awk -F'load average:' '{print $2}' | awk '{print $2}' | sed 's/,//')
+              LOAD_15=$(uptime | awk -F'load average:' '{print $2}' | awk '{print $3}')
+              CPU_COUNT=$(nproc)
+              echo "Load Average (1min): ${LOAD_1}"
+              echo "Load Average (5min): ${LOAD_5}"
+              echo "Load Average (15min): ${LOAD_15}"
+              echo "CPU Cores: ${CPU_COUNT}"
+              echo ""
+              
+              # Service Status
+              echo "=== SERVICE STATUS ==="
+              POSTFIX_STATUS=$(systemctl is-active postfix 2>/dev/null || echo "unknown")
+              DOVECOT_STATUS=$(systemctl is-active dovecot 2>/dev/null || echo "unknown")
+              NGINX_STATUS=$(systemctl is-active nginx 2>/dev/null || echo "unknown")
+              SSM_STATUS=$(systemctl is-active snap.amazon-ssm-agent.amazon-ssm-agent.service 2>/dev/null || systemctl is-active amazon-ssm-agent 2>/dev/null || echo "unknown")
+              echo "Postfix: ${POSTFIX_STATUS}"
+              echo "Dovecot: ${DOVECOT_STATUS}"
+              echo "Nginx: ${NGINX_STATUS}"
+              echo "SSM Agent: ${SSM_STATUS}"
+              echo ""
+              
+              # Mail Queue Statistics
+              echo "=== MAIL QUEUE STATISTICS ==="
+              MAILQ_OUTPUT=$(mailq 2>/dev/null || echo "")
+              MAILQ_COUNT=$(echo "${MAILQ_OUTPUT}" | grep -c "^[A-F0-9]" || echo "0")
+              echo "Mail Queue Size: ${MAILQ_COUNT} messages"
+              if [ "${MAILQ_COUNT}" -gt 0 ]; then
+                  echo "Mail Queue Sample (first 5):"
+                  echo "${MAILQ_OUTPUT}" | head -6
+              fi
+              echo ""
+              
+              # Network Statistics
+              echo "=== NETWORK STATISTICS ==="
+              echo "Active Connections:"
+              ss -s 2>/dev/null | head -2 || netstat -s 2>/dev/null | head -5 || echo "Network stats unavailable"
+              echo ""
+              
+              # Process Statistics
+              echo "=== PROCESS STATISTICS ==="
+              echo "Top 5 Memory-Consuming Processes:"
+              ps aux --sort=-%mem | head -6 | awk '{print $2, $3"%", $4"%", $11}' | column -t
+              echo ""
+              echo "Total Processes: $(ps aux | wc -l)"
+              echo ""
+              
+              # System Uptime
+              echo "=== SYSTEM UPTIME ==="
+              UPTIME_SECONDS=$(awk '{print int($1)}' /proc/uptime)
+              UPTIME_DAYS=$((UPTIME_SECONDS / 86400))
+              UPTIME_HOURS=$(((UPTIME_SECONDS % 86400) / 3600))
+              UPTIME_MINUTES=$(((UPTIME_SECONDS % 3600) / 60))
+              echo "Uptime: ${UPTIME_DAYS} days, ${UPTIME_HOURS} hours, ${UPTIME_MINUTES} minutes"
+              echo ""
+              
+              # Health Indicators
+              echo "=== HEALTH INDICATORS ==="
+              HEALTH_SCORE=100
+              HEALTH_ISSUES=()
+              
+              # Check memory
+              if [ "${MEM_AVAIL_PERCENT}" -lt 10 ]; then
+                  HEALTH_SCORE=$((HEALTH_SCORE - 30))
+                  HEALTH_ISSUES+=("Low memory available (${MEM_AVAIL_PERCENT}%)")
+              elif [ "${MEM_AVAIL_PERCENT}" -lt 20 ]; then
+                  HEALTH_SCORE=$((HEALTH_SCORE - 15))
+                  HEALTH_ISSUES+=("Memory getting low (${MEM_AVAIL_PERCENT}%)")
+              fi
+              
+              # Check disk
+              if [ "${DISK_PERCENT}" -gt 95 ]; then
+                  HEALTH_SCORE=$((HEALTH_SCORE - 30))
+                  HEALTH_ISSUES+=("Disk nearly full (${DISK_PERCENT}%)")
+              elif [ "${DISK_PERCENT}" -gt 90 ]; then
+                  HEALTH_SCORE=$((HEALTH_SCORE - 15))
+                  HEALTH_ISSUES+=("Disk getting full (${DISK_PERCENT}%)")
+              fi
+              
+              # Check services
+              if [ "${POSTFIX_STATUS}" != "active" ]; then
+                  HEALTH_SCORE=$((HEALTH_SCORE - 25))
+                  HEALTH_ISSUES+=("Postfix is ${POSTFIX_STATUS}")
+              fi
+              if [ "${DOVECOT_STATUS}" != "active" ]; then
+                  HEALTH_SCORE=$((HEALTH_SCORE - 25))
+                  HEALTH_ISSUES+=("Dovecot is ${DOVECOT_STATUS}")
+              fi
+              if [ "${NGINX_STATUS}" != "active" ]; then
+                  HEALTH_SCORE=$((HEALTH_SCORE - 10))
+                  HEALTH_ISSUES+=("Nginx is ${NGINX_STATUS}")
+              fi
+              
+              # Check mail queue
+              MAILQ_COUNT_NUM=$(echo "${MAILQ_COUNT}" | tr -d ' ' || echo "0")
+              if [ -n "${MAILQ_COUNT_NUM}" ] && [ "${MAILQ_COUNT_NUM}" -gt 100 ] 2>/dev/null; then
+                  HEALTH_SCORE=$((HEALTH_SCORE - 10))
+                  HEALTH_ISSUES+=("Large mail queue (${MAILQ_COUNT_NUM} messages)")
+              fi
+              
+              # Ensure health score doesn't go negative
+              if [ "${HEALTH_SCORE}" -lt 0 ]; then
+                  HEALTH_SCORE=0
+              fi
+              
+              echo "Health Score: ${HEALTH_SCORE}/100"
+              if [ ${#HEALTH_ISSUES[@]} -gt 0 ]; then
+                  echo "Issues:"
+                  for issue in "${HEALTH_ISSUES[@]}"; do
+                      echo "  - ${issue}"
+                  done
+              else
+                  echo "No issues detected"
+              fi
+              echo ""
+              
+              # Output JSON for parsing (simplified, robust)
+              echo "=== JSON OUTPUT ==="
+              TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ || echo "")
+              
+              # Build issues array (simplified approach, handle empty case)
+              ISSUES_ARRAY="["
+              ISSUE_COUNT=0
+              ISSUE_LIST_LEN=${#HEALTH_ISSUES[@]}
+              if [ "$ISSUE_LIST_LEN" -gt 0 ] 2>/dev/null; then
+                  for issue_item in "${HEALTH_ISSUES[@]}"; do
+                      if [ $ISSUE_COUNT -gt 0 ]; then
+                          ISSUES_ARRAY="${ISSUES_ARRAY},"
+                      fi
+                      # Escape quotes and backslashes in issue message
+                      ISSUE_ESC=$(echo "${issue_item}" | sed 's/\\\\/\\\\\\\\/g' | sed 's/"/\\\\"/g' 2>/dev/null || echo "${issue_item}")
+                      ISSUES_ARRAY="${ISSUES_ARRAY}\\\"${ISSUE_ESC}\\\""
+                      ISSUE_COUNT=$((ISSUE_COUNT + 1))
+                  done
+              fi
+              ISSUES_ARRAY="${ISSUES_ARRAY}]"
+              
+              # Output JSON
+              echo "{"
+              echo "\\\"timestamp\\\":\\\"${TIMESTAMP}\\\","
+              echo "\\\"memory\\\":{"
+              echo "\\\"total_bytes\\\":${MEM_TOTAL},"
+              echo "\\\"used_bytes\\\":${MEM_USED},"
+              echo "\\\"free_bytes\\\":${MEM_FREE},"
+              echo "\\\"available_bytes\\\":${MEM_AVAIL},"
+              echo "\\\"cache_bytes\\\":${MEM_CACHE},"
+              echo "\\\"usage_percent\\\":${MEM_PERCENT},"
+              echo "\\\"available_percent\\\":${MEM_AVAIL_PERCENT}"
+              echo "},"
+              echo "\\\"disk\\\":{"
+              echo "\\\"total_bytes\\\":${DISK_TOTAL},"
+              echo "\\\"used_bytes\\\":${DISK_USED},"
+              echo "\\\"free_bytes\\\":${DISK_FREE},"
+              echo "\\\"usage_percent\\\":${DISK_PERCENT}"
+              echo "},"
+              echo "\\\"cpu\\\":{"
+              echo "\\\"cores\\\":${CPU_COUNT},"
+              echo "\\\"load_1min\\\":${LOAD_1},"
+              echo "\\\"load_5min\\\":${LOAD_5},"
+              echo "\\\"load_15min\\\":${LOAD_15}"
+              echo "},"
+              echo "\\\"services\\\":{"
+              echo "\\\"postfix\\\":\\\"${POSTFIX_STATUS}\\\","
+              echo "\\\"dovecot\\\":\\\"${DOVECOT_STATUS}\\\","
+              echo "\\\"nginx\\\":\\\"${NGINX_STATUS}\\\","
+              echo "\\\"ssm_agent\\\":\\\"${SSM_STATUS}\\\""
+              echo "},"
+              echo "\\\"mail_queue\\\":{"
+              echo "\\\"size\\\":${MAILQ_COUNT}"
+              echo "},"
+              echo "\\\"uptime_seconds\\\":${UPTIME_SECONDS},"
+              echo "\\\"health\\\":{"
+              echo "\\\"score\\\":${HEALTH_SCORE},"
+              echo "\\\"issues\\\":${ISSUES_ARRAY}"
+              echo "}"
+              echo "}"
+              """
+              
+              try:
+                  print(f"Collecting system statistics for instance {instance_id}")
+                  
+                  # Send SSM command
+                  response = ssm.send_command(
+                      InstanceIds=[instance_id],
+                      DocumentName="AWS-RunShellScript",
+                      Parameters={'commands': [stats_script]},
+                      TimeoutSeconds=60
+                  )
+                  
+                  # Extract CommandId from nested response structure
+                  if 'Command' in response and 'CommandId' in response['Command']:
+                      command_id = response['Command']['CommandId']
+                  elif 'CommandId' in response:
+                      command_id = response['CommandId']
+                  else:
+                      return {
+                          'success': False,
+                          'error': f'No CommandId in response: {response}'
+                      }
+                  
+                  # Wait for command completion (poll up to 55 seconds)
+                  max_wait = 55
+                  waited = 0
+                  while waited < max_wait:
+                      time.sleep(2)
+                      waited += 2
+                      output = ssm.get_command_invocation(
+                          CommandId=command_id,
+                          InstanceId=instance_id
+                      )
+                      status = output.get('Status')
+                      
+                      if status in ['Success', 'Failed', 'TimedOut', 'Cancelled']:
+                          stdout = output.get('StandardOutputContent', '')
+                          stderr = output.get('StandardErrorContent', '')
+                          
+                          # Parse JSON from stdout (try multiple methods)
+                          json_data = {}
+                          
+                          # Method 1: Look for JSON after "JSON OUTPUT" marker
+                          json_marker = stdout.find('=== JSON OUTPUT ===')
+                          if json_marker >= 0:
+                              json_section = stdout[json_marker:]
+                              json_start = json_section.find('{')
+                              json_end = json_section.rfind('}') + 1
+                              if json_start >= 0 and json_end > json_start:
+                                  try:
+                                      json_str = json_section[json_start:json_end]
+                                      json_data = json.loads(json_str)
+                                  except json.JSONDecodeError as e:
+                                      print(f"Error parsing JSON from marker: {e}")
+                          
+                          # Method 2: Look for any JSON in stdout
+                          if not json_data:
+                              json_start = stdout.find('{')
+                              json_end = stdout.rfind('}') + 1
+                              if json_start >= 0 and json_end > json_start:
+                                  try:
+                                      json_str = stdout[json_start:json_end]
+                                      json_data = json.loads(json_str)
+                                  except json.JSONDecodeError as e:
+                                      print(f"Error parsing JSON from stdout: {e}")
+                          
+                          # Method 3: Parse from text output if JSON not found
+                          if not json_data and stdout:
+                              try:
+                                  import re
+                                  json_data = {
+                                      'timestamp': datetime.utcnow().isoformat() + 'Z',
+                                      'memory': {},
+                                      'disk': {},
+                                      'cpu': {},
+                                      'services': {},
+                                      'mail_queue': {},
+                                      'uptime_seconds': 0,
+                                      'health': {'score': 100, 'issues': []}
+                                  }
+                                  
+                                  # Parse memory
+                                  mem_match = re.search(r'Memory Usage: (\d+)%', stdout)
+                                  mem_avail_match = re.search(r'Memory Available: (\d+)%', stdout)
+                                  mem_total_match = re.search(r'Memory Total: (\d+) bytes', stdout)
+                                  mem_used_match = re.search(r'Memory Used: (\d+) bytes', stdout)
+                                  mem_free_match = re.search(r'Memory Free: (\d+) bytes', stdout)
+                                  mem_avail_bytes_match = re.search(r'Memory Available: (\d+) bytes', stdout)
+                                  mem_cache_match = re.search(r'Memory Cache: (\d+) bytes', stdout)
+                                  
+                                  if mem_total_match:
+                                      json_data['memory']['total_bytes'] = int(mem_total_match.group(1))
+                                  if mem_used_match:
+                                      json_data['memory']['used_bytes'] = int(mem_used_match.group(1))
+                                  if mem_free_match:
+                                      json_data['memory']['free_bytes'] = int(mem_free_match.group(1))
+                                  if mem_avail_bytes_match:
+                                      json_data['memory']['available_bytes'] = int(mem_avail_bytes_match.group(1))
+                                  if mem_cache_match:
+                                      json_data['memory']['cache_bytes'] = int(mem_cache_match.group(1))
+                                  if mem_avail_match:
+                                      json_data['memory']['available_percent'] = int(mem_avail_match.group(1))
+                                  if mem_match:
+                                      json_data['memory']['usage_percent'] = int(mem_match.group(1))
+                                  
+                                  # Parse disk
+                                  disk_match = re.search(r'Disk Usage: (\d+)%', stdout)
+                                  disk_total_match = re.search(r'Disk Total: (\d+) bytes', stdout)
+                                  disk_used_match = re.search(r'Disk Used: (\d+) bytes', stdout)
+                                  disk_free_match = re.search(r'Disk Free: (\d+) bytes', stdout)
+                                  
+                                  if disk_match:
+                                      json_data['disk']['usage_percent'] = int(disk_match.group(1))
+                                  if disk_total_match:
+                                      json_data['disk']['total_bytes'] = int(disk_total_match.group(1))
+                                  if disk_used_match:
+                                      json_data['disk']['used_bytes'] = int(disk_used_match.group(1))
+                                  if disk_free_match:
+                                      json_data['disk']['free_bytes'] = int(disk_free_match.group(1))
+                                  
+                                  # Parse CPU and load
+                                  cpu_cores_match = re.search(r'CPU Cores: (\d+)', stdout)
+                                  load_1_match = re.search(r'Load Average \(1min\): ([\d.]+)', stdout)
+                                  load_5_match = re.search(r'Load Average \(5min\): ([\d.]+)', stdout)
+                                  load_15_match = re.search(r'Load Average \(15min\): ([\d.]+)', stdout)
+                                  
+                                  if cpu_cores_match:
+                                      json_data['cpu']['cores'] = int(cpu_cores_match.group(1))
+                                  if load_1_match:
+                                      json_data['cpu']['load_1min'] = float(load_1_match.group(1))
+                                  if load_5_match:
+                                      json_data['cpu']['load_5min'] = float(load_5_match.group(1))
+                                  if load_15_match:
+                                      json_data['cpu']['load_15min'] = float(load_15_match.group(1))
+                                  
+                                  # Parse services
+                                  postfix_match = re.search(r'Postfix: (\w+)', stdout)
+                                  dovecot_match = re.search(r'Dovecot: (\w+)', stdout)
+                                  nginx_match = re.search(r'Nginx: (\w+)', stdout)
+                                  ssm_match = re.search(r'SSM Agent: (\w+)', stdout)
+                                  
+                                  if postfix_match:
+                                      json_data['services']['postfix'] = postfix_match.group(1)
+                                  if dovecot_match:
+                                      json_data['services']['dovecot'] = dovecot_match.group(1)
+                                  if nginx_match:
+                                      json_data['services']['nginx'] = nginx_match.group(1)
+                                  if ssm_match:
+                                      json_data['services']['ssm_agent'] = ssm_match.group(1)
+                                  
+                                  # Parse mail queue
+                                  mailq_match = re.search(r'Mail Queue Size: (\d+)', stdout)
+                                  if mailq_match:
+                                      json_data['mail_queue']['size'] = int(mailq_match.group(1))
+                                  
+                                  # Parse uptime
+                                  uptime_match = re.search(r'Uptime: (\d+) days, (\d+) hours, (\d+) minutes', stdout)
+                                  if uptime_match:
+                                      days = int(uptime_match.group(1))
+                                      hours = int(uptime_match.group(2))
+                                      minutes = int(uptime_match.group(3))
+                                      json_data['uptime_seconds'] = (days * 86400) + (hours * 3600) + (minutes * 60)
+                                  
+                                  # Calculate health score
+                                  health_score = 100
+                                  issues = []
+                                  if json_data['memory'].get('available_percent', 100) < 10:
+                                      health_score -= 30
+                                      issues.append('Low memory available')
+                                  if json_data['disk'].get('usage_percent', 0) > 95:
+                                      health_score -= 30
+                                      issues.append('Disk nearly full')
+                                  if json_data['services'].get('postfix') != 'active':
+                                      health_score -= 25
+                                      issues.append('Postfix inactive')
+                                  if json_data['services'].get('dovecot') != 'active':
+                                      health_score -= 25
+                                      issues.append('Dovecot inactive')
+                                  json_data['health'] = {'score': max(0, health_score), 'issues': issues}
+                                  
+                              except Exception as e:
+                                  print(f"Error parsing stats from text: {e}")
+                          
+                          # Consider it successful if we got stats data, even if command failed
+                          has_stats = bool(json_data)
+                          success_status = status == 'Success' or (has_stats and status == 'Failed')
+                          
+                          return {
+                              'success': success_status,
+                              'status': status,
+                              'stdout': stdout,
+                              'stderr': stderr,
+                              'command_id': command_id,
+                              'stats': json_data if json_data else None
+                          }
+                  
+                  # Timeout
+                  return {
+                      'success': False,
+                      'status': 'Timeout',
+                      'error': f'Command timed out after {max_wait} seconds',
+                      'command_id': command_id
+                  }
+                  
+              except Exception as e:
+                  print(f"Error collecting system stats: {str(e)}")
+                  return {
+                      'success': False,
+                      'error': str(e)
+                  }
+          
+          def handler(event, context):
+              instance_id = os.environ.get('INSTANCE_ID')
+              
+              if not instance_id:
+                  return {
+                      'statusCode': 500,
+                      'body': json.dumps({
+                          'error': 'INSTANCE_ID environment variable not set',
+                          'success': False
+                      })
+                  }
+              
+              try:
+                  print(f"Collecting system statistics for instance {instance_id}")
+                  result = collect_system_stats(instance_id)
+                  
+                  status_code = 200 if result.get('success') else 500
+                  
+                  return {
+                      'statusCode': status_code,
+                      'body': json.dumps(result, indent=2)
+                  }
+              except Exception as e:
+                  print(f"Error in system stats Lambda: {str(e)}")
+                  return {
+                      'statusCode': 500,
+                      'body': json.dumps({
+                          'error': str(e),
+                          'success': False
+                      })
+                  }
+
+Outputs:
+  LambdaFunctionArn:
+    Description: ARN of the system stats Lambda function
+    Value: !GetAtt SystemStatsLambdaFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-LambdaFunctionArn'
+
+  LambdaFunctionName:
+    Description: Name of the system stats Lambda function
+    Value: !Ref SystemStatsLambdaFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-LambdaFunctionName'
+

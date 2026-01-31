@@ -50,12 +50,11 @@ pnpm nx test cdk-k3frame-core --coverage
 
 ### For Unit/Integration Tests
 - No special requirements - tests use CDK assertions library
-- AWS profile defaults to `k3frame` via test setup (override with `AWS_PROFILE`)
 
 ### For E2E Tests
 - CDK stack must be built: `pnpm nx build cdk-k3frame-core`
 - CDK synthesis must succeed: `pnpm nx run cdk-k3frame-core:synth`
-- Feature flag must be set: `FEATURE_CDK_K3FRAME_STACKS_ENABLED=1`
+- Feature flag must be set: `FEATURE_CDK_k3frame_STACKS_ENABLED=1`
 
 ### For CloudFormation Validation (Optional)
 - AWS CLI installed and configured
@@ -219,9 +218,10 @@ Tests should run in CI pipeline:
 ### E2E tests fail
 - Ensure CDK stack is built: `pnpm nx build cdk-k3frame-core`
 - Run synthesis manually: `pnpm nx run cdk-k3frame-core:synth`
-- Check that `FEATURE_CDK_K3FRAME_STACKS_ENABLED=1` is set
+- Check that `FEATURE_CDK_k3frame_STACKS_ENABLED=1` is set
 
 ### Template validation fails
 - Check AWS credentials are configured
 - Verify AWS CLI is installed: `aws --version`
 - Ensure CloudFormation service is accessible
+

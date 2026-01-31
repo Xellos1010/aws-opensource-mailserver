@@ -1,10 +1,6 @@
 #!/bin/bash
 set -e
 
-# Default to k3frame profile for AWS lookups
-export AWS_PROFILE="${AWS_PROFILE:-k3frame}"
-export AWS_DEFAULT_PROFILE="${AWS_DEFAULT_PROFILE:-$AWS_PROFILE}"
-
 # Set CDK_DEFAULT_ACCOUNT if not already set
 if [ -z "$CDK_DEFAULT_ACCOUNT" ]; then
   CDK_DEFAULT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text 2>/dev/null || echo "")
@@ -35,3 +31,4 @@ fi
 
 # Run CDK synth
 cdk synth $CDK_CONTEXT_ARGS
+

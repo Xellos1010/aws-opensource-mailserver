@@ -82,7 +82,7 @@
     "synth": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-k3frame} FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 cdk synth ${DOMAIN:+--context domain=$DOMAIN}",
+        "command": "FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 cdk synth ${DOMAIN:+--context domain=$DOMAIN}",
         "cwd": "dist/apps/cdk-k3frame/core"
       },
       "dependsOn": ["build"]
@@ -90,7 +90,7 @@
     "deploy": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-k3frame} FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js deploy --require-approval never ${DOMAIN:+--context domain=$DOMAIN}",
+        "command": "FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js deploy --require-approval never ${DOMAIN:+--context domain=$DOMAIN}",
         "cwd": "dist/apps/cdk-k3frame/core"
       },
       "dependsOn": ["build", "infra-config-loader:build"]
@@ -98,7 +98,7 @@
     "diff": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-k3frame} FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 cdk diff ${DOMAIN:+--context domain=$DOMAIN}",
+        "command": "FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 cdk diff ${DOMAIN:+--context domain=$DOMAIN}",
         "cwd": "dist/apps/cdk-k3frame/core"
       },
       "dependsOn": ["build"]
@@ -106,7 +106,7 @@
     "destroy": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-k3frame} FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 if [ -n \"$DOMAIN\" ] && [ \"$DOMAIN\" != \"k3frame.com\" ]; then echo \"Note: Emptying buckets for domain $DOMAIN\"; DOMAIN=$DOMAIN APP_PATH=apps/cdk-k3frame/core pnpm nx run admin-s3-empty:empty || true; else DOMAIN=k3frame.com APP_PATH=apps/cdk-k3frame/core pnpm nx run admin-s3-empty:empty || true; fi && node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js destroy --force ${DOMAIN:+--context domain=$DOMAIN}",
+        "command": "FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 if [ -n \"$DOMAIN\" ] && [ \"$DOMAIN\" != \"k3frame.com\" ]; then echo \"Note: Emptying buckets for domain $DOMAIN\"; DOMAIN=$DOMAIN APP_PATH=apps/cdk-k3frame/core pnpm nx run admin-s3-empty:empty || true; else pnpm nx run admin-s3-empty:empty:k3frame || true; fi && node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js destroy --force ${DOMAIN:+--context domain=$DOMAIN}",
         "cwd": "dist/apps/cdk-k3frame/core"
       },
       "dependsOn": ["build", "infra-config-loader:build"]
@@ -115,7 +115,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["admin-stack-info:build"],
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-k3frame} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core pnpm nx run admin-stack-info:get"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core pnpm nx run admin-stack-info:get"
       },
       "description": "Get core stack information (outputs, instance details, etc.)"
     },
@@ -123,7 +123,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["admin-stack-events:build"],
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-k3frame} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core MAX_RESULTS=${MAX_RESULTS:-50} pnpm nx run admin-stack-events:events"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core MAX_RESULTS=${MAX_RESULTS:-50} pnpm nx run admin-stack-events:events"
       },
       "description": "Get recent CloudFormation stack events"
     },
@@ -131,7 +131,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["admin-stack-events:build"],
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-k3frame} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core FAILED_ONLY=1 pnpm nx run admin-stack-events:events"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core FAILED_ONLY=1 pnpm nx run admin-stack-events:events"
       },
       "description": "Get only failed CloudFormation stack events"
     },
@@ -139,7 +139,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["^build", "admin-stack-info:build"],
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-k3frame} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core pnpm exec tsx --tsconfig tools/tsconfig.json tools/test-core-deployed.cli.ts"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core pnpm exec tsx --tsconfig tools/tsconfig.json tools/test-core-deployed.cli.ts"
       },
       "description": "Prerequisite test: Verify core stack is deployed and required outputs exist"
     },
@@ -147,7 +147,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["admin-reverse-dns:build"],
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-k3frame} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core pnpm nx run admin-reverse-dns:set"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core pnpm nx run admin-reverse-dns:set"
       },
       "description": "Set reverse DNS for Elastic IP (box.{domain})"
     },
@@ -155,7 +155,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["admin-s3-empty:build"],
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-k3frame} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core DRY_RUN=${DRY_RUN:-0} pnpm nx run admin-s3-empty:empty"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core DRY_RUN=${DRY_RUN:-0} pnpm nx run admin-s3-empty:empty"
       },
       "description": "Empty S3 buckets in core stack (required before destroy)"
     },
@@ -163,7 +163,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["admin-s3-empty:build"],
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-k3frame} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core DRY_RUN=1 pnpm nx run admin-s3-empty:empty"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core DRY_RUN=1 pnpm nx run admin-s3-empty:empty"
       },
       "description": "Dry run: Show what would be emptied from S3 buckets"
     }

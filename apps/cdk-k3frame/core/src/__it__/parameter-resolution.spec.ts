@@ -1,11 +1,11 @@
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
-import { K3FrameCoreStack } from '../stacks/core-stack';
+import { k3frameCoreStack } from '../stacks/core-stack';
 
 describe('Parameter Resolution', () => {
   it('uses default domain when no context provided', () => {
     const app = new cdk.App();
-    const stack = new K3FrameCoreStack(app, 'TestStack', {
+    const stack = new k3frameCoreStack(app, 'TestStack', {
       env: {
         account: '123456789012',
         region: 'us-east-1',
@@ -33,7 +33,7 @@ describe('Parameter Resolution', () => {
     const app = new cdk.App();
     app.node.setContext('domain', 'test.example.com');
 
-    const stack = new K3FrameCoreStack(app, 'TestStack', {
+    const stack = new k3frameCoreStack(app, 'TestStack', {
       env: {
         account: '123456789012',
         region: 'us-east-1',
@@ -52,7 +52,7 @@ describe('Parameter Resolution', () => {
 
   it('domain parameter validation pattern is correct', () => {
     const app = new cdk.App();
-    const stack = new K3FrameCoreStack(app, 'TestStack', {
+    const stack = new k3frameCoreStack(app, 'TestStack', {
       env: {
         account: '123456789012',
         region: 'us-east-1',
@@ -68,7 +68,7 @@ describe('Parameter Resolution', () => {
 
   it('rejects invalid domain patterns', () => {
     const app = new cdk.App();
-    const stack = new K3FrameCoreStack(app, 'TestStack', {
+    const stack = new k3frameCoreStack(app, 'TestStack', {
       env: {
         account: '123456789012',
         region: 'us-east-1',
@@ -89,7 +89,7 @@ describe('Parameter Resolution', () => {
 
   it('domain parameter has correct default value', () => {
     const app = new cdk.App();
-    const stack = new K3FrameCoreStack(app, 'TestStack', {
+    const stack = new k3frameCoreStack(app, 'TestStack', {
       env: {
         account: '123456789012',
         region: 'us-east-1',
@@ -107,7 +107,7 @@ describe('Parameter Resolution', () => {
 
   it('all resource names incorporate domain parameter', () => {
     const app = new cdk.App();
-    const stack = new K3FrameCoreStack(app, 'TestStack', {
+    const stack = new k3frameCoreStack(app, 'TestStack', {
       env: {
         account: '123456789012',
         region: 'us-east-1',

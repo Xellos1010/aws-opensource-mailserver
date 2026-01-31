@@ -30,47 +30,75 @@ export interface CreateAdminAccountResult {
 
 /**
  * Check if admin account exists in Mail-in-a-Box
+ *
+ * This function uses a single SSH command to minimize connection overhead.
  */
 export async function checkAdminAccountExists(
   keyPath: string,
   instanceIp: string,
   email: string
 ): Promise<boolean> {
-  // Detect which script to use (cli.py for v73+, users.py for older)
-  const checkCliPy = `test -f /opt/mailinabox/management/cli.py && echo "CLI_EXISTS" || echo "NOT_FOUND"`;
-  const checkUsersPy = `test -f /opt/mailinabox/management/users.py && echo "USERS_EXISTS" || echo "NOT_FOUND"`;
-  
-  const cliCheck = await sshCommand(keyPath, instanceIp, checkCliPy);
-  const usersCheck = await sshCommand(keyPath, instanceIp, checkUsersPy);
-  
-  let userCheckCommand: string;
-  if (cliCheck.output.includes('CLI_EXISTS')) {
-    userCheckCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && sudo -n -u user-data /opt/mailinabox/management/cli.py user 2>/dev/null | grep -i "${email}" || echo "not found"'`;
-  } else if (usersCheck.output.includes('USERS_EXISTS')) {
-    userCheckCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && sudo -n -u user-data /opt/mailinabox/management/users.py list 2>/dev/null | grep -i "${email}" || echo "not found"'`;
-  } else {
-    return false;
-  }
-  
-  const userCheck = await sshCommand(keyPath, instanceIp, userCheckCommand);
-  return userCheck.success && 
-         userCheck.output.toLowerCase().includes(email.toLowerCase()) && 
-         userCheck.output !== 'not found';
+  const emailLower = email.toLowerCase();
+
+  // Consolidated command that detects script and checks for user
+  const command = `sudo bash -c '
+cd /opt/mailinabox
+git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true
+
+# Fix API key permissions for cli.py
+chmod 644 /var/lib/mailinabox/api.key 2>/dev/null || true
+chown user-data:user-data /var/lib/mailinabox/api.key 2>/dev/null || true
+
+if [ -f /opt/mailinabox/management/cli.py ]; then
+  sudo -u user-data /opt/mailinabox/management/cli.py user 2>/dev/null | grep -i "${emailLower}" || echo "USER_NOT_FOUND"
+elif [ -f /opt/mailinabox/management/users.py ]; then
+  sudo -u user-data /opt/mailinabox/management/users.py list 2>/dev/null | grep -i "${emailLower}" || echo "USER_NOT_FOUND"
+else
+  echo "NO_MANAGEMENT_SCRIPT"
+fi
+'`;
+
+  const result = await sshCommand(keyPath, instanceIp, command);
+  return result.success &&
+         result.output.toLowerCase().includes(emailLower) &&
+         !result.output.includes('USER_NOT_FOUND');
 }
 
 /**
  * Create mailbox directory for admin account
+ *
+ * Mail-in-a-Box/Dovecot stores mailboxes in the format:
+ * /home/user-data/mail/mailboxes/domain.com/username/
+ *
+ * The mailbox directories are owned by the 'mail' user (not user-data).
+ * This also creates the standard Dovecot maildir structure with
+ * cur/, new/, tmp/ subdirectories.
  */
 export async function createMailboxDirectory(
   keyPath: string,
   instanceIp: string,
   email: string
 ): Promise<boolean> {
-  const mailboxPath = `/home/user-data/mail/mailboxes/${email}`;
-  const command = `sudo -u user-data mkdir -p "${mailboxPath}" && sudo -u user-data chmod 700 "${mailboxPath}" && echo "CREATED" || echo "FAILED"`;
-  
+  // Parse email to get username and domain
+  const [username, domain] = email.split('@');
+  if (!username || !domain) {
+    return false;
+  }
+
+  const mailboxPath = `/home/user-data/mail/mailboxes/${domain}/${username}`;
+
+  // Create mailbox directory with standard Dovecot maildir structure
+  // Ownership should be mail:mail to match existing mailboxes
+  const command = `sudo bash -c '
+    mkdir -p "${mailboxPath}/cur" "${mailboxPath}/new" "${mailboxPath}/tmp" && \
+    chown -R mail:mail "${mailboxPath}" && \
+    chmod 700 "${mailboxPath}" && \
+    chmod 700 "${mailboxPath}/cur" "${mailboxPath}/new" "${mailboxPath}/tmp" && \
+    echo "MAILBOX_CREATED"
+  ' || echo "MAILBOX_FAILED"`;
+
   const result = await sshCommand(keyPath, instanceIp, command);
-  return result.success && result.output.includes('CREATED');
+  return result.success && result.output.includes('MAILBOX_CREATED');
 }
 
 /**
@@ -145,6 +173,9 @@ PYEOF
 
 /**
  * Sync password using Mail-in-a-Box CLI (ensures proper password hash format)
+ *
+ * This function consolidates all operations into a single SSH command to minimize
+ * connection overhead and avoid rate limiting issues.
  */
 export async function syncPassword(
   keyPath: string,
@@ -152,26 +183,35 @@ export async function syncPassword(
   email: string,
   password: string
 ): Promise<boolean> {
-  // Fix API key permissions first
-  const fixApiKeyCommand = `sudo chmod 644 /var/lib/mailinabox/api.key 2>/dev/null && sudo chown user-data:user-data /var/lib/mailinabox/api.key 2>/dev/null && echo "FIXED" || echo "NOT_FIXED"`;
-  await sshCommand(keyPath, instanceIp, fixApiKeyCommand);
-  
-  // Detect which script to use
-  const checkCliPy = `test -f /opt/mailinabox/management/cli.py && echo "CLI_EXISTS" || echo "NOT_FOUND"`;
-  const cliCheck = await sshCommand(keyPath, instanceIp, checkCliPy);
-  
   const emailB64 = Buffer.from(email).toString('base64');
   const passwordB64 = Buffer.from(password).toString('base64');
-  
-  let passwordCommand: string;
-  if (cliCheck.output.includes('CLI_EXISTS')) {
-    passwordCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && EMAIL=\$(echo "${emailB64}" | base64 -d) && PASS=\$(echo "${passwordB64}" | base64 -d) && sudo -n -u user-data bash -c "cd /opt/mailinabox && /opt/mailinabox/management/cli.py user password \\\"\$EMAIL\\\" \\\"\$PASS\\\"" 2>&1'`;
-  } else {
-    // Fallback to users.py for older versions
-    passwordCommand = `bash -c 'cd /opt/mailinabox && git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true && EMAIL=\$(echo "${emailB64}" | base64 -d) && PASS=\$(echo "${passwordB64}" | base64 -d) && sudo -n -u user-data bash -c "cd /opt/mailinabox && /opt/mailinabox/management/users.py password \\\"\$EMAIL\\\" \\\"\$PASS\\\"" 2>&1'`;
-  }
-  
-  const result = await sshCommand(keyPath, instanceIp, passwordCommand);
+
+  // Consolidated command that:
+  // 1. Fixes API key permissions
+  // 2. Detects which management script to use
+  // 3. Sets the password
+  const command = `sudo bash -c '
+# Fix API key permissions
+chmod 644 /var/lib/mailinabox/api.key 2>/dev/null || true
+chown user-data:user-data /var/lib/mailinabox/api.key 2>/dev/null || true
+
+cd /opt/mailinabox
+git config --global --add safe.directory /opt/mailinabox 2>/dev/null || true
+
+EMAIL=$(echo "${emailB64}" | base64 -d)
+PASS=$(echo "${passwordB64}" | base64 -d)
+
+if [ -f /opt/mailinabox/management/cli.py ]; then
+  sudo -u user-data /opt/mailinabox/management/cli.py user password "$EMAIL" "$PASS" 2>&1
+elif [ -f /opt/mailinabox/management/users.py ]; then
+  sudo -u user-data /opt/mailinabox/management/users.py password "$EMAIL" "$PASS" 2>&1
+else
+  echo "NO_MANAGEMENT_SCRIPT"
+  exit 1
+fi
+'`;
+
+  const result = await sshCommand(keyPath, instanceIp, command);
   return result.success && (result.output.includes('OK') || result.output.includes('password') || result.output.trim() === '');
 }
 
@@ -191,7 +231,8 @@ export async function createAdminAccount(
   
   // Check if account already exists
   const accountExists = await checkAdminAccountExists(keyPath, instanceIp, email);
-  
+  let accountCreatedNow = false;
+
   if (!accountExists) {
     // Create account in database
     const dbCreated = await createAdminAccountInDatabase(keyPath, instanceIp, email, password);
@@ -204,20 +245,23 @@ export async function createAdminAccount(
         passwordSynced: false,
       };
     }
+    accountCreatedNow = true;
   }
-  
+
   // Create mailbox directory
   const mailboxCreated = await createMailboxDirectory(keyPath, instanceIp, email);
-  
+
   // Sync password via CLI (ensures proper hash format)
   const passwordSynced = await syncPassword(keyPath, instanceIp, email, password);
-  
+
+  // Success if account existed before OR was just created successfully
+  // At this point, account definitely exists (we return early above if creation failed)
   return {
-    success: accountExists || mailboxCreated,
-    message: accountExists 
+    success: true,
+    message: accountExists
       ? 'Account already exists, mailbox and password synced'
       : 'Account created, mailbox and password synced',
-    accountExists: true,
+    accountExists: accountExists || accountCreatedNow,
     mailboxCreated,
     passwordSynced,
   };

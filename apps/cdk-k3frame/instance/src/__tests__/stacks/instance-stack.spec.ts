@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
-import { MailServerInstanceStack, K3FrameInstanceStack } from '../../stacks/instance-stack';
+import { MailServerInstanceStack, k3frameInstanceStack } from '../../stacks/instance-stack';
 import { DomainConfig } from '@mm/infra-instance-constructs';
 
 describe('MailServerInstanceStack', () => {
@@ -470,14 +470,14 @@ describe('MailServerInstanceStack', () => {
   });
 });
 
-describe('K3FrameInstanceStack', () => {
+describe('k3frameInstanceStack', () => {
   let app: cdk.App;
-  let stack: K3FrameInstanceStack;
+  let stack: k3frameInstanceStack;
   let template: Template;
 
   beforeEach(() => {
     app = new cdk.App();
-    stack = new K3FrameInstanceStack(app, 'TestStack', {
+    stack = new k3frameInstanceStack(app, 'TestStack', {
       env: {
         account: '123456789012',
         region: 'us-east-1',

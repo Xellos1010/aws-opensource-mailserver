@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import * as cdk from 'aws-cdk-lib';
-import { MailServerInstanceStack, K3FrameInstanceStack } from './stacks/instance-stack';
+import { MailServerInstanceStack, k3frameInstanceStack } from './stacks/instance-stack';
 import { DomainConfig, InstanceConfig } from '@mm/infra-instance-constructs';
 import {
   toMailserverInstanceStackName,
@@ -41,14 +41,13 @@ const domainConfig: DomainConfig = {
 };
 
 // Use generic MailServerInstanceStack for multi-domain support
-// K3FrameInstanceStack provides the default k3frame.com configuration
+// k3frameInstanceStack is kept for backward compatibility
 if (domain === 'k3frame.com') {
-  new K3FrameInstanceStack(app, stackName, {
+  new k3frameInstanceStack(app, stackName, {
     env: {
       account: process.env['CDK_DEFAULT_ACCOUNT'],
       region: process.env['CDK_DEFAULT_REGION'] || 'us-east-1',
     },
-    instanceConfig,
     description: `${domain} Mailserver – Instance stack (EC2/SG/EIP/InstanceProfile/SSM Bootstrap Ready)`,
   });
 } else {
@@ -64,3 +63,4 @@ if (domain === 'k3frame.com') {
 }
 
 app.synth();
+

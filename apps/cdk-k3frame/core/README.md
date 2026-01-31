@@ -1,11 +1,11 @@
-# K3 Frame Core Stack
+# EMC Notary Core Stack
 
-Core infrastructure stack for K3 Frame mailserver. This stack contains shared resources that are deployed once and rarely changed.
+Core infrastructure stack for EMC Notary mailserver. This stack contains shared resources that are deployed once and rarely changed.
 
 ## Stack Naming
 
 This stack uses canonical naming via `@mm/infra-naming`:
-- **Stack Name**: `k3-frame-com-mailserver-core` (format: `{domain-tld}-mailserver-core`)
+- **Stack Name**: `k3frame-com-mailserver-core` (format: `{domain-tld}-mailserver-core`)
 - Stack name is automatically derived from the `DOMAIN` environment variable or CDK context
 
 See [ADR-001: Infrastructure Naming Standard](../../docs/adr/001-infra-naming-standard.md) for details.
@@ -21,17 +21,13 @@ See [ADR-001: Infrastructure Naming Standard](../../docs/adr/001-infra-naming-st
 
 ## SSM Parameters Created
 
-- `/k3-frame/core/domainName` - Domain name for mail server
-- `/k3-frame/core/backupBucket` - S3 Backup Bucket Name
-- `/k3-frame/core/nextcloudBucket` - S3 Nextcloud Bucket Name
-- `/k3-frame/core/alarmsTopicArn` - SNS Alarms Topic ARN
-- `/k3-frame/core/sesIdentityArn` - SES Email Identity ARN
+- `/k3frame/core/domainName` - Domain name for mail server
+- `/k3frame/core/backupBucket` - S3 Backup Bucket Name
+- `/k3frame/core/nextcloudBucket` - S3 Nextcloud Bucket Name
+- `/k3frame/core/alarmsTopicArn` - SNS Alarms Topic ARN
+- `/k3frame/core/sesIdentityArn` - SES Email Identity ARN
 
 ## Usage
-
-### AWS Profile
-
-All Nx targets in this project default to `AWS_PROFILE=k3frame` for synth/diff/deploy/destroy and admin/test commands. Override by setting `AWS_PROFILE` explicitly if needed.
 
 ### Build
 
@@ -73,4 +69,5 @@ This stack must be deployed **before** the instance stack, as the instance stack
 
 ## Feature Flag
 
-This stack is controlled by `FEATURE_CDK_K3FRAME_STACKS_ENABLED` (default: `0`). Set to `1` to enable deployment.
+This stack is controlled by `FEATURE_CDK_k3frame_STACKS_ENABLED` (default: `0`). Set to `1` to enable deployment.
+

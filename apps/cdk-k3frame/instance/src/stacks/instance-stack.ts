@@ -183,7 +183,7 @@ export class MailServerInstanceStack extends Stack {
     });
 
     // ============================================================================
-    // Mailserver Recovery System (ported from hepefoundation)
+    // Mailserver Recovery System (ported from k3frame)
     // Provides progressive recovery: Health Check → System Reset → Service Restart → Instance Restart
     // Recovery time: 30-90 seconds for most failures (vs 5-10 minutes)
     // ============================================================================
@@ -373,11 +373,9 @@ export class MailServerInstanceStack extends Stack {
   }
 }
 
-// Default wrapper for k3frame.com configuration
-export type K3FrameInstanceStackProps = Omit<MailServerInstanceStackProps, 'domainConfig'>;
-
-export class K3FrameInstanceStack extends MailServerInstanceStack {
-  constructor(scope: Construct, id: string, props: K3FrameInstanceStackProps = {}) {
+// Export for backward compatibility
+export class k3frameInstanceStack extends MailServerInstanceStack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, {
       ...props,
       domainConfig: {

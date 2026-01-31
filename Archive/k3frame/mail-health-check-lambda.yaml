@@ -1,0 +1,245 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Mail service health check Lambda for k3frame.com - Checks postfix/dovecot service status via SSM
+
+Parameters:
+  InstanceId:
+    Type: String
+    Description: EC2 instance ID to check (get from mailserver stack RestorePrefix or InstanceId output)
+  Region:
+    Type: String
+    Default: us-east-1
+    Description: AWS region where resources are deployed
+
+Resources:
+  MailHealthCheckLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub MailHealthCheckLambda-${AWS::StackName}
+      Description: Role for mail service health check Lambda
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: MailHealthCheckLambdaPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:SendCommand
+                  - ssm:GetCommandInvocation
+                  - ssm:DescribeInstanceInformation
+                  - ec2:DescribeInstances
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: 'arn:aws:logs:*:*:*'
+
+  MailHealthCheckLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Checks mail service health (postfix/dovecot) via SSM - port checks are informational only
+      FunctionName: !Sub mail-health-check-${AWS::StackName}
+      Handler: index.handler
+      MemorySize: 256
+      Role: !GetAtt MailHealthCheckLambdaRole.Arn
+      Runtime: python3.11
+      Timeout: 30
+      Environment:
+        Variables:
+          INSTANCE_ID: !Ref InstanceId
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import time
+          import os
+          
+          ssm = boto3.client('ssm')
+          ec2 = boto3.client('ec2')
+          
+          def check_mail_services(instance_id):
+              """
+              Check mail service health via SSM.
+              Primary checks: service status (postfix, dovecot) - these determine health
+              Secondary checks: port connectivity (informational only - AWS may restrict port 25)
+              """
+              
+              # Primary health checks - service status (these determine health)
+              primary_checks = {
+                  'postfix': 'systemctl is-active postfix',
+                  'dovecot': 'systemctl is-active dovecot',
+                  'mail_queue': 'mailq | head -1 || echo "empty"'
+              }
+              
+              # Secondary checks - port connectivity (informational, non-blocking)
+              # Note: AWS may restrict port 25, so these are informational only
+              port_checks = {
+                  'smtp_25': 'timeout 3 bash -c "</dev/tcp/localhost/25" 2>/dev/null && echo "open" || echo "restricted_or_closed"',
+                  'smtp_587': 'timeout 3 bash -c "</dev/tcp/localhost/587" 2>/dev/null && echo "open" || echo "restricted_or_closed"',
+                  'imap_993': 'timeout 3 bash -c "</dev/tcp/localhost/993" 2>/dev/null && echo "open" || echo "restricted_or_closed"'
+              }
+              
+              results = {
+                  'primary': {},
+                  'ports': {},
+                  'healthy': False,
+                  'health_reason': ''
+              }
+              
+              # Check primary services (these determine health)
+              all_primary_healthy = True
+              for service, command in primary_checks.items():
+                  try:
+                      response = ssm.send_command(
+                          InstanceIds=[instance_id],
+                          DocumentName="AWS-RunShellScript",
+                          Parameters={'commands': [command]},
+                          TimeoutSeconds=30
+                      )
+                      # Extract CommandId from nested response structure
+                      if 'Command' in response and 'CommandId' in response['Command']:
+                          command_id = response['Command']['CommandId']
+                      elif 'CommandId' in response:
+                          command_id = response['CommandId']
+                      else:
+                          raise Exception(f'No CommandId in response: {response}')
+                      
+                      # Wait for command completion (poll up to 10 seconds)
+                      max_wait = 10
+                      waited = 0
+                      while waited < max_wait:
+                          time.sleep(1)
+                          waited += 1
+                          output = ssm.get_command_invocation(
+                              CommandId=command_id,
+                              InstanceId=instance_id
+                          )
+                          if output.get('Status') in ['Success', 'Failed', 'TimedOut', 'Cancelled']:
+                              break
+                      
+                      stdout = output.get('StandardOutputContent', '').strip()
+                      
+                      if service in ['postfix', 'dovecot']:
+                          is_active = stdout == 'active'
+                          results['primary'][service] = {
+                              'status': 'active' if is_active else 'inactive',
+                              'raw': stdout
+                          }
+                          if not is_active:
+                              all_primary_healthy = False
+                      else:  # mail_queue
+                          results['primary'][service] = {
+                              'status': 'ok' if stdout and stdout != 'empty' else 'empty',
+                              'raw': stdout[:100] if stdout else 'empty'  # Limit output
+                          }
+                          
+                  except Exception as e:
+                      print(f"Error checking {service}: {str(e)}")
+                      results['primary'][service] = {
+                          'status': 'error',
+                          'error': str(e)
+                      }
+                      if service in ['postfix', 'dovecot']:
+                          all_primary_healthy = False
+              
+              # Check ports (informational only - don't affect health status)
+              for port_name, command in port_checks.items():
+                  try:
+                      response = ssm.send_command(
+                          InstanceIds=[instance_id],
+                          DocumentName="AWS-RunShellScript",
+                          Parameters={'commands': [command]},
+                          TimeoutSeconds=30
+                      )
+                      # Extract CommandId from nested response structure
+                      if 'Command' in response and 'CommandId' in response['Command']:
+                          command_id = response['Command']['CommandId']
+                      elif 'CommandId' in response:
+                          command_id = response['CommandId']
+                      else:
+                          raise Exception(f'No CommandId in response: {response}')
+                      time.sleep(2)  # Brief wait for port check
+                      output = ssm.get_command_invocation(
+                          CommandId=command_id,
+                          InstanceId=instance_id
+                      )
+                      stdout = output.get('StandardOutputContent', '').strip()
+                      results['ports'][port_name] = {
+                          'status': stdout,
+                          'note': 'informational_only_aws_may_restrict'
+                      }
+                  except Exception as e:
+                      results['ports'][port_name] = {
+                          'status': 'check_failed',
+                          'error': str(e),
+                          'note': 'informational_only_aws_may_restrict'
+                      }
+              
+              # Determine overall health based on primary checks only
+              results['healthy'] = all_primary_healthy
+              if all_primary_healthy:
+                  results['health_reason'] = 'All primary services (postfix, dovecot) are active'
+              else:
+                  inactive = [s for s, v in results['primary'].items() 
+                             if s in ['postfix', 'dovecot'] and v.get('status') != 'active']
+                  results['health_reason'] = f'Services inactive: {", ".join(inactive)}'
+              
+              return results
+          
+          def handler(event, context):
+              instance_id = os.environ.get('INSTANCE_ID')
+              
+              if not instance_id:
+                  return {
+                      'statusCode': 500,
+                      'body': json.dumps({
+                          'error': 'INSTANCE_ID environment variable not set',
+                          'healthy': False
+                      })
+                  }
+              
+              try:
+                  print(f"Checking mail service health for instance {instance_id}")
+                  health = check_mail_services(instance_id)
+                  
+                  print(f"Health check result: {health['healthy']} - {health['health_reason']}")
+                  
+                  return {
+                      'statusCode': 200,
+                      'body': json.dumps(health, indent=2)
+                  }
+              except Exception as e:
+                  print(f"Error in health check: {str(e)}")
+                  return {
+                      'statusCode': 500,
+                      'body': json.dumps({
+                          'error': str(e),
+                          'healthy': False,
+                          'health_reason': f'Health check failed: {str(e)}'
+                      })
+                  }
+
+Outputs:
+  LambdaFunctionArn:
+    Description: ARN of the mail health check Lambda function
+    Value: !GetAtt MailHealthCheckLambdaFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-LambdaFunctionArn'
+
+  LambdaFunctionName:
+    Description: Name of the mail health check Lambda function
+    Value: !Ref MailHealthCheckLambdaFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-LambdaFunctionName'
+

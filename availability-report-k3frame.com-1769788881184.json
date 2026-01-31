@@ -1,0 +1,79 @@
+{
+  "timestamp": "2026-01-30T16:01:11.642Z",
+  "domain": "k3frame.com",
+  "instanceId": "i-0102e34ff9740ba83",
+  "instanceIp": "18.210.29.62",
+  "hostname": "box.k3frame.com",
+  "services": [
+    {
+      "name": "nginx",
+      "status": "running",
+      "details": "active"
+    },
+    {
+      "name": "dovecot",
+      "status": "running",
+      "details": "active"
+    },
+    {
+      "name": "postfix",
+      "status": "running",
+      "details": "active"
+    },
+    {
+      "name": "php8.0-fpm",
+      "status": "running",
+      "details": "active"
+    },
+    {
+      "name": "nsd",
+      "status": "running",
+      "details": "active"
+    },
+    {
+      "name": "fail2ban",
+      "status": "running",
+      "details": "active"
+    }
+  ],
+  "healthChecks": [
+    {
+      "name": "HTTP Web Server",
+      "status": "healthy",
+      "responseTime": 93,
+      "details": "HTTP 301 (93ms)"
+    },
+    {
+      "name": "HTTPS Web Server",
+      "status": "healthy",
+      "responseTime": 123,
+      "details": "HTTPS 200 (123ms)"
+    },
+    {
+      "name": "Webmail (Roundcube)",
+      "status": "healthy",
+      "responseTime": 1399,
+      "details": "HTTP 200 (1399ms)"
+    },
+    {
+      "name": "Admin Panel",
+      "status": "healthy",
+      "responseTime": 1180,
+      "details": "HTTP 200 (1180ms)"
+    },
+    {
+      "name": "DNS Resolution",
+      "status": "healthy",
+      "responseTime": 71,
+      "details": "Resolved to 18.210.29.62 (71ms)"
+    }
+  ],
+  "summary": {
+    "overall": "online",
+    "servicesRunning": 6,
+    "servicesTotal": 6,
+    "healthChecksPassing": 5,
+    "healthChecksTotal": 5
+  },
+  "ec2Status": "running"
+}

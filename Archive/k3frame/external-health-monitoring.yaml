@@ -1,0 +1,477 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  External health monitoring for k3frame.com mailserver.
+  Adds Route 53 health checks and scheduled proactive health checks to detect
+  zombie state instances where EC2 status checks pass but services are unresponsive.
+
+Parameters:
+  DomainName:
+    Type: String
+    Default: k3frame.com
+    Description: Domain name to monitor
+  
+  BoxHostname:
+    Type: String
+    Default: box.k3frame.com
+    Description: Hostname for web interface health check
+  
+  InstanceId:
+    Type: String
+    Description: EC2 instance ID to restart on failure
+  
+  EmergencyRestartLambdaArn:
+    Type: String
+    Description: ARN of the emergency restart Lambda function
+  
+  AlertTopicArn:
+    Type: String
+    Default: ''
+    Description: Optional SNS topic ARN for alarm notifications
+  
+  HealthCheckIntervalSeconds:
+    Type: Number
+    Default: 30
+    Description: Interval between health checks (10 or 30 seconds)
+    AllowedValues:
+      - 10
+      - 30
+
+Conditions:
+  HasAlertTopic: !Not [!Equals [!Ref AlertTopicArn, '']]
+
+Resources:
+  # ============================================================================
+  # Route 53 Health Check - External HTTPS monitoring
+  # This runs from AWS global infrastructure and can detect zombie instances
+  # ============================================================================
+  
+  HttpsHealthCheck:
+    Type: AWS::Route53::HealthCheck
+    Properties:
+      HealthCheckConfig:
+        Type: HTTPS
+        FullyQualifiedDomainName: !Ref BoxHostname
+        Port: 443
+        ResourcePath: /
+        RequestInterval: !Ref HealthCheckIntervalSeconds
+        FailureThreshold: 3  # Fail after 3 consecutive failures
+        EnableSNI: true
+        Regions:
+          - us-east-1
+          - us-west-1
+          - us-west-2
+          - eu-west-1
+      HealthCheckTags:
+        - Key: Name
+          Value: !Sub 'HTTPS-${BoxHostname}'
+        - Key: Domain
+          Value: !Ref DomainName
+        - Key: Purpose
+          Value: 'Zombie state detection'
+
+  # CloudWatch Alarm for HTTPS Health Check
+  HttpsHealthCheckAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'HttpsUnhealthy-${BoxHostname}'
+      AlarmDescription: !Sub |
+        Alerts when ${BoxHostname} HTTPS endpoint is unreachable.
+        This detects zombie instances where EC2 status checks pass but web services are down.
+        Triggers automatic instance restart.
+      Namespace: AWS/Route53
+      MetricName: HealthCheckStatus
+      Dimensions:
+        - Name: HealthCheckId
+          Value: !Ref HttpsHealthCheck
+      Statistic: Minimum
+      Period: 60
+      EvaluationPeriods: 3  # 3 minutes of unhealthy before alarming
+      Threshold: 1
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: breaching
+      AlarmActions:
+        - !Ref EmergencyRestartLambdaArn
+        - !If [HasAlertTopic, !Ref AlertTopicArn, !Ref 'AWS::NoValue']
+      OKActions:
+        - !If [HasAlertTopic, !Ref AlertTopicArn, !Ref 'AWS::NoValue']
+
+  # Lambda permission for CloudWatch to invoke emergency restart
+  EmergencyRestartLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref EmergencyRestartLambdaArn
+      Action: lambda:InvokeFunction
+      Principal: lambda.alarms.cloudwatch.amazonaws.com
+      SourceArn: !GetAtt HttpsHealthCheckAlarm.Arn
+
+  # ============================================================================
+  # Scheduled Proactive Health Check Lambda
+  # Runs every 5 minutes to detect SSM connectivity issues and service problems
+  # ============================================================================
+  
+  ProactiveHealthCheckRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'ProactiveHealthCheck-${AWS::StackName}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: ProactiveHealthCheckPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:DescribeInstanceInformation
+                  - ssm:SendCommand
+                  - ssm:GetCommandInvocation
+                  - ec2:DescribeInstances
+                  - ec2:DescribeInstanceStatus
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !Ref EmergencyRestartLambdaArn
+              - Effect: Allow
+                Action:
+                  - cloudwatch:PutMetricData
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !If [HasAlertTopic, !Ref AlertTopicArn, '*']
+
+  ProactiveHealthCheckLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'proactive-health-check-${AWS::StackName}'
+      Description: |
+        Proactive health check that runs every 5 minutes.
+        Detects zombie instances by checking SSM connectivity and service status.
+        Triggers emergency restart if issues persist.
+      Runtime: python3.11
+      Handler: index.handler
+      Role: !GetAtt ProactiveHealthCheckRole.Arn
+      Timeout: 120
+      MemorySize: 256
+      Environment:
+        Variables:
+          INSTANCE_ID: !Ref InstanceId
+          DOMAIN_NAME: !Ref DomainName
+          BOX_HOSTNAME: !Ref BoxHostname
+          EMERGENCY_RESTART_LAMBDA_ARN: !Ref EmergencyRestartLambdaArn
+          ALERT_TOPIC_ARN: !If [HasAlertTopic, !Ref AlertTopicArn, '']
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import os
+          import urllib.request
+          import ssl
+          from datetime import datetime, timedelta
+
+          ssm = boto3.client('ssm')
+          ec2 = boto3.client('ec2')
+          lambda_client = boto3.client('lambda')
+          cloudwatch = boto3.client('cloudwatch')
+          sns = boto3.client('sns')
+
+          INSTANCE_ID = os.environ.get('INSTANCE_ID')
+          DOMAIN_NAME = os.environ.get('DOMAIN_NAME')
+          BOX_HOSTNAME = os.environ.get('BOX_HOSTNAME')
+          EMERGENCY_RESTART_LAMBDA_ARN = os.environ.get('EMERGENCY_RESTART_LAMBDA_ARN')
+          ALERT_TOPIC_ARN = os.environ.get('ALERT_TOPIC_ARN')
+
+          def check_ssm_connectivity():
+              """Check if SSM agent is online and responsive"""
+              try:
+                  response = ssm.describe_instance_information(
+                      Filters=[{'Key': 'InstanceIds', 'Values': [INSTANCE_ID]}]
+                  )
+                  instances = response.get('InstanceInformationList', [])
+                  if not instances:
+                      return {'healthy': False, 'reason': 'Instance not found in SSM'}
+                  
+                  instance = instances[0]
+                  ping_status = instance.get('PingStatus', 'Unknown')
+                  last_ping = instance.get('LastPingDateTime')
+                  
+                  if ping_status != 'Online':
+                      return {
+                          'healthy': False, 
+                          'reason': f'SSM agent status: {ping_status}',
+                          'last_ping': str(last_ping) if last_ping else 'Never'
+                      }
+                  
+                  # Check if last ping was within 10 minutes
+                  if last_ping:
+                      now = datetime.now(last_ping.tzinfo)
+                      if (now - last_ping).total_seconds() > 600:  # 10 minutes
+                          return {
+                              'healthy': False,
+                              'reason': f'SSM agent last ping was {(now - last_ping).total_seconds() / 60:.1f} minutes ago',
+                              'last_ping': str(last_ping)
+                          }
+                  
+                  return {'healthy': True, 'reason': 'SSM agent is online and responsive'}
+              except Exception as e:
+                  return {'healthy': False, 'reason': f'SSM check error: {str(e)}'}
+
+          def check_https_connectivity():
+              """Check HTTPS connectivity to box hostname"""
+              try:
+                  ctx = ssl.create_default_context()
+                  ctx.check_hostname = False
+                  ctx.verify_mode = ssl.CERT_NONE
+                  
+                  url = f'https://{BOX_HOSTNAME}/'
+                  req = urllib.request.Request(url, method='HEAD')
+                  with urllib.request.urlopen(req, timeout=10, context=ctx) as response:
+                      return {
+                          'healthy': True,
+                          'reason': f'HTTPS responding with status {response.status}',
+                          'status_code': response.status
+                      }
+              except Exception as e:
+                  return {'healthy': False, 'reason': f'HTTPS check failed: {str(e)}'}
+
+          def check_ec2_status():
+              """Check EC2 instance status"""
+              try:
+                  response = ec2.describe_instance_status(
+                      InstanceIds=[INSTANCE_ID],
+                      IncludeAllInstances=True
+                  )
+                  statuses = response.get('InstanceStatuses', [])
+                  if not statuses:
+                      return {'healthy': False, 'reason': 'No instance status found'}
+                  
+                  status = statuses[0]
+                  instance_state = status.get('InstanceState', {}).get('Name', 'unknown')
+                  system_status = status.get('SystemStatus', {}).get('Status', 'unknown')
+                  instance_status = status.get('InstanceStatus', {}).get('Status', 'unknown')
+                  
+                  if instance_state != 'running':
+                      return {
+                          'healthy': False,
+                          'reason': f'Instance state is {instance_state}',
+                          'state': instance_state
+                      }
+                  
+                  if system_status != 'ok' or instance_status != 'ok':
+                      return {
+                          'healthy': False,
+                          'reason': f'Status checks: system={system_status}, instance={instance_status}',
+                          'system_status': system_status,
+                          'instance_status': instance_status
+                      }
+                  
+                  return {
+                      'healthy': True,
+                      'reason': 'EC2 status checks passing',
+                      'state': instance_state
+                  }
+              except Exception as e:
+                  return {'healthy': False, 'reason': f'EC2 check error: {str(e)}'}
+
+          def publish_metrics(health_results):
+              """Publish custom CloudWatch metrics"""
+              try:
+                  metrics = [
+                      {
+                          'MetricName': 'SSMConnectivityHealthy',
+                          'Value': 1 if health_results['ssm']['healthy'] else 0,
+                          'Unit': 'Count',
+                          'Dimensions': [
+                              {'Name': 'InstanceId', 'Value': INSTANCE_ID},
+                              {'Name': 'Domain', 'Value': DOMAIN_NAME}
+                          ]
+                      },
+                      {
+                          'MetricName': 'HTTPSHealthy',
+                          'Value': 1 if health_results['https']['healthy'] else 0,
+                          'Unit': 'Count',
+                          'Dimensions': [
+                              {'Name': 'InstanceId', 'Value': INSTANCE_ID},
+                              {'Name': 'Domain', 'Value': DOMAIN_NAME}
+                          ]
+                      },
+                      {
+                          'MetricName': 'OverallHealthy',
+                          'Value': 1 if health_results['overall_healthy'] else 0,
+                          'Unit': 'Count',
+                          'Dimensions': [
+                              {'Name': 'InstanceId', 'Value': INSTANCE_ID},
+                              {'Name': 'Domain', 'Value': DOMAIN_NAME}
+                          ]
+                      }
+                  ]
+                  
+                  cloudwatch.put_metric_data(
+                      Namespace='MailServer/ProactiveHealthCheck',
+                      MetricData=metrics
+                  )
+              except Exception as e:
+                  print(f"Error publishing metrics: {e}")
+
+          def send_alert(subject, message):
+              """Send alert via SNS"""
+              if not ALERT_TOPIC_ARN:
+                  return
+              try:
+                  sns.publish(
+                      TopicArn=ALERT_TOPIC_ARN,
+                      Subject=subject[:100],  # SNS subject limit
+                      Message=message
+                  )
+              except Exception as e:
+                  print(f"Error sending alert: {e}")
+
+          def trigger_emergency_restart(health_results):
+              """Trigger emergency restart Lambda"""
+              try:
+                  payload = {
+                      'AlarmName': 'ProactiveHealthCheck-ZombieStateDetected',
+                      'NewStateReason': f'Zombie state detected: {health_results["failure_reason"]}',
+                      'source': 'proactive-health-check'
+                  }
+                  
+                  response = lambda_client.invoke(
+                      FunctionName=EMERGENCY_RESTART_LAMBDA_ARN,
+                      InvocationType='Event',  # Async invocation
+                      Payload=json.dumps(payload)
+                  )
+                  
+                  print(f"Emergency restart triggered: {response}")
+                  return True
+              except Exception as e:
+                  print(f"Error triggering restart: {e}")
+                  return False
+
+          def handler(event, context):
+              """
+              Proactive health check handler.
+              Runs every 5 minutes to detect zombie instances.
+              """
+              print(f"=== Proactive Health Check ===")
+              print(f"Instance: {INSTANCE_ID}")
+              print(f"Domain: {DOMAIN_NAME}")
+              print(f"Time: {datetime.now().isoformat()}")
+              
+              # Run all health checks
+              health_results = {
+                  'ec2': check_ec2_status(),
+                  'ssm': check_ssm_connectivity(),
+                  'https': check_https_connectivity(),
+                  'overall_healthy': True,
+                  'failure_reason': None,
+                  'timestamp': datetime.now().isoformat()
+              }
+              
+              # Determine overall health
+              # EC2 running + SSM healthy + HTTPS healthy = healthy
+              # EC2 running + (SSM unhealthy OR HTTPS unhealthy) = zombie state
+              
+              if not health_results['ec2']['healthy']:
+                  health_results['overall_healthy'] = False
+                  health_results['failure_reason'] = f"EC2 issue: {health_results['ec2']['reason']}"
+              elif not health_results['ssm']['healthy'] or not health_results['https']['healthy']:
+                  health_results['overall_healthy'] = False
+                  reasons = []
+                  if not health_results['ssm']['healthy']:
+                      reasons.append(f"SSM: {health_results['ssm']['reason']}")
+                  if not health_results['https']['healthy']:
+                      reasons.append(f"HTTPS: {health_results['https']['reason']}")
+                  health_results['failure_reason'] = ' | '.join(reasons)
+              
+              # Publish metrics
+              publish_metrics(health_results)
+              
+              # Log results
+              print(f"Health Results: {json.dumps(health_results, indent=2)}")
+              
+              # If unhealthy, trigger action
+              if not health_results['overall_healthy']:
+                  print(f"🚨 UNHEALTHY: {health_results['failure_reason']}")
+                  
+                  # Send alert
+                  send_alert(
+                      f"🚨 {DOMAIN_NAME} Health Check FAILED",
+                      f"Proactive health check detected issues:\n\n"
+                      f"Instance: {INSTANCE_ID}\n"
+                      f"Domain: {DOMAIN_NAME}\n"
+                      f"Failure Reason: {health_results['failure_reason']}\n\n"
+                      f"Details:\n"
+                      f"- EC2: {health_results['ec2']['reason']}\n"
+                      f"- SSM: {health_results['ssm']['reason']}\n"
+                      f"- HTTPS: {health_results['https']['reason']}\n\n"
+                      f"🔄 Emergency restart will be triggered."
+                  )
+                  
+                  # Trigger restart
+                  restart_triggered = trigger_emergency_restart(health_results)
+                  health_results['restart_triggered'] = restart_triggered
+              else:
+                  print("✅ All health checks passed")
+              
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps(health_results, indent=2)
+              }
+
+  # EventBridge Rule to run proactive health check every 5 minutes
+  ProactiveHealthCheckSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub 'proactive-health-check-${AWS::StackName}'
+      Description: Run proactive health check every 5 minutes
+      ScheduleExpression: 'rate(5 minutes)'
+      State: ENABLED
+      Targets:
+        - Id: ProactiveHealthCheckTarget
+          Arn: !GetAtt ProactiveHealthCheckLambda.Arn
+
+  # Lambda permission for EventBridge
+  ProactiveHealthCheckSchedulePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProactiveHealthCheckLambda
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ProactiveHealthCheckSchedule.Arn
+
+Outputs:
+  HttpsHealthCheckId:
+    Description: Route 53 Health Check ID
+    Value: !Ref HttpsHealthCheck
+    Export:
+      Name: !Sub '${AWS::StackName}-HttpsHealthCheckId'
+
+  HttpsHealthCheckAlarmName:
+    Description: CloudWatch Alarm name for HTTPS health check
+    Value: !Ref HttpsHealthCheckAlarm
+    Export:
+      Name: !Sub '${AWS::StackName}-HttpsHealthCheckAlarmName'
+
+  ProactiveHealthCheckLambdaArn:
+    Description: ARN of proactive health check Lambda
+    Value: !GetAtt ProactiveHealthCheckLambda.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-ProactiveHealthCheckLambdaArn'
+
+  ProactiveHealthCheckScheduleArn:
+    Description: ARN of EventBridge schedule rule
+    Value: !GetAtt ProactiveHealthCheckSchedule.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-ProactiveHealthCheckScheduleArn'
+
+
+
+

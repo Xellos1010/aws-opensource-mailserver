@@ -19,7 +19,7 @@ describe('Destroy Operation E2E', () => {
     // Verify destroy command can be constructed
     // The command should handle domain-specific bucket emptying
     const destroyCmd = 
-      'FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js destroy --force';
+      'FEATURE_CDK_k3frame_STACKS_ENABLED=1 node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js destroy --force';
     
     // Verify all components exist
     expect(existsSync(
@@ -28,11 +28,11 @@ describe('Destroy Operation E2E', () => {
   });
 
   it('validates feature flag is set for destroy', () => {
-    // Destroy command should require FEATURE_CDK_K3FRAME_STACKS_ENABLED=1
+    // Destroy command should require FEATURE_CDK_k3frame_STACKS_ENABLED=1
     const projectJson = require('../../project.json');
     const destroyCommand = projectJson.targets.destroy.options.command;
     
-    expect(destroyCommand).toContain('FEATURE_CDK_K3FRAME_STACKS_ENABLED=1');
+    expect(destroyCommand).toContain('FEATURE_CDK_k3frame_STACKS_ENABLED=1');
   });
 
   it('validates bucket emptying runs before destroy', () => {

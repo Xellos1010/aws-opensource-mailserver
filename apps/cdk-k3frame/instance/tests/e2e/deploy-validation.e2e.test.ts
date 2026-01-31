@@ -34,7 +34,7 @@ describe('Deploy Operation E2E', () => {
         cwd: process.cwd(),
         env: {
           ...process.env,
-          FEATURE_CDK_K3FRAME_STACKS_ENABLED: '1',
+          FEATURE_CDK_k3frame_STACKS_ENABLED: '1',
         },
       });
       expect(existsSync(templatePath)).toBe(true);
@@ -62,7 +62,7 @@ describe('Deploy Operation E2E', () => {
           timeout: 60000,
           env: {
             ...process.env,
-            FEATURE_CDK_K3FRAME_STACKS_ENABLED: '1',
+            FEATURE_CDK_k3frame_STACKS_ENABLED: '1',
             DOMAIN: 'k3frame.com',
           },
         }
@@ -95,7 +95,7 @@ describe('Deploy Operation E2E', () => {
   it('deploy command structure is valid', () => {
     // Test that deploy command can be constructed without syntax errors
     const deployCmd = 
-      'FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js deploy --require-approval never';
+      'FEATURE_CDK_k3frame_STACKS_ENABLED=1 node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js deploy --require-approval never';
     
     // Verify all components exist
     expect(existsSync(
@@ -145,7 +145,7 @@ describe('Deploy Operation E2E', () => {
           cwd: process.cwd(),
           env: {
             ...process.env,
-            FEATURE_CDK_K3FRAME_STACKS_ENABLED: '1',
+            FEATURE_CDK_k3frame_STACKS_ENABLED: '1',
           },
         });
       } catch (error) {
