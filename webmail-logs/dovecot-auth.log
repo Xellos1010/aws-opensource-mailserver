@@ -1,9 +1,7 @@
-Jan 25 03:00:22 lmtp(me@box.emcnotary.com)<129905><roUiGUWHdWlx+wEAQCw0vA>: Error: sieve: Execution of script /etc/dovecot/sieve-spam.sieve was aborted due to temporary failure
-Jan 25 03:00:22 lmtp(me@box.emcnotary.com)<129906><ldPGGUWHdWly+wEAQCw0vA>: Error: sieve: Execution of script /etc/dovecot/sieve-spam.sieve was aborted due to temporary failure
-Jan 25 03:30:05 master: Info: Dovecot v2.3.16 (7e2e900c1a) starting up for imap, lmtp, sieve, pop3 (core dumps disabled)
-Jan 25 03:30:05 doveconf: Warning: NOTE: You can get a new clean config file with: doveconf -Pn > dovecot-new.conf
-Jan 25 03:30:05 doveconf: Warning: Obsolete setting in /etc/dovecot/conf.d/10-ssl.conf:91: ssl_dh_parameters_length is no longer needed
-Jan 25 03:30:05 config: Warning: NOTE: You can get a new clean config file with: doveconf -Pn > dovecot-new.conf
-Jan 25 03:30:05 config: Warning: Obsolete setting in /etc/dovecot/conf.d/10-ssl.conf:91: ssl_dh_parameters_length is no longer needed
-Jan 25 03:30:22 lmtp(me@box.emcnotary.com)<133593><197uGU2OdWnZCQIAQCw0vA>: Error: sieve: Execution of script /etc/dovecot/sieve-spam.sieve was aborted due to temporary failure
-Jan 25 03:35:22 lmtp(me@box.emcnotary.com)<134348><yI8YHnmPdWnMDAIAQCw0vA>: Error: sieve: Execution of script /etc/dovecot/sieve-spam.sieve was aborted due to temporary failure
+Feb 01 01:30:17 master: Info: Dovecot v2.3.16 (7e2e900c1a) starting up for imap, lmtp, sieve, pop3 (core dumps disabled)
+Feb 01 01:30:17 doveconf: Warning: NOTE: You can get a new clean config file with: doveconf -Pn > dovecot-new.conf
+Feb 01 01:30:17 doveconf: Warning: Obsolete setting in /etc/dovecot/conf.d/10-ssl.conf:91: ssl_dh_parameters_length is no longer needed
+Feb 01 01:30:17 config: Warning: NOTE: You can get a new clean config file with: doveconf -Pn > dovecot-new.conf
+Feb 01 01:30:17 config: Warning: Obsolete setting in /etc/dovecot/conf.d/10-ssl.conf:91: ssl_dh_parameters_length is no longer needed
+Feb 01 05:19:46 lmtp(sysops@k3frame.com)<143354><SurFImnifmn6LwIABIoaxA>: Error: sieve: Execution of script /etc/dovecot/sieve-spam.sieve was aborted due to temporary failure
+Feb 01 05:25:21 lmtp(sysops@k3frame.com)<144348><C9vgDsDjfmncMwIABIoaxA>: Error: sieve: Execution of script /etc/dovecot/sieve-spam.sieve was aborted due to temporary failure

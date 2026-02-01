@@ -542,6 +542,14 @@
       },
       "description": "Fix webmail 401 errors: Restarts PHP-FPM, Nginx, and Dovecot services to resolve webmail authentication issues"
     },
+    "admin:fix:mailbox-permissions": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/fix-mailbox-permissions.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+      },
+      "description": "Fix mailbox directory permissions: Sets mail:mail ownership and 2770 mode on /home/user-data/mail/mailboxes for dovecot write access"
+    },
     "admin:availability:report": {
       "executor": "nx:run-commands",
       "dependsOn": ["^build", "admin-stack-info:build", "admin:test:bootstrap-complete"],
@@ -821,6 +829,46 @@
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/verify-and-setup-k3frame.cli.ts"
       },
       "description": "Comprehensive verification: Checks recovery system, SES configuration, and provides mailbox restore guidance"
+    },
+    "admin:health-gate": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin:test:instance-deployed", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/health-gate.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DISK_THRESHOLD:+--disk-threshold $DISK_THRESHOLD} ${SKIP_MAIL_FLOW:+--skip-mail-flow}"
+      },
+      "description": "Post-deploy health gate: Runs comprehensive health checks including availability, IMAP auth, disk space, and optionally mail flow tests. Fails if any critical check fails. Use DISK_THRESHOLD to set disk % limit (default: 85)"
+    },
+    "admin:logs:dovecot": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} LOG_LINES=${LOG_LINES:-500} OUTPUT_DIR=${OUTPUT_DIR:-./dovecot-logs} pnpm exec tsx --tsconfig tools/tsconfig.json tools/pull-dovecot-logs.cli.ts ${DOMAIN:+--domain $DOMAIN} ${LOG_LINES:+--lines $LOG_LINES} ${OUTPUT_DIR:+--output-dir $OUTPUT_DIR} ${FILTER_ERRORS:+--filter-errors}"
+      },
+      "description": "Pull Dovecot/sieve logs: Retrieves dovecot, sieve, and mail.log from instance for diagnostics (use LOG_LINES to control lines, FILTER_ERRORS=1 to show only errors)"
+    },
+    "admin:repair:mail": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin-credentials:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/repair-mail-delivery.cli.ts ${DOMAIN:+--domain $DOMAIN} ${USER_EMAIL:+--user $USER_EMAIL} ${DRY_RUN:+--dry-run} ${SKIP_SIEVE:+--skip-sieve} ${SKIP_RESYNC:+--skip-resync} ${SKIP_SERVICES:+--skip-services}"
+      },
+      "description": "Repair mail delivery: Fixes sieve scripts, resyncs mailbox indexes, restarts services. Use USER_EMAIL for specific user, DRY_RUN=1 to preview"
+    },
+    "admin:repair:mail:user": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin-credentials:build", "admin:test:bootstrap-complete"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/repair-mail-delivery.cli.ts ${DOMAIN:+--domain $DOMAIN} --user ${USER_EMAIL} ${USER_PASSWORD:+USER_PASSWORD=$USER_PASSWORD} ${DRY_RUN:+--dry-run}"
+      },
+      "description": "Repair mail for specific user: Resyncs mailbox, tests auth (requires USER_EMAIL, optional USER_PASSWORD)"
+    },
+    "admin:repair:mail:dry-run": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/repair-mail-delivery.cli.ts ${DOMAIN:+--domain $DOMAIN} --dry-run"
+      },
+      "description": "Preview mail repairs without applying changes"
     }
   }
 }

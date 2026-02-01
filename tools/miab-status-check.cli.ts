@@ -318,8 +318,27 @@ async function fetchStatusChecks(options: StatusCheckOptions): Promise<StatusChe
   );
 
   if (checkScriptExists.output === 'EXISTS') {
-    // Run status_checks.py as mailinabox user
-    statusCommand = `sudo -u mailinabox python3 ${statusCheckScript} 2>&1`;
+    // Try multiple users in order of preference: mailinabox, user-data, root
+    // The mailinabox user may not exist on all installations (configuration drift)
+    const userCheckResult = await sshCommand(
+      keyPath,
+      instanceIp,
+      `id -u mailinabox >/dev/null 2>&1 && echo "mailinabox" || (id -u user-data >/dev/null 2>&1 && echo "user-data" || echo "root")`,
+      { verbose }
+    );
+    const runAsUser = userCheckResult.output.trim() || 'root';
+
+    if (verbose) {
+      console.log(`   ℹ️  Running status_checks.py as user: ${runAsUser}`);
+      if (runAsUser !== 'mailinabox') {
+        console.log(`   ⚠️  Note: mailinabox user not found, falling back to ${runAsUser}`);
+      }
+    }
+
+    // Run status_checks.py as the appropriate user
+    statusCommand = runAsUser === 'root'
+      ? `sudo python3 ${statusCheckScript} 2>&1`
+      : `sudo -u ${runAsUser} python3 ${statusCheckScript} 2>&1`;
   } else {
     // Method 2: Try via mailinabox CLI command
     const mailinaboxCmdCheck = await sshCommand(
