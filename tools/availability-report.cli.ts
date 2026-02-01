@@ -47,6 +47,58 @@ interface HealthCheck {
   responseTime?: number;
 }
 
+interface DiskUsage {
+  total: string;
+  used: string;
+  available: string;
+  percentUsed: number;
+  status: 'ok' | 'warning' | 'critical';
+}
+
+/**
+ * Check TCP port connectivity
+ */
+async function checkTcpPort(host: string, port: number, timeout: number = 10000): Promise<{ success: boolean; responseTime: number; error?: string }> {
+  const net = await import('node:net');
+  return new Promise((resolve) => {
+    const startTime = Date.now();
+    const socket = new net.Socket();
+
+    socket.setTimeout(timeout);
+
+    socket.on('connect', () => {
+      const responseTime = Date.now() - startTime;
+      socket.destroy();
+      resolve({
+        success: true,
+        responseTime,
+      });
+    });
+
+    socket.on('timeout', () => {
+      socket.destroy();
+      const responseTime = Date.now() - startTime;
+      resolve({
+        success: false,
+        responseTime,
+        error: 'Connection timeout',
+      });
+    });
+
+    socket.on('error', (error) => {
+      const responseTime = Date.now() - startTime;
+      socket.destroy();
+      resolve({
+        success: false,
+        responseTime,
+        error: error.message,
+      });
+    });
+
+    socket.connect(port, host);
+  });
+}
+
 async function checkHttpEndpoint(url: string, timeout: number = 10000): Promise<{ success: boolean; statusCode?: number; responseTime: number; error?: string }> {
   return new Promise((resolve) => {
     const startTime = Date.now();
@@ -141,12 +193,14 @@ async function generateAvailabilityReport(options: AvailabilityReportOptions): P
     ec2Status?: string;
     services: ServiceStatus[];
     healthChecks: HealthCheck[];
+    diskUsage?: DiskUsage;
     summary: {
       overall: 'online' | 'degraded' | 'offline';
       servicesRunning: number;
       servicesTotal: number;
       healthChecksPassing: number;
       healthChecksTotal: number;
+      diskStatus?: 'ok' | 'warning' | 'critical';
     };
   } = {
     timestamp: new Date().toISOString(),
@@ -386,6 +440,113 @@ async function generateAvailabilityReport(options: AvailabilityReportOptions): P
     }
   }
 
+  // Check IMAPS (port 993)
+  console.log('   Checking IMAPS (port 993)...');
+  const imapsResult = await checkTcpPort(instanceIp, 993, 10000);
+  const imapsHealth: HealthCheck = {
+    name: 'IMAPS (993)',
+    status: imapsResult.success ? 'healthy' : 'unhealthy',
+    responseTime: imapsResult.responseTime,
+    details: imapsResult.success
+      ? `Connected (${imapsResult.responseTime}ms)`
+      : imapsResult.error || 'Connection failed',
+  };
+  report.healthChecks.push(imapsHealth);
+  console.log(`   ${imapsHealth.status === 'healthy' ? '✅' : '❌'} ${imapsHealth.name}: ${imapsHealth.details}\n`);
+
+  // Check SMTP Submission (port 587)
+  console.log('   Checking SMTP Submission (port 587)...');
+  const smtpResult = await checkTcpPort(instanceIp, 587, 10000);
+  const smtpHealth: HealthCheck = {
+    name: 'SMTP Submission (587)',
+    status: smtpResult.success ? 'healthy' : 'unhealthy',
+    responseTime: smtpResult.responseTime,
+    details: smtpResult.success
+      ? `Connected (${smtpResult.responseTime}ms)`
+      : smtpResult.error || 'Connection failed',
+  };
+  report.healthChecks.push(smtpHealth);
+  console.log(`   ${smtpHealth.status === 'healthy' ? '✅' : '❌'} ${smtpHealth.name}: ${smtpHealth.details}\n`);
+
+  // Step 4: Check disk usage
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📋 Step 4: Checking Disk Usage');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+  try {
+    const diskCommand = "df -h / | tail -1 | awk '{print $2,$3,$4,$5}'";
+    const diskResult = await ssmClient.send(
+      new SendCommandCommand({
+        InstanceIds: [instanceId],
+        DocumentName: 'AWS-RunShellScript',
+        Parameters: {
+          commands: [diskCommand],
+        },
+      })
+    );
+
+    const diskCommandId = diskResult.Command?.CommandId;
+    if (diskCommandId) {
+      let diskInvocation: GetCommandInvocationCommandOutput | undefined;
+      let retries = 0;
+      const maxRetries = 5;
+
+      while (retries < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        diskInvocation = await ssmClient.send(
+          new GetCommandInvocationCommand({
+            CommandId: diskCommandId,
+            InstanceId: instanceId,
+          })
+        );
+
+        if (diskInvocation.Status === 'Success' || diskInvocation.Status === 'Failed') {
+          break;
+        }
+        retries++;
+      }
+
+      if (diskInvocation && diskInvocation.Status === 'Success') {
+        const output = diskInvocation.StandardOutputContent || '';
+        const parts = output.trim().split(/\s+/);
+        const percentStr = parts[3] || '0%';
+        const percentUsed = parseInt(percentStr.replace('%', ''), 10) || 0;
+
+        // Disk status thresholds: warning at 80%, critical at 90%
+        let diskStatus: 'ok' | 'warning' | 'critical' = 'ok';
+        if (percentUsed >= 90) {
+          diskStatus = 'critical';
+        } else if (percentUsed >= 80) {
+          diskStatus = 'warning';
+        }
+
+        report.diskUsage = {
+          total: parts[0] || 'unknown',
+          used: parts[1] || 'unknown',
+          available: parts[2] || 'unknown',
+          percentUsed,
+          status: diskStatus,
+        };
+        report.summary.diskStatus = diskStatus;
+
+        const diskIcon = diskStatus === 'ok' ? '✅' : diskStatus === 'warning' ? '⚠️' : '❌';
+        console.log(`   ${diskIcon} Disk Usage: ${percentUsed}% (${parts[1] || '?'} of ${parts[0] || '?'})`);
+        console.log(`   Available: ${parts[2] || 'unknown'}`);
+        if (diskStatus === 'critical') {
+          console.log(`   ❌ CRITICAL: Disk usage above 90% threshold!`);
+        } else if (diskStatus === 'warning') {
+          console.log(`   ⚠️  WARNING: Disk usage above 80% threshold`);
+        }
+        console.log('');
+      } else {
+        console.log(`   ⚠️  Could not determine disk usage\n`);
+      }
+    }
+  } catch (error) {
+    console.log(`   ❌ Failed to check disk usage: ${error instanceof Error ? error.message : String(error)}\n`);
+  }
+
   // Calculate summary
   report.summary.servicesTotal = report.services.length;
   report.summary.servicesRunning = report.services.filter(s => s.status === 'running').length;
@@ -396,9 +557,11 @@ async function generateAvailabilityReport(options: AvailabilityReportOptions): P
     report.summary.overall = 'offline';
   } else if (
     report.summary.servicesRunning === report.summary.servicesTotal &&
-    report.summary.healthChecksPassing === report.summary.healthChecksTotal
+    report.summary.healthChecksPassing === report.summary.healthChecksTotal &&
+    report.summary.diskStatus !== 'critical'
   ) {
-    report.summary.overall = 'online';
+    // Degrade to 'degraded' if disk is warning level
+    report.summary.overall = report.summary.diskStatus === 'warning' ? 'degraded' : 'online';
   } else if (
     report.summary.servicesRunning > 0 &&
     report.summary.healthChecksPassing > 0
@@ -418,7 +581,12 @@ async function generateAvailabilityReport(options: AvailabilityReportOptions): P
   console.log(`   Overall Status: ${overallIcon} ${report.summary.overall.toUpperCase()}\n`);
 
   console.log(`   Services: ${report.summary.servicesRunning}/${report.summary.servicesTotal} running`);
-  console.log(`   Health Checks: ${report.summary.healthChecksPassing}/${report.summary.healthChecksTotal} passing\n`);
+  console.log(`   Health Checks: ${report.summary.healthChecksPassing}/${report.summary.healthChecksTotal} passing`);
+  if (report.diskUsage) {
+    const diskIcon = report.diskUsage.status === 'ok' ? '✅' : report.diskUsage.status === 'warning' ? '⚠️' : '❌';
+    console.log(`   Disk: ${diskIcon} ${report.diskUsage.percentUsed}% used (${report.diskUsage.available} free)`);
+  }
+  console.log('');
 
   if (report.summary.servicesRunning < report.summary.servicesTotal) {
     const stoppedServices = report.services.filter(s => s.status !== 'running');
@@ -451,6 +619,19 @@ async function generateAvailabilityReport(options: AvailabilityReportOptions): P
     console.log(`📄 Report saved to: ${path.resolve(defaultOutputFile)}\n`);
   }
 
+  // Disk usage warnings
+  if (report.diskUsage && report.diskUsage.status !== 'ok') {
+    console.log('   ⚠️  Disk Usage Warning:');
+    console.log(`      - Current usage: ${report.diskUsage.percentUsed}% (${report.diskUsage.available} available)`);
+    if (report.diskUsage.status === 'critical') {
+      console.log('      - CRITICAL: Run admin:cleanup:disk-space immediately');
+      console.log('      - Consider expanding EBS volume if cleanup is insufficient');
+    } else {
+      console.log('      - Run admin:cleanup:disk-space to free space');
+    }
+    console.log('');
+  }
+
   // Recommendations
   console.log('💡 Recommendations:');
   if (report.summary.overall === 'offline') {
@@ -461,6 +642,9 @@ async function generateAvailabilityReport(options: AvailabilityReportOptions): P
     console.log('   - Restart failed services');
     console.log('   - Check service logs for errors');
     console.log('   - Verify network connectivity');
+    if (report.diskUsage && report.diskUsage.status !== 'ok') {
+      console.log('   - Address disk space issues: pnpm nx run cdk-k3frame-instance:admin:cleanup:disk-space');
+    }
   } else {
     console.log('   - Instance is healthy and online');
     console.log('   - Monitor CloudWatch alarms');
