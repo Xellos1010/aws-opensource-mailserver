@@ -1454,6 +1454,17 @@
               "configurations": {},
               "parallelism": true
             },
+            "set:k3frame": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=hepe-admin-mfa AWS_REGION=us-east-1 APP_PATH=apps/cdk-k3frame/instance node dist/libs/admin/admin-reverse-dns/set-reverse-dns.mjs"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
             "test": {
               "executor": "@nx/jest:jest",
               "outputs": [
@@ -2481,6 +2492,76 @@
               "configurations": {},
               "parallelism": true
             },
+            "admin:imap:auth:test": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} USER_EMAIL=${USER_EMAIL} USER_PASSWORD=${USER_PASSWORD} pnpm exec tsx --tsconfig tools/tsconfig.json tools/test-imap-auth.cli.ts ${DOMAIN:+--domain $DOMAIN} ${USER_EMAIL:+--email $USER_EMAIL} ${USER_PASSWORD:+--password $USER_PASSWORD}"
+              },
+              "description": "Test IMAP authentication via doveadm auth test (defaults to admin credentials from SSM)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:roundcube:diagnose": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/diagnose-roundcube-login.cli.ts ${DOMAIN:+--domain $DOMAIN}"
+              },
+              "description": "Diagnose Roundcube login issues (PHP session path, logs, and Roundcube config)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:roundcube:fix-session": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/fix-roundcube-session.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "Fix Roundcube PHP session directory permissions and reload services",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:mail:flow:test": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} FROM_EMAIL=${FROM_EMAIL} FROM_PASSWORD=${FROM_PASSWORD} TO=${TO} SUBJECT=${SUBJECT} BODY=${BODY} pnpm exec tsx --tsconfig tools/tsconfig.json tools/test-mail-flow.cli.ts ${DOMAIN:+--domain $DOMAIN} ${FROM_EMAIL:+--from-email $FROM_EMAIL} ${FROM_PASSWORD:+--from-password $FROM_PASSWORD} ${TO:+--to $TO} ${SUBJECT:+--subject $SUBJECT} ${BODY:+--body $BODY}"
+              },
+              "description": "Send test emails and verify IMAP auth via doveadm (use FROM_EMAIL, FROM_PASSWORD, TO)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:postfix:ses:relay": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} SMTP_REGION=${SMTP_REGION} SMTP_USERNAME=${SMTP_USERNAME} SMTP_PASSWORD=${SMTP_PASSWORD} pnpm exec tsx --tsconfig tools/tsconfig.json tools/configure-ses-relay.cli.ts ${DOMAIN:+--domain $DOMAIN} ${SMTP_REGION:+--smtp-region $SMTP_REGION} ${SMTP_USERNAME:+--smtp-username $SMTP_USERNAME} ${SMTP_PASSWORD:+--smtp-password $SMTP_PASSWORD}"
+              },
+              "description": "Configure Postfix to relay outbound mail via SES SMTP (use SMTP_USERNAME/SMTP_PASSWORD)",
+              "configurations": {},
+              "parallelism": true
+            },
             "admin:users:list": {
               "executor": "nx:run-commands",
               "dependsOn": [
@@ -2611,9 +2692,41 @@
                 "admin:test:bootstrap-complete"
               ],
               "options": {
-                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/sync-master-backup.cli.ts --master-backup-dir ${MASTER_BACKUP_DIR} ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} USERS=${USERS} INCLUDE_DELETED=${INCLUDE_DELETED} pnpm exec tsx --tsconfig tools/tsconfig.json tools/sync-master-backup.cli.ts --master-backup-dir ${MASTER_BACKUP_DIR} ${DOMAIN:+--domain $DOMAIN} ${USERS:+--users $USERS} ${INCLUDE_DELETED:+--include-deleted} ${DRY_RUN:+--dry-run}"
               },
-              "description": "Sync master backup folder: Syncs master backup folder with mailserver (skips duplicates, use MASTER_BACKUP_DIR to specify master backup location)",
+              "description": "Sync master backup folder: Syncs master backup folder with mailserver (skips duplicates, use MASTER_BACKUP_DIR to specify master backup location, USERS to limit, INCLUDE_DELETED=1 to include trash)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:mailboxes:aggregate-admin": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} SOURCE_PATH=${SOURCE_PATH} USER=${USER} STAGING_DIR=${STAGING_DIR} pnpm exec tsx --tsconfig tools/tsconfig.json tools/aggregate-admin-mailbox.cli.ts --source-path ${SOURCE_PATH} ${DOMAIN:+--domain $DOMAIN} ${USER:+--user $USER} ${STAGING_DIR:+--staging-dir $STAGING_DIR} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "Aggregate admin mailbox (cur/new + .Sent) with dedupe, skip trash, and upload (use SOURCE_PATH, USER, STAGING_DIR, DRY_RUN)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:mailboxes:pull": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} DESTINATION_DIR=${DESTINATION_DIR} USERS=${USERS} pnpm exec tsx --tsconfig tools/tsconfig.json tools/pull-mailboxes.cli.ts ${DESTINATION_DIR:+--destination-dir $DESTINATION_DIR} ${USERS:+--users $USERS} ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "Pull mailboxes from server to local backup dir (use DESTINATION_DIR, USERS, DRY_RUN)",
               "configurations": {},
               "parallelism": true
             },
@@ -3643,6 +3756,1553 @@
           "implicitDependencies": []
         }
       },
+      "cdk-k3frame-instance": {
+        "name": "cdk-k3frame-instance",
+        "type": "app",
+        "data": {
+          "root": "apps/cdk-k3frame/instance",
+          "targets": {
+            "test": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/apps/cdk-k3frame/instance"
+              ],
+              "dependsOn": [
+                "build",
+                "^build"
+              ],
+              "options": {
+                "jestConfig": "apps/cdk-k3frame/instance/jest.config.ts",
+                "passWithNoTests": true
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true
+            },
+            "build": {
+              "executor": "@nx/esbuild:esbuild",
+              "outputs": [
+                "{options.outputPath}"
+              ],
+              "options": {
+                "platform": "node",
+                "outputPath": "dist/apps/cdk-k3frame/instance",
+                "format": [
+                  "cjs"
+                ],
+                "bundle": true,
+                "main": "apps/cdk-k3frame/instance/src/main.ts",
+                "tsConfig": "apps/cdk-k3frame/instance/tsconfig.app.json",
+                "assets": [
+                  "apps/cdk-k3frame/instance/cdk.json"
+                ],
+                "generatePackageJson": true,
+                "esbuildOptions": {
+                  "sourcemap": true,
+                  "external": [
+                    "aws-sdk"
+                  ]
+                }
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true,
+              "dependsOn": [
+                "^build"
+              ],
+              "inputs": [
+                "production",
+                "^production"
+              ]
+            },
+            "lint": {
+              "executor": "@nx/eslint:lint",
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "cache": true
+            },
+            "test:unit": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/apps/cdk-k3frame/instance"
+              ],
+              "dependsOn": [
+                "build",
+                "^build"
+              ],
+              "options": {
+                "jestConfig": "apps/cdk-k3frame/instance/jest.config.ts",
+                "testPathPattern": "src/__tests__",
+                "testPathIgnorePatterns": [
+                  "__it__",
+                  "tests/e2e"
+                ],
+                "passWithNoTests": true
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:integration": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/apps/cdk-k3frame/instance"
+              ],
+              "dependsOn": [
+                "build",
+                "^build"
+              ],
+              "options": {
+                "jestConfig": "apps/cdk-k3frame/instance/jest.config.ts",
+                "testPathPattern": "src/__it__",
+                "testPathIgnorePatterns": [
+                  "__tests__",
+                  "tests/e2e"
+                ],
+                "passWithNoTests": true
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:e2e": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/apps/cdk-k3frame/instance"
+              ],
+              "dependsOn": [
+                "build",
+                "^build"
+              ],
+              "options": {
+                "jestConfig": "apps/cdk-k3frame/instance/jest.config.ts",
+                "testPathPattern": "tests/e2e",
+                "passWithNoTests": true
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:no-deploy": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/apps/cdk-k3frame/instance"
+              ],
+              "dependsOn": [
+                "build",
+                "^build"
+              ],
+              "options": {
+                "jestConfig": "apps/cdk-k3frame/instance/jest.config.ts",
+                "testPathPattern": "src/__tests__|src/__it__|build-validation|deploy-validation|destroy-validation|cdk-validation|deployment-smoke",
+                "passWithNoTests": true
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:bootstrap": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/apps/cdk-k3frame/instance"
+              ],
+              "dependsOn": [
+                "build",
+                "^build",
+                "admin:test:instance-deployed",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "jestConfig": "apps/cdk-k3frame/instance/jest.config.ts",
+                "testPathPattern": "bootstrap.e2e",
+                "passWithNoTests": true
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:reboot": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/apps/cdk-k3frame/instance"
+              ],
+              "dependsOn": [
+                "build",
+                "^build",
+                "admin:test:instance-deployed"
+              ],
+              "options": {
+                "jestConfig": "apps/cdk-k3frame/instance/jest.config.ts",
+                "testPathPattern": "reboot-event.e2e",
+                "passWithNoTests": true
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:reboot-integration": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/apps/cdk-k3frame/instance"
+              ],
+              "dependsOn": [
+                "build",
+                "^build",
+                "admin:test:instance-deployed"
+              ],
+              "options": {
+                "jestConfig": "apps/cdk-k3frame/instance/jest.config.ts",
+                "testPathPattern": "reboot-integration",
+                "testPathIgnorePatterns": [
+                  "reboot-event",
+                  "bootstrap",
+                  "build-validation",
+                  "cdk-validation",
+                  "deploy-validation",
+                  "deploy-schedule-validation",
+                  "deployment-smoke",
+                  "destroy-validation",
+                  "__tests__",
+                  "__it__"
+                ],
+                "passWithNoTests": true
+              },
+              "description": "Run comprehensive reboot integration tests (will reboot instance multiple times). Uses AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa}",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:reboot-lambda-only": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/apps/cdk-k3frame/instance"
+              ],
+              "dependsOn": [
+                "build",
+                "^build",
+                "admin:test:instance-deployed"
+              ],
+              "options": {
+                "jestConfig": "apps/cdk-k3frame/instance/jest.config.ts",
+                "testPathPattern": "reboot-integration",
+                "testNamePattern": "Test 1: Direct Lambda invocation",
+                "testPathIgnorePatterns": [
+                  "reboot-event",
+                  "bootstrap",
+                  "build-validation",
+                  "cdk-validation",
+                  "deploy-validation",
+                  "deploy-schedule-validation",
+                  "deployment-smoke",
+                  "destroy-validation",
+                  "__tests__",
+                  "__it__"
+                ],
+                "passWithNoTests": true
+              },
+              "description": "Run only the Lambda invocation test (Test 1) for faster debugging. Uses AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa}",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:deploy-validation": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/apps/cdk-k3frame/instance"
+              ],
+              "dependsOn": [
+                "build",
+                "^build",
+                "admin:test:instance-deployed"
+              ],
+              "options": {
+                "jestConfig": "apps/cdk-k3frame/instance/jest.config.ts",
+                "testPathPattern": "deploy-schedule-validation.e2e",
+                "passWithNoTests": true
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "synth": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 node ../../../../dist/libs/infra/config-loader/bin/cdk-synth.js",
+                "cwd": "dist/apps/cdk-k3frame/instance"
+              },
+              "dependsOn": [
+                "build",
+                "infra-config-loader:build"
+              ],
+              "configurations": {},
+              "parallelism": true
+            },
+            "deploy": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js deploy --require-approval never ${DOMAIN:+--context domain=$DOMAIN} ${INSTANCE_DNS:+--context instanceDns=$INSTANCE_DNS} ${CORE_PARAM_PREFIX:+--context coreParamPrefix=$CORE_PARAM_PREFIX}",
+                "cwd": "dist/apps/cdk-k3frame/instance"
+              },
+              "dependsOn": [
+                "build",
+                "infra-config-loader:build",
+                "cdk-k3frame-core:admin:test:core-deployed"
+              ],
+              "configurations": {},
+              "parallelism": true
+            },
+            "diff": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 cdk diff ${DOMAIN:+--context domain=$DOMAIN} ${INSTANCE_DNS:+--context instanceDns=$INSTANCE_DNS} ${CORE_PARAM_PREFIX:+--context coreParamPrefix=$CORE_PARAM_PREFIX}",
+                "cwd": "dist/apps/cdk-k3frame/instance"
+              },
+              "dependsOn": [
+                "build"
+              ],
+              "configurations": {},
+              "parallelism": true
+            },
+            "destroy": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js destroy --force ${DOMAIN:+--context domain=$DOMAIN} ${INSTANCE_DNS:+--context instanceDns=$INSTANCE_DNS} ${CORE_PARAM_PREFIX:+--context coreParamPrefix=$CORE_PARAM_PREFIX}",
+                "cwd": "dist/apps/cdk-k3frame/instance"
+              },
+              "dependsOn": [
+                "build",
+                "infra-config-loader:build"
+              ],
+              "configurations": {},
+              "parallelism": true
+            },
+            "emergency-monitoring-legacy:build": {
+              "executor": "@nx/esbuild:esbuild",
+              "outputs": [
+                "{options.outputPath}"
+              ],
+              "options": {
+                "platform": "node",
+                "outputPath": "dist/apps/cdk-k3frame/instance-emergency-legacy",
+                "format": [
+                  "cjs"
+                ],
+                "bundle": true,
+                "main": "apps/cdk-k3frame/instance/src/emergency-monitoring-legacy-main.ts",
+                "tsConfig": "apps/cdk-k3frame/instance/tsconfig.app.json",
+                "assets": [
+                  "apps/cdk-k3frame/instance/cdk.json"
+                ],
+                "generatePackageJson": true,
+                "esbuildOptions": {
+                  "sourcemap": true,
+                  "external": [
+                    "aws-sdk"
+                  ]
+                }
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true,
+              "dependsOn": [
+                "^build"
+              ],
+              "inputs": [
+                "production",
+                "^production"
+              ]
+            },
+            "emergency-monitoring-legacy:synth": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "cdk synth --app 'node dist/apps/cdk-k3frame/instance-emergency-legacy/emergency-monitoring-legacy-main.js' ${DOMAIN:+--context domain=$DOMAIN} ${LEGACY_STACK_NAME:+--context legacyStackName=$LEGACY_STACK_NAME} ${ALARMS_TOPIC_ARN:+--context alarmsTopicArn=$ALARMS_TOPIC_ARN}",
+                "cwd": "."
+              },
+              "dependsOn": [
+                "emergency-monitoring-legacy:build"
+              ],
+              "configurations": {},
+              "parallelism": true
+            },
+            "emergency-monitoring-legacy:deploy": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "cdk deploy --app 'node dist/apps/cdk-k3frame/instance-emergency-legacy/emergency-monitoring-legacy-main.js' --require-approval never ${DOMAIN:+--context domain=$DOMAIN} ${LEGACY_STACK_NAME:+--context legacyStackName=$LEGACY_STACK_NAME} ${ALARMS_TOPIC_ARN:+--context alarmsTopicArn=$ALARMS_TOPIC_ARN}",
+                "cwd": "."
+              },
+              "dependsOn": [
+                "emergency-monitoring-legacy:build",
+                "admin:test:instance-deployed"
+              ],
+              "configurations": {},
+              "parallelism": true
+            },
+            "emergency-monitoring-legacy:diff": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "cdk diff --app 'node dist/apps/cdk-k3frame/instance-emergency-legacy/emergency-monitoring-legacy-main.js' ${DOMAIN:+--context domain=$DOMAIN} ${LEGACY_STACK_NAME:+--context legacyStackName=$LEGACY_STACK_NAME} ${ALARMS_TOPIC_ARN:+--context alarmsTopicArn=$ALARMS_TOPIC_ARN}",
+                "cwd": "."
+              },
+              "dependsOn": [
+                "emergency-monitoring-legacy:build"
+              ],
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:info": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "admin-stack-info:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm nx run admin-stack-info:get"
+              },
+              "description": "Get instance stack information (outputs, instance ID, IP, etc.)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:events": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "admin-stack-events:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} MAX_RESULTS=${MAX_RESULTS:-50} pnpm nx run admin-stack-events:events"
+              },
+              "description": "Get recent CloudFormation stack events",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:events:failed": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "admin-stack-events:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} FAILED_ONLY=1 pnpm nx run admin-stack-events:events"
+              },
+              "description": "Get only failed CloudFormation stack events",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:test:instance-deployed": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/test-instance-deployed.cli.ts"
+              },
+              "description": "Prerequisite test: Verify instance stack is deployed and EC2 instance is running",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:test:bootstrap-complete": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/test-bootstrap-complete.cli.ts"
+              },
+              "description": "Prerequisite test: Verify MIAB bootstrap completed (admin password SSM parameter present)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:test:e2e": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin-dns-restore:build",
+                "admin:ssh:test"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/test-and-restore-e2e.cli.ts ${MAILBOX_BACKUP_PATH:+--mailbox-backup-path $MAILBOX_BACKUP_PATH} ${DNS_BACKUP_PATH:+--dns-backup-path $DNS_BACKUP_PATH} ${DOMAIN:+--domain $DOMAIN} ${SKIP_DEPLOY:+--skip-deploy} ${SKIP_RESTORE:+--skip-restore} ${SKIP_TESTS:+--skip-tests} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "End-to-end test and restore: Deploys stacks, restores from backups, and validates all components (use MAILBOX_BACKUP_PATH and DNS_BACKUP_PATH to specify backup locations)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:bootstrap-miab-ec2-instance": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "admin:test:instance-deployed",
+                "^build",
+                "support-scripts-aws-instance-bootstrap:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance pnpm exec tsx --tsconfig tools/tsconfig.json tools/instance-bootstrap.cli.ts"
+              },
+              "description": "Bootstrap Mail-in-a-Box (MIAB) to EC2 instance via SSM RunCommand",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:bootstrap-miab-ec2-instance:dry-run": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "support-scripts-aws-instance-bootstrap:build",
+                "admin:info"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance pnpm exec tsx --tsconfig tools/tsconfig.json tools/instance-bootstrap.cli.ts --dry-run"
+              },
+              "description": "Dry run: Preview bootstrap of Mail-in-a-Box (MIAB) to EC2 instance (no SSM command sent). First retrieves stack info via admin:info, then validates with AWS credentials.",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:bootstrap:status": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/bootstrap-status.cli.ts ${COMMAND_ID:+--command-id $COMMAND_ID} ${TAIL:+--tail $TAIL} ${FOLLOW:+--follow}"
+              },
+              "description": "Check bootstrap status: Shows instance status, SSM agent status, and latest/bootstrap command status with prerequisite checks",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:bootstrap:status:follow": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} FOLLOW=1 pnpm exec tsx --tsconfig tools/tsconfig.json tools/bootstrap-status.cli.ts --follow"
+              },
+              "description": "Follow bootstrap status: Continuously monitor bootstrap command status (updates every 10 seconds)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:bootstrap:logs": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/bootstrap-logs.cli.ts ${TAIL:+--tail $TAIL}"
+              },
+              "description": "View bootstrap logs from instance: Shows last N lines of /var/log/mailinabox_setup.log (use TAIL=100 for more lines)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:bootstrap:logs:follow": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} FOLLOW=1 pnpm exec tsx --tsconfig tools/tsconfig.json tools/bootstrap-logs.cli.ts --follow"
+              },
+              "description": "Follow bootstrap logs: Stream /var/log/mailinabox_setup.log in real-time (Ctrl+C to stop)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:bootstrap:commands": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/bootstrap-status.cli.ts --list-commands"
+              },
+              "description": "List recent SSM commands: Shows last N SSM commands for the instance (use MAX_ITEMS=20 for more)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:bootstrap:confirm": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/bootstrap-confirm.cli.ts"
+              },
+              "description": "Confirm bootstrap success: Comprehensive check of instance state against expected bootstrap outcomes",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:fix-ssm-agent": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/fix-ssm-agent.cli.ts"
+              },
+              "description": "Fix SSM agent on existing instance: Install and start SSM agent via SSH (for instances deployed before UserData fix)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:ssh:setup": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "admin-ssh:build",
+                "admin:ssh:test"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm nx run admin-ssh:setup"
+              },
+              "description": "Setup SSH access (fetch key from SSM, configure known_hosts) and validate connectivity",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:ssh:test": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "admin:test:instance-deployed",
+                "admin-ssh:build:test"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm nx run admin-ssh:test"
+              },
+              "description": "Test SSH connection to instance",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:provision:ssh-and-ses-dns": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "instance-provision:build",
+                "admin:test:instance-deployed",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "APP_PATH=apps/cdk-k3frame/instance pnpm nx run instance-provision:provision"
+              },
+              "description": "Provision instance: Setup SSH access and configure SES DNS records",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:provision:ses-dns-only": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "instance-provision:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "APP_PATH=apps/cdk-k3frame/instance pnpm nx run instance-provision:provision -- --skip-ssh"
+              },
+              "description": "Provision instance: Configure SES DNS only (skip SSH setup)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:ses-dns": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "ses-dns:build",
+                "admin:test:bootstrap-complete",
+                "admin:ssh:test"
+              ],
+              "options": {
+                "command": "APP_PATH=apps/cdk-k3frame/instance pnpm nx run ses-dns:set-dns"
+              },
+              "description": "Set SES DNS records (DKIM, Mail-From) via Mail-in-a-Box API",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:ses-dns:dry-run": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "ses-dns:build"
+              ],
+              "options": {
+                "command": "APP_PATH=apps/cdk-k3frame/instance pnpm nx run ses-dns:set-dns -- --dry-run"
+              },
+              "description": "Dry run: Preview SES DNS records without making changes",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:ses-dns:print": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/print-ses-dns-records.cli.ts"
+              },
+              "description": "Print SES DNS records (from core stack admin:info) in MIAB-friendly format for NSD nameserver",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:ses-dns:set": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin-credentials:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} CORE_APP_PATH=apps/cdk-k3frame/core pnpm exec tsx --tsconfig tools/tsconfig.json tools/set-ses-dns-miab.cli.ts"
+              },
+              "description": "Set SES DNS records via Mail-in-a-Box DNS API (external approach - recommended)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:ses-dns:set:ssm": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} CORE_APP_PATH=apps/cdk-k3frame/core pnpm exec tsx --tsconfig tools/tsconfig.json tools/set-ses-dns-ssm.cli.ts"
+              },
+              "description": "Set SES DNS records via SSM agent script executed on instance (alternative approach)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:nameserver:audit": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/audit-miab-nameserver.cli.ts"
+              },
+              "description": "Audit Mail-in-a-Box NSD nameserver configuration and domain management",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:ses:status": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/check-ses-status.cli.ts ${DOMAIN:+--domain $DOMAIN}"
+              },
+              "description": "Check SES status: Verifies SES domain verification, DKIM, and Mail-From status from AWS",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:ses:poll": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} CORE_APP_PATH=apps/cdk-k3frame/core pnpm exec tsx --tsconfig tools/tsconfig.json tools/poll-ses-status.cli.ts"
+              },
+              "description": "Poll SES service: Comprehensive verification of SES status and DNS records (internal and external)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:ssl:provision": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin-credentials:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/ssl-provision-api.cli.ts"
+              },
+              "description": "Provision SSL certificates: Uses Mail-in-a-Box HTTP API to provision Let's Encrypt SSL certificates (Method 2 - recommended)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:ssl:provision:ssh": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/ssl-provision.cli.ts ${DOMAINS:+--domains $DOMAINS}"
+              },
+              "description": "Provision SSL certificates (SSH method): Uses Mail-in-a-Box management script via SSH (fallback method)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:ssl:status": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/ssl-status.cli.ts"
+              },
+              "description": "Check SSL certificate status: Verifies SSL certificate provisioning, validity, expiration, and configuration",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:ssl:audit": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/audit-miab-ssl-provision.cli.ts"
+              },
+              "description": "Audit Mail-in-a-Box SSL provisioning: Examines how the UI provisions SSL certificates and identifies programmatic invocation methods",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:ssl:find-endpoint": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/find-ssl-api-endpoint.cli.ts"
+              },
+              "description": "Find SSL API endpoint: Examines Mail-in-a-Box web UI code to find the actual SSL provisioning endpoint",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:credentials": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin-credentials:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/get-admin-credentials.cli.ts ${DOMAIN:+--domain $DOMAIN}"
+              },
+              "description": "Get admin credentials: Retrieves Mail-in-a-Box admin username and password from SSM Parameter Store",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:credentials:test": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin-credentials:build",
+                "admin:ssh:test",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/test-admin-credentials.cli.ts ${DOMAIN:+--domain $DOMAIN}"
+              },
+              "description": "Test admin credentials: Verifies admin account exists, checks login page accessibility, and provides troubleshooting steps",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:credentials:create": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin-credentials:build",
+                "admin:ssh:test",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/create-admin-account.cli.ts ${EMAIL:+--email $EMAIL} ${PASSWORD:+--password $PASSWORD}"
+              },
+              "description": "Create admin account: Creates the admin@domain email account in Mail-in-a-Box if it doesn't exist (uses SSM password by default)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:credentials:sync": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin-credentials:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/sync-admin-password.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "Sync admin password: Syncs admin@domain password from SSM Parameter Store to Mail-in-a-Box account via SSM RunCommand (ensures password matches admin:credentials output)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:logs:webmail": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} OUTPUT_DIR=${OUTPUT_DIR:-./webmail-logs} LOG_LINES=${LOG_LINES:-1000} pnpm exec tsx --tsconfig tools/tsconfig.json tools/pull-webmail-logs.cli.ts ${DOMAIN:+--domain $DOMAIN} ${OUTPUT_DIR:+--output-dir $OUTPUT_DIR} ${LOG_LINES:+--lines $LOG_LINES}"
+              },
+              "description": "Pull webmail logs: Retrieves webmail/web UI logs from Mail-in-a-Box instance to diagnose authentication issues (use LOG_LINES to control how many lines, OUTPUT_DIR for output location)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:diagnose:webmail-401": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} TEST_EMAIL=${TEST_EMAIL:-test@k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/diagnose-webmail-401.cli.ts ${DOMAIN:+--domain $DOMAIN} ${TEST_EMAIL:+--email $TEST_EMAIL}"
+              },
+              "description": "Diagnose webmail 401 errors: Checks PHP-FPM, Roundcube, user accounts, and authentication to identify cause of 401 errors",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:fix:webmail-401": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/fix-webmail-401.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "Fix webmail 401 errors: Restarts PHP-FPM, Nginx, and Dovecot services to resolve webmail authentication issues",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:fix:mailbox-permissions": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/fix-mailbox-permissions.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "Fix mailbox directory permissions: Sets mail:mail ownership and 2770 mode on /home/user-data/mail/mailboxes for dovecot write access",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:availability:report": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} OUTPUT_FILE=${OUTPUT_FILE} pnpm exec tsx --tsconfig tools/tsconfig.json tools/availability-report.cli.ts ${DOMAIN:+--domain $DOMAIN} ${OUTPUT_FILE:+--output $OUTPUT_FILE}"
+              },
+              "description": "Generate availability report: Checks EC2 status, services, and health endpoints to determine instance availability",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:users:password:set": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} USER_EMAIL=${USER_EMAIL} USER_PASSWORD=${USER_PASSWORD} pnpm exec tsx --tsconfig tools/tsconfig.json tools/set-user-password.cli.ts ${DOMAIN:+--domain $DOMAIN} ${USER_EMAIL:+--email $USER_EMAIL} ${USER_PASSWORD:+--password $USER_PASSWORD} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "Set a user's password via SSM RunCommand (requires USER_EMAIL and USER_PASSWORD)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:credentials:verify": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} USER_EMAIL=${USER_EMAIL} USER_PASSWORD=${USER_PASSWORD} pnpm exec tsx --tsconfig tools/tsconfig.json tools/verify-user-password.cli.ts ${DOMAIN:+--domain $DOMAIN} ${USER_EMAIL:+--email $USER_EMAIL} ${USER_PASSWORD:+--password $USER_PASSWORD} ${VERBOSE:+--verbose}"
+              },
+              "description": "Verify user password works: Tests Dovecot and HTTP API authentication (requires USER_EMAIL and USER_PASSWORD, or uses admin credentials from SSM)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:dovecot:users:verify": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} EMAILS=${EMAILS} pnpm exec tsx --tsconfig tools/tsconfig.json tools/verify-dovecot-users.cli.ts ${DOMAIN:+--domain $DOMAIN} ${EMAILS:+--emails $EMAILS}"
+              },
+              "description": "Verify Dovecot userdb entries for specific mail users (default: admin@domain and me@box.domain)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:imap:auth:test": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} USER_EMAIL=${USER_EMAIL} USER_PASSWORD=${USER_PASSWORD} pnpm exec tsx --tsconfig tools/tsconfig.json tools/test-imap-auth.cli.ts ${DOMAIN:+--domain $DOMAIN} ${USER_EMAIL:+--email $USER_EMAIL} ${USER_PASSWORD:+--password $USER_PASSWORD}"
+              },
+              "description": "Test IMAP authentication via doveadm auth test (defaults to admin credentials from SSM)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:roundcube:diagnose": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/diagnose-roundcube-login.cli.ts ${DOMAIN:+--domain $DOMAIN}"
+              },
+              "description": "Diagnose Roundcube login issues (PHP session path, logs, and Roundcube config)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:roundcube:fix-session": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/fix-roundcube-session.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "Fix Roundcube PHP session directory permissions and reload services",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:mail:flow:test": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} FROM_EMAIL=${FROM_EMAIL} FROM_PASSWORD=${FROM_PASSWORD} TO=${TO} SUBJECT=${SUBJECT} BODY=${BODY} pnpm exec tsx --tsconfig tools/tsconfig.json tools/test-mail-flow.cli.ts ${DOMAIN:+--domain $DOMAIN} ${FROM_EMAIL:+--from-email $FROM_EMAIL} ${FROM_PASSWORD:+--from-password $FROM_PASSWORD} ${TO:+--to $TO} ${SUBJECT:+--subject $SUBJECT} ${BODY:+--body $BODY}"
+              },
+              "description": "Send test emails and verify IMAP auth via doveadm (use FROM_EMAIL, FROM_PASSWORD, TO)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:postfix:ses:relay": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} SMTP_REGION=${SMTP_REGION} SMTP_USERNAME=${SMTP_USERNAME} SMTP_PASSWORD=${SMTP_PASSWORD} pnpm exec tsx --tsconfig tools/tsconfig.json tools/configure-ses-relay.cli.ts ${DOMAIN:+--domain $DOMAIN} ${SMTP_REGION:+--smtp-region $SMTP_REGION} ${SMTP_USERNAME:+--smtp-username $SMTP_USERNAME} ${SMTP_PASSWORD:+--smtp-password $SMTP_PASSWORD}"
+              },
+              "description": "Configure Postfix to relay outbound mail via SES SMTP (use SMTP_USERNAME/SMTP_PASSWORD)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:users:list": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/manage-miab-users.cli.ts --action list ${DOMAIN:+--domain $DOMAIN} ${VERBOSE:+--verbose}"
+              },
+              "description": "List Mail-in-a-Box users via SSM RunCommand: Retrieves and displays all email users configured on the Mail-in-a-Box server (bypasses HTTP API auth issues)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:users:add": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin-credentials:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/manage-miab-users.cli.ts --action add --email ${EMAIL} --password ${PASSWORD} ${ADMIN:+--admin} ${DOMAIN:+--domain $DOMAIN}"
+              },
+              "description": "Add Mail-in-a-Box user via HTTP API: Creates a new user (use EMAIL, PASSWORD env vars, ADMIN=1 for admin privileges)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:users:remove": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin-credentials:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/manage-miab-users.cli.ts --action remove --email ${EMAIL} ${DOMAIN:+--domain $DOMAIN}"
+              },
+              "description": "Remove Mail-in-a-Box user via HTTP API: Removes a user (use EMAIL env var)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:users:remove-all": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin-credentials:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/remove-all-users.cli.ts ${DOMAIN:+--domain $DOMAIN} ${KEEP_ADMIN:+--keep-admin} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "Remove all Mail-in-a-Box users via HTTP API: Removes all users except me@box.domain (use KEEP_ADMIN=1 to keep admin@domain, DRY_RUN=1 to preview)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:users:discover-from-mailboxes": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/discover-users-from-mailboxes.cli.ts ${BACKUP_PATH:+--backup-path $BACKUP_PATH} ${DOMAIN:+--domain $DOMAIN} ${OUTPUT:+--output $OUTPUT} ${VALIDATE_STRUCTURE:+--validate-structure $VALIDATE_STRUCTURE} ${INCLUDE_METADATA:+--include-metadata $INCLUDE_METADATA} ${EXTRACT_TAR:+--extract-tar $EXTRACT_TAR} ${TEMP_DIR:+--temp-dir $TEMP_DIR}"
+              },
+              "description": "Discover users from mailbox backup: Scans mailbox backup directory and extracts user information. Auto-discovers backup path when not specified, or use BACKUP_PATH to specify backup location.",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:users:create-multiple": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/create-multiple-users.cli.ts --users ${USERS} ${DOMAIN:+--domain $DOMAIN} ${DEFAULT_PASSWORD:+--default-password $DEFAULT_PASSWORD} ${ADMIN_USERS:+--admin-users $ADMIN_USERS} ${WAIT_FOR_API_KEY:+--wait-for-api-key $WAIT_FOR_API_KEY} ${RETRY_ATTEMPTS:+--retry-attempts $RETRY_ATTEMPTS}"
+              },
+              "description": "Create multiple users from JSON: Creates multiple Mail-in-a-Box users from JSON file or inline JSON array (use USERS to specify JSON file path or inline JSON)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:mailboxes:restore": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/restore-mailboxes.cli.ts --backup-path ${BACKUP_PATH} ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run} ${RESTART_SERVICES:+--restart-services $RESTART_SERVICES} ${VERIFY_AFTER_RESTORE:+--verify-after-restore $VERIFY_AFTER_RESTORE} ${EXTRACT_TAR:+--extract-tar $EXTRACT_TAR} ${TEMP_DIR:+--temp-dir $TEMP_DIR} ${BACKUP_FORMAT:+--backup-format $BACKUP_FORMAT}"
+              },
+              "description": "Restore mailboxes from backup: Restores mailboxes from backup directory or tar.gz file (use BACKUP_PATH to specify backup location, use DRY_RUN=1 to preview)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:mailboxes:restore-aggregated": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-mailbox-restore:build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/restore-aggregated-mailboxes.cli.ts ${BACKUP_FOLDERS:+--backup-folders $BACKUP_FOLDERS} ${BACKUP_BASE_DIR:+--backup-base-dir $BACKUP_BASE_DIR} ${DOMAIN:+--domain $DOMAIN} ${ADMIN_PASSWORD:+--admin-password $ADMIN_PASSWORD} ${NO_GENERATE_PASSWORDS:+--no-generate-passwords} ${NO_SKIP_EXISTING_USERS:+--no-skip-existing-users} ${NO_SKIP_EXISTING_EMAILS:+--no-skip-existing-emails} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "Restore aggregated mailboxes: Aggregates users and emails from multiple backup folders (de-duplicated) and restores them to Mail-in-a-Box server",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:mailboxes:sync-master": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} USERS=${USERS} INCLUDE_DELETED=${INCLUDE_DELETED} pnpm exec tsx --tsconfig tools/tsconfig.json tools/sync-master-backup.cli.ts --master-backup-dir ${MASTER_BACKUP_DIR} ${DOMAIN:+--domain $DOMAIN} ${USERS:+--users $USERS} ${INCLUDE_DELETED:+--include-deleted} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "Sync master backup folder: Syncs master backup folder with mailserver (skips duplicates, use MASTER_BACKUP_DIR to specify master backup location, USERS to limit, INCLUDE_DELETED=1 to include trash)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:mailboxes:aggregate-admin": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} SOURCE_PATH=${SOURCE_PATH} USER=${USER} STAGING_DIR=${STAGING_DIR} pnpm exec tsx --tsconfig tools/tsconfig.json tools/aggregate-admin-mailbox.cli.ts --source-path ${SOURCE_PATH} ${DOMAIN:+--domain $DOMAIN} ${USER:+--user $USER} ${STAGING_DIR:+--staging-dir $STAGING_DIR} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "Aggregate admin mailbox (cur/new + .Sent) with dedupe, skip trash, and upload (use SOURCE_PATH, USER, STAGING_DIR, DRY_RUN)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:mailboxes:pull": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} DESTINATION_DIR=${DESTINATION_DIR} USERS=${USERS} pnpm exec tsx --tsconfig tools/tsconfig.json tools/pull-mailboxes.cli.ts ${DESTINATION_DIR:+--destination-dir $DESTINATION_DIR} ${USERS:+--users $USERS} ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "Pull mailboxes from server to local backup dir (use DESTINATION_DIR, USERS, DRY_RUN)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:mailboxes:archive-master": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build"
+              ],
+              "options": {
+                "command": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/archive-master-backup.cli.ts --master-backup-dir ${MASTER_BACKUP_DIR} ${ARCHIVE_BASE_DIR:+--archive-base-dir $ARCHIVE_BASE_DIR} ${TIMESTAMP:+--timestamp $TIMESTAMP}"
+              },
+              "description": "Archive master backup folder: Packages master backup folder into a date&timestamped archive folder (use MASTER_BACKUP_DIR to specify master backup location)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:restore:users-and-mailboxes": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/restore-users-and-mailboxes.cli.ts --backup-path ${BACKUP_PATH} ${DOMAIN:+--domain $DOMAIN} ${DEFAULT_PASSWORD:+--default-password $DEFAULT_PASSWORD} ${SKIP_USERS:+--skip-users} ${SKIP_MAILBOXES:+--skip-mailboxes} ${WAIT_FOR_API_KEY:+--wait-for-api-key $WAIT_FOR_API_KEY} ${VERIFY_AFTER_RESTORE:+--verify-after-restore $VERIFY_AFTER_RESTORE} ${DRY_RUN:+--dry-run} ${BACKUP_FORMAT:+--backup-format $BACKUP_FORMAT} ${EXTRACT_TAR:+--extract-tar $EXTRACT_TAR}"
+              },
+              "description": "Combined restore workflow: Discovers users from mailbox backup, creates users, and restores mailboxes in a single operation (use BACKUP_PATH to specify backup location)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:restore:k3frame": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/restore-k3frame.cli.ts"
+              },
+              "description": "Quick restore for k3frame.com using Archive backups (set DRY_RUN=1 for dry run, SKIP_DEPLOY=1 to skip deployment, SKIP_RESTORE=1 to skip restore, SKIP_TESTS=1 to skip tests)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:dns:list": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/list-miab-dns.cli.ts ${DOMAIN:+--domain $DOMAIN}"
+              },
+              "description": "List Mail-in-a-Box DNS records: Retrieves and displays DNS configuration and records from the Mail-in-a-Box server",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:dns:sync-react": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-credentials:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} STACK_NAME=${STACK_NAME:-k3frame-react-webserver} BACKUP_FILE=${BACKUP_FILE:-Archive/backups/k3frame.com/dns/dns-backup-20250915-120038.json} DRY_RUN=${DRY_RUN:-0} VERBOSE=${VERBOSE:-false} pnpm exec tsx --tsconfig tools/tsconfig.json tools/sync-react-dns.cli.ts ${DOMAIN:+--domain $DOMAIN} ${STACK_NAME:+--stack-name $STACK_NAME} ${BACKUP_FILE:+--backup-file $BACKUP_FILE} ${DRY_RUN:+--dry-run} ${VERBOSE:+--verbose}"
+              },
+              "description": "Sync React DNS records: Updates DNS A records from backup file with Elastic IP from CloudFormation stack (use DRY_RUN=1 to preview changes)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:dns:setup-website": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-credentials:build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} WEBSITE_PROFILE=${WEBSITE_PROFILE:-k3frame} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} WEBSITE_STACK_NAME=${WEBSITE_STACK_NAME:-k3frame-react-webserver} pnpm exec tsx --tsconfig tools/tsconfig.json tools/setup-website-dns.cli.ts ${DOMAIN:+--domain $DOMAIN} ${WEBSITE_IP:+--ip $WEBSITE_IP} --stack-name ${WEBSITE_STACK_NAME:-k3frame-react-webserver} --website-profile ${WEBSITE_PROFILE:-k3frame} ${DRY_RUN:+--dry-run} ${VERBOSE:+--verbose}"
+              },
+              "description": "Setup website DNS A records: Sets A records for root domain and www subdomain (uses k3frame profile for website stack, hepe-admin-mfa for MIAB)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:dns:setup-website:dry-run": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-credentials:build",
+                "admin-stack-info:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} WEBSITE_PROFILE=${WEBSITE_PROFILE:-k3frame} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} WEBSITE_STACK_NAME=${WEBSITE_STACK_NAME:-k3frame-react-webserver} DRY_RUN=1 pnpm exec tsx --tsconfig tools/tsconfig.json tools/setup-website-dns.cli.ts ${DOMAIN:+--domain $DOMAIN} ${WEBSITE_IP:+--ip $WEBSITE_IP} --stack-name ${WEBSITE_STACK_NAME:-k3frame-react-webserver} --website-profile ${WEBSITE_PROFILE:-k3frame} --dry-run ${VERBOSE:+--verbose}"
+              },
+              "description": "Dry run: Preview website DNS A record setup (uses k3frame profile for website stack, hepe-admin-mfa for MIAB)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:users:reset": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin-credentials:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/reset-and-create-admin-workflow.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "Reset users and create admin: Creates admin@domain via HTTP API, then removes all other users via SSM RunCommand (use DRY_RUN=1 to preview)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:users:reset:ssm-only": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/reset-users-via-ssm.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "Reset users via SSM only: Removes all users except admin accounts using SSM RunCommand (bypasses SSH issues, use DRY_RUN=1 to preview)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:users:reset:workflow": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin-credentials:build",
+                "admin-ssh:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/reset-users-workflow.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "Reset users workflow: Creates admin@domain via HTTP API, then removes all other users via SSH (use DRY_RUN=1 to preview)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:miab:audit": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} UPDATE=${UPDATE:-0} VERBOSE=${VERBOSE:-false} pnpm exec tsx --tsconfig tools/tsconfig.json tools/audit-miab-version.cli.ts ${DOMAIN:+--domain $DOMAIN} ${UPDATE:+--update} ${VERBOSE:+--verbose}"
+              },
+              "description": "Audit Mail-in-a-Box version: Checks current version vs latest GitHub release, verifies management scripts, and lists users (use UPDATE=1 to update to latest)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:miab:cleanup": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} PRESERVE_DATA=${PRESERVE_DATA:-0} VERBOSE=${VERBOSE:-false} pnpm exec tsx --tsconfig tools/tsconfig.json tools/cleanup-miab.cli.ts ${DOMAIN:+--domain $DOMAIN} ${PRESERVE_DATA:+--preserve-data} ${VERBOSE:+--verbose}"
+              },
+              "description": "Cleanup Mail-in-a-Box installation: Removes git repository and bootstrap markers to allow fresh bootstrap (use PRESERVE_DATA=1 to keep user data)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:cleanup:disk-space": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/cleanup-disk-space.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "Clean up disk space on Mail-in-a-Box instance (removes old logs, temp files, apt cache, etc.)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:miab:status-check": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-ssh:build",
+                "admin-stack-info:build",
+                "admin:ssh:test",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/miab-status-check.cli.ts ${DOMAIN:+--domain $DOMAIN} ${OUTPUT_FILE:+--output $OUTPUT_FILE} ${VERBOSE:+--verbose}"
+              },
+              "description": "Fetch and parse Mail-in-a-Box status checks from instance (use OUTPUT_FILE to save JSON, VERBOSE=1 for detailed output)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:verify-and-setup": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/verify-and-setup-k3frame.cli.ts"
+              },
+              "description": "Comprehensive verification: Checks recovery system, SES configuration, and provides mailbox restore guidance",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:health-gate": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:instance-deployed",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/health-gate.cli.ts ${DOMAIN:+--domain $DOMAIN} ${DISK_THRESHOLD:+--disk-threshold $DISK_THRESHOLD} ${SKIP_MAIL_FLOW:+--skip-mail-flow}"
+              },
+              "description": "Post-deploy health gate: Runs comprehensive health checks including availability, IMAP auth, disk space, and optionally mail flow tests. Fails if any critical check fails. Use DISK_THRESHOLD to set disk % limit (default: 85)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:logs:dovecot": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} LOG_LINES=${LOG_LINES:-500} OUTPUT_DIR=${OUTPUT_DIR:-./dovecot-logs} pnpm exec tsx --tsconfig tools/tsconfig.json tools/pull-dovecot-logs.cli.ts ${DOMAIN:+--domain $DOMAIN} ${LOG_LINES:+--lines $LOG_LINES} ${OUTPUT_DIR:+--output-dir $OUTPUT_DIR} ${FILTER_ERRORS:+--filter-errors}"
+              },
+              "description": "Pull Dovecot/sieve logs: Retrieves dovecot, sieve, and mail.log from instance for diagnostics (use LOG_LINES to control lines, FILTER_ERRORS=1 to show only errors)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:repair:mail": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin-credentials:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/repair-mail-delivery.cli.ts ${DOMAIN:+--domain $DOMAIN} ${USER_EMAIL:+--user $USER_EMAIL} ${DRY_RUN:+--dry-run} ${SKIP_SIEVE:+--skip-sieve} ${SKIP_RESYNC:+--skip-resync} ${SKIP_SERVICES:+--skip-services}"
+              },
+              "description": "Repair mail delivery: Fixes sieve scripts, resyncs mailbox indexes, restarts services. Use USER_EMAIL for specific user, DRY_RUN=1 to preview",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:repair:mail:user": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build",
+                "admin-credentials:build",
+                "admin:test:bootstrap-complete"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/repair-mail-delivery.cli.ts ${DOMAIN:+--domain $DOMAIN} --user ${USER_EMAIL} ${USER_PASSWORD:+USER_PASSWORD=$USER_PASSWORD} ${DRY_RUN:+--dry-run}"
+              },
+              "description": "Repair mail for specific user: Resyncs mailbox, tests auth (requires USER_EMAIL, optional USER_PASSWORD)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:repair:mail:dry-run": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/repair-mail-delivery.cli.ts ${DOMAIN:+--domain $DOMAIN} --dry-run"
+              },
+              "description": "Preview mail repairs without applying changes",
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "cdk-k3frame-instance",
+          "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "apps/cdk-k3frame/instance/src",
+          "projectType": "application",
+          "tags": [
+            "type:cdk",
+            "domain:infra",
+            "scope:instance"
+          ],
+          "implicitDependencies": []
+        }
+      },
       "admin-account": {
         "name": "admin-account",
         "type": "lib",
@@ -4504,6 +6164,296 @@
           ],
           "$schema": "../../../node_modules/nx/schemas/project-schema.json",
           "sourceRoot": "libs/admin/godaddy-dns/src",
+          "implicitDependencies": []
+        }
+      },
+      "cdk-k3frame-core": {
+        "name": "cdk-k3frame-core",
+        "type": "app",
+        "data": {
+          "root": "apps/cdk-k3frame/core",
+          "targets": {
+            "test": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/apps/cdk-k3frame/core"
+              ],
+              "dependsOn": [
+                "build",
+                "^build"
+              ],
+              "options": {
+                "jestConfig": "apps/cdk-k3frame/core/jest.config.ts",
+                "passWithNoTests": true
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true
+            },
+            "build": {
+              "executor": "@nx/esbuild:esbuild",
+              "outputs": [
+                "{options.outputPath}"
+              ],
+              "options": {
+                "platform": "node",
+                "outputPath": "dist/apps/cdk-k3frame/core",
+                "format": [
+                  "cjs"
+                ],
+                "bundle": true,
+                "main": "apps/cdk-k3frame/core/src/main.ts",
+                "tsConfig": "apps/cdk-k3frame/core/tsconfig.app.json",
+                "assets": [
+                  "apps/cdk-k3frame/core/cdk.json"
+                ],
+                "generatePackageJson": true,
+                "esbuildOptions": {
+                  "sourcemap": true,
+                  "external": [
+                    "aws-sdk"
+                  ]
+                }
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true,
+              "dependsOn": [
+                "^build"
+              ],
+              "inputs": [
+                "production",
+                "^production"
+              ]
+            },
+            "lint": {
+              "executor": "@nx/eslint:lint",
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "cache": true
+            },
+            "test:unit": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/apps/cdk-k3frame/core"
+              ],
+              "dependsOn": [
+                "build",
+                "^build"
+              ],
+              "options": {
+                "jestConfig": "apps/cdk-k3frame/core/jest.config.ts",
+                "testPathPattern": "src/__tests__",
+                "testPathIgnorePatterns": [
+                  "__it__",
+                  "tests/e2e"
+                ],
+                "passWithNoTests": true
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:integration": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/apps/cdk-k3frame/core"
+              ],
+              "dependsOn": [
+                "build",
+                "^build"
+              ],
+              "options": {
+                "jestConfig": "apps/cdk-k3frame/core/jest.config.ts",
+                "testPathPattern": "src/__it__",
+                "testPathIgnorePatterns": [
+                  "__tests__",
+                  "tests/e2e"
+                ],
+                "passWithNoTests": true
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:e2e": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/apps/cdk-k3frame/core"
+              ],
+              "dependsOn": [
+                "build",
+                "^build"
+              ],
+              "options": {
+                "jestConfig": "apps/cdk-k3frame/core/jest.config.ts",
+                "testPathPattern": "tests/e2e",
+                "passWithNoTests": true
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:no-deploy": {
+              "executor": "@nx/jest:jest",
+              "outputs": [
+                "{workspaceRoot}/coverage/apps/cdk-k3frame/core"
+              ],
+              "dependsOn": [
+                "build",
+                "^build"
+              ],
+              "options": {
+                "jestConfig": "apps/cdk-k3frame/core/jest.config.ts",
+                "testPathPattern": "src/__tests__|src/__it__|build-validation|deploy-validation|destroy-validation",
+                "passWithNoTests": true
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "synth": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 cdk synth ${DOMAIN:+--context domain=$DOMAIN}",
+                "cwd": "dist/apps/cdk-k3frame/core"
+              },
+              "dependsOn": [
+                "build"
+              ],
+              "configurations": {},
+              "parallelism": true
+            },
+            "deploy": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js deploy --require-approval never ${DOMAIN:+--context domain=$DOMAIN}",
+                "cwd": "dist/apps/cdk-k3frame/core"
+              },
+              "dependsOn": [
+                "build",
+                "infra-config-loader:build"
+              ],
+              "configurations": {},
+              "parallelism": true
+            },
+            "diff": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 cdk diff ${DOMAIN:+--context domain=$DOMAIN}",
+                "cwd": "dist/apps/cdk-k3frame/core"
+              },
+              "dependsOn": [
+                "build"
+              ],
+              "configurations": {},
+              "parallelism": true
+            },
+            "destroy": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "FEATURE_CDK_K3FRAME_STACKS_ENABLED=1 if [ -n \"$DOMAIN\" ] && [ \"$DOMAIN\" != \"k3frame.com\" ]; then echo \"Note: Emptying buckets for domain $DOMAIN\"; DOMAIN=$DOMAIN APP_PATH=apps/cdk-k3frame/core pnpm nx run admin-s3-empty:empty || true; else pnpm nx run admin-s3-empty:empty:k3frame || true; fi && node ../../../../dist/libs/infra/config-loader/bin/cdk-deploy.js destroy --force ${DOMAIN:+--context domain=$DOMAIN}",
+                "cwd": "dist/apps/cdk-k3frame/core"
+              },
+              "dependsOn": [
+                "build",
+                "infra-config-loader:build"
+              ],
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:info": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "admin-stack-info:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core pnpm nx run admin-stack-info:get"
+              },
+              "description": "Get core stack information (outputs, instance details, etc.)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:events": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "admin-stack-events:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core MAX_RESULTS=${MAX_RESULTS:-50} pnpm nx run admin-stack-events:events"
+              },
+              "description": "Get recent CloudFormation stack events",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:events:failed": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "admin-stack-events:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core FAILED_ONLY=1 pnpm nx run admin-stack-events:events"
+              },
+              "description": "Get only failed CloudFormation stack events",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:test:core-deployed": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "^build",
+                "admin-stack-info:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core pnpm exec tsx --tsconfig tools/tsconfig.json tools/test-core-deployed.cli.ts"
+              },
+              "description": "Prerequisite test: Verify core stack is deployed and required outputs exist",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:reverse-dns": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "admin-reverse-dns:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core pnpm nx run admin-reverse-dns:set"
+              },
+              "description": "Set reverse DNS for Elastic IP (box.{domain})",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:s3-empty": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "admin-s3-empty:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core DRY_RUN=${DRY_RUN:-0} pnpm nx run admin-s3-empty:empty"
+              },
+              "description": "Empty S3 buckets in core stack (required before destroy)",
+              "configurations": {},
+              "parallelism": true
+            },
+            "admin:s3-empty:dry-run": {
+              "executor": "nx:run-commands",
+              "dependsOn": [
+                "admin-s3-empty:build"
+              ],
+              "options": {
+                "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/core DRY_RUN=1 pnpm nx run admin-s3-empty:empty"
+              },
+              "description": "Dry run: Show what would be emptied from S3 buckets",
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "cdk-k3frame-core",
+          "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "apps/cdk-k3frame/core/src",
+          "projectType": "application",
+          "tags": [
+            "type:cdk",
+            "domain:infra",
+            "scope:core"
+          ],
           "implicitDependencies": []
         }
       },
@@ -5890,6 +7840,28 @@
           "type": "static"
         }
       ],
+      "cdk-k3frame-instance": [
+        {
+          "source": "cdk-k3frame-instance",
+          "target": "instance-constructs",
+          "type": "static"
+        },
+        {
+          "source": "cdk-k3frame-instance",
+          "target": "infra-naming",
+          "type": "static"
+        },
+        {
+          "source": "cdk-k3frame-instance",
+          "target": "shared-constructs",
+          "type": "static"
+        },
+        {
+          "source": "cdk-k3frame-instance",
+          "target": "mailserver-recovery",
+          "type": "static"
+        }
+      ],
       "admin-account": [],
       "admin-dns-api": [
         {
@@ -5918,6 +7890,18 @@
       "infra-config-loader": [],
       "core-params": [],
       "godaddy-dns": [],
+      "cdk-k3frame-core": [
+        {
+          "source": "cdk-k3frame-core",
+          "target": "infra-naming",
+          "type": "static"
+        },
+        {
+          "source": "cdk-k3frame-core",
+          "target": "shared-constructs",
+          "type": "static"
+        }
+      ],
       "ssh-access": [
         {
           "source": "ssh-access",
