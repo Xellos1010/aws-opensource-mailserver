@@ -20,6 +20,9 @@ import {
   CloudFormationClient,
   DescribeStacksCommand,
   DeleteStackCommand,
+  ListChangeSetsCommand,
+  DeleteChangeSetCommand,
+  DescribeChangeSetCommand,
   StackStatus,
 } from '@aws-sdk/client-cloudformation';
 import {
@@ -105,6 +108,37 @@ async function deleteCloudFormationStack(): Promise<void> {
 
     if (stackStatus) {
       console.log(`   Stack found with status: ${stackStatus}`);
+
+      // Handle REVIEW_IN_PROGRESS state - delete pending changesets first
+      if (stackStatus === StackStatus.REVIEW_IN_PROGRESS) {
+        console.log('   ⚠️  Stack is in REVIEW_IN_PROGRESS - cleaning up changesets...');
+        
+        try {
+          const listChangesetsCmd = new ListChangeSetsCommand({ StackName: STACK_NAME });
+          const changesets = await cfClient.send(listChangesetsCmd);
+          
+          for (const changeset of changesets.Summaries || []) {
+            if (changeset.ChangeSetName && changeset.Status === 'CREATE_PENDING' || changeset.Status === 'CREATE_IN_PROGRESS') {
+              console.log(`   Deleting changeset: ${changeset.ChangeSetName}`);
+              try {
+                const deleteChangesetCmd = new DeleteChangeSetCommand({
+                  StackName: STACK_NAME,
+                  ChangeSetName: changeset.ChangeSetName,
+                });
+                await cfClient.send(deleteChangesetCmd);
+                console.log(`   ✅ Deleted changeset: ${changeset.ChangeSetName}`);
+              } catch (err: any) {
+                console.log(`   ⚠️  Could not delete changeset ${changeset.ChangeSetName}: ${err.message}`);
+              }
+            }
+          }
+        } catch (err: any) {
+          console.log(`   ⚠️  Could not list changesets: ${err.message}`);
+        }
+
+        // Wait a moment for changeset cleanup
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      }
 
       // Don't delete if stack is in DELETE_IN_PROGRESS
       if (stackStatus === StackStatus.DELETE_IN_PROGRESS) {

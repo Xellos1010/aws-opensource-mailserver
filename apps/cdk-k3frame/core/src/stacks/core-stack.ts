@@ -60,6 +60,18 @@ export class k3frameCoreStack extends Stack {
     // are only resolved at deploy time, but SSM parameter names must be static
     const paramPaths = createCoreParamPaths(DEFAULT_DOMAIN);
 
+    // Allow bucket name overrides via CDK context to avoid conflicts with existing buckets
+    // Usage: --context backupBucketName=k3frame-com-backup-v2 --context nextcloudBucketName=k3frame-com-nextcloud-v2
+    // If not provided, defaults to ${domain}-backup and ${domain}-nextcloud
+    const backupBucketName =
+      this.node.tryGetContext('backupBucketName') ||
+      process.env['BACKUP_BUCKET_NAME'] ||
+      `${domain}-backup`;
+    const nextcloudBucketName =
+      this.node.tryGetContext('nextcloudBucketName') ||
+      process.env['NEXTCLOUD_BUCKET_NAME'] ||
+      `${domain}-nextcloud`;
+
     // Elastic IP - persistent across instance updates for hot-swapping
     const eip = new ec2.CfnEIP(this, 'ElasticIP', {
       domain: 'vpc',
@@ -239,8 +251,9 @@ def lambda_handler(event, context):
 
     // S3 Buckets: backup and nextcloud (matching CloudFormation template)
     // Note: These buckets are deleted when stack is deleted - backups should be handled separately
+    // Bucket names can be overridden via CDK context to avoid conflicts with existing buckets in other accounts
     const backupBucket = new s3.Bucket(this, 'BackupBucket', {
-      bucketName: `${domain}-backup`,
+      bucketName: backupBucketName,
       removalPolicy: RemovalPolicy.DESTROY, // Delete bucket on stack deletion
       versioned: true,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -249,7 +262,7 @@ def lambda_handler(event, context):
     });
 
     const nextcloudBucket = new s3.Bucket(this, 'NextcloudBucket', {
-      bucketName: `${domain}-nextcloud`,
+      bucketName: nextcloudBucketName,
       removalPolicy: RemovalPolicy.DESTROY, // Delete bucket on stack deletion
       versioned: true,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
