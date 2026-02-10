@@ -108,7 +108,7 @@ export async function setSesDnsRecords(
         dkim1: { name: 'dkim1._domainkey', value: 'dkim1.example.com.dkim.amazonses.com', type: 'CNAME' as const },
         dkim2: { name: 'dkim2._domainkey', value: 'dkim2.example.com.dkim.amazonses.com', type: 'CNAME' as const },
         dkim3: { name: 'dkim3._domainkey', value: 'dkim3.example.com.dkim.amazonses.com', type: 'CNAME' as const },
-        mailFromMx: { name: 'mail', value: '10 feedback-smtp.us-east-1.amazonses.com', type: 'MX' as const },
+        mailFromMx: { name: 'mail', value: '10 feedback-smtp.us-east-1.amazonses.com.', type: 'MX' as const },
         mailFromTxt: { name: 'mail', value: 'v=spf1 include:amazonses.com ~all', type: 'TXT' as const },
       },
     };
@@ -495,8 +495,14 @@ export async function setSesDnsRecords(
         mailFromDomainAfter: normalizedMailFromDomain
       });
 
-      // Strip priority from MX record (format: "10 mail.example.com" -> "mail.example.com")
-      const mailFromMxValue = mailFromMx.split(/\s+/).slice(1).join(' ') || mailFromMx;
+      // Strip priority from MX record and normalize to a fully-qualified host.
+      // MIAB expects an absolute host for MX targets to avoid appending the zone name.
+      const mailFromMxRawValue = mailFromMx.split(/\s+/).slice(1).join(' ') || mailFromMx;
+      const ensureMxTargetFormat = (value: string): string => {
+        const trimmed = value.trim();
+        return trimmed.endsWith('.') ? trimmed : `${trimmed}.`;
+      };
+      const mailFromMxValue = ensureMxTargetFormat(mailFromMxRawValue);
       
       // Ensure CNAME values end with a period (fully qualified domain name per MIAB docs)
       // Per MIAB docs: "CNAME (an alias, which is a fully qualified domain name — don't forget the final period)"
