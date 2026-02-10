@@ -618,7 +618,7 @@ def lambda_handler(event, context):
     });
 
     new CfnOutput(this, 'MailFromMXRecord', {
-      value: `10 feedback-smtp.${this.region}.amazonses.com`,
+      value: `10 feedback-smtp.${this.region}.amazonses.com.`,
       description: 'MX record for custom MAIL FROM domain',
     });
 
