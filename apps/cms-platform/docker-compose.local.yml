@@ -1,0 +1,134 @@
+name: cms-local
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cms
+      POSTGRES_USER: cms
+      POSTGRES_PASSWORD: cms
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    command: server /data --console-address ':9001'
+    volumes:
+      - minio_data:/data
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+
+  localstack:
+    image: localstack/localstack:3.8
+    restart: unless-stopped
+    environment:
+      SERVICES: sqs,s3
+      DEBUG: '0'
+      LS_LOG: warn
+      AWS_DEFAULT_REGION: us-east-1
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - '4566:4566'
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    restart: unless-stopped
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+
+  cms-api:
+    profiles: ['apps']
+    image: node:20-bookworm
+    restart: unless-stopped
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+      - cms_data:/workspace/tmp/cms/data
+    environment:
+      CMS_API_PORT: '4010'
+      CMS_STATE_FILE: /workspace/tmp/cms/data/state.json
+      CMS_JWT_SECRET: cms-local-jwt-secret
+      CMS_PASSWORD_SALT: cms-local-password-salt
+      CMS_OWNER_EMAIL: owner@emcnotary.com
+      CMS_OWNER_NAME: Owner User
+      CMS_OWNER_PASSWORD: ChangeMe123!
+      TWILIO_WEBHOOK_SECRET: local-twilio-secret
+    command: sh -lc "corepack enable && pnpm nx run cms-api:serve"
+    depends_on:
+      - postgres
+      - minio
+      - localstack
+      - mailhog
+    ports:
+      - '4010:4010'
+
+  cms-worker:
+    profiles: ['apps']
+    image: node:20-bookworm
+    restart: unless-stopped
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+      - cms_data:/workspace/tmp/cms/data
+    environment:
+      CMS_STATE_FILE: /workspace/tmp/cms/data/state.json
+      CMS_JWT_SECRET: cms-local-jwt-secret
+      CMS_PASSWORD_SALT: cms-local-password-salt
+      CMS_OWNER_EMAIL: owner@emcnotary.com
+      CMS_OWNER_NAME: Owner User
+      CMS_OWNER_PASSWORD: ChangeMe123!
+      CMS_WORKER_POLL_INTERVAL_MS: '2000'
+      CMS_RETENTION_DAYS: '90'
+    command: sh -lc "corepack enable && pnpm nx run cms-worker:serve"
+    depends_on:
+      - cms-api
+
+  cms-web:
+    profiles: ['apps']
+    image: node:20-bookworm
+    restart: unless-stopped
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+    environment:
+      VITE_CMS_API_URL: http://localhost:4010
+      CMS_WEB_PORT: '4173'
+    command: sh -lc "corepack enable && pnpm nx run cms-web:serve"
+    depends_on:
+      - cms-api
+    ports:
+      - '4173:4173'
+
+  cms-telephony-sim:
+    profiles: ['apps']
+    image: node:20-bookworm
+    restart: unless-stopped
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+    environment:
+      CMS_TWILIO_SIM_PORT: '4050'
+      CMS_API_BASE_URL: http://cms-api:4010
+      TWILIO_WEBHOOK_SECRET: local-twilio-secret
+    command: sh -lc "corepack enable && pnpm nx run cms-telephony-sim:serve"
+    depends_on:
+      - cms-api
+    ports:
+      - '4050:4050'
+
+volumes:
+  postgres_data:
+  minio_data:
+  localstack_data:
+  cms_data:
