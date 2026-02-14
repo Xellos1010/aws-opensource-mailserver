@@ -2,6 +2,11 @@
 
 Base URL (local): `http://localhost:4010`
 
+Backend env:
+
+- `CMS_STATE_BACKEND=postgres|json`
+- `CMS_DATABASE_URL` required when backend is `postgres`
+
 ## Authentication
 
 - `POST /auth/login`
@@ -57,3 +62,5 @@ Base URL (local): `http://localhost:4010`
 
 - `smsEnabled=true`
 - `smsCampaignApproved=true`
+
+When Postgres is unavailable, API returns `503` with `DB_UNAVAILABLE`.

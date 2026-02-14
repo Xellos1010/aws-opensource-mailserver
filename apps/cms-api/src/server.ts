@@ -3,12 +3,12 @@ import { createServer, IncomingMessage, Server, ServerResponse } from 'node:http
 import { URL } from 'node:url';
 import {
   CmsService,
-  JsonStateStore,
   MockExtractionProvider,
   MockTranscriptionProvider,
   MockTwilioTelephonyProvider,
   assertRole,
   CmsError,
+  CmsStateStore,
 } from '@mm/cms-core';
 import {
   CallStatus,
@@ -20,12 +20,9 @@ import {
 } from '@mm/cms-contracts';
 
 export interface CmsApiConfig {
-  stateFilePath: string;
+  stateStore: CmsStateStore;
   jwtSecret: string;
   passwordSalt: string;
-  ownerEmail: string;
-  ownerName: string;
-  ownerPassword: string;
   twilioWebhookSecret: string;
   accessTokenTtlSeconds: number;
   refreshTokenTtlSeconds: number;
@@ -49,15 +46,7 @@ const JSON_HEADERS = {
 };
 
 export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
-  const store = new JsonStateStore({
-    filePath: config.stateFilePath,
-    passwordSalt: config.passwordSalt,
-    ownerEmail: config.ownerEmail,
-    ownerName: config.ownerName,
-    ownerPassword: config.ownerPassword,
-  });
-
-  const service = new CmsService(store, {
+  const service = new CmsService(config.stateStore, {
     jwtSecret: config.jwtSecret,
     passwordSalt: config.passwordSalt,
     accessTokenTtlSeconds: config.accessTokenTtlSeconds,
@@ -95,7 +84,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
         const { body } = await readJsonBody(req);
         const email = String(body.email ?? '');
         const password = String(body.password ?? '');
-        const session = service.login(email, password);
+        const session = await service.login(email, password);
         writeJson(res, 200, {
           requestId,
           ...session,
@@ -106,7 +95,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
       if (req.method === 'POST' && path === '/auth/refresh') {
         const { body } = await readJsonBody(req);
         const refreshToken = String(body.refreshToken ?? '');
-        const session = service.refresh(refreshToken);
+        const session = await service.refresh(refreshToken);
         writeJson(res, 200, {
           requestId,
           ...session,
@@ -118,7 +107,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
         const actor = service.authenticate(req.headers.authorization);
         writeJson(res, 200, {
           requestId,
-          user: service.getMe(actor),
+          user: await service.getMe(actor),
         });
         return;
       }
@@ -146,7 +135,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
         };
 
         const normalizedEvents = await telephonyProvider.handleWebhook(providerEvent);
-        const result = service.ingestTelephonyEvents('twilio', normalizedEvents);
+        const result = await service.ingestTelephonyEvents('twilio', normalizedEvents);
         writeJson(res, 202, {
           requestId,
           accepted: result.accepted,
@@ -160,14 +149,14 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
       if (req.method === 'GET' && path === '/contacts') {
         writeJson(res, 200, {
           requestId,
-          contacts: service.listContacts(),
+          contacts: await service.listContacts(),
         });
         return;
       }
 
       if (req.method === 'POST' && path === '/contacts') {
         const request = await readJsonBody(req);
-        const contact = service.createContact(actor, {
+        const contact = await service.createContact(actor, {
           firstName: String(request.body.firstName ?? ''),
           lastName: String(request.body.lastName ?? ''),
           email: request.body.email ? String(request.body.email) : undefined,
@@ -186,7 +175,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
       if (req.method === 'GET' && path.startsWith('/contacts/')) {
         const segments = path.split('/').filter(Boolean);
         if (segments.length === 2) {
-          const contact = service.getContact(segments[1]);
+          const contact = await service.getContact(segments[1]);
           writeJson(res, 200, {
             requestId,
             contact,
@@ -199,7 +188,11 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
         const segments = path.split('/').filter(Boolean);
         if (segments.length === 2) {
           const request = await readJsonBody(req);
-          const contact = service.patchContact(actor, segments[1], request.body as Record<string, unknown>);
+          const contact = await service.patchContact(
+            actor,
+            segments[1],
+            request.body as Record<string, unknown>
+          );
           writeJson(res, 200, {
             requestId,
             contact,
@@ -211,7 +204,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
       if (req.method === 'POST' && path.match(/^\/contacts\/[^/]+\/notes$/)) {
         const segments = path.split('/').filter(Boolean);
         const request = await readJsonBody(req);
-        service.addContactNote(actor, segments[1], String(request.body.body ?? ''));
+        await service.addContactNote(actor, segments[1], String(request.body.body ?? ''));
         writeJson(res, 201, {
           requestId,
           ok: true,
@@ -222,7 +215,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
       if (req.method === 'POST' && path.match(/^\/contacts\/[^/]+\/follow-ups$/)) {
         const segments = path.split('/').filter(Boolean);
         const request = await readJsonBody(req);
-        service.addFollowUp(
+        await service.addFollowUp(
           actor,
           segments[1],
           String(request.body.summary ?? ''),
@@ -239,7 +232,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
       if (req.method === 'POST' && path.match(/^\/contacts\/[^/]+\/stage-transition$/)) {
         const segments = path.split('/').filter(Boolean);
         const request = await readJsonBody(req);
-        const contact = service.transitionStage(
+        const contact = await service.transitionStage(
           actor,
           segments[1],
           String(request.body.toStageId) as ContactStageId,
@@ -255,7 +248,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
       if (req.method === 'GET' && path === '/accounts') {
         writeJson(res, 200, {
           requestId,
-          accounts: service.listAccounts(),
+          accounts: await service.listAccounts(),
         });
         return;
       }
@@ -263,14 +256,14 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
       if (req.method === 'GET' && path === '/pipeline/stages') {
         writeJson(res, 200, {
           requestId,
-          stages: service.listStages(),
+          stages: await service.listStages(),
         });
         return;
       }
 
       if (req.method === 'POST' && path === '/calls/start') {
         const request = await readJsonBody(req);
-        const call = service.createOutboundCallIntent(actor, {
+        const call = await service.createOutboundCallIntent(actor, {
           contactId: String(request.body.contactId ?? ''),
           fromNumber: String(request.body.fromNumber ?? ''),
           toNumber: String(request.body.toNumber ?? ''),
@@ -285,7 +278,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
           consentPrompt:
             'This call may be recorded for quality and compliance. By staying on the line, you consent to recording.',
         });
-        const boundCall = service.bindProviderCall(call.id, providerRef);
+        const boundCall = await service.bindProviderCall(call.id, providerRef);
         writeJson(res, 201, {
           requestId,
           call: boundCall,
@@ -304,7 +297,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
         const finalStatus = allowedStatuses.includes(rawStatus as CallStatus)
           ? (rawStatus as CallStatus)
           : 'completed';
-        const call = service.endCall(actor, segments[1], finalStatus);
+        const call = await service.endCall(actor, segments[1], finalStatus);
         writeJson(res, 200, {
           requestId,
           call,
@@ -314,7 +307,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
 
       if (req.method === 'GET' && path.match(/^\/calls\/[^/]+$/)) {
         const segments = path.split('/').filter(Boolean);
-        const call = service.getCall(segments[1]);
+        const call = await service.getCall(segments[1]);
         writeJson(res, 200, {
           requestId,
           call,
@@ -324,7 +317,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
 
       if (req.method === 'GET' && path.match(/^\/calls\/[^/]+\/transcript$/)) {
         const segments = path.split('/').filter(Boolean);
-        const transcript = service.getTranscriptForCall(segments[1]);
+        const transcript = await service.getTranscriptForCall(segments[1]);
         writeJson(res, 200, {
           requestId,
           transcript,
@@ -334,7 +327,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
 
       if (req.method === 'POST' && path === '/messages/email/send') {
         const request = await readJsonBody(req);
-        const message = service.sendEmail(actor, {
+        const message = await service.sendEmail(actor, {
           to: String(request.body.to ?? ''),
           from: String(request.body.from ?? ''),
           subject: String(request.body.subject ?? ''),
@@ -350,7 +343,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
 
       if (req.method === 'POST' && path === '/messages/sms/send') {
         const request = await readJsonBody(req);
-        const message = service.sendSms(actor, {
+        const message = await service.sendSms(actor, {
           to: String(request.body.to ?? ''),
           from: String(request.body.from ?? ''),
           body: String(request.body.body ?? ''),
@@ -365,7 +358,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
 
       if (req.method === 'GET' && path.match(/^\/messages\/[^/]+\/status$/)) {
         const segments = path.split('/').filter(Boolean);
-        const message = service.getMessageStatus(segments[1]);
+        const message = await service.getMessageStatus(segments[1]);
         writeJson(res, 200, {
           requestId,
           message,
@@ -375,7 +368,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
 
       if (req.method === 'POST' && path.match(/^\/ai\/calls\/[^/]+\/extract$/)) {
         const segments = path.split('/').filter(Boolean);
-        const transcript = service.getTranscriptForCall(segments[2]);
+        const transcript = await service.getTranscriptForCall(segments[2]);
         if (!transcript) {
           throw new CmsError('TRANSCRIPT_REQUIRED', 'Transcript required before extraction', 400);
         }
@@ -383,7 +376,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
           callId: segments[2],
           transcript: transcript.content,
         });
-        const summary = service.saveExtraction(segments[2], extraction);
+        const summary = await service.saveExtraction(segments[2], extraction);
         writeJson(res, 202, {
           requestId,
           summary,
@@ -393,7 +386,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
 
       if (req.method === 'GET' && path.match(/^\/ai\/calls\/[^/]+\/summary$/)) {
         const segments = path.split('/').filter(Boolean);
-        const summary = service.getAiSummary(segments[2]);
+        const summary = await service.getAiSummary(segments[2]);
         writeJson(res, 200, {
           requestId,
           summary,
@@ -403,7 +396,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
 
       if (req.method === 'POST' && path.match(/^\/ai\/calls\/[^/]+\/approve-summary$/)) {
         const segments = path.split('/').filter(Boolean);
-        const summary = service.approveAiSummary(actor, segments[2]);
+        const summary = await service.approveAiSummary(actor, segments[2]);
         writeJson(res, 200, {
           requestId,
           summary,
@@ -415,7 +408,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
         assertRole(actor.roles, ['owner', 'manager']);
         writeJson(res, 200, {
           requestId,
-          featureFlags: service.getFeatureFlags(),
+          featureFlags: await service.getFeatureFlags(),
         });
         return;
       }
@@ -423,7 +416,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
       if (req.method === 'PATCH' && path === '/admin/feature-flags') {
         assertRole(actor.roles, ['owner']);
         const request = await readJsonBody(req);
-        const featureFlags = service.patchFeatureFlags(actor, request.body);
+        const featureFlags = await service.patchFeatureFlags(actor, request.body);
         writeJson(res, 200, {
           requestId,
           featureFlags,
@@ -434,7 +427,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
       if (req.method === 'POST' && path === '/admin/campaign-approval') {
         assertRole(actor.roles, ['owner']);
         const request = await readJsonBody(req);
-        const approval = service.approveCampaign(actor, String(request.body.approvalNote ?? ''));
+        const approval = await service.approveCampaign(actor, String(request.body.approvalNote ?? ''));
         writeJson(res, 201, {
           requestId,
           approval,
@@ -445,7 +438,7 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
       if (req.method === 'GET' && path === '/admin/audit-logs') {
         assertRole(actor.roles, ['owner', 'manager']);
         const limitParam = Number(url.searchParams.get('limit') ?? 200);
-        const auditLogs = service.getAuditLogs(Number.isNaN(limitParam) ? 200 : limitParam);
+        const auditLogs = await service.getAuditLogs(Number.isNaN(limitParam) ? 200 : limitParam);
         writeJson(res, 200, {
           requestId,
           auditLogs,
@@ -461,7 +454,11 @@ export function createCmsApiServer(config: CmsApiConfig): CmsApiServerContext {
           callId: segments[2],
           recordingUrl: String(request.body.recordingUrl ?? 'mock://recording.mp3'),
         });
-        service.saveTranscript(segments[2], request.body.recordingId ? String(request.body.recordingId) : undefined, transcript);
+        await service.saveTranscript(
+          segments[2],
+          request.body.recordingId ? String(request.body.recordingId) : undefined,
+          transcript
+        );
         writeJson(res, 202, {
           requestId,
           transcript,

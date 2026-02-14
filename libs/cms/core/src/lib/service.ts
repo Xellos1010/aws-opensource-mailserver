@@ -1,5 +1,6 @@
 import {
   AiSummary,
+  Account,
   AuthSession,
   Call,
   CampaignApproval,
@@ -11,6 +12,7 @@ import {
   NormalizedCallEvent,
   OutboundMessage,
   ProviderCallRef,
+  Stage,
   StructuredCallSummary,
   TranscriptResult,
   User,
@@ -25,7 +27,7 @@ import {
 import { AuthError, NotFoundError, ValidationError } from './errors';
 import { assertEmailPolicy, assertRole, assertSmsPolicy } from './policy';
 import { getAllowedTransitions, isStageTransitionAllowed } from './stage-rules';
-import { JsonStateStore } from './state-store';
+import { CmsStateStore } from './store';
 import { CmsState, MessageEvent, UserRecord } from './state';
 import { calculatePurgeTargets } from './retention';
 
@@ -69,12 +71,12 @@ export interface JobRunResult {
 
 export class CmsService {
   constructor(
-    private readonly store: JsonStateStore,
+    private readonly store: CmsStateStore,
     private readonly config: CmsServiceConfig
   ) {}
 
-  login(email: string, password: string): AuthSession {
-    return this.store.mutate((state) => {
+  async login(email: string, password: string): Promise<AuthSession> {
+    return await this.store.mutate((state) => {
       const user = state.users.find(
         (candidate) => candidate.email.toLowerCase() === email.toLowerCase()
       );
@@ -99,13 +101,13 @@ export class CmsService {
     });
   }
 
-  refresh(refreshToken: string): AuthSession {
+  async refresh(refreshToken: string): Promise<AuthSession> {
     const payload = verifyToken(refreshToken, this.config.jwtSecret);
     if (payload.type !== 'refresh') {
       throw new AuthError('Expected refresh token');
     }
 
-    return this.store.mutate((state) => {
+    return await this.store.mutate((state) => {
       const tokenHash = hashOpaqueToken(refreshToken);
       const tokenRecord = state.refreshTokens.find(
         (candidate) =>
@@ -146,8 +148,8 @@ export class CmsService {
     };
   }
 
-  getMe(actor: Actor): User {
-    const state = this.store.read();
+  async getMe(actor: Actor): Promise<User> {
+    const state = await this.store.read();
     const user = state.users.find((candidate) => candidate.id === actor.userId);
     if (!user) {
       throw new AuthError('Actor not found');
@@ -155,13 +157,16 @@ export class CmsService {
     return sanitizeUser(user);
   }
 
-  listContacts(): Contact[] {
-    const state = this.store.read();
+  async listContacts(): Promise<Contact[]> {
+    const state = await this.store.read();
     return state.contacts;
   }
 
-  createContact(actor: Actor, input: Partial<Contact> & Pick<Contact, 'firstName' | 'lastName'>): Contact {
-    return this.store.mutate((state) => {
+  async createContact(
+    actor: Actor,
+    input: Partial<Contact> & Pick<Contact, 'firstName' | 'lastName'>
+  ): Promise<Contact> {
+    return await this.store.mutate((state) => {
       const id = this.nextId(state, 'contact', 'con');
       const now = this.nowIso();
       const contact: Contact = {
@@ -188,8 +193,8 @@ export class CmsService {
     });
   }
 
-  getContact(contactId: string): Contact {
-    const state = this.store.read();
+  async getContact(contactId: string): Promise<Contact> {
+    const state = await this.store.read();
     const contact = state.contacts.find((candidate) => candidate.id === contactId);
     if (!contact) {
       throw new NotFoundError('Contact', contactId);
@@ -197,8 +202,12 @@ export class CmsService {
     return contact;
   }
 
-  patchContact(actor: Actor, contactId: string, patch: Partial<Contact>): Contact {
-    return this.store.mutate((state) => {
+  async patchContact(
+    actor: Actor,
+    contactId: string,
+    patch: Partial<Contact>
+  ): Promise<Contact> {
+    return await this.store.mutate((state) => {
       const contact = state.contacts.find((candidate) => candidate.id === contactId);
       if (!contact) {
         throw new NotFoundError('Contact', contactId);
@@ -234,12 +243,12 @@ export class CmsService {
     });
   }
 
-  addContactNote(actor: Actor, contactId: string, body: string): void {
+  async addContactNote(actor: Actor, contactId: string, body: string): Promise<void> {
     if (!body.trim()) {
       throw new ValidationError('Note body is required');
     }
 
-    this.store.mutate((state) => {
+    await this.store.mutate((state) => {
       this.requireContact(state, contactId);
       const now = this.nowIso();
       state.interactions.push({
@@ -265,12 +274,12 @@ export class CmsService {
     summary: string,
     dueAt: string,
     assignedToUserId?: string
-  ): void {
+  ): Promise<void> {
     if (!summary.trim()) {
       throw new ValidationError('Follow-up summary is required');
     }
 
-    this.store.mutate((state) => {
+    return this.store.mutate((state) => {
       this.requireContact(state, contactId);
       const now = this.nowIso();
       state.followUps.push({
@@ -299,13 +308,13 @@ export class CmsService {
     });
   }
 
-  transitionStage(
+  async transitionStage(
     actor: Actor,
     contactId: string,
     toStageId: Contact['stageId'],
     reason?: string
-  ): Contact {
-    return this.store.mutate((state) => {
+  ): Promise<Contact> {
+    return await this.store.mutate((state) => {
       const contact = this.requireContact(state, contactId);
       if (!isStageTransitionAllowed(contact.stageId, toStageId)) {
         throw new ValidationError('Invalid stage transition', {
@@ -347,16 +356,18 @@ export class CmsService {
     });
   }
 
-  listAccounts() {
-    return this.store.read().accounts;
+  async listAccounts(): Promise<Account[]> {
+    const state = await this.store.read();
+    return state.accounts;
   }
 
-  listStages() {
-    return this.store.read().stages;
+  async listStages(): Promise<Stage[]> {
+    const state = await this.store.read();
+    return state.stages;
   }
 
-  createOutboundCallIntent(actor: Actor, input: StartCallInput): Call {
-    return this.store.mutate((state) => {
+  async createOutboundCallIntent(actor: Actor, input: StartCallInput): Promise<Call> {
+    return await this.store.mutate((state) => {
       this.requireContact(state, input.contactId);
       const now = this.nowIso();
       const call: Call = {
@@ -393,8 +404,8 @@ export class CmsService {
     });
   }
 
-  bindProviderCall(callId: string, providerRef: ProviderCallRef): Call {
-    return this.store.mutate((state) => {
+  async bindProviderCall(callId: string, providerRef: ProviderCallRef): Promise<Call> {
+    return await this.store.mutate((state) => {
       const call = this.requireCall(state, callId);
       call.providerCallId = providerRef.providerCallId;
       call.provider = providerRef.provider;
@@ -409,8 +420,12 @@ export class CmsService {
     });
   }
 
-  endCall(actor: Actor, callId: string, finalStatus: Call['status'] = 'completed'): Call {
-    return this.store.mutate((state) => {
+  async endCall(
+    actor: Actor,
+    callId: string,
+    finalStatus: Call['status'] = 'completed'
+  ): Promise<Call> {
+    return await this.store.mutate((state) => {
       const call = this.requireCall(state, callId);
       const now = this.nowIso();
       call.status = finalStatus;
@@ -427,18 +442,21 @@ export class CmsService {
     });
   }
 
-  getCall(callId: string): Call {
-    const state = this.store.read();
+  async getCall(callId: string): Promise<Call> {
+    const state = await this.store.read();
     return this.requireCall(state, callId);
   }
 
-  getTranscriptForCall(callId: string) {
-    const state = this.store.read();
+  async getTranscriptForCall(callId: string) {
+    const state = await this.store.read();
     return state.callTranscripts.find((item) => item.callId === callId) ?? null;
   }
 
-  ingestTelephonyEvents(source: string, events: NormalizedCallEvent[]): { accepted: number; ignored: number } {
-    return this.store.mutate((state) => {
+  async ingestTelephonyEvents(
+    source: string,
+    events: NormalizedCallEvent[]
+  ): Promise<{ accepted: number; ignored: number }> {
+    return await this.store.mutate((state) => {
       let accepted = 0;
       let ignored = 0;
       for (const event of events) {
@@ -519,8 +537,12 @@ export class CmsService {
     });
   }
 
-  saveTranscript(callId: string, recordingId: string | undefined, transcript: TranscriptResult): void {
-    this.store.mutate((state) => {
+  async saveTranscript(
+    callId: string,
+    recordingId: string | undefined,
+    transcript: TranscriptResult
+  ): Promise<void> {
+    await this.store.mutate((state) => {
       this.requireCall(state, callId);
       const existing = state.callTranscripts.find((item) => item.callId === callId);
       if (existing) {
@@ -550,8 +572,8 @@ export class CmsService {
     });
   }
 
-  saveExtraction(callId: string, extraction: StructuredCallSummary): AiSummary {
-    return this.store.mutate((state) => {
+  async saveExtraction(callId: string, extraction: StructuredCallSummary): Promise<AiSummary> {
+    return await this.store.mutate((state) => {
       this.requireCall(state, callId);
 
       const now = this.nowIso();
@@ -600,16 +622,16 @@ export class CmsService {
     });
   }
 
-  getAiSummary(callId: string): AiSummary | null {
-    const state = this.store.read();
+  async getAiSummary(callId: string): Promise<AiSummary | null> {
+    const state = await this.store.read();
     const summaries = state.aiSummaries
       .filter((item) => item.callId === callId)
       .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
     return summaries[0] ?? null;
   }
 
-  approveAiSummary(actor: Actor, callId: string): AiSummary {
-    return this.store.mutate((state) => {
+  async approveAiSummary(actor: Actor, callId: string): Promise<AiSummary> {
+    return await this.store.mutate((state) => {
       const summary =
         state.aiSummaries
           .filter((item) => item.callId === callId)
@@ -658,8 +680,8 @@ export class CmsService {
     });
   }
 
-  sendEmail(actor: Actor, input: SendEmailInput): OutboundMessage {
-    return this.store.mutate((state) => {
+  async sendEmail(actor: Actor, input: SendEmailInput): Promise<OutboundMessage> {
+    return await this.store.mutate((state) => {
       assertEmailPolicy(state.featureFlags);
       const now = this.nowIso();
       const message: OutboundMessage = {
@@ -691,8 +713,8 @@ export class CmsService {
     });
   }
 
-  sendSms(actor: Actor, input: SendSmsInput): OutboundMessage {
-    return this.store.mutate((state) => {
+  async sendSms(actor: Actor, input: SendSmsInput): Promise<OutboundMessage> {
+    return await this.store.mutate((state) => {
       assertSmsPolicy(state.featureFlags);
       const now = this.nowIso();
       const message: OutboundMessage = {
@@ -719,8 +741,8 @@ export class CmsService {
     });
   }
 
-  getMessageStatus(messageId: string): OutboundMessage {
-    const state = this.store.read();
+  async getMessageStatus(messageId: string): Promise<OutboundMessage> {
+    const state = await this.store.read();
     const message = state.messages.find((candidate) => candidate.id === messageId);
     if (!message) {
       throw new NotFoundError('Message', messageId);
@@ -728,8 +750,12 @@ export class CmsService {
     return message;
   }
 
-  setMessageStatus(messageId: string, status: MessageStatus, rawPayload?: Record<string, unknown>): void {
-    this.store.mutate((state) => {
+  async setMessageStatus(
+    messageId: string,
+    status: MessageStatus,
+    rawPayload?: Record<string, unknown>
+  ): Promise<void> {
+    await this.store.mutate((state) => {
       const message = state.messages.find((candidate) => candidate.id === messageId);
       if (!message) {
         throw new NotFoundError('Message', messageId);
@@ -746,13 +772,17 @@ export class CmsService {
     });
   }
 
-  getFeatureFlags(): FeatureFlags {
-    return this.store.read().featureFlags;
+  async getFeatureFlags(): Promise<FeatureFlags> {
+    const state = await this.store.read();
+    return state.featureFlags;
   }
 
-  patchFeatureFlags(actor: Actor, patch: Partial<FeatureFlags>): FeatureFlags {
+  async patchFeatureFlags(
+    actor: Actor,
+    patch: Partial<FeatureFlags>
+  ): Promise<FeatureFlags> {
     assertRole(actor.roles, ['owner']);
-    return this.store.mutate((state) => {
+    return await this.store.mutate((state) => {
       const next: FeatureFlags = {
         ...state.featureFlags,
         ...patch,
@@ -775,13 +805,13 @@ export class CmsService {
     });
   }
 
-  approveCampaign(actor: Actor, approvalNote: string): CampaignApproval {
+  async approveCampaign(actor: Actor, approvalNote: string): Promise<CampaignApproval> {
     assertRole(actor.roles, ['owner']);
     if (!approvalNote.trim()) {
       throw new ValidationError('approvalNote is required');
     }
 
-    return this.store.mutate((state) => {
+    return await this.store.mutate((state) => {
       const approval: CampaignApproval = {
         id: this.nextId(state, 'approval', 'cap'),
         approvedByUserId: actor.userId,
@@ -800,15 +830,15 @@ export class CmsService {
     });
   }
 
-  getAuditLogs(limit = 200) {
-    const state = this.store.read();
+  async getAuditLogs(limit = 200): Promise<CmsState['auditLogs']> {
+    const state = await this.store.read();
     return [...state.auditLogs]
       .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
       .slice(0, limit);
   }
 
-  claimDueJobs(limit = 10): JobRunResult {
-    return this.store.mutate((state) => {
+  async claimDueJobs(limit = 10): Promise<JobRunResult> {
+    return await this.store.mutate((state) => {
       const now = Date.now();
       const sorted = [...state.jobs].sort((left, right) => left.availableAt.localeCompare(right.availableAt));
       const due = sorted.filter((job) => new Date(job.availableAt).getTime() <= now).slice(0, limit);
@@ -831,8 +861,8 @@ export class CmsService {
     });
   }
 
-  requeueJob(job: CmsJob, delaySeconds = 30): void {
-    this.store.mutate((state) => {
+  async requeueJob(job: CmsJob, delaySeconds = 30): Promise<void> {
+    await this.store.mutate((state) => {
       const retryJob: CmsJob = {
         ...job,
         attempts: job.attempts + 1,
@@ -848,8 +878,8 @@ export class CmsService {
     });
   }
 
-  enqueueRetentionPurgeIfMissing(retentionDays = 90): void {
-    this.store.mutate((state) => {
+  async enqueueRetentionPurgeIfMissing(retentionDays = 90): Promise<void> {
+    await this.store.mutate((state) => {
       const hasJob = state.jobs.some((job) => job.type === 'retention.purge');
       if (!hasJob) {
         this.enqueueJob(state, {
@@ -862,8 +892,10 @@ export class CmsService {
     });
   }
 
-  runRetentionPurge(retentionDays = 90): { purgedRecordings: number; purgedTranscripts: number } {
-    return this.store.mutate((state) => {
+  async runRetentionPurge(
+    retentionDays = 90
+  ): Promise<{ purgedRecordings: number; purgedTranscripts: number }> {
+    return await this.store.mutate((state) => {
       const now = new Date();
       const targets = calculatePurgeTargets(
         state.callRecordings,

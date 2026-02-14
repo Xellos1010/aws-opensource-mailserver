@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { createDefaultState } from './default-state';
 import { CmsState } from './state';
+import { CmsStateStore } from './store';
 
 export interface JsonStateStoreOptions {
   filePath: string;
@@ -11,7 +12,8 @@ export interface JsonStateStoreOptions {
   ownerPassword?: string;
 }
 
-export class JsonStateStore {
+export class JsonStateStore implements CmsStateStore {
+  readonly backend = 'json' as const;
   private readonly filePath: string;
   private readonly passwordSalt: string;
   private readonly ownerEmail?: string;
@@ -27,13 +29,13 @@ export class JsonStateStore {
     this.ensureStateFile();
   }
 
-  read(): CmsState {
+  async read(): Promise<CmsState> {
     return this.loadState();
   }
 
-  mutate<T>(mutator: (state: CmsState) => T): T {
+  async mutate<T>(mutator: (state: CmsState) => T | Promise<T>): Promise<T> {
     const state = this.loadState();
-    const result = mutator(state);
+    const result = await mutator(state);
     state.meta.updatedAt = new Date().toISOString();
     this.writeState(state);
     return result;

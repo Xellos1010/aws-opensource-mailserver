@@ -47,7 +47,8 @@
       "@mm/admin-godaddy-dns": ["libs/admin/godaddy-dns/src/index.ts"],
       "@mm/admin-miab-api": ["libs/admin/admin-miab-api/src/index.ts"],
       "@mm/cms-contracts": ["libs/cms/contracts/src/index.ts"],
-      "@mm/cms-core": ["libs/cms/core/src/index.ts"]
+      "@mm/cms-core": ["libs/cms/core/src/index.ts"],
+      "@mm/cms-persistence": ["libs/cms/persistence/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

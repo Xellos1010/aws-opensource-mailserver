@@ -56,15 +56,17 @@ services:
       - ../..:/workspace
       - cms_data:/workspace/tmp/cms/data
     environment:
+      CMS_STATE_BACKEND: postgres
       CMS_API_PORT: '4010'
       CMS_STATE_FILE: /workspace/tmp/cms/data/state.json
+      CMS_DATABASE_URL: postgres://cms:cms@postgres:5432/cms
       CMS_JWT_SECRET: cms-local-jwt-secret
       CMS_PASSWORD_SALT: cms-local-password-salt
       CMS_OWNER_EMAIL: owner@emcnotary.com
       CMS_OWNER_NAME: Owner User
       CMS_OWNER_PASSWORD: ChangeMe123!
       TWILIO_WEBHOOK_SECRET: local-twilio-secret
-    command: sh -lc "corepack enable && pnpm nx run cms-api:serve"
+    command: sh -lc "corepack enable && pnpm run cms:migrate && pnpm nx run cms-api:serve"
     depends_on:
       - postgres
       - minio
@@ -82,7 +84,9 @@ services:
       - ../..:/workspace
       - cms_data:/workspace/tmp/cms/data
     environment:
+      CMS_STATE_BACKEND: postgres
       CMS_STATE_FILE: /workspace/tmp/cms/data/state.json
+      CMS_DATABASE_URL: postgres://cms:cms@postgres:5432/cms
       CMS_JWT_SECRET: cms-local-jwt-secret
       CMS_PASSWORD_SALT: cms-local-password-salt
       CMS_OWNER_EMAIL: owner@emcnotary.com

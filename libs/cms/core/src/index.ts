@@ -7,6 +7,7 @@ export * from './lib/service';
 export * from './lib/stage-rules';
 export * from './lib/state';
 export * from './lib/state-store';
+export * from './lib/store';
 export * from './lib/providers/mock-telephony-provider';
 export * from './lib/providers/mock-transcription-provider';
 export * from './lib/providers/mock-extraction-provider';

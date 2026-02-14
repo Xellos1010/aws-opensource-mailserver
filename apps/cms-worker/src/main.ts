@@ -1,10 +1,10 @@
 import {
   CmsJob,
   CmsService,
-  JsonStateStore,
   MockExtractionProvider,
   MockTranscriptionProvider,
 } from '@mm/cms-core';
+import { createCmsStateStore } from '@mm/cms-persistence';
 
 function env(name: string, fallback?: string): string {
   const value = process.env[name] ?? fallback;
@@ -15,7 +15,9 @@ function env(name: string, fallback?: string): string {
 }
 
 const config = {
+  stateBackend: env('CMS_STATE_BACKEND', 'postgres') as 'json' | 'postgres',
   stateFilePath: env('CMS_STATE_FILE', 'tmp/cms/data/state.json'),
+  databaseUrl: process.env['CMS_DATABASE_URL'],
   jwtSecret: env('CMS_JWT_SECRET', 'cms-local-jwt-secret'),
   passwordSalt: env('CMS_PASSWORD_SALT', 'cms-local-password-salt'),
   ownerEmail: env('CMS_OWNER_EMAIL', 'owner@emcnotary.com'),
@@ -27,8 +29,10 @@ const config = {
   retentionDays: Number(env('CMS_RETENTION_DAYS', '90')),
 };
 
-const store = new JsonStateStore({
-  filePath: config.stateFilePath,
+const store = createCmsStateStore({
+  backend: config.stateBackend,
+  stateFilePath: config.stateFilePath,
+  databaseUrl: config.databaseUrl,
   passwordSalt: config.passwordSalt,
   ownerEmail: config.ownerEmail,
   ownerName: config.ownerName,
@@ -56,7 +60,9 @@ process.on('SIGTERM', () => {
 
 async function processJob(job: CmsJob): Promise<void> {
   if (job.type === 'email.send') {
-    service.setMessageStatus(job.payload.messageId, 'sent', { provider: 'mock-mailhog' });
+    await service.setMessageStatus(job.payload.messageId, 'sent', {
+      provider: 'mock-mailhog',
+    });
     return;
   }
 
@@ -65,12 +71,12 @@ async function processJob(job: CmsJob): Promise<void> {
       callId: job.payload.callId,
       recordingUrl: job.payload.recordingUrl,
     });
-    service.saveTranscript(job.payload.callId, job.payload.recordingId, transcript);
+    await service.saveTranscript(job.payload.callId, job.payload.recordingId, transcript);
     return;
   }
 
   if (job.type === 'call.extract') {
-    const transcript = service.getTranscriptForCall(job.payload.callId);
+    const transcript = await service.getTranscriptForCall(job.payload.callId);
     if (!transcript) {
       return;
     }
@@ -78,25 +84,25 @@ async function processJob(job: CmsJob): Promise<void> {
       callId: job.payload.callId,
       transcript: transcript.content,
     });
-    service.saveExtraction(job.payload.callId, extraction);
+    await service.saveExtraction(job.payload.callId, extraction);
     return;
   }
 
   if (job.type === 'retention.purge') {
-    service.runRetentionPurge(job.payload.retentionDays);
+    await service.runRetentionPurge(job.payload.retentionDays);
   }
 }
 
 async function loop(): Promise<void> {
-  service.enqueueRetentionPurgeIfMissing(config.retentionDays);
+  await service.enqueueRetentionPurgeIfMissing(config.retentionDays);
 
   while (active) {
-    const { claimed } = service.claimDueJobs(25);
+    const { claimed } = await service.claimDueJobs(25);
     for (const job of claimed) {
       try {
         await processJob(job);
       } catch (error) {
-        service.requeueJob(job, Math.min(120, (job.attempts + 1) * 10));
+        await service.requeueJob(job, Math.min(120, (job.attempts + 1) * 10));
         // eslint-disable-next-line no-console
         console.error('job failed', job.id, job.type, error);
       }

@@ -27,34 +27,36 @@ describe('CmsService', () => {
     // no-op; each test owns cleanup
   });
 
-  it('authenticates default owner', () => {
+  it('authenticates default owner', async () => {
     const { service, dir } = createService();
-    const session = service.login('owner@emcnotary.com', 'ChangeMe123!');
+    const session = await service.login('owner@emcnotary.com', 'ChangeMe123!');
     expect(session.user.email).toBe('owner@emcnotary.com');
     expect(session.tokens.accessToken.length).toBeGreaterThan(20);
     rmSync(dir, { recursive: true, force: true });
   });
 
-  it('blocks invalid stage transition', () => {
+  it('blocks invalid stage transition', async () => {
     const { service, dir } = createService();
-    const session = service.login('owner@emcnotary.com', 'ChangeMe123!');
+    const session = await service.login('owner@emcnotary.com', 'ChangeMe123!');
     const actor = service.authenticate(`Bearer ${session.tokens.accessToken}`);
-    const contact = service.listContacts()[0];
-    expect(() => service.transitionStage(actor, contact.id, 'won')).toThrow('Invalid stage transition');
+    const contact = (await service.listContacts())[0];
+    await expect(service.transitionStage(actor, contact.id, 'won')).rejects.toThrow(
+      'Invalid stage transition'
+    );
     rmSync(dir, { recursive: true, force: true });
   });
 
-  it('hard-blocks sms by default', () => {
+  it('hard-blocks sms by default', async () => {
     const { service, dir } = createService();
-    const session = service.login('owner@emcnotary.com', 'ChangeMe123!');
+    const session = await service.login('owner@emcnotary.com', 'ChangeMe123!');
     const actor = service.authenticate(`Bearer ${session.tokens.accessToken}`);
-    expect(() =>
+    await expect(
       service.sendSms(actor, {
         from: '+15550000000',
         to: '+15550000001',
         body: 'test',
       })
-    ).toThrow('SMS sending is disabled');
+    ).rejects.toThrow('SMS sending is disabled');
     rmSync(dir, { recursive: true, force: true });
   });
 });

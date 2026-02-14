@@ -56,3 +56,10 @@ export class PolicyBlockedError extends CmsError {
     this.name = 'PolicyBlockedError';
   }
 }
+
+export class DbUnavailableError extends CmsError {
+  constructor(message = 'Database unavailable', detail?: Record<string, unknown>) {
+    super('DB_UNAVAILABLE', message, 503, detail);
+    this.name = 'DbUnavailableError';
+  }
+}

@@ -20,6 +20,9 @@ docker compose -f docker-compose.local.yml up -d postgres minio localstack mailh
 2. Start app services locally (host process mode):
 
 ```bash
+export CMS_STATE_BACKEND=postgres
+export CMS_DATABASE_URL=postgres://cms:cms@localhost:5432/cms
+pnpm run cms:migrate
 pnpm nx run cms-api:serve
 pnpm nx run cms-worker:serve
 pnpm nx run cms-web:serve
@@ -47,6 +50,12 @@ To run infra and apps in Docker together:
 cd apps/cms-platform
 docker compose -f docker-compose.local.yml --profile apps up
 ```
+
+## Backend Selection
+
+- `CMS_STATE_BACKEND=postgres` (default for local stack now)
+- `CMS_DATABASE_URL=postgres://cms:cms@localhost:5432/cms`
+- `CMS_STATE_BACKEND=json` can still be used temporarily for rollback mode.
 
 ## Deterministic Call Flow Replay
 
