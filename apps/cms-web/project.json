@@ -1,0 +1,36 @@
+{
+  "name": "cms-web",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cms-web/src",
+  "projectType": "application",
+  "tags": ["scope:shared", "type:tool", "domain:cms"],
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec vite --config apps/cms-web/vite.config.mts --host 0.0.0.0 --port ${CMS_WEB_PORT:-4173}"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec vite build --config apps/cms-web/vite.config.mts"
+      }
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec vite preview --config apps/cms-web/vite.config.mts --host 0.0.0.0 --port 4173"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec vitest --config apps/cms-web/vitest.config.mts run --passWithNoTests"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

@@ -5,7 +5,13 @@
   "description": "AWS Open Source Mail Server Infrastructure",
   "scripts": {
     "format": "nx format:write",
-    "format:check": "nx format:check"
+    "format:check": "nx format:check",
+    "cms:infra:up": "docker compose -f apps/cms-platform/docker-compose.local.yml up -d postgres minio localstack mailhog",
+    "cms:infra:down": "docker compose -f apps/cms-platform/docker-compose.local.yml down",
+    "cms:apps:serve": "pnpm nx run-many --target=serve --projects=cms-api,cms-worker,cms-web,cms-telephony-sim --parallel=4",
+    "cms:compose:up": "docker compose -f apps/cms-platform/docker-compose.local.yml --profile apps up",
+    "cms:seed": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/cms-seed.cli.ts",
+    "cms:scenario": "pnpm exec tsx --tsconfig tools/tsconfig.json tools/cms-bootstrap-scenario.cli.ts"
   },
   "engines": {
     "node": ">=20.0.0",
@@ -39,6 +45,9 @@
     "@swc-node/register": "~1.9.1",
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.4.1",
     "@types/jest": "^29.5.12",
     "@types/node": "20.19.9",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
@@ -57,6 +66,7 @@
     "jest-environment-node": "^29.7.0",
     "jest-util": "^29.7.0",
     "jiti": "2.4.2",
+    "jsdom": "^26.1.0",
     "jsonc-eslint-parser": "^2.1.0",
     "nx": "^22.0.2",
     "prettier": "^3.3.3",
@@ -72,6 +82,8 @@
   "dependencies": {
     "@aws-sdk/client-sts": "^3.654.0",
     "@aws-sdk/credential-providers": "^3.654.0",
-    "ini": "^4.1.1"
+    "ini": "^4.1.1",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
   }
 }
