@@ -602,9 +602,9 @@
       "executor": "nx:run-commands",
       "dependsOn": ["^build", "admin-stack-info:build", "admin:test:bootstrap-complete"],
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} SMTP_REGION=${SMTP_REGION} SMTP_USERNAME=${SMTP_USERNAME} SMTP_PASSWORD=${SMTP_PASSWORD} pnpm exec tsx --tsconfig tools/tsconfig.json tools/configure-ses-relay.cli.ts ${DOMAIN:+--domain $DOMAIN} ${SMTP_REGION:+--smtp-region $SMTP_REGION} ${SMTP_USERNAME:+--smtp-username $SMTP_USERNAME} ${SMTP_PASSWORD:+--smtp-password $SMTP_PASSWORD}"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} SMTP_REGION=${SMTP_REGION} pnpm exec tsx --tsconfig tools/tsconfig.json tools/configure-ses-relay.cli.ts ${DOMAIN:+--domain $DOMAIN} ${SMTP_REGION:+--smtp-region $SMTP_REGION} ${AUTO_FETCH:---auto-fetch-credentials}"
       },
-      "description": "Configure Postfix to relay outbound mail via SES SMTP (use SMTP_USERNAME/SMTP_PASSWORD)"
+      "description": "Configure Postfix to relay outbound mail via SES SMTP (auto-fetches credentials from SSM by default, set AUTO_FETCH=0 to disable)"
     },
     "admin:users:list": {
       "executor": "nx:run-commands",
