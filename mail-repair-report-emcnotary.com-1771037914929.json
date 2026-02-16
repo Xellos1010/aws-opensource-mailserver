@@ -1,0 +1,56 @@
+{
+  "timestamp": "2026-02-14T02:58:34.929Z",
+  "domain": "emcnotary.com",
+  "instanceId": "i-0239dde3de6782b2e",
+  "userEmail": "certifiedlsa@emcnotary.com",
+  "dryRun": false,
+  "results": [
+    {
+      "step": "Fix mailbox permissions",
+      "status": "success",
+      "message": "Permissions already correct"
+    },
+    {
+      "step": "Recompile sieve scripts",
+      "status": "skipped",
+      "message": "No sieve scripts found"
+    },
+    {
+      "step": "Resync mailbox (certifiedlsa@emcnotary.com)",
+      "status": "success",
+      "message": "Mailbox indexes rebuilt",
+      "output": "RESYNC_DONE\n"
+    },
+    {
+      "step": "Restart dovecot",
+      "status": "success",
+      "message": "Service restarted"
+    },
+    {
+      "step": "Restart postfix",
+      "status": "success",
+      "message": "Service restarted"
+    },
+    {
+      "step": "IMAP auth test",
+      "status": "skipped",
+      "message": "No admin password available"
+    },
+    {
+      "step": "Check mail queue",
+      "status": "success",
+      "message": "3 messages queued",
+      "output": "-Queue ID-  --Size-- ----Arrival Time---- -Sender/Recipient-------\nE03057E007    74051 Fri Feb 13 06:47:08  admin@emcnotary.com\n (connect to alt1.aspmx.l.google.com[108.177.123.27]:25: Connection timed out)\n                                         support@snapdocs.com\n\n0E3CE7E0D7    88820 Fri Feb 13 07:33:15  admin@emcnotary.com\n(connect to alt2.aspmx.l.google.com[2a00:1450:400b:c02::1b]:25: Network is unreachable)\n                                         support@snapdocs.com\n\n271B67E0DF    71264 Fri Feb 13 20:55:45  CertifiedLSA@emcnotary.com\n(connect to alt2.gmail-smtp-in.l.google.com[2a00:1450:400b:c02::1a]:25: Network is unreachable)\n                                         e.mccallvr@gmail.com\n\n-- 228 Kbytes in 3 Requests."
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "success": 5,
+    "failed": 0,
+    "skipped": 2
+  },
+  "mailFlowTest": {
+    "imapAuth": false,
+    "smtpRelay": true
+  }
+}
