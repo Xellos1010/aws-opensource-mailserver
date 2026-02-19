@@ -814,6 +814,14 @@
       },
       "description": "Clean up disk space on Mail-in-a-Box instance (removes old logs, temp files, apt cache, etc.)"
     },
+    "admin:backup-and-cleanup": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} STACK_NAME=${STACK_NAME} DESTINATION_DIR=${DESTINATION_DIR} JOURNAL_VACUUM_MB=${JOURNAL_VACUUM_MB:-100} SSH_KEY_PATH=${SSH_KEY_PATH} pnpm exec tsx --tsconfig tools/tsconfig.json tools/backup-and-cleanup-mailserver.cli.ts ${DOMAIN:+--domain $DOMAIN} ${STACK_NAME:+--stack-name $STACK_NAME} ${DESTINATION_DIR:+--destination-dir $DESTINATION_DIR} ${JOURNAL_VACUUM_MB:+--journal-vacuum-mb $JOURNAL_VACUUM_MB} ${SSH_KEY_PATH:+--ssh-key-path $SSH_KEY_PATH} ${SKIP_BACKUP:+--skip-backup} ${SKIP_CLEANUP:+--skip-cleanup} ${NO_TAR:+--no-tar} ${DRY_RUN:+--dry-run}"
+      },
+      "description": "Backup all mailboxes locally and clean disk pressure on the instance in one workflow (supports legacy stack via STACK_NAME)"
+    },
     "admin:miab:status-check": {
       "executor": "nx:run-commands",
       "dependsOn": ["^build", "admin-ssh:build", "admin-stack-info:build", "admin:ssh:test", "admin:test:bootstrap-complete"],
