@@ -43,6 +43,15 @@ Comprehensive system recovery without instance reboot.
 
 **Recovery Time:** 30-90 seconds
 
+### DailySystemCleanup
+Scheduled non-critical cleanup task (no reboot, no stop/start).
+
+**Features:**
+- Journald vacuum and apt cache cleanup
+- Temporary and stale log file cleanup
+- Before/after root disk usage logging
+- Safe scheduled maintenance that avoids disruptive restarts
+
 ### StopStartHelperLambda
 Smart instance restart with maintenance window awareness (last resort).
 
@@ -51,7 +60,7 @@ Smart instance restart with maintenance window awareness (last resort).
 - In-progress detection (prevents cascading restarts)
 - Mail health check before restart (skips if healthy)
 - Progressive recovery: service restart → instance restart
-- EventBridge schedule support (daily maintenance)
+- Optional EventBridge schedule support (typically disabled)
 
 **Recovery Time:** 5-10 minutes
 
@@ -112,7 +121,7 @@ const stopStartHelper = new StopStartHelperLambda(this, 'StopStartHelper', {
   domainName: 'emcnotary.com',
   mailHealthCheckLambdaName: mailHealthCheck.lambda.functionName,
   serviceRestartLambdaName: serviceRestart.lambda.functionName,
-  scheduleExpression: 'cron(0 8 * * ? *)', // Daily at 3am EST
+  // scheduleExpression intentionally omitted to keep instance restart as last resort only
 });
 
 const recoveryOrchestrator = new RecoveryOrchestratorLambda(this, 'RecoveryOrchestrator', {
@@ -170,5 +179,3 @@ This library is ported from `Archive/hepefoundation` recovery system, which was 
 - `.cursor/plans/REQUIREMENTS_AUDIT_hepefoundation_recovery_system.md` - Requirements audit
 - `.cursor/plans/IMPLEMENTATION_SUMMARY_hepefoundation_recovery.md` - Implementation summary
 - `Archive/hepefoundation/COMPLETE-RECOVERY-SYSTEM.md` - Original system documentation
-
-

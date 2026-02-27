@@ -1,6 +1,5 @@
 import { Construct } from 'constructs';
 import {
-  Stack,
   Duration,
   aws_cloudwatch as cw,
   aws_cloudwatch_actions as cwa,
@@ -8,7 +7,7 @@ import {
   aws_events as events,
   aws_lambda as lambda,
 } from 'aws-cdk-lib';
-import { createNightlyReboot } from './nightly-reboot';
+import { createDailySystemCleanup } from './daily-system-cleanup';
 import { MailHealthCheckLambda } from './mail-health-check-lambda';
 import { ServiceRestartLambda } from './service-restart-lambda';
 import { SystemResetLambda } from './system-reset-lambda';
@@ -24,7 +23,20 @@ export interface MailserverObservabilityMaintenanceProps {
   instanceDns: string;
   instanceStackName: string;
   alarmsTopicArn: string;
+  /** Daily non-critical cleanup schedule (EventBridge expression). */
+  dailyCleanupScheduleExpression?: string;
+  /** Daily cleanup rule description. */
+  dailyCleanupDescription?: string;
+  /** Optional scheduled stop/start expression. Leave unset to disable scheduled restarts. */
+  stopStartScheduleExpression?: string;
+  /**
+   * @deprecated Replaced by dailyCleanupScheduleExpression.
+   * Legacy six-field cron values are converted to an EventBridge cron expression.
+   */
   nightlyRebootSchedule?: string;
+  /**
+   * @deprecated Replaced by dailyCleanupDescription.
+   */
   nightlyRebootDescription?: string;
   healthCheckScheduleExpression?: string;
   systemStatsScheduleExpression?: string;
@@ -39,7 +51,11 @@ export interface MailserverObservabilityMaintenanceProps {
  */
 export class MailserverObservabilityMaintenance extends Construct {
   public readonly alarmsTopic: sns.ITopic;
+  public readonly dailyCleanupLambda: lambda.Function;
+  public readonly dailyCleanupRule: events.Rule;
+  /** @deprecated Alias retained for compatibility. */
   public readonly nightlyRebootLambda: lambda.Function;
+  /** @deprecated Alias retained for compatibility. */
   public readonly nightlyRebootRule: events.Rule;
   public readonly mailHealthCheck: MailHealthCheckLambda;
   public readonly serviceRestart: ServiceRestartLambda;
@@ -61,6 +77,9 @@ export class MailserverObservabilityMaintenance extends Construct {
       instanceDns,
       instanceStackName,
       alarmsTopicArn,
+      dailyCleanupScheduleExpression,
+      dailyCleanupDescription,
+      stopStartScheduleExpression,
       nightlyRebootSchedule,
       nightlyRebootDescription,
       healthCheckScheduleExpression = 'rate(5 minutes)',
@@ -68,22 +87,28 @@ export class MailserverObservabilityMaintenance extends Construct {
       alarmNamePrefix,
     } = props;
 
-    const stack = Stack.of(this);
     this.alarmsTopic = sns.Topic.fromTopicArn(this, 'AlarmsTopic', alarmsTopicArn);
 
-    const { lambda: rebootLambda, rule: rebootRule } = createNightlyReboot(
+    const cleanupScheduleExpression =
+      dailyCleanupScheduleExpression || (nightlyRebootSchedule ? `cron(${nightlyRebootSchedule})` : undefined);
+    const cleanupDescription =
+      dailyCleanupDescription ||
+      nightlyRebootDescription ||
+      'Daily non-critical cleanup for Mail-in-a-Box instance at 02:30 ET (07:30 UTC)';
+
+    const { lambda: cleanupLambda, rule: cleanupRule } = createDailySystemCleanup(
       this,
-      'NightlyReboot',
+      'DailySystemCleanup',
       {
         instanceId,
-        schedule: nightlyRebootSchedule,
-        description: nightlyRebootDescription,
-        region: stack.region,
-        account: stack.account,
+        scheduleExpression: cleanupScheduleExpression,
+        description: cleanupDescription,
       }
     );
-    this.nightlyRebootLambda = rebootLambda;
-    this.nightlyRebootRule = rebootRule;
+    this.dailyCleanupLambda = cleanupLambda;
+    this.dailyCleanupRule = cleanupRule;
+    this.nightlyRebootLambda = cleanupLambda;
+    this.nightlyRebootRule = cleanupRule;
 
     this.mailHealthCheck = new MailHealthCheckLambda(this, 'MailHealthCheck', {
       instanceId,
@@ -107,7 +132,8 @@ export class MailserverObservabilityMaintenance extends Construct {
       domainName,
       mailHealthCheckLambdaName: this.mailHealthCheck.lambda.functionName,
       serviceRestartLambdaName: this.serviceRestart.lambda.functionName,
-      scheduleExpression: 'cron(0 8 * * ? *)',
+      scheduleExpression: stopStartScheduleExpression,
+      maintenanceWindowEnabled: Boolean(stopStartScheduleExpression),
       maintenanceWindowStartHour: 8,
       maintenanceWindowEndHour: 8.25,
     });

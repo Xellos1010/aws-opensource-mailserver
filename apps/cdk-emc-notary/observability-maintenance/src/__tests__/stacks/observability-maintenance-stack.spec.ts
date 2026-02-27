@@ -31,23 +31,30 @@ describe('MailServerObservabilityMaintenanceStack', () => {
     expect(Object.keys(eventRules).length).toBeGreaterThan(0);
   });
 
-  it('creates memory and swap alarms in CloudWatch', () => {
+  it('creates memory, swap, and proactive health alarms in CloudWatch', () => {
     const alarms = Object.values(template.findResources('AWS::CloudWatch::Alarm', {})) as any[];
 
-    expect(alarms.length).toBeGreaterThan(1);
+    expect(alarms.length).toBeGreaterThan(3);
     expect(alarms.some((a) => JSON.stringify(a.Properties?.AlarmName).includes('MemHigh-'))).toBe(true);
     expect(alarms.some((a) => JSON.stringify(a.Properties?.AlarmName).includes('SwapHigh-'))).toBe(true);
+    expect(alarms.some((a) => JSON.stringify(a.Properties?.AlarmName).includes('AdminEndpointUnhealthy-'))).toBe(true);
+    expect(alarms.some((a) => JSON.stringify(a.Properties?.AlarmName).includes('DiskUsageCritical-'))).toBe(true);
+    expect(alarms.some((a) => JSON.stringify(a.Properties?.AlarmName).includes('MailPrimaryUnhealthy-'))).toBe(true);
   });
 
-  it('creates a nightly reboot EventBridge schedule in observability stack', () => {
+  it('creates a daily non-critical cleanup schedule and disables scheduled stop-start', () => {
     const rules = Object.values(template.findResources('AWS::Events::Rule', {})) as any[];
 
-    const rebootRule = rules.find((rule) =>
-      String(rule.Properties?.Description || '').includes('Daily reboot')
+    const cleanupRule = rules.find((rule) =>
+      String(rule.Properties?.Description || '').includes('non-critical cleanup')
+    );
+    const stopStartRule = rules.find((rule) =>
+      String(rule.Properties?.Description || '').includes('stop-and-start')
     );
 
-    expect(rebootRule).toBeDefined();
-    expect(String(rebootRule?.Properties?.ScheduleExpression || '')).toContain('cron(');
+    expect(cleanupRule).toBeDefined();
+    expect(String(cleanupRule?.Properties?.ScheduleExpression || '')).toContain('cron(');
+    expect(stopStartRule).toBeUndefined();
   });
 
   it('exports observability outputs required by admin tooling', () => {
@@ -63,6 +70,7 @@ describe('MailServerObservabilityMaintenanceStack', () => {
       'RecoverySystemEnabled',
       'SystemStatsLambdaArn',
       'ExternalMonitoringEnabled',
+      'DailyCleanupSchedule',
       'NightlyRebootSchedule',
     ];
 

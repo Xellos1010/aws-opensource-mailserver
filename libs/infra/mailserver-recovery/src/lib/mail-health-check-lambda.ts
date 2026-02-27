@@ -67,6 +67,7 @@ export class MailHealthCheckLambda extends Construct {
           'ssm:GetCommandInvocation',
           'ssm:DescribeInstanceInformation',
           'ec2:DescribeInstances',
+          'cloudwatch:PutMetricData',
         ],
         resources: ['*'],
       })
@@ -99,9 +100,26 @@ import boto3
 import json
 import time
 import os
+from datetime import datetime
 
 ssm = boto3.client('ssm')
-ec2 = boto3.client('ec2')
+cloudwatch = boto3.client('cloudwatch')
+
+METRICS_NAMESPACE = 'MailServer/Health'
+ADMIN_TIMEOUT_SECONDS = 10
+DISK_CRITICAL_PERCENT = 95
+
+def parse_admin_healthy(raw_status):
+    if raw_status in ['timeout', '', None]:
+        return False
+
+    try:
+        status_code = int(raw_status)
+    except (TypeError, ValueError):
+        return False
+
+    # 2xx/3xx and auth challenge responses mean admin responded.
+    return 200 <= status_code < 500
 
 def check_mail_services(instance_id):
     """
@@ -129,7 +147,9 @@ def check_mail_services(instance_id):
         'postfix': 'systemctl is-active postfix',
         'dovecot': 'systemctl is-active dovecot',
         'mailbox_root_permissions': mailbox_permission_cmd,
-        'mail_queue': 'mailq | head -1 || echo "empty"'
+        'mail_queue': 'mailq | head -1 || echo "empty"',
+        'admin_endpoint': f'curl -sk --max-time {ADMIN_TIMEOUT_SECONDS} -o /dev/null -w "%{{http_code}}" https://127.0.0.1/admin || echo timeout',
+        'disk_usage_percent': "df / | awk 'NR==2{gsub(/%/, \\"\\", $5); print $5}'"
     }
     
     # Secondary checks - port connectivity (informational, non-blocking)
@@ -143,8 +163,14 @@ def check_mail_services(instance_id):
     results = {
         'primary': {},
         'ports': {},
+        'metrics': {
+            'admin_endpoint_healthy': 0,
+            'disk_usage_percent': 100,
+            'mail_primary_healthy': 0,
+        },
         'healthy': False,
-        'health_reason': ''
+        'health_reason': '',
+        'timestamp': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
     }
     
     # Check primary services (these determine health)
@@ -196,6 +222,30 @@ def check_mail_services(instance_id):
                 }
                 if not permission_ok:
                     all_primary_healthy = False
+            elif service == 'admin_endpoint':
+                admin_healthy = parse_admin_healthy(stdout)
+                results['primary'][service] = {
+                    'status': 'healthy' if admin_healthy else 'unhealthy',
+                    'raw': stdout,
+                    'timeout_seconds': ADMIN_TIMEOUT_SECONDS
+                }
+                results['metrics']['admin_endpoint_healthy'] = 1 if admin_healthy else 0
+                if not admin_healthy:
+                    all_primary_healthy = False
+            elif service == 'disk_usage_percent':
+                try:
+                    disk_percent = int(stdout)
+                except (TypeError, ValueError):
+                    disk_percent = 100
+                disk_ok = disk_percent < DISK_CRITICAL_PERCENT
+                results['primary'][service] = {
+                    'status': 'ok' if disk_ok else 'critical',
+                    'usage_percent': disk_percent,
+                    'raw': stdout
+                }
+                results['metrics']['disk_usage_percent'] = disk_percent
+                if not disk_ok:
+                    all_primary_healthy = False
             else:  # mail_queue
                 results['primary'][service] = {
                     'status': 'ok' if stdout and stdout != 'empty' else 'empty',
@@ -208,7 +258,7 @@ def check_mail_services(instance_id):
                 'status': 'error',
                 'error': str(e)
             }
-            if service in ['postfix', 'dovecot', 'mailbox_root_permissions']:
+            if service in ['postfix', 'dovecot', 'mailbox_root_permissions', 'admin_endpoint', 'disk_usage_percent']:
                 all_primary_healthy = False
     
     # Check ports (informational only - don't affect health status)
@@ -246,8 +296,9 @@ def check_mail_services(instance_id):
     
     # Determine overall health based on primary checks only
     results['healthy'] = all_primary_healthy
+    results['metrics']['mail_primary_healthy'] = 1 if all_primary_healthy else 0
     if all_primary_healthy:
-        results['health_reason'] = 'All primary checks passed (postfix, dovecot, mailbox_root_permissions)'
+        results['health_reason'] = 'All primary checks passed (postfix, dovecot, mailbox_root_permissions, admin_endpoint, disk_usage)'
     else:
         unhealthy_checks = []
         for check_name, check_result in results['primary'].items():
@@ -256,12 +307,48 @@ def check_mail_services(instance_id):
                 unhealthy_checks.append(check_name)
             if check_name == 'mailbox_root_permissions' and status != 'ok':
                 unhealthy_checks.append(f"{check_name}={check_result.get('raw', 'unknown')}")
+            if check_name == 'admin_endpoint' and status != 'healthy':
+                unhealthy_checks.append(f"{check_name}={check_result.get('raw', 'unknown')}")
+            if check_name == 'disk_usage_percent' and status != 'ok':
+                unhealthy_checks.append(f"{check_name}={check_result.get('usage_percent', 'unknown')}%")
         results['health_reason'] = f'Primary checks failing: {", ".join(unhealthy_checks)}'
     
     return results
 
+def publish_metrics(instance_id, domain_name, health):
+    metric_data = [
+        {
+            'MetricName': 'AdminEndpointHealthy',
+            'Value': health['metrics']['admin_endpoint_healthy'],
+            'Unit': 'Count',
+        },
+        {
+            'MetricName': 'DiskUsagePercent',
+            'Value': health['metrics']['disk_usage_percent'],
+            'Unit': 'Percent',
+        },
+        {
+            'MetricName': 'MailPrimaryHealthy',
+            'Value': health['metrics']['mail_primary_healthy'],
+            'Unit': 'Count',
+        },
+    ]
+
+    dimensions = [
+        {'Name': 'InstanceId', 'Value': instance_id},
+        {'Name': 'Domain', 'Value': domain_name},
+    ]
+    for item in metric_data:
+        item['Dimensions'] = dimensions
+
+    cloudwatch.put_metric_data(
+        Namespace=METRICS_NAMESPACE,
+        MetricData=metric_data
+    )
+
 def handler(event, context):
     instance_id = os.environ.get('INSTANCE_ID')
+    domain_name = os.environ.get('DOMAIN_NAME', 'unknown')
     
     if not instance_id:
         return {
@@ -275,6 +362,7 @@ def handler(event, context):
     try:
         print(f"Checking mail service health for instance {instance_id}")
         health = check_mail_services(instance_id)
+        publish_metrics(instance_id, domain_name, health)
         
         print(f"Health check result: {health['healthy']} - {health['health_reason']}")
         

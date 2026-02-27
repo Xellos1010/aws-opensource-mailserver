@@ -5,7 +5,7 @@ automation for the EMC Notary mailserver instance.
 
 ## Scope
 
-- Nightly reboot automation
+- Daily non-critical system cleanup automation (no scheduled reboot)
 - Recovery lambda chain (health check, system reset, service restart, orchestrator, stop/start)
 - CloudWatch and Route53 health alarms
 - External health monitoring
@@ -46,3 +46,7 @@ pnpm nx run cdk-emcnotary-observability-maintenance:admin:disk:monitor
 pnpm nx run cdk-emcnotary-observability-maintenance:admin:cleanup:disk-space
 pnpm nx run cdk-emcnotary-observability-maintenance:admin:backup-and-cleanup
 ```
+
+Runbooks:
+
+- `apps/cdk-emc-notary/observability-maintenance/docs/runbooks/README.md`

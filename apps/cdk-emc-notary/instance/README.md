@@ -135,7 +135,7 @@ pnpm nx run cdk-emcnotary-instance:destroy
 
 The core stack remains intact and can be reused for a new instance deployment.
 
-Nightly reboot and recovery automation are now managed by
+Daily cleanup and recovery automation are now managed by
 `cdk-emcnotary-observability-maintenance`, not by the instance stack.
 
 ## Bootstrap

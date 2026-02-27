@@ -7,7 +7,7 @@ The instance app now owns **launch-time infrastructure only**:
 - bootstrap/user-data placeholders
 - SSM metadata publication for downstream stacks
 
-Observability and maintenance automation (nightly reboot, recovery lambdas, EventBridge schedules, emergency alarms) is owned by:
+Observability and maintenance automation (daily cleanup, recovery lambdas, EventBridge schedules, emergency alarms) is owned by:
 - `apps/cdk-emc-notary/observability-maintenance`
 
 ## Test Structure

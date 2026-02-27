@@ -26,6 +26,8 @@ export interface StopStartHelperLambdaProps {
   maintenanceWindowStartHour?: number;
   /** Maintenance window end hour (UTC, default: 8.25) */
   maintenanceWindowEndHour?: number;
+  /** Whether maintenance window suppression is enabled (default: true when scheduleExpression is set) */
+  maintenanceWindowEnabled?: boolean;
   /** Timeout in seconds (default: 900 = 15 minutes) */
   timeout?: Duration;
   /** Memory size in MB (default: 256) */
@@ -59,6 +61,7 @@ export class StopStartHelperLambda extends Construct {
       scheduleExpression,
       maintenanceWindowStartHour = 8,
       maintenanceWindowEndHour = 8.25,
+      maintenanceWindowEnabled = Boolean(scheduleExpression),
       timeout = Duration.minutes(15),
       memorySize = 256,
     } = props;
@@ -253,6 +256,10 @@ async function stopAndStart(id) {
 
 // Smart restart logic
 function isMaintenanceWindow() {
+  const enabled = (process.env.MAINTENANCE_WINDOW_ENABLED || 'true') === 'true';
+  if (!enabled) {
+    return false;
+  }
   const now = new Date();
   const utcHour = now.getUTCHours();
   const utcMinute = now.getUTCMinutes();
@@ -488,6 +495,7 @@ exports.handler = async (event) => {
         SERVICE_RESTART_LAMBDA_NAME: serviceRestartLambdaName || '',
         MAINTENANCE_WINDOW_START_HOUR: maintenanceWindowStartHour.toString(),
         MAINTENANCE_WINDOW_END_HOUR: maintenanceWindowEndHour.toString(),
+        MAINTENANCE_WINDOW_ENABLED: maintenanceWindowEnabled ? 'true' : 'false',
       },
     });
 
@@ -512,4 +520,3 @@ exports.handler = async (event) => {
     // by LambdaAction when alarms are wired to it. No manual permission needed here.
   }
 }
-

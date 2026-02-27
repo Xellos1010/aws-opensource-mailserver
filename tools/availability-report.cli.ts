@@ -643,7 +643,7 @@ async function generateAvailabilityReport(options: AvailabilityReportOptions): P
     console.log('   - Check service logs for errors');
     console.log('   - Verify network connectivity');
     if (report.diskUsage && report.diskUsage.status !== 'ok') {
-      console.log('   - Address disk space issues: pnpm nx run cdk-k3frame-instance:admin:cleanup:disk-space');
+      console.log('   - Address disk space issues: pnpm nx run cdk-emcnotary-observability-maintenance:admin:cleanup:disk-space');
     }
   } else {
     console.log('   - Instance is healthy and online');
@@ -714,4 +714,3 @@ Examples:
 }
 
 export { generateAvailabilityReport };
-

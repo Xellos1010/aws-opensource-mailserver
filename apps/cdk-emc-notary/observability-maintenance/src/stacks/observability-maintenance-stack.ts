@@ -109,9 +109,14 @@ export class MailServerObservabilityMaintenanceStack extends Stack {
       description: 'External monitoring enabled state',
     });
 
+    new CfnOutput(this, 'DailyCleanupSchedule', {
+      value: '02:30 ET (07:30 UTC) daily',
+      description: 'Schedule for non-critical daily system cleanup on Mail-in-a-Box instance',
+    });
+
     new CfnOutput(this, 'NightlyRebootSchedule', {
-      value: '03:00 ET (08:00 UTC) daily',
-      description: 'Schedule for automatic nightly reboot of Mail-in-a-Box instance',
+      value: 'disabled (replaced by DailyCleanupSchedule)',
+      description: 'Deprecated output retained for compatibility; nightly reboot is disabled',
     });
   }
 }

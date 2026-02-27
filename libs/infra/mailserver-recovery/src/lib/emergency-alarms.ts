@@ -2,7 +2,6 @@ import { Construct } from 'constructs';
 import {
   Stack,
   aws_cloudwatch as cw,
-  aws_cloudwatch_actions as cwa,
   aws_sns as sns,
   aws_lambda as lambda,
   aws_logs as logs,
@@ -26,6 +25,16 @@ export interface EmergencyAlarmsProps {
   logRetentionDays?: number;
   /** Optional prefix to keep alarm names unique across split stacks */
   alarmNamePrefix?: string;
+  /** Enable alarms from MailServer/Health custom metrics */
+  enableProactiveHealthAlarms?: boolean;
+  /** Namespace for proactive health metrics */
+  healthMetricsNamespace?: string;
+  /** Admin endpoint healthy threshold (0/1 metric) */
+  adminEndpointHealthyThreshold?: number;
+  /** Root disk usage critical threshold (percent) */
+  diskUsageCriticalPercent?: number;
+  /** Primary health threshold (0/1 metric) */
+  mailPrimaryHealthyThreshold?: number;
 }
 
 /**
@@ -43,6 +52,9 @@ export class EmergencyAlarms extends Construct {
   public readonly systemStatusAlarm: cw.Alarm;
   public readonly oomKillAlarm: cw.Alarm;
   public readonly mailboxPermissionAlarm: cw.Alarm;
+  public readonly adminEndpointAlarm?: cw.Alarm;
+  public readonly diskUsageCriticalAlarm?: cw.Alarm;
+  public readonly mailPrimaryUnhealthyAlarm?: cw.Alarm;
   public readonly syslogLogGroup: logs.LogGroup;
 
   constructor(scope: Construct, id: string, props: EmergencyAlarmsProps) {
@@ -56,6 +68,11 @@ export class EmergencyAlarms extends Construct {
       syslogLogGroupName: providedSyslogLogGroupName,
       logRetentionDays = 7,
       alarmNamePrefix,
+      enableProactiveHealthAlarms = true,
+      healthMetricsNamespace = 'MailServer/Health',
+      adminEndpointHealthyThreshold = 1,
+      diskUsageCriticalPercent = 92,
+      mailPrimaryHealthyThreshold = 1,
     } = props;
 
     const alarmPrefix = alarmNamePrefix ? `${alarmNamePrefix}-` : '';
@@ -123,7 +140,7 @@ export class EmergencyAlarms extends Construct {
     this.instanceStatusAlarm = new cw.Alarm(this, 'InstanceStatusCheckAlarm', {
       alarmName: `${alarmPrefix}InstanceStatusCheck-${instanceId}`,
       alarmDescription:
-        'Alerts when EC2 instance status check fails (instance-level issues). Triggers automatic restart via recovery orchestrator.',
+        'Alerts when EC2 instance status check fails (instance-level issues). Triggers automatic progressive recovery via orchestrator.',
       metric: new cw.Metric({
         namespace: 'AWS/EC2',
         metricName: 'StatusCheckFailed_Instance',
@@ -147,7 +164,7 @@ export class EmergencyAlarms extends Construct {
     this.systemStatusAlarm = new cw.Alarm(this, 'SystemStatusCheckAlarm', {
       alarmName: `${alarmPrefix}SystemStatusCheck-${instanceId}`,
       alarmDescription:
-        'Alerts when EC2 system status check fails (AWS infrastructure issues). Triggers automatic restart via recovery orchestrator.',
+        'Alerts when EC2 system status check fails (AWS infrastructure issues). Triggers automatic progressive recovery via orchestrator.',
       metric: new cw.Metric({
         namespace: 'AWS/EC2',
         metricName: 'StatusCheckFailed_System',
@@ -171,7 +188,7 @@ export class EmergencyAlarms extends Construct {
     this.oomKillAlarm = new cw.Alarm(this, 'OOMKillAlarm', {
       alarmName: `${alarmPrefix}OOMKillDetected-${instanceId}`,
       alarmDescription:
-        'Alerts when Out-of-Memory killer terminates processes. Triggers automatic restart via recovery orchestrator.',
+        'Alerts when Out-of-Memory killer terminates processes. Triggers automatic progressive recovery via orchestrator.',
       metric: new cw.Metric({
         namespace: 'EC2',
         metricName: 'oom_kills',
@@ -207,5 +224,77 @@ export class EmergencyAlarms extends Construct {
 
     const mailboxPermissionCfn = this.mailboxPermissionAlarm.node.defaultChild as cw.CfnAlarm;
     mailboxPermissionCfn.addPropertyOverride('AlarmActions', alarmActions);
+
+    if (enableProactiveHealthAlarms) {
+      this.adminEndpointAlarm = new cw.Alarm(this, 'AdminEndpointUnhealthyAlarm', {
+        alarmName: `${alarmPrefix}AdminEndpointUnhealthy-${instanceId}`,
+        alarmDescription:
+          'Alerts when local /admin endpoint health degrades and triggers progressive non-reboot recovery.',
+        metric: new cw.Metric({
+          namespace: healthMetricsNamespace,
+          metricName: 'AdminEndpointHealthy',
+          dimensionsMap: {
+            InstanceId: instanceId,
+            Domain: domainName,
+          },
+          period: Duration.minutes(1),
+          statistic: 'Minimum',
+        }),
+        threshold: adminEndpointHealthyThreshold,
+        evaluationPeriods: 3,
+        comparisonOperator: cw.ComparisonOperator.LESS_THAN_THRESHOLD,
+        treatMissingData: cw.TreatMissingData.BREACHING,
+      });
+      const adminEndpointCfn = this.adminEndpointAlarm.node.defaultChild as cw.CfnAlarm;
+      adminEndpointCfn.addPropertyOverride('AlarmActions', alarmActions);
+    }
+
+    if (enableProactiveHealthAlarms) {
+      this.diskUsageCriticalAlarm = new cw.Alarm(this, 'DiskUsageCriticalAlarm', {
+        alarmName: `${alarmPrefix}DiskUsageCritical-${instanceId}`,
+        alarmDescription:
+          'Alerts when root disk usage exceeds critical threshold and triggers progressive non-reboot recovery.',
+        metric: new cw.Metric({
+          namespace: healthMetricsNamespace,
+          metricName: 'DiskUsagePercent',
+          dimensionsMap: {
+            InstanceId: instanceId,
+            Domain: domainName,
+          },
+          period: Duration.minutes(1),
+          statistic: 'Maximum',
+        }),
+        threshold: diskUsageCriticalPercent,
+        evaluationPeriods: 3,
+        comparisonOperator: cw.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: cw.TreatMissingData.NOT_BREACHING,
+      });
+      const diskUsageCfn = this.diskUsageCriticalAlarm.node.defaultChild as cw.CfnAlarm;
+      diskUsageCfn.addPropertyOverride('AlarmActions', alarmActions);
+    }
+
+    if (enableProactiveHealthAlarms) {
+      this.mailPrimaryUnhealthyAlarm = new cw.Alarm(this, 'MailPrimaryUnhealthyAlarm', {
+        alarmName: `${alarmPrefix}MailPrimaryUnhealthy-${instanceId}`,
+        alarmDescription:
+          'Alerts when primary mail health checks fail and triggers progressive non-reboot recovery.',
+        metric: new cw.Metric({
+          namespace: healthMetricsNamespace,
+          metricName: 'MailPrimaryHealthy',
+          dimensionsMap: {
+            InstanceId: instanceId,
+            Domain: domainName,
+          },
+          period: Duration.minutes(1),
+          statistic: 'Minimum',
+        }),
+        threshold: mailPrimaryHealthyThreshold,
+        evaluationPeriods: 2,
+        comparisonOperator: cw.ComparisonOperator.LESS_THAN_THRESHOLD,
+        treatMissingData: cw.TreatMissingData.BREACHING,
+      });
+      const mailPrimaryCfn = this.mailPrimaryUnhealthyAlarm.node.defaultChild as cw.CfnAlarm;
+      mailPrimaryCfn.addPropertyOverride('AlarmActions', alarmActions);
+    }
   }
 }
