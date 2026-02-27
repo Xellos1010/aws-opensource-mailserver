@@ -63,6 +63,32 @@ async function getStackOutput(
 }
 
 /**
+ * Returns the first matching stack output from a list of candidate keys.
+ */
+async function getFirstStackOutput(
+  stackName: string,
+  outputKeys: string[],
+  region: string,
+  profile: string
+): Promise<{ key: string; value: string }> {
+  let lastError: Error | undefined;
+
+  for (const outputKey of outputKeys) {
+    try {
+      const value = await getStackOutput(stackName, outputKey, region, profile);
+      return { key: outputKey, value };
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
+  }
+
+  throw new Error(
+    `Could not find any of [${outputKeys.join(', ')}] in stack ${stackName}. ` +
+      `Last error: ${lastError?.message || 'unknown'}`
+  );
+}
+
+/**
  * Normalizes DNS value for Mail-in-a-Box API
  */
 function normalizeValue(value: string, rtype: string): string {
@@ -225,7 +251,7 @@ async function syncDns(options: SyncDnsOptions): Promise<void> {
 
   console.log('🌐 Sync React DNS Records');
   console.log(`   Domain: ${resolvedDomain}`);
-  console.log(`   React Stack: ${options.stackName || process.env.STACK_NAME || 'emcnotary-react-webserver'}`);
+  console.log(`   React Stack: ${options.stackName || process.env.STACK_NAME || 'emc-notary-web'}`);
   console.log(`   Backup File: ${backupFile}`);
   console.log(`   Region: ${region}`);
   console.log(`   Profile: ${profile}`);
@@ -234,47 +260,29 @@ async function syncDns(options: SyncDnsOptions): Promise<void> {
   try {
     // Step 1: Get Elastic IP from React webserver CloudFormation stack
     console.log('📋 Step 1: Getting Elastic IP from React webserver stack...');
-    const reactStackName = options.stackName || process.env.STACK_NAME || 'emcnotary-react-webserver';
-    let elasticIp: string;
-    try {
-      // Try ElasticIPAddress first (if using Elastic IP)
-      elasticIp = await getStackOutput(reactStackName, 'ElasticIPAddress', region, profile);
-    } catch (error) {
-      // Fallback to PublicIpAddress if ElasticIPAddress doesn't exist
-      try {
-        elasticIp = await getStackOutput(reactStackName, 'PublicIpAddress', region, profile);
-      } catch (fallbackError) {
-        throw new Error(
-          `Could not find ElasticIPAddress or PublicIpAddress in stack ${reactStackName}. ` +
-          `Error: ${error instanceof Error ? error.message : String(error)}`
-        );
-      }
-    }
-    console.log(`✅ Found React webserver IP: ${elasticIp}\n`);
+    const reactStackName = options.stackName || process.env.STACK_NAME || 'emc-notary-web';
+    const reactIpOutput = await getFirstStackOutput(
+      reactStackName,
+      ['ElasticIPAddress', 'ElasticIpOutput', 'PublicIpAddress', 'PublicIp'],
+      region,
+      profile
+    );
+    const elasticIp = reactIpOutput.value;
+    console.log(`✅ Found React webserver IP: ${elasticIp} (output: ${reactIpOutput.key})\n`);
 
     // Step 2: Get Mail-in-a-Box instance IP for API calls
     console.log('📋 Step 2: Getting Mail-in-a-Box instance IP...');
     const instanceStackName = resolveStackName(domain, appPath, undefined, 'instance');
-    let instanceIp: string;
-    try {
-      // Try various output keys that might contain the instance IP
-      instanceIp = await getStackOutput(instanceStackName, 'InstancePublicIp', region, profile);
-    } catch (error) {
-      try {
-        instanceIp = await getStackOutput(instanceStackName, 'PublicIp', region, profile);
-      } catch (fallbackError1) {
-        try {
-          instanceIp = await getStackOutput(instanceStackName, 'ElasticIPAddress', region, profile);
-        } catch (fallbackError2) {
-          throw new Error(
-            `Could not find instance IP in stack ${instanceStackName}. ` +
-            `Tried: InstancePublicIp, PublicIp, ElasticIPAddress. ` +
-            `Error: ${error instanceof Error ? error.message : String(error)}`
-          );
-        }
-      }
-    }
-    console.log(`✅ Found Mail-in-a-Box instance IP: ${instanceIp}\n`);
+    const instanceIpOutput = await getFirstStackOutput(
+      instanceStackName,
+      ['InstancePublicIp', 'InstancePublicIpAddress', 'PublicIp', 'ElasticIPAddress', 'InstancePublicIpOutput'],
+      region,
+      profile
+    );
+    const instanceIp = instanceIpOutput.value;
+    console.log(
+      `✅ Found Mail-in-a-Box instance IP: ${instanceIp} (output: ${instanceIpOutput.key})\n`
+    );
 
     // Step 3: Read backup file
     console.log('📋 Step 3: Reading DNS backup file...');
@@ -535,4 +543,3 @@ if (require.main === module) {
     process.exit(1);
   });
 }
-

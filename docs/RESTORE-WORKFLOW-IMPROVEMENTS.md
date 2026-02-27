@@ -23,10 +23,10 @@ Automatically cleans up disk space before restore operations:
 **Usage**:
 ```bash
 # Cleanup disk space
-pnpm nx run cdk-emcnotary-instance:admin:cleanup:disk-space
+pnpm nx run cdk-emcnotary-observability-maintenance:admin:cleanup:disk-space
 
 # Dry run
-DRY_RUN=1 pnpm nx run cdk-emcnotary-instance:admin:cleanup:disk-space
+DRY_RUN=1 pnpm nx run cdk-emcnotary-observability-maintenance:admin:cleanup:disk-space
 ```
 
 ### 2. Stack Creation Polling
@@ -139,7 +139,7 @@ SKIP_DEPLOY=1 pnpm nx run cdk-emcnotary-instance:admin:restore:emcnotary
 ### Cleanup Disk Space Only
 
 ```bash
-pnpm nx run cdk-emcnotary-instance:admin:cleanup:disk-space
+pnpm nx run cdk-emcnotary-observability-maintenance:admin:cleanup:disk-space
 ```
 
 ### Dry Run (Preview Changes)
@@ -187,7 +187,7 @@ DRY_RUN=1 pnpm nx run cdk-emcnotary-instance:admin:restore:emcnotary
 
 1. Run cleanup script:
    ```bash
-   pnpm nx run cdk-emcnotary-instance:admin:cleanup:disk-space
+   pnpm nx run cdk-emcnotary-observability-maintenance:admin:cleanup:disk-space
    ```
 
 2. Check disk usage manually:
@@ -215,7 +215,7 @@ DRY_RUN=1 pnpm nx run cdk-emcnotary-instance:admin:restore:emcnotary
 
 ## Related Commands
 
-- `pnpm nx run cdk-emcnotary-instance:admin:cleanup:disk-space` - Clean disk space
+- `pnpm nx run cdk-emcnotary-observability-maintenance:admin:cleanup:disk-space` - Clean disk space
 - `pnpm nx run cdk-emcnotary-instance:admin:restore:emcnotary` - Full restore
 - `pnpm nx run cdk-emcnotary-instance:admin:test:e2e` - E2E tests only
 - `pnpm nx run cdk-emcnotary-instance:admin:restore:users-and-mailboxes` - Users + mailboxes only

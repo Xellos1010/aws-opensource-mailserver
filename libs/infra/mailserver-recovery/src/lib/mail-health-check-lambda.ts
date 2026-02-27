@@ -51,7 +51,6 @@ export class MailHealthCheckLambda extends Construct {
     // IAM Role - Use construct ID for naming (domainName is a token from SSM)
     const stack = Stack.of(this);
     const role = new iam.Role(this, 'Role', {
-      roleName: `MailHealthCheckLambda-${stack.stackName}`,
       description: 'Role for mail service health check Lambda',
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [
@@ -86,14 +85,12 @@ export class MailHealthCheckLambda extends Construct {
 
     // CloudWatch Log Group
     const logGroup = new logs.LogGroup(this, 'LogGroup', {
-      logGroupName: `/aws/lambda/mail-health-check-${stack.stackName}`,
       retention: logs.RetentionDays.ONE_MONTH,
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
     // Lambda Function
     this.lambda = new lambda.Function(this, 'Function', {
-      functionName: `mail-health-check-${stack.stackName}`,
       description: 'Checks mail service health (postfix/dovecot) via SSM - port checks are informational only',
       runtime: lambda.Runtime.PYTHON_3_11,
       handler: 'index.handler',
@@ -113,10 +110,25 @@ def check_mail_services(instance_id):
     Secondary checks: port connectivity (informational only - AWS may restrict port 25)
     """
     
+    domain_name = os.environ.get('DOMAIN_NAME', '')
+    mailbox_permission_cmd = (
+        f'DOMAIN_NAME="{domain_name}"; '
+        'ROOT="/home/user-data/mail/mailboxes/$DOMAIN_NAME"; '
+        'if [ -z "$DOMAIN_NAME" ]; then echo "skip"; '
+        'elif [ ! -d "$ROOT" ]; then echo "missing"; '
+        'else '
+        'OWN=$(stat -c "%U:%G" "$ROOT" 2>/dev/null || echo unknown); '
+        'PERM=$(stat -c "%a" "$ROOT" 2>/dev/null || echo 000); '
+        'if [ "$OWN" = "mail:mail" ] && [ "$PERM" = "755" ]; then echo "ok"; '
+        'else echo "bad:$OWN:$PERM"; fi; '
+        'fi'
+    )
+
     # Primary health checks - service status (these determine health)
     primary_checks = {
         'postfix': 'systemctl is-active postfix',
         'dovecot': 'systemctl is-active dovecot',
+        'mailbox_root_permissions': mailbox_permission_cmd,
         'mail_queue': 'mailq | head -1 || echo "empty"'
     }
     
@@ -176,6 +188,14 @@ def check_mail_services(instance_id):
                 }
                 if not is_active:
                     all_primary_healthy = False
+            elif service == 'mailbox_root_permissions':
+                permission_ok = stdout in ['ok', 'skip']
+                results['primary'][service] = {
+                    'status': 'ok' if permission_ok else 'error',
+                    'raw': stdout
+                }
+                if not permission_ok:
+                    all_primary_healthy = False
             else:  # mail_queue
                 results['primary'][service] = {
                     'status': 'ok' if stdout and stdout != 'empty' else 'empty',
@@ -188,7 +208,7 @@ def check_mail_services(instance_id):
                 'status': 'error',
                 'error': str(e)
             }
-            if service in ['postfix', 'dovecot']:
+            if service in ['postfix', 'dovecot', 'mailbox_root_permissions']:
                 all_primary_healthy = False
     
     # Check ports (informational only - don't affect health status)
@@ -227,11 +247,16 @@ def check_mail_services(instance_id):
     # Determine overall health based on primary checks only
     results['healthy'] = all_primary_healthy
     if all_primary_healthy:
-        results['health_reason'] = 'All primary services (postfix, dovecot) are active'
+        results['health_reason'] = 'All primary checks passed (postfix, dovecot, mailbox_root_permissions)'
     else:
-        inactive = [s for s, v in results['primary'].items() 
-                   if s in ['postfix', 'dovecot'] and v.get('status') != 'active']
-        results['health_reason'] = f'Services inactive: {", ".join(inactive)}'
+        unhealthy_checks = []
+        for check_name, check_result in results['primary'].items():
+            status = check_result.get('status')
+            if check_name in ['postfix', 'dovecot'] and status != 'active':
+                unhealthy_checks.append(check_name)
+            if check_name == 'mailbox_root_permissions' and status != 'ok':
+                unhealthy_checks.append(f"{check_name}={check_result.get('raw', 'unknown')}")
+        results['health_reason'] = f'Primary checks failing: {", ".join(unhealthy_checks)}'
     
     return results
 
@@ -274,6 +299,7 @@ def handler(event, context):
       logGroup,
       environment: {
         INSTANCE_ID: instanceId,
+        DOMAIN_NAME: domainName,
       },
     });
 
@@ -302,4 +328,3 @@ def handler(event, context):
     }
   }
 }
-

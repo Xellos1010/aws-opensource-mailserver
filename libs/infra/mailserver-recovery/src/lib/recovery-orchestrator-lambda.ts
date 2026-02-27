@@ -46,14 +46,13 @@ export class RecoveryOrchestratorLambda extends Construct {
       serviceRestartLambdaArn,
       stopStartLambdaArn,
       domainName,
-      timeout = Duration.minutes(5),
+      timeout = Duration.minutes(8),
       memorySize = 512,
     } = props;
 
     // IAM Role - Use stack name for naming (domainName is a token from SSM)
     const stack = Stack.of(this);
     const role = new iam.Role(this, 'Role', {
-      roleName: `MailRecovery-${stack.stackName}`,
       description: 'Role for mail recovery orchestrator Lambda',
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [
@@ -88,14 +87,12 @@ export class RecoveryOrchestratorLambda extends Construct {
 
     // CloudWatch Log Group
     const logGroup = new logs.LogGroup(this, 'LogGroup', {
-      logGroupName: `/aws/lambda/mail-recovery-orchestrator-${stack.stackName}`,
       retention: logs.RetentionDays.ONE_MONTH,
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
     // Lambda Function
     this.lambda = new lambda.Function(this, 'Function', {
-      functionName: `mail-recovery-orchestrator-${stack.stackName}`,
       description: 'Orchestrates mail service recovery - checks health, restarts services, then instance if needed',
       runtime: lambda.Runtime.PYTHON_3_11,
       handler: 'index.handler',
@@ -103,6 +100,7 @@ export class RecoveryOrchestratorLambda extends Construct {
 import boto3
 import json
 import os
+import time
 
 lambda_client = boto3.client('lambda')
 
@@ -223,6 +221,29 @@ def handler(event, context):
             })
         }
     
+    # Step 3.5: Wait 45s then re-check health (services may self-recover or SSM may have been transient)
+    print("Step 3.5: Waiting 45 seconds before final health check...")
+    time.sleep(45)
+
+    retry_health = invoke_lambda(health_check_lambda)
+    retry_body = retry_health.get('body', '{}')
+    if isinstance(retry_body, str):
+        retry_data = json.loads(retry_body)
+    else:
+        retry_data = retry_body
+
+    if retry_data.get('healthy', False):
+        print("✅ Services recovered after waiting - no instance restart needed")
+        return {
+            'statusCode': 200,
+            'body': json.dumps({
+                'message': 'Services self-recovered after waiting (transient SSM issue resolved)',
+                'alarm': alarm_name,
+                'health_check': retry_data,
+                'action_taken': 'self_recovery'
+            })
+        }
+
     # Step 4: Fall back to instance restart (last resort)
     print("Step 4: All recovery methods failed, triggering instance restart (last resort)...")
     instance_restart_result = invoke_lambda(stop_start_lambda, {

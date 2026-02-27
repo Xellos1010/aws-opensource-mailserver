@@ -117,7 +117,6 @@ export class ExternalMonitoring extends Construct {
       functionName: emergencyRestartLambdaArn,
       action: 'lambda:InvokeFunction',
       principal: 'lambda.alarms.cloudwatch.amazonaws.com',
-      sourceArn: `arn:aws:cloudwatch:${stack.region}:${stack.account}:alarm:*`,
     });
 
     // Set alarm action directly using escape hatch
@@ -130,7 +129,6 @@ export class ExternalMonitoring extends Construct {
 
     // Proactive Health Check Lambda Role
     const proactiveHealthCheckRole = new iam.Role(this, 'ProactiveHealthCheckRole', {
-      roleName: `ProactiveHealthCheck-${stack.stackName}`,
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName(
@@ -165,7 +163,6 @@ export class ExternalMonitoring extends Construct {
 
     // CloudWatch Log Group for proactive health check
     const proactiveLogGroup = new logs.LogGroup(this, 'ProactiveHealthCheckLogGroup', {
-      logGroupName: `/aws/lambda/proactive-health-check-${stack.stackName}`,
       retention: logs.RetentionDays.ONE_MONTH,
       removalPolicy: RemovalPolicy.DESTROY,
     });
@@ -173,7 +170,6 @@ export class ExternalMonitoring extends Construct {
     // Proactive Health Check Lambda
     // Note: Shell script variables (\${VAR}) are escaped to prevent TypeScript template string interpolation
     this.proactiveHealthCheckLambda = new lambda.Function(this, 'ProactiveHealthCheckLambda', {
-      functionName: `proactive-health-check-${stack.stackName}`,
       description: `Proactive health check that runs every 5 minutes. Detects zombie instances by checking SSM connectivity and service status. Triggers emergency restart if issues persist.`,
       runtime: lambda.Runtime.PYTHON_3_11,
       handler: 'index.handler',
@@ -415,7 +411,6 @@ def handler(event, context):
 
     // EventBridge Rule to run proactive health check every 5 minutes
     this.proactiveHealthCheckSchedule = new events.Rule(this, 'ProactiveHealthCheckSchedule', {
-      ruleName: `proactive-health-check-${stack.stackName}`,
       description: 'Run proactive health check every 5 minutes',
       schedule: events.Schedule.rate(Duration.minutes(5)),
       enabled: true,
@@ -430,4 +425,3 @@ def handler(event, context):
     });
   }
 }
-

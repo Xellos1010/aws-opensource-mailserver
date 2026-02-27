@@ -87,8 +87,6 @@ describe('CDK Synthesis E2E', () => {
     expect(template.Resources).toHaveProperty('InstanceRole');
     expect(template.Resources).toHaveProperty('NewKeyPair');
     expect(template.Resources).toHaveProperty('InstanceEIPAssociation');
-    expect(template.Resources).toHaveProperty('NightlyRebootFunction');
-    expect(template.Resources).toHaveProperty('NightlyRebootRule');
   });
 
   it('all required outputs are present', () => {
@@ -141,8 +139,10 @@ describe('CDK Synthesis E2E', () => {
       'InstancePublicIp',
       'AdminPassword',
       'RestorePrefixValue',
-      'NightlyRebootSchedule',
       'BootstrapCommand',
+      'InstanceParamInstanceId',
+      'InstanceParamInstanceDns',
+      'InstanceParamStackName',
     ];
 
     requiredOutputs.forEach((outputName) => {
@@ -257,4 +257,3 @@ describe('CDK Synthesis E2E', () => {
     expect(template.Parameters.InstanceDns).toHaveProperty('Default', 'box');
   });
 });
-

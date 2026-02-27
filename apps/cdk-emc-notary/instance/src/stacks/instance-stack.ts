@@ -4,16 +4,8 @@ import {
   CfnOutput,
   CfnParameter,
   Tags,
-  Duration,
-  RemovalPolicy,
   aws_ec2 as ec2,
   aws_ssm as ssm,
-  aws_cloudwatch as cw,
-  aws_cloudwatch_actions as cwa,
-  aws_sns as sns,
-  aws_lambda as lambda,
-  aws_iam as iam,
-  aws_logs as logs,
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { tagStack } from '@mm/infra-shared-constructs';
@@ -22,19 +14,9 @@ import {
   InstanceConfig,
   createMailServerSecurityGroup,
   createInstanceRole,
-  createNightlyReboot,
   createBootstrapPlaceholderUserData,
 } from '@mm/infra-instance-constructs';
-import {
-  MailHealthCheckLambda,
-  ServiceRestartLambda,
-  SystemResetLambda,
-  StopStartHelperLambda,
-  RecoveryOrchestratorLambda,
-  EmergencyAlarms,
-  SystemStatsLambda,
-  ExternalMonitoring,
-} from '@mm/infra-mailserver-recovery';
+import { instanceParamPrefix } from '@mm/infra-naming';
 
 export interface MailServerInstanceStackProps extends StackProps {
   /** Domain configuration */
@@ -68,15 +50,6 @@ export class MailServerInstanceStack extends Stack {
       'CoreNextcloudBucket',
       { parameterName: `${domainConfig.coreParamPrefix}/nextcloudBucket` }
     ).stringValue;
-
-    const alarmsTopicArn = ssm.StringParameter.fromStringParameterAttributes(
-      this,
-      'CoreAlarmsTopic',
-      { parameterName: `${domainConfig.coreParamPrefix}/alarmsTopicArn` }
-    ).stringValue;
-
-    // Get SNS topic for alarm notifications
-    const alarmsTopic = sns.Topic.fromTopicArn(this, 'AlarmsTopic', alarmsTopicArn);
 
     const eipAllocationId = ssm.StringParameter.fromStringParameterAttributes(
       this,
@@ -113,7 +86,7 @@ export class MailServerInstanceStack extends Stack {
     });
 
     // IAM role/profile (using shared construct)
-    const { role, profile } = createInstanceRole(this, 'InstanceRole', {
+    const { role } = createInstanceRole(this, 'InstanceRole', {
       domainConfig,
       backupBucket,
       nextcloudBucket,
@@ -127,9 +100,6 @@ export class MailServerInstanceStack extends Stack {
       '/aws/service/canonical/ubuntu/server/jammy/stable/current/amd64/hvm/ebs-gp2/ami-id'
     );
 
-    // Create IKeyPair from key name for use with Instance construct
-    // Using fromKeyPairName to avoid deprecated keyName property
-    // Note: keyName is a literal string value, so we can use it directly
     const keyPairName = `${domainName}-keypair`;
     const keyPairRef = ec2.KeyPair.fromKeyPairName(this, 'KeyPairRef', keyPairName);
 
@@ -153,7 +123,6 @@ export class MailServerInstanceStack extends Stack {
       ],
     });
 
-    // Add tags
     Tags.of(instance).add('Name', `MailInABoxInstance-${this.stackName}`);
     Tags.of(instance).add('MAILSERVER', domainName);
 
@@ -173,126 +142,26 @@ export class MailServerInstanceStack extends Stack {
     );
     instance.addUserData(...userData);
 
-    // Nightly Reboot (using shared construct)
-    const { rule: rebootRule } = createNightlyReboot(this, 'NightlyReboot', {
-      instanceId: instance.instanceId,
-      schedule: instanceConfig.nightlyRebootSchedule,
-      description: instanceConfig.nightlyRebootDescription,
-      region: this.region,
-      account: this.account,
+    // Publish instance metadata for observability-maintenance stack consumption.
+    const instancePrefix = instanceParamPrefix(domainConfig.domainName);
+
+    const instanceIdParam = new ssm.StringParameter(this, 'ParamInstanceId', {
+      parameterName: `${instancePrefix}/instanceId`,
+      stringValue: instance.instanceId,
+      description: 'EC2 instance ID used by observability-maintenance stack',
     });
 
-    // ============================================================================
-    // Mailserver Recovery System (ported from hepefoundation)
-    // Provides progressive recovery: Health Check → System Reset → Service Restart → Instance Restart
-    // Recovery time: 30-90 seconds for most failures (vs 5-10 minutes)
-    // ============================================================================
-
-    // Mail Health Check Lambda - Scheduled health checks via EventBridge
-    const mailHealthCheck = new MailHealthCheckLambda(this, 'MailHealthCheck', {
-      instanceId: instance.instanceId,
-      domainName,
-      scheduleExpression: 'rate(5 minutes)',
-      notificationTopic: alarmsTopic,
+    const instanceDnsParam = new ssm.StringParameter(this, 'ParamInstanceDns', {
+      parameterName: `${instancePrefix}/instanceDns`,
+      stringValue: instanceDns.valueAsString,
+      description: 'Instance DNS label used by observability-maintenance stack',
     });
 
-    // Service Restart Lambda - Restarts mail services without instance reboot
-    const serviceRestart = new ServiceRestartLambda(this, 'ServiceRestart', {
-      instanceId: instance.instanceId,
-      domainName,
+    const instanceStackNameParam = new ssm.StringParameter(this, 'ParamInstanceStackName', {
+      parameterName: `${instancePrefix}/stackName`,
+      stringValue: this.stackName,
+      description: 'Instance stack name used by observability-maintenance stack',
     });
-
-    // System Reset Lambda - Comprehensive recovery without instance reboot
-    const systemReset = new SystemResetLambda(this, 'SystemReset', {
-      instanceId: instance.instanceId,
-      domainName,
-    });
-
-    // Stop/Start Helper Lambda - Smart instance restart (last resort)
-    const stopStartHelper = new StopStartHelperLambda(this, 'StopStartHelper', {
-      mailServerStackName: this.stackName,
-      domainName,
-      mailHealthCheckLambdaName: mailHealthCheck.lambda.functionName,
-      serviceRestartLambdaName: serviceRestart.lambda.functionName,
-      scheduleExpression: 'cron(0 8 * * ? *)', // Daily at 3am EST (8am UTC)
-      maintenanceWindowStartHour: 8,
-      maintenanceWindowEndHour: 8.25,
-    });
-
-    // Recovery Orchestrator Lambda - Orchestrates progressive recovery flow
-    const recoveryOrchestrator = new RecoveryOrchestratorLambda(this, 'RecoveryOrchestrator', {
-      mailHealthCheckLambdaArn: mailHealthCheck.lambda.functionArn,
-      systemResetLambdaArn: systemReset.lambda.functionArn,
-      serviceRestartLambdaArn: serviceRestart.lambda.functionArn,
-      stopStartLambdaArn: stopStartHelper.lambda.functionArn,
-      domainName,
-    });
-
-    // Emergency Alarms - CloudWatch alarms wired to recovery orchestrator
-    const emergencyAlarms = new EmergencyAlarms(this, 'EmergencyAlarms', {
-      instanceId: instance.instanceId,
-      recoveryOrchestratorLambda: recoveryOrchestrator.lambda,
-      notificationTopic: alarmsTopic,
-      domainName,
-    });
-
-    // System Stats Lambda - Comprehensive system statistics for operational monitoring
-    const systemStats = new SystemStatsLambda(this, 'SystemStats', {
-      instanceId: instance.instanceId,
-      domainName,
-      scheduleExpression: 'rate(1 hour)', // Collect stats hourly
-    });
-
-    // External Monitoring - Route 53 health checks + proactive health check
-    // Use instanceDns parameter value (which handles tokens properly)
-    const externalMonitoring = new ExternalMonitoring(this, 'ExternalMonitoring', {
-      instanceId: instance.instanceId,
-      domainName,
-      boxHostname: `${instanceDns.valueAsString}.${domainName}`,
-      emergencyRestartLambdaArn: recoveryOrchestrator.lambda.functionArn,
-      notificationTopic: alarmsTopic,
-      healthCheckIntervalSeconds: 30,
-    });
-
-    // Memory High Alarm - alerts when memory usage exceeds threshold
-    const memoryHighAlarm = new cw.Alarm(this, 'MemoryHighAlarm', {
-      alarmName: `MemHigh-${instance.instanceId}`,
-      metric: new cw.Metric({
-        namespace: 'CWAgent',
-        metricName: 'mem_used_percent',
-        dimensionsMap: {
-          InstanceId: instance.instanceId,
-        },
-        period: Duration.minutes(1),
-        statistic: 'Average',
-      }),
-      threshold: 85, // Alert when memory usage exceeds 85%
-      evaluationPeriods: 5, // Require 5 consecutive periods (5 minutes)
-      comparisonOperator: cw.ComparisonOperator.GREATER_THAN_THRESHOLD,
-      treatMissingData: cw.TreatMissingData.NOT_BREACHING,
-      alarmDescription: 'Alerts when memory usage exceeds 85% for 5 consecutive minutes',
-    });
-    memoryHighAlarm.addAlarmAction(new cwa.SnsAction(alarmsTopic));
-
-    // Swap High Alarm - alerts when swap usage exceeds threshold
-    const swapHighAlarm = new cw.Alarm(this, 'SwapHighAlarm', {
-      alarmName: `SwapHigh-${instance.instanceId}`,
-      metric: new cw.Metric({
-        namespace: 'CWAgent',
-        metricName: 'swap_used_percent',
-        dimensionsMap: {
-          InstanceId: instance.instanceId,
-        },
-        period: Duration.minutes(1),
-        statistic: 'Average',
-      }),
-      threshold: 50, // Alert when swap usage exceeds 50%
-      evaluationPeriods: 5, // Require 5 consecutive periods (5 minutes)
-      comparisonOperator: cw.ComparisonOperator.GREATER_THAN_THRESHOLD,
-      treatMissingData: cw.TreatMissingData.NOT_BREACHING,
-      alarmDescription: 'Alerts when swap usage exceeds 50% for 5 consecutive minutes',
-    });
-    swapHighAlarm.addAlarmAction(new cwa.SnsAction(alarmsTopic));
 
     // Outputs for admin tooling and bootstrap discovery
     new CfnOutput(this, 'InstanceId', {
@@ -327,17 +196,14 @@ export class MailServerInstanceStack extends Stack {
 
     new CfnOutput(this, 'AdminPassword', {
       value: `/MailInABoxAdminPassword-${this.stackName}`,
-      description: 'Name of the SSM Parameter containing the Admin Password to Mail-in-a-box Web-UI',
+      description:
+        'Name of the SSM Parameter containing the Admin Password to Mail-in-a-box Web-UI',
     });
 
     new CfnOutput(this, 'RestorePrefixValue', {
       value: instance.instanceId,
-      description: 'The S3 prefix where backups are stored is set to the ID of the EC2 instance of your current deployment',
-    });
-
-    new CfnOutput(this, 'NightlyRebootSchedule', {
-      value: instanceConfig.nightlyRebootDescription || '03:00 ET (08:00 UTC) daily',
-      description: 'Schedule for automatic nightly reboot of Mail-in-a-Box instance',
+      description:
+        'The S3 prefix where backups are stored is set to the ID of the EC2 instance of your current deployment',
     });
 
     new CfnOutput(this, 'BootstrapCommand', {
@@ -345,30 +211,19 @@ export class MailServerInstanceStack extends Stack {
       description: 'Command to bootstrap this instance via SSM',
     });
 
-    // Recovery System Outputs
-    new CfnOutput(this, 'MailHealthCheckLambdaArn', {
-      value: mailHealthCheck.lambda.functionArn,
-      description: 'ARN of the mail health check Lambda function',
+    new CfnOutput(this, 'InstanceParamInstanceId', {
+      value: instanceIdParam.parameterName,
+      description: 'SSM parameter path for instance ID metadata',
     });
 
-    new CfnOutput(this, 'RecoveryOrchestratorLambdaArn', {
-      value: recoveryOrchestrator.lambda.functionArn,
-      description: 'ARN of the recovery orchestrator Lambda function',
+    new CfnOutput(this, 'InstanceParamInstanceDns', {
+      value: instanceDnsParam.parameterName,
+      description: 'SSM parameter path for instance DNS metadata',
     });
 
-    new CfnOutput(this, 'RecoverySystemEnabled', {
-      value: 'true',
-      description: 'Recovery system is enabled with progressive recovery flow',
-    });
-
-    new CfnOutput(this, 'SystemStatsLambdaArn', {
-      value: systemStats.lambda.functionArn,
-      description: 'ARN of the system statistics Lambda function',
-    });
-
-    new CfnOutput(this, 'ExternalMonitoringEnabled', {
-      value: 'true',
-      description: 'External monitoring enabled with Route 53 health checks and proactive checks',
+    new CfnOutput(this, 'InstanceParamStackName', {
+      value: instanceStackNameParam.parameterName,
+      description: 'SSM parameter path for instance stack name metadata',
     });
   }
 }

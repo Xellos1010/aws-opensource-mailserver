@@ -24,6 +24,8 @@ export interface EmergencyAlarmsProps {
   syslogLogGroupName?: string;
   /** Log retention in days (default: 7) */
   logRetentionDays?: number;
+  /** Optional prefix to keep alarm names unique across split stacks */
+  alarmNamePrefix?: string;
 }
 
 /**
@@ -40,6 +42,7 @@ export class EmergencyAlarms extends Construct {
   public readonly instanceStatusAlarm: cw.Alarm;
   public readonly systemStatusAlarm: cw.Alarm;
   public readonly oomKillAlarm: cw.Alarm;
+  public readonly mailboxPermissionAlarm: cw.Alarm;
   public readonly syslogLogGroup: logs.LogGroup;
 
   constructor(scope: Construct, id: string, props: EmergencyAlarmsProps) {
@@ -52,7 +55,10 @@ export class EmergencyAlarms extends Construct {
       domainName,
       syslogLogGroupName: providedSyslogLogGroupName,
       logRetentionDays = 7,
+      alarmNamePrefix,
     } = props;
+
+    const alarmPrefix = alarmNamePrefix ? `${alarmNamePrefix}-` : '';
 
     // Use stack name for syslog log group if not provided (domainName is a token from SSM)
     const stack = Stack.of(this);
@@ -88,13 +94,23 @@ export class EmergencyAlarms extends Construct {
       defaultValue: 0,
     });
 
+    // Mailbox permission error metric filter - catches Dovecot maildir ownership failures
+    // Example: mkdir(/home/user-data/mail/mailboxes/... ) failed: Permission denied
+    new logs.MetricFilter(this, 'MailboxPermissionMetricFilter', {
+      logGroup: this.syslogLogGroup,
+      filterPattern: logs.FilterPattern.literal('"Failed to autocreate mailbox"'),
+      metricNamespace: 'EC2',
+      metricName: 'mailbox_permission_errors',
+      metricValue: '1',
+      defaultValue: 0,
+    });
+
     // CRITICAL FIX: Create CloudWatch alarm permission manually once (before creating alarms)
     // LambdaAction.bind() creates permissions with ID "AlarmPermission" for each alarm,
     // causing conflicts when multiple alarms trigger the same Lambda.
     // By creating the permission manually first with a wildcard sourceArn, we avoid duplicates.
     recoveryOrchestratorLambda.addPermission('CloudWatchAlarmInvoke', {
       principal: new iam.ServicePrincipal('lambda.alarms.cloudwatch.amazonaws.com'),
-      sourceArn: `arn:aws:cloudwatch:${stack.region}:${stack.account}:alarm:*`,
     });
 
     const lambdaArn = recoveryOrchestratorLambda.functionArn;
@@ -105,7 +121,7 @@ export class EmergencyAlarms extends Construct {
 
     // Instance Status Check Alarm
     this.instanceStatusAlarm = new cw.Alarm(this, 'InstanceStatusCheckAlarm', {
-      alarmName: `InstanceStatusCheck-${instanceId}`,
+      alarmName: `${alarmPrefix}InstanceStatusCheck-${instanceId}`,
       alarmDescription:
         'Alerts when EC2 instance status check fails (instance-level issues). Triggers automatic restart via recovery orchestrator.',
       metric: new cw.Metric({
@@ -129,7 +145,7 @@ export class EmergencyAlarms extends Construct {
 
     // System Status Check Alarm
     this.systemStatusAlarm = new cw.Alarm(this, 'SystemStatusCheckAlarm', {
-      alarmName: `SystemStatusCheck-${instanceId}`,
+      alarmName: `${alarmPrefix}SystemStatusCheck-${instanceId}`,
       alarmDescription:
         'Alerts when EC2 system status check fails (AWS infrastructure issues). Triggers automatic restart via recovery orchestrator.',
       metric: new cw.Metric({
@@ -153,7 +169,7 @@ export class EmergencyAlarms extends Construct {
 
     // OOM Kill Alarm
     this.oomKillAlarm = new cw.Alarm(this, 'OOMKillAlarm', {
-      alarmName: `OOMKillDetected-${instanceId}`,
+      alarmName: `${alarmPrefix}OOMKillDetected-${instanceId}`,
       alarmDescription:
         'Alerts when Out-of-Memory killer terminates processes. Triggers automatic restart via recovery orchestrator.',
       metric: new cw.Metric({
@@ -171,6 +187,25 @@ export class EmergencyAlarms extends Construct {
     // Set alarm actions directly using escape hatch (bypasses LambdaAction)
     const oomKillCfn = this.oomKillAlarm.node.defaultChild as cw.CfnAlarm;
     oomKillCfn.addPropertyOverride('AlarmActions', alarmActions);
+
+    // Mailbox permission alarm
+    this.mailboxPermissionAlarm = new cw.Alarm(this, 'MailboxPermissionAlarm', {
+      alarmName: `${alarmPrefix}MaildirPermissionDenied-${instanceId}`,
+      alarmDescription:
+        'Alerts when Dovecot cannot write mailboxes due to permission drift. Triggers automatic recovery orchestration.',
+      metric: new cw.Metric({
+        namespace: 'EC2',
+        metricName: 'mailbox_permission_errors',
+        period: Duration.minutes(1),
+        statistic: 'Sum',
+      }),
+      threshold: 0,
+      evaluationPeriods: 1,
+      comparisonOperator: cw.ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: cw.TreatMissingData.NOT_BREACHING,
+    });
+
+    const mailboxPermissionCfn = this.mailboxPermissionAlarm.node.defaultChild as cw.CfnAlarm;
+    mailboxPermissionCfn.addPropertyOverride('AlarmActions', alarmActions);
   }
 }
-

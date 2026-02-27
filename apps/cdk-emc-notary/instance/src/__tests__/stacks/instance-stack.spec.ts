@@ -301,61 +301,6 @@ describe('MailServerInstanceStack', () => {
     });
   });
 
-  describe('Nightly Reboot', () => {
-    it('creates Lambda function for reboot', () => {
-      // Find Lambda function by logical ID pattern (NightlyRebootFunction)
-      const lambdaResources = template.findResources('AWS::Lambda::Function', {});
-      const rebootLambda = Object.values(lambdaResources).find((resource: any, index: number, arr: any[]) => {
-        const logicalId = Object.keys(lambdaResources)[index];
-        return logicalId.includes('NightlyReboot') || logicalId.includes('Reboot');
-      });
-      
-      // If not found by logical ID, check by runtime and environment variables
-      const lambdaByRuntime = Object.values(lambdaResources).find((resource: any) =>
-        resource['Properties']?.['Runtime'] === 'nodejs20.x' &&
-        resource['Properties']?.['Environment']?.['Variables']?.['INSTANCE_ID']
-      );
-      
-      const foundLambda = rebootLambda || lambdaByRuntime;
-      expect(foundLambda).toBeDefined();
-      
-      if (foundLambda) {
-        expect(foundLambda['Properties']['Runtime']).toBe('nodejs20.x');
-        expect(foundLambda['Properties']['Timeout']).toBe(30);
-        expect(foundLambda['Properties']['Environment']).toHaveProperty('Variables');
-        expect(foundLambda['Properties']['Environment']['Variables']).toHaveProperty('INSTANCE_ID');
-      }
-    });
-
-    it('creates EventBridge rule with correct schedule', () => {
-      // EventBridge schedule format may vary slightly
-      template.hasResourceProperties('AWS::Events::Rule', {
-        State: 'ENABLED',
-      });
-      
-      // Verify schedule contains expected cron pattern
-      const rules = template.findResources('AWS::Events::Rule', {});
-      const rebootRule = Object.values(rules).find((resource: any) =>
-        resource['Properties']?.['ScheduleExpression']?.includes('0 8')
-      );
-      expect(rebootRule).toBeDefined();
-    });
-
-    it('Lambda has EC2 reboot permissions', () => {
-      // Find Lambda policy by checking for ec2:RebootInstances
-      const policies = template.findResources('AWS::IAM::Policy', {});
-      const rebootPolicy = Object.values(policies).find((resource: any) => {
-        const statements = resource['Properties']?.['PolicyDocument']?.['Statement'] || [];
-        return statements.some((stmt: any) =>
-          Array.isArray(stmt.Action)
-            ? stmt.Action.some((action: string) => action.includes('RebootInstances'))
-            : stmt.Action?.includes('RebootInstances')
-        );
-      });
-      expect(rebootPolicy).toBeDefined();
-    });
-  });
-
   describe('CloudFormation Parameters', () => {
     it('creates InstanceType parameter with default', () => {
       const templateJson = template.toJSON();
@@ -386,8 +331,10 @@ describe('MailServerInstanceStack', () => {
         'InstancePublicIp',
         'AdminPassword',
         'RestorePrefixValue',
-        'NightlyRebootSchedule',
         'BootstrapCommand',
+        'InstanceParamInstanceId',
+        'InstanceParamInstanceDns',
+        'InstanceParamStackName',
       ];
 
       requiredOutputs.forEach((outputName) => {
@@ -505,4 +452,3 @@ describe('EmcNotaryInstanceStack', () => {
     expect(templateJson['Parameters']['InstanceDns']).toHaveProperty('Default', 'box');
   });
 });
-

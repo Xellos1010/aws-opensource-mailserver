@@ -48,7 +48,6 @@ export class SystemResetLambda extends Construct {
     // IAM Role - Use stack name for naming (domainName is a token from SSM)
     const stack = Stack.of(this);
     const role = new iam.Role(this, 'Role', {
-      roleName: `SystemResetLambda-${stack.stackName}`,
       description: 'Role for system reset Lambda',
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [
@@ -83,14 +82,12 @@ export class SystemResetLambda extends Construct {
 
     // CloudWatch Log Group
     const logGroup = new logs.LogGroup(this, 'LogGroup', {
-      logGroupName: `/aws/lambda/system-reset-${stack.stackName}`,
       retention: logs.RetentionDays.ONE_MONTH,
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
     // Lambda Function
     this.lambda = new lambda.Function(this, 'Function', {
-      functionName: `system-reset-${stack.stackName}`,
       description: 'Comprehensive system reset without instance reboot - handles memory, services, processes, and resources',
       runtime: lambda.Runtime.PYTHON_3_11,
       handler: 'index.handler',
@@ -115,6 +112,7 @@ def system_reset(instance_id):
     - System resource cleanup
     """
     
+    domain_name = os.environ.get('DOMAIN_NAME', '')
     reset_script = """
 set -e
 
@@ -122,6 +120,53 @@ echo "=========================================="
 echo "System Reset (No Reboot)"
 echo "=========================================="
 echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+echo ""
+DOMAIN_NAME="__DOMAIN_NAME__"
+
+# Step 0: Emergency disk cleanup (ALWAYS runs first - frees space before SSM can fail)
+echo "=== Step 0: Emergency Disk Cleanup ==="
+echo "Disk before cleanup:"
+df -h / | tail -1
+echo ""
+
+# Vacuum systemd journal (typically frees 100-200MB - largest single source)
+journalctl --vacuum-size=100M 2>/dev/null || true
+journalctl --vacuum-time=7d 2>/dev/null || true
+
+# Clear apt package cache
+apt-get clean 2>/dev/null || true
+
+# Clear old Amazon SSM agent logs (keep only today's)
+find /var/log/amazon/ssm -name '*.log.*' -mtime +0 -delete 2>/dev/null || true
+
+# Clear old compressed log archives (older than 3 days)
+find /var/log -name '*.gz' -mtime +3 -delete 2>/dev/null || true
+
+# Clear old temp files
+find /tmp -type f -mtime +1 -delete 2>/dev/null || true
+
+echo "Disk after emergency cleanup:"
+df -h / | tail -1
+echo ""
+
+# Step 0.5: Repair mailbox ownership drift that breaks IMAP folder operations
+echo "=== Step 0.5: Mailbox Permission Integrity ==="
+if [ -n "$DOMAIN_NAME" ]; then
+    MAILBOX_DOMAIN_ROOT="/home/user-data/mail/mailboxes/$DOMAIN_NAME"
+    if [ -d "$MAILBOX_DOMAIN_ROOT" ]; then
+        OWNER=$(stat -c '%U:%G' "$MAILBOX_DOMAIN_ROOT" 2>/dev/null || echo "unknown")
+        PERM=$(stat -c '%a' "$MAILBOX_DOMAIN_ROOT" 2>/dev/null || echo "000")
+        if [ "$OWNER" != "mail:mail" ] || [ "$PERM" != "755" ]; then
+            echo "Repairing mailbox permissions: $MAILBOX_DOMAIN_ROOT ($OWNER $PERM -> mail:mail 755)"
+            sudo chown mail:mail "$MAILBOX_DOMAIN_ROOT" || true
+            sudo chmod 755 "$MAILBOX_DOMAIN_ROOT" || true
+        else
+            echo "Mailbox permissions already healthy: $MAILBOX_DOMAIN_ROOT ($OWNER $PERM)"
+        fi
+    else
+        echo "Mailbox domain root not found: $MAILBOX_DOMAIN_ROOT"
+    fi
+fi
 echo ""
 
 # Step 1: Check system state
@@ -254,7 +299,7 @@ else
     [ "$NGINX_STATUS" != "active" ] && echo "  - Nginx: $NGINX_STATUS"
     exit 1
 fi
-"""
+""".replace('__DOMAIN_NAME__', domain_name)
     
     try:
         print(f"Performing system reset on instance {instance_id}")
@@ -368,8 +413,8 @@ def handler(event, context):
       logGroup,
       environment: {
         INSTANCE_ID: instanceId,
+        DOMAIN_NAME: domainName,
       },
     });
   }
 }
-

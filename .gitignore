@@ -9,6 +9,8 @@
 **/mailbox*/
 **/*.mbox
 **/*.mbox/
+Archive/staging/
+webmail-logs/
 
 # Private keys and certificates
 *.pem

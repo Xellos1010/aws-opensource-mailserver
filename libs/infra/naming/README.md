@@ -8,6 +8,7 @@ Provides canonical naming functions for CDK stacks, ensuring consistency across 
 
 - **Core stacks**: `{domain-tld}-mailserver-core`
 - **Instance stacks**: `{domain-tld}-mailserver-instance`
+- **Observability stacks**: `{domain-tld}-mailserver-observability-maintenance`
 
 ## Usage
 
@@ -15,8 +16,10 @@ Provides canonical naming functions for CDK stacks, ensuring consistency across 
 import {
   toMailserverCoreStackName,
   toMailserverInstanceStackName,
+  toMailserverObservabilityMaintenanceStackName,
   parseDomainFromMailserverStack,
   coreParamPrefix,
+  instanceParamPrefix,
 } from '@mm/infra-naming';
 
 // Generate stack names
@@ -26,6 +29,10 @@ const coreStack = toMailserverCoreStackName('emcnotary.com');
 const instanceStack = toMailserverInstanceStackName('emcnotary.com');
 // => 'emcnotary-com-mailserver-instance'
 
+const observabilityStack =
+  toMailserverObservabilityMaintenanceStackName('emcnotary.com');
+// => 'emcnotary-com-mailserver-observability-maintenance'
+
 // Parse domain from stack name
 const domain = parseDomainFromMailserverStack('emcnotary-com-mailserver-core');
 // => 'emcnotary.com'
@@ -33,6 +40,9 @@ const domain = parseDomainFromMailserverStack('emcnotary-com-mailserver-core');
 // Generate SSM parameter prefix
 const prefix = coreParamPrefix('emcnotary.com');
 // => '/emcnotary/core'
+
+const instancePrefix = instanceParamPrefix('emcnotary.com');
+// => '/emcnotary/instance'
 ```
 
 ## API Reference
@@ -49,6 +59,10 @@ Generates the canonical core stack name for a domain.
 
 Generates the canonical instance stack name for a domain.
 
+### `toMailserverObservabilityMaintenanceStackName(domain: string): string`
+
+Generates the canonical observability-maintenance stack name for a domain.
+
 ### `parseDomainFromMailserverStack(stackName: string): string`
 
 Parses domain name from a canonical mailserver stack name. Throws if the stack name doesn't match the canonical format.
@@ -56,6 +70,10 @@ Parses domain name from a canonical mailserver stack name. Throws if the stack n
 ### `coreParamPrefix(domain: string): string`
 
 Generates SSM parameter prefix for core parameters (uses domain name without TLD).
+
+### `instanceParamPrefix(domain: string): string`
+
+Generates SSM parameter prefix for instance metadata (uses domain name without TLD).
 
 ## Migration Notes
 
@@ -65,7 +83,6 @@ This library replaces ad-hoc naming logic scattered across:
 - Support scripts (`libs/support-scripts/aws/instance-bootstrap`)
 
 All code should now import from this library instead of implementing naming logic inline.
-
 
 
 

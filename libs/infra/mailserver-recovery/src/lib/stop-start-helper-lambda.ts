@@ -66,7 +66,6 @@ export class StopStartHelperLambda extends Construct {
     // IAM Role - Use stack name for naming (domainName is a token from SSM)
     const stack = Stack.of(this);
     const role = new iam.Role(this, 'Role', {
-      roleName: `StopStartLambda-${stack.stackName}`,
       description: 'Role assumed by Lambda to stop and start EC2 instance',
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [
@@ -116,14 +115,12 @@ export class StopStartHelperLambda extends Construct {
 
     // CloudWatch Log Group
     const logGroup = new logs.LogGroup(this, 'LogGroup', {
-      logGroupName: `/aws/lambda/stop-start-helper-${stack.stackName}`,
       retention: logs.RetentionDays.ONE_MONTH,
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
     // Lambda Function
     this.lambda = new lambda.Function(this, 'Function', {
-      functionName: `stop-start-helper-${stack.stackName}`,
       description: 'Stops and starts EC2 instance with state waiting and smart logic',
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',

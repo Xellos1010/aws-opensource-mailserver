@@ -40,7 +40,6 @@ export class ServiceRestartLambda extends Construct {
     // IAM Role - Use stack name for naming (domainName is a token from SSM)
     const stack = Stack.of(this);
     const role = new iam.Role(this, 'Role', {
-      roleName: `ServiceRestartLambda-${stack.stackName}`,
       description: 'Role for service restart Lambda',
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [
@@ -75,14 +74,12 @@ export class ServiceRestartLambda extends Construct {
 
     // CloudWatch Log Group
     const logGroup = new logs.LogGroup(this, 'LogGroup', {
-      logGroupName: `/aws/lambda/service-restart-${stack.stackName}`,
       retention: logs.RetentionDays.ONE_MONTH,
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
     // Lambda Function
     this.lambda = new lambda.Function(this, 'Function', {
-      functionName: `service-restart-${stack.stackName}`,
       description: 'Restarts mail services (postfix/dovecot/nginx) via SSM without restarting EC2 instance',
       runtime: lambda.Runtime.PYTHON_3_11,
       handler: 'index.handler',
@@ -101,11 +98,27 @@ def restart_mail_services(instance_id):
     Uses Mail-in-a-Box daemon if available, otherwise restarts individual services.
     """
     
+    domain_name = os.environ.get('DOMAIN_NAME', '')
     restart_script = """
 set -e
 
 echo "=== Mail Service Restart ==="
 echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+DOMAIN_NAME="__DOMAIN_NAME__"
+
+# Repair common mailbox root ownership drift that breaks IMAP folder operations.
+if [ -n "$DOMAIN_NAME" ]; then
+    MAILBOX_DOMAIN_ROOT="/home/user-data/mail/mailboxes/$DOMAIN_NAME"
+    if [ -d "$MAILBOX_DOMAIN_ROOT" ]; then
+        OWNER=$(stat -c '%U:%G' "$MAILBOX_DOMAIN_ROOT" 2>/dev/null || echo "unknown")
+        PERM=$(stat -c '%a' "$MAILBOX_DOMAIN_ROOT" 2>/dev/null || echo "000")
+        if [ "$OWNER" != "mail:mail" ] || [ "$PERM" != "755" ]; then
+            echo "Repairing mailbox permissions: $MAILBOX_DOMAIN_ROOT ($OWNER $PERM -> mail:mail 755)"
+            sudo chown mail:mail "$MAILBOX_DOMAIN_ROOT" || true
+            sudo chmod 755 "$MAILBOX_DOMAIN_ROOT" || true
+        fi
+    fi
+fi
 
 # Try Mail-in-a-Box daemon first (preferred method)
 if [ -x /opt/mailinabox/management/mailinabox-daemon ]; then
@@ -158,7 +171,7 @@ else
     [ "$NGINX_ACTIVE" != "active" ] && echo "  - Nginx: $NGINX_ACTIVE"
     exit 1
 fi
-"""
+""".replace('__DOMAIN_NAME__', domain_name)
     
     try:
         print(f"Restarting mail services on instance {instance_id}")
@@ -272,8 +285,8 @@ def handler(event, context):
       logGroup,
       environment: {
         INSTANCE_ID: instanceId,
+        DOMAIN_NAME: domainName,
       },
     });
   }
 }
-

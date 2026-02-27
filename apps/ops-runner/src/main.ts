@@ -22,10 +22,13 @@ Commands:
   ssl:provision <domain1> [domain2 ...]
   stack:core:deploy [domain]        # Deploy core stack (default: emcnotary.com)
   stack:instance:deploy [domain]   # Deploy instance stack (default: emcnotary.com)
+  stack:observability:deploy [domain] # Deploy observability-maintenance stack
   stack:core:destroy [domain]      # Destroy core stack (default: emcnotary.com)
   stack:instance:destroy [domain]   # Destroy instance stack (default: emcnotary.com)
+  stack:observability:destroy [domain] # Destroy observability-maintenance stack
   stack:core:diff [domain]          # Show core stack diff (default: emcnotary.com)
   stack:instance:diff [domain]      # Show instance stack diff (default: emcnotary.com)
+  stack:observability:diff [domain] # Show observability-maintenance stack diff
   admin:instance:provision <domain> # Provision instance (SSH + SES DNS)
   instance:bootstrap [domain]       # Bootstrap MIAB via SSM (default: emcnotary.com)
 
@@ -210,6 +213,24 @@ Env:
       break;
     }
 
+    case 'stack:observability:deploy': {
+      const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
+      if (!domain) {
+        throw new Error('stack:observability:deploy requires a domain argument or DOMAIN env var');
+      }
+
+      console.log(`Deploying observability-maintenance stack for domain: ${domain}`);
+
+      const { execSync } = await import('child_process');
+      execSync(`pnpm nx run cdk-emcnotary-observability-maintenance:deploy`, {
+        stdio: 'inherit',
+        env: { ...process.env, DOMAIN: domain }
+      });
+
+      console.log('✅ Observability-maintenance stack deployed successfully');
+      break;
+    }
+
     case 'stack:core:destroy': {
       const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
       if (!domain) throw new Error('stack:core:destroy requires a domain argument or DOMAIN env var');
@@ -244,6 +265,24 @@ Env:
       break;
     }
 
+    case 'stack:observability:destroy': {
+      const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
+      if (!domain) {
+        throw new Error('stack:observability:destroy requires a domain argument or DOMAIN env var');
+      }
+
+      console.log(`⚠️  Destroying observability-maintenance stack for domain: ${domain}`);
+
+      const { execSync } = await import('child_process');
+      execSync(`pnpm nx run cdk-emcnotary-observability-maintenance:destroy`, {
+        stdio: 'inherit',
+        env: { ...process.env, DOMAIN: domain }
+      });
+
+      console.log('✅ Observability-maintenance stack destroyed successfully');
+      break;
+    }
+
     case 'stack:core:diff': {
       const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
       if (!domain) throw new Error('stack:core:diff requires a domain argument or DOMAIN env var');
@@ -266,6 +305,22 @@ Env:
 
       const { execSync } = await import('child_process');
       execSync(`pnpm nx run cdk-emcnotary-instance:diff`, {
+        stdio: 'inherit',
+        env: { ...process.env, DOMAIN: domain }
+      });
+      break;
+    }
+
+    case 'stack:observability:diff': {
+      const domain = args[0] || process.env.DOMAIN || 'emcnotary.com';
+      if (!domain) {
+        throw new Error('stack:observability:diff requires a domain argument or DOMAIN env var');
+      }
+
+      console.log(`Showing diff for observability-maintenance stack: ${domain}`);
+
+      const { execSync } = await import('child_process');
+      execSync(`pnpm nx run cdk-emcnotary-observability-maintenance:diff`, {
         stdio: 'inherit',
         env: { ...process.env, DOMAIN: domain }
       });
@@ -305,7 +360,13 @@ Env:
         env: { ...process.env, DOMAIN: domain }
       });
 
-      console.log('✅ Instance bootstrap completed successfully');
+      console.log('🔧 Enforcing mailbox root permissions after bootstrap...');
+      execSync(`pnpm nx run cdk-emcnotary-instance:admin:mailboxes:permissions:repair`, {
+        stdio: 'inherit',
+        env: { ...process.env, DOMAIN: domain }
+      });
+
+      console.log('✅ Instance bootstrap completed successfully (mailbox permission guard applied)');
       break;
     }
 
@@ -318,4 +379,3 @@ run().catch((e) => {
   console.error(e);
   process.exit(1);
 });
-

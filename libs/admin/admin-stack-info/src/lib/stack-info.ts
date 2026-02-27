@@ -8,6 +8,7 @@ import { fromIni } from '@aws-sdk/credential-providers';
 import {
   toMailserverCoreStackName,
   toMailserverInstanceStackName,
+  toMailserverObservabilityMaintenanceStackName,
   parseDomainFromMailserverStack,
 } from '@mm/infra-naming';
 
@@ -74,16 +75,22 @@ export function resolveDomain(
     // Get the app directory name (second-to-last if last is 'core' or 'instance')
     let appName = parts[parts.length - 1];
     
-    // If last part is 'core' or 'instance', use the parent directory
-    if (appName === 'core' || appName === 'instance') {
+    // If last part is a stack type folder, use the parent app directory.
+    if (
+      appName === 'core' ||
+      appName === 'instance' ||
+      appName === 'observability-maintenance'
+    ) {
       appName = parts[parts.length - 2] || appName;
     }
     
     // Remove "cdk-" prefix if present
     let domainPart = appName.replace(/^cdk-/, '');
     
-    // Remove "-core" suffix if present (e.g., "emcnotary-core" -> "emcnotary")
+    // Remove stack-type suffixes if present.
     domainPart = domainPart.replace(/-core$/, '');
+    domainPart = domainPart.replace(/-instance$/, '');
+    domainPart = domainPart.replace(/-observability-maintenance$/, '');
     
     // Convert kebab-case to domain: "emc-notary" -> "emcnotary.com"
     // Domain mapping for known apps
@@ -105,7 +112,10 @@ export function resolveDomain(
     } catch {
       // Fallback to legacy parsing for non-canonical names
       // "emcnotary-com-mailserver" or "emcnotary-com-mailserver-core" -> "emcnotary.com"
-      const withoutSuffix = stackName.replace(/-mailserver(-core|-instance)?$/, '');
+      const withoutSuffix = stackName.replace(
+        /-mailserver(-core|-instance|-observability-maintenance)?$/,
+        ''
+      );
       return withoutSuffix.replace(/-/g, '.');
     }
   }
@@ -123,13 +133,13 @@ export function resolveDomain(
  * @param domain - Domain name (e.g., "emcnotary.com")
  * @param appPath - App path (e.g., "apps/cdk-emc-notary/core")
  * @param explicitStackName - Explicit stack name (takes precedence)
- * @param stackType - Stack type: "core" | "instance" | undefined (auto-detect from appPath)
+ * @param stackType - Stack type: "core" | "instance" | "observability-maintenance" | undefined (auto-detect from appPath)
  */
 export function resolveStackName(
   domain?: string,
   appPath?: string,
   explicitStackName?: string,
-  stackType?: 'core' | 'instance'
+  stackType?: 'core' | 'instance' | 'observability-maintenance'
 ): string {
   if (explicitStackName) {
     return explicitStackName;
@@ -141,6 +151,11 @@ export function resolveStackName(
     const lastPart = pathParts[pathParts.length - 1] || '';
     if (lastPart === 'core' || lastPart.includes('-core')) {
       stackType = 'core';
+    } else if (
+      lastPart === 'observability-maintenance' ||
+      lastPart.includes('-observability-maintenance')
+    ) {
+      stackType = 'observability-maintenance';
     } else if (lastPart === 'instance' || lastPart.includes('-instance')) {
       stackType = 'instance';
     }
@@ -149,6 +164,8 @@ export function resolveStackName(
   if (domain) {
     if (stackType === 'core') {
       return toMailserverCoreStackName(domain);
+    } else if (stackType === 'observability-maintenance') {
+      return toMailserverObservabilityMaintenanceStackName(domain);
     } else if (stackType === 'instance') {
       return toMailserverInstanceStackName(domain);
     }
@@ -160,6 +177,8 @@ export function resolveStackName(
   if (resolvedDomain) {
     if (stackType === 'core') {
       return toMailserverCoreStackName(resolvedDomain);
+    } else if (stackType === 'observability-maintenance') {
+      return toMailserverObservabilityMaintenanceStackName(resolvedDomain);
     } else if (stackType === 'instance') {
       return toMailserverInstanceStackName(resolvedDomain);
     }
@@ -193,18 +212,25 @@ export async function getStackInfo(
   }
   
   // Determine stack type from appPath or stackName
-  let stackType: 'core' | 'instance' | undefined;
+  let stackType: 'core' | 'instance' | 'observability-maintenance' | undefined;
   if (config.appPath) {
     const pathParts = config.appPath.split('/');
     const lastPart = pathParts[pathParts.length - 1] || '';
     if (lastPart === 'core' || lastPart.includes('-core')) {
       stackType = 'core';
+    } else if (
+      lastPart === 'observability-maintenance' ||
+      lastPart.includes('-observability-maintenance')
+    ) {
+      stackType = 'observability-maintenance';
     } else if (lastPart === 'instance' || lastPart.includes('-instance')) {
       stackType = 'instance';
     }
   } else if (config.stackName) {
     if (config.stackName.includes('-mailserver-core')) {
       stackType = 'core';
+    } else if (config.stackName.includes('-mailserver-observability-maintenance')) {
+      stackType = 'observability-maintenance';
     } else if (config.stackName.includes('-mailserver-instance')) {
       stackType = 'instance';
     }

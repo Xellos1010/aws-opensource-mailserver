@@ -153,7 +153,7 @@ function getCategories(): Category[] {
     {
       id: 'cdk-stack',
       name: 'CDK Stack Operations',
-      match: anyOf(equals('synth'), equals('deploy'), equals('diff'), equals('destroy'), startsWith('emergency-monitoring-legacy:')),
+      match: anyOf(equals('synth'), equals('deploy'), equals('diff'), equals('destroy')),
     },
     {
       id: 'build-test',
@@ -307,5 +307,4 @@ if (require.main === module) {
     process.exit(1);
   });
 }
-
 

@@ -285,7 +285,19 @@ async function testCredentials(options: TestCredentialsOptions): Promise<void> {
 
     // Check 5: Check if admin account needs to be created manually
     console.log('🔍 Step 8: Checking if admin account exists in system...');
-    
+
+    // Detect which Mail-in-a-Box management script is available.
+    const cliCheck = await sshCommand(
+      keyPath,
+      instanceIp,
+      'test -f /opt/mailinabox/management/cli.py && echo CLI_EXISTS || echo CLI_MISSING'
+    );
+    const usersCheck = await sshCommand(
+      keyPath,
+      instanceIp,
+      'test -f /opt/mailinabox/management/users.py && echo USERS_EXISTS || echo USERS_MISSING'
+    );
+
     // Use the same detection logic as above
     let adminListCommand: string;
     if (cliCheck.output.includes('CLI_EXISTS')) {
@@ -358,4 +370,3 @@ if (require.main === module) {
     process.exit(1);
   });
 }
-

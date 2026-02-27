@@ -15,8 +15,8 @@ See [ADR-001: Infrastructure Naming Standard](../../docs/adr/001-infra-naming-st
 This stack uses **shared constructs** from `@mm/infra-instance-constructs` for:
 - Security Group configuration
 - IAM Role and Instance Profile
-- Nightly Reboot Lambda and EventBridge rule
 - UserData placeholder for SSM bootstrap
+- Instance metadata publication to SSM for downstream stacks
 
 The actual Mail-in-a-Box setup is performed via **SSM RunCommand** after instance launch (see Bootstrap section below).
 
@@ -27,7 +27,7 @@ The actual Mail-in-a-Box setup is performed via **SSM RunCommand** after instanc
 - **Elastic IP**: Static IP address for the mail server (associated via AllocationId from core stack)
 - **IAM Role**: Instance role with SSM access, S3 bucket access, and SSM parameter read permissions
 - **User Data**: Minimal placeholder that prepares instance for SSM bootstrap (installs AWS CLI, ensures SSM agent is running)
-- **Nightly Reboot**: EventBridge rule + Lambda for automatic reboot at 03:00 ET (08:00 UTC)
+- **Instance Metadata SSM Parameters**: `/.../instance/instanceId`, `/.../instance/instanceDns`, `/.../instance/stackName`
 
 ## Dependencies
 
@@ -35,10 +35,23 @@ This stack **requires** the core stack to be deployed first, as it reads SSM par
 - `{coreParamPrefix}/domainName`
 - `{coreParamPrefix}/backupBucket`
 - `{coreParamPrefix}/nextcloudBucket`
-- `{coreParamPrefix}/alarmsTopicArn`
 - `{coreParamPrefix}/eipAllocationId`
 
 For EMC Notary, the `coreParamPrefix` is `/emcnotary/core`.
+
+## Observability Handoff
+
+This stack now only handles launch-time instance infrastructure.
+
+All post-init maintenance/security/observability automation is deployed in:
+
+- `apps/cdk-emc-notary/observability-maintenance`
+
+The instance stack publishes this SSM metadata contract consumed by that stack:
+
+- `/emcnotary/instance/instanceId`
+- `/emcnotary/instance/instanceDns`
+- `/emcnotary/instance/stackName`
 
 ## Multi-Domain Support
 
@@ -122,28 +135,8 @@ pnpm nx run cdk-emcnotary-instance:destroy
 
 The core stack remains intact and can be reused for a new instance deployment.
 
-## Nightly Reboot Schedule
-
-The instance stack includes an automatic nightly reboot to clear memory issues and ensure consistent performance. The reboot occurs at **03:00 ET (08:00 UTC)** daily.
-
-### Implementation Details
-
-- **EventBridge Rule**: Cron schedule `0 8 * * ? *` (08:00 UTC)
-- **Lambda Function**: Node.js 20 runtime with `ec2:RebootInstances` permission
-- **Timezone Note**: Uses UTC for EventBridge. For strict ET observance, consider EventBridge Scheduler with timezone support in future updates.
-
-### Monitoring Reboots
-
-Reboots are logged in the Lambda function's CloudWatch logs. Check logs if reboot behavior needs investigation:
-
-```bash
-# View recent reboot logs
-aws logs filter-log-events \
-  --log-group-name '/aws/lambda/RebootMailServerInstanceFunction-emcnotary-com-mailserver-instance' \
-  --start-time $(date -v-1H +%s)000 \
-  --query 'events[*].{time:from_unixtime(timestamp/1000),message:message}' \
-  --output table
-```
+Nightly reboot and recovery automation are now managed by
+`cdk-emcnotary-observability-maintenance`, not by the instance stack.
 
 ## Bootstrap
 
@@ -189,10 +182,10 @@ The status check tool:
 - **SMTP port 25 blocked**: AWS may restrict outbound port 25; use SES for sending
 - **MTA-STS policy missing**: Configure MTA-STS records in DNS
 - **TLS certificate self-signed**: Provision Let's Encrypt certificates
-- **Disk space low**: Run cleanup: `pnpm nx run cdk-emcnotary-instance:admin:cleanup:disk-space`
+- **Disk space low**: Run cleanup:
+  `pnpm nx run cdk-emcnotary-observability-maintenance:admin:cleanup:disk-space`
 
 ## Feature Flags
 
 - **`FEATURE_CDK_EMCNOTARY_STACKS_ENABLED`**: Controls CDK stack deployment (default: `0`, set to `1` to enable)
 - **`FEATURE_INSTANCE_BOOTSTRAP_ENABLED`**: Controls SSM bootstrap execution (default: enabled unless set to `0`)
-

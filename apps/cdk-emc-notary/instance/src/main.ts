@@ -25,42 +25,40 @@ const instanceConfig: InstanceConfig = {
   swapSizeGiB: app.node.tryGetContext('swapSizeGiB'),
   mailInABoxVersion: app.node.tryGetContext('mailInABoxVersion'),
   mailInABoxCloneUrl: app.node.tryGetContext('mailInABoxCloneUrl'),
-  nightlyRebootSchedule: app.node.tryGetContext('nightlyRebootSchedule'),
-  nightlyRebootDescription: app.node.tryGetContext('nightlyRebootDescription'),
 };
 
-// Derive stack name from domain using canonical naming utility
-const stackName =
+const env = {
+  account: process.env['CDK_DEFAULT_ACCOUNT'],
+  region: process.env['CDK_DEFAULT_REGION'] || 'us-east-1',
+};
+
+// Derive stack names from domain using canonical naming utilities
+const instanceStackName =
   app.node.tryGetContext('stackName') || toMailserverInstanceStackName(domain);
 
 const domainConfig: DomainConfig = {
   domainName: domain,
   instanceDns,
   coreParamPrefix: coreParamPrefixValue,
-  stackName,
+  stackName: instanceStackName,
 };
 
-// Use generic MailServerInstanceStack for multi-domain support
-// EmcNotaryInstanceStack is kept for backward compatibility
+// ── Stack 1: Instance ────────────────────────────────────────────────────────
+// Contains EC2, SG, EIP, key pair, IAM profile, SSM params.
+// RARELY deployed — any change here risks replacing the EC2 instance.
+// Use `deploy:instance` target explicitly (not the default `deploy`).
 if (domain === 'emcnotary.com') {
-  new EmcNotaryInstanceStack(app, stackName, {
-    env: {
-      account: process.env['CDK_DEFAULT_ACCOUNT'],
-      region: process.env['CDK_DEFAULT_REGION'] || 'us-east-1',
-    },
-    description: `${domain} Mailserver – Instance stack (EC2/SG/EIP/InstanceProfile/SSM Bootstrap Ready)`,
+  new EmcNotaryInstanceStack(app, instanceStackName, {
+    env,
+    description: `${domain} Mailserver – Instance stack (EC2/SG/EIP/InstanceProfile). CAUTION: changes may replace the EC2 instance.`,
   });
 } else {
-  new MailServerInstanceStack(app, stackName, {
+  new MailServerInstanceStack(app, instanceStackName, {
     domainConfig,
     instanceConfig,
-    env: {
-      account: process.env['CDK_DEFAULT_ACCOUNT'],
-      region: process.env['CDK_DEFAULT_REGION'] || 'us-east-1',
-    },
-    description: `${domain} Mailserver – Instance stack (EC2/SG/EIP/InstanceProfile/SSM Bootstrap Ready)`,
+    env,
+    description: `${domain} Mailserver – Instance stack (EC2/SG/EIP/InstanceProfile). CAUTION: changes may replace the EC2 instance.`,
   });
 }
 
 app.synth();
-

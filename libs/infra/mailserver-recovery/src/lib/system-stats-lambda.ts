@@ -55,7 +55,6 @@ export class SystemStatsLambda extends Construct {
     // IAM Role - Use stack name for naming (domainName is a token from SSM)
     const stack = Stack.of(this);
     const role = new iam.Role(this, 'Role', {
-      roleName: `SystemStatsLambda-${stack.stackName}`,
       description: 'Role for system stats reporting Lambda',
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [
@@ -91,7 +90,6 @@ export class SystemStatsLambda extends Construct {
 
     // CloudWatch Log Group
     const logGroup = new logs.LogGroup(this, 'LogGroup', {
-      logGroupName: `/aws/lambda/system-stats-${stack.stackName}`,
       retention: logs.RetentionDays.ONE_MONTH,
       removalPolicy: RemovalPolicy.DESTROY,
     });
@@ -367,7 +365,6 @@ def handler(event, context):
 
     // Lambda Function
     this.lambda = new lambda.Function(this, 'Function', {
-      functionName: `system-stats-${stack.stackName}`,
       description: 'Collects and reports comprehensive system statistics for operational monitoring',
       runtime: lambda.Runtime.PYTHON_3_11,
       handler: 'index.handler',

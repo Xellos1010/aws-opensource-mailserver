@@ -3,8 +3,10 @@ import {
   toKebabDomain,
   toMailserverCoreStackName,
   toMailserverInstanceStackName,
+  toMailserverObservabilityMaintenanceStackName,
   parseDomainFromMailserverStack,
   coreParamPrefix,
+  instanceParamPrefix,
 } from './index';
 
 describe('infra-naming', () => {
@@ -43,6 +45,17 @@ describe('infra-naming', () => {
     });
   });
 
+  describe('toMailserverObservabilityMaintenanceStackName', () => {
+    it('generates canonical observability-maintenance stack name', () => {
+      expect(toMailserverObservabilityMaintenanceStackName('emcnotary.com')).toBe(
+        'emcnotary-com-mailserver-observability-maintenance'
+      );
+      expect(toMailserverObservabilityMaintenanceStackName('example.org')).toBe(
+        'example-org-mailserver-observability-maintenance'
+      );
+    });
+  });
+
   describe('parseDomainFromMailserverStack', () => {
     it('parses domain from core stack name', () => {
       expect(
@@ -59,6 +72,17 @@ describe('infra-naming', () => {
       ).toBe('emcnotary.com');
       expect(
         parseDomainFromMailserverStack('example-org-mailserver-instance')
+      ).toBe('example.org');
+    });
+
+    it('parses domain from observability-maintenance stack name', () => {
+      expect(
+        parseDomainFromMailserverStack(
+          'emcnotary-com-mailserver-observability-maintenance'
+        )
+      ).toBe('emcnotary.com');
+      expect(
+        parseDomainFromMailserverStack('example-org-mailserver-observability-maintenance')
       ).toBe('example.org');
     });
 
@@ -81,8 +105,14 @@ describe('infra-naming', () => {
       expect(coreParamPrefix('example.org')).toBe('/example/core');
     });
   });
-});
 
+  describe('instanceParamPrefix', () => {
+    it('generates SSM parameter prefix', () => {
+      expect(instanceParamPrefix('emcnotary.com')).toBe('/emcnotary/instance');
+      expect(instanceParamPrefix('example.org')).toBe('/example/instance');
+    });
+  });
+});
 
 
 

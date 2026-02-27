@@ -98,35 +98,27 @@ describe('Instance Stack Resource Integration', () => {
       expect(instancePolicy).toBeDefined();
     });
 
-    it('nightly reboot Lambda references correct instance ID', () => {
-      // Find Lambda function by runtime and environment variables
+    it('does not include maintenance Lambda functions in the instance stack', () => {
       const lambdaResources = template.findResources('AWS::Lambda::Function', {});
-      const rebootLambda = Object.values(lambdaResources).find((resource: any) =>
-        resource['Properties']?.['Runtime'] === 'nodejs20.x' &&
-        resource['Properties']?.['Environment']?.['Variables']?.['INSTANCE_ID']
-      );
-      expect(rebootLambda).toBeDefined();
-      
-      if (rebootLambda) {
-        expect(rebootLambda['Properties']['Environment']).toBeDefined();
-        expect(rebootLambda['Properties']['Environment']['Variables']).toHaveProperty('INSTANCE_ID');
-        // The INSTANCE_ID should reference the EC2 instance
-        const instanceId = rebootLambda['Properties']['Environment']['Variables']['INSTANCE_ID'];
-        expect(instanceId).toBeDefined();
-      }
+      expect(Object.keys(lambdaResources)).toHaveLength(0);
     });
 
-    it('nightly reboot EventBridge rule targets Lambda function', () => {
-      // Verify EventBridge rule exists and has targets
-      template.hasResourceProperties('AWS::Events::Rule', {
-        State: 'ENABLED',
-      });
-      
-      // Verify rule has targets
+    it('does not include EventBridge maintenance schedules in the instance stack', () => {
       const rules = template.findResources('AWS::Events::Rule', {});
-      const rebootRule = Object.values(rules)[0] as any;
-      expect(rebootRule['Properties']).toHaveProperty('Targets');
-      expect(Array.isArray(rebootRule['Properties']['Targets'])).toBe(true);
+      expect(Object.keys(rules)).toHaveLength(0);
+    });
+
+    it('publishes instance metadata to SSM parameters for observability stack consumption', () => {
+      const params = template.findResources('AWS::SSM::Parameter', {});
+      expect(Object.keys(params).length).toBeGreaterThanOrEqual(3);
+
+      const paramNames = Object.values(params).map(
+        (resource: any) => resource['Properties']?.['Name']
+      );
+
+      expect(paramNames).toContain('/test/instance/instanceId');
+      expect(paramNames).toContain('/test/instance/instanceDns');
+      expect(paramNames).toContain('/test/instance/stackName');
     });
 
     it('userData includes domain and instance DNS information', () => {
@@ -140,7 +132,16 @@ describe('Instance Stack Resource Integration', () => {
       const outputs = template.findOutputs('*');
       
       // Verify all required outputs exist
-      const requiredOutputs = ['InstanceId', 'DomainName', 'ElasticIPAllocationId', 'InstancePublicIp', 'RestorePrefixValue'];
+      const requiredOutputs = [
+        'InstanceId',
+        'DomainName',
+        'ElasticIPAllocationId',
+        'InstancePublicIp',
+        'RestorePrefixValue',
+        'InstanceParamInstanceId',
+        'InstanceParamInstanceDns',
+        'InstanceParamStackName',
+      ];
       requiredOutputs.forEach((outputName) => {
         expect(outputs).toHaveProperty(outputName);
         expect(outputs[outputName]['Value']).toBeDefined();
@@ -166,4 +167,3 @@ describe('Instance Stack Resource Integration', () => {
     });
   });
 });
-

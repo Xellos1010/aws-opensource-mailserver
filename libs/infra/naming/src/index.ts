@@ -58,6 +58,24 @@ export function toMailserverInstanceStackName(domain: string): string {
 }
 
 /**
+ * Generates the canonical observability-maintenance stack name for a domain.
+ *
+ * Format: `{domain-tld}-mailserver-observability-maintenance`
+ *
+ * @param domain - Domain name (e.g., "emcnotary.com")
+ * @returns Observability stack name
+ *
+ * @example
+ * ```typescript
+ * toMailserverObservabilityMaintenanceStackName('emcnotary.com')
+ * // 'emcnotary-com-mailserver-observability-maintenance'
+ * ```
+ */
+export function toMailserverObservabilityMaintenanceStackName(domain: string): string {
+  return `${toKebabDomain(domain)}-mailserver-observability-maintenance`;
+}
+
+/**
  * Parses domain name from a canonical mailserver stack name
  * 
  * @param stackName - Stack name (e.g., "emcnotary-com-mailserver-core")
@@ -71,10 +89,12 @@ export function toMailserverInstanceStackName(domain: string): string {
  * ```
  */
 export function parseDomainFromMailserverStack(stackName: string): string {
-  const match = stackName.match(/^([a-z0-9-]+)-mailserver-(core|instance)$/);
+  const match = stackName.match(
+    /^([a-z0-9-]+)-mailserver-(core|instance|observability-maintenance)$/
+  );
   if (!match) {
     throw new Error(
-      `Not a canonical mailserver stack name: ${stackName}. Expected format: {domain-tld}-mailserver-{core|instance}`
+      `Not a canonical mailserver stack name: ${stackName}. Expected format: {domain-tld}-mailserver-{core|instance|observability-maintenance}`
     );
   }
   return match[1].replace(/-/g, '.');
@@ -98,6 +118,43 @@ export function coreParamPrefix(domain: string): string {
   return `/${domainPart}/core`;
 }
 
+/**
+ * Generates SSM parameter prefix for instance metadata published by instance stacks.
+ *
+ * Uses the domain name without TLD (e.g., "emcnotary.com" -> "/emcnotary/instance")
+ *
+ * @param domain - Domain name (e.g., "emcnotary.com")
+ * @returns SSM parameter prefix (e.g., "/emcnotary/instance")
+ *
+ * @example
+ * ```typescript
+ * instanceParamPrefix('emcnotary.com') // '/emcnotary/instance'
+ * ```
+ */
+export function instanceParamPrefix(domain: string): string {
+  const domainPart = domain.split('.')[0];
+  return `/${domainPart}/instance`;
+}
+
+/**
+ * Generates the canonical ops stack name for a domain.
+ *
+ * The ops stack contains Lambdas, alarms, and maintenance constructs — it is
+ * deployed frequently and must NOT contain EC2 resources.
+ *
+ * Format: `{domain-tld}-mailserver-ops`
+ *
+ * @param domain - Domain name (e.g., "emcnotary.com")
+ * @returns Ops stack name (e.g., "emcnotary-com-mailserver-ops")
+ *
+ * @example
+ * ```typescript
+ * toMailserverOpsStackName('emcnotary.com') // 'emcnotary-com-mailserver-ops'
+ * ```
+ */
+export function toMailserverOpsStackName(domain: string): string {
+  return `${toKebabDomain(domain)}-mailserver-ops`;
+}
 
 
 

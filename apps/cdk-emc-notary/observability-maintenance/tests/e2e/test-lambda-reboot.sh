@@ -3,11 +3,11 @@ set -euo pipefail
 
 export AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa}
 export DOMAIN=${DOMAIN:-emcnotary.com}
-export STACK_NAME="${DOMAIN//./-}-mailserver-instance"
+export STACK_NAME="${DOMAIN//./-}-mailserver-observability-maintenance"
 
 # Get resources
 INSTANCE_ID=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query 'Stacks[0].Outputs[?OutputKey==`InstanceId`].OutputValue' --output text)
-LAMBDA_NAME=$(aws cloudformation describe-stack-resources --stack-name "$STACK_NAME" --query 'StackResources[?ResourceType==`AWS::Lambda::Function` && starts_with(LogicalResourceId, `NightlyRebootFunction`)].PhysicalResourceId' --output text)
+LAMBDA_NAME=$(aws cloudformation describe-stack-resources --stack-name "$STACK_NAME" --query 'StackResources[?ResourceType==`AWS::Lambda::Function` && contains(LogicalResourceId, `NightlyRebootFunction`)].PhysicalResourceId' --output text)
 
 echo "=== Testing Lambda Reboot Function ==="
 echo "Instance: $INSTANCE_ID"
