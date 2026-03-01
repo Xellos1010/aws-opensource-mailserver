@@ -27,7 +27,7 @@ export interface SystemResetLambdaProps {
  * - Memory management (clear caches)
  * - Mail queue management (flush stuck queue)
  * - Log rotation/cleanup (free disk space)
- * - Service restart (postfix/dovecot/nginx)
+ * - Service restart (mailinabox/postfix/dovecot/nginx)
  * - Resource verification
  *
  * Recovery Time: 30-90 seconds
@@ -41,7 +41,7 @@ export class SystemResetLambda extends Construct {
     const {
       instanceId,
       domainName,
-      timeout = Duration.seconds(120),
+      timeout = Duration.seconds(180),
       memorySize = 512,
     } = props;
 
@@ -88,7 +88,7 @@ export class SystemResetLambda extends Construct {
 
     // Lambda Function
     this.lambda = new lambda.Function(this, 'Function', {
-      description: 'Comprehensive system reset without instance reboot - handles memory, services, processes, and resources',
+      description: 'Comprehensive system reset without EC2 reboot - includes Mail-in-a-Box service recovery',
       runtime: lambda.Runtime.PYTHON_3_11,
       handler: 'index.handler',
       code: lambda.Code.fromInline(`
@@ -105,7 +105,7 @@ def system_reset(instance_id):
     Comprehensive system reset without instance reboot.
     Handles:
     - Memory cleanup (drop caches)
-    - Service restart (postfix, dovecot, nginx)
+    - Service restart (mailinabox, postfix, dovecot, nginx)
     - Process cleanup (kill hung processes)
     - Mail queue management
     - Log rotation/cleanup
@@ -225,9 +225,27 @@ find /var/log -name "*.gz" -type f -mtime +7 -delete 2>/dev/null || true
 echo "Log rotation completed"
 echo ""
 
+# Step 5.5: Harden Mail-in-a-Box start script (admin gunicorn stability)
+echo "=== Step 5.5: Mail-in-a-Box Start Script Integrity ==="
+MIAB_START="/usr/local/lib/mailinabox/start"
+if [ -f "$MIAB_START" ]; then
+    if [ ! -f "\${MIAB_START}.bak-observability" ]; then
+        cp "$MIAB_START" "\${MIAB_START}.bak-observability" || true
+    fi
+    if ! grep -q "cd /opt/mailinabox/management" "$MIAB_START"; then
+        sed -i '/source \\/usr\\/local\\/lib\\/mailinabox\\/env\\/bin\\/activate/a cd \\/opt\\/mailinabox\\/management' "$MIAB_START" || true
+    fi
+    sed -i 's/-b localhost:10222/-b 127.0.0.1:10222/g' "$MIAB_START" || true
+    echo "Mail-in-a-Box start script verified"
+else
+    echo "Mail-in-a-Box start script not found at $MIAB_START"
+fi
+echo ""
+
 # Step 6: Restart mail services
 echo "=== Step 6: Service Restart ==="
 # Stop services gracefully first
+sudo systemctl stop mailinabox 2>/dev/null || true
 sudo systemctl stop postfix 2>/dev/null || true
 sudo systemctl stop dovecot 2>/dev/null || true
 sudo systemctl stop nginx 2>/dev/null || true
@@ -235,43 +253,32 @@ sudo systemctl stop nginx 2>/dev/null || true
 # Wait a moment
 sleep 2
 
-# Try Mail-in-a-Box daemon first (preferred method)
-if [ -x /opt/mailinabox/management/mailinabox-daemon ]; then
-    echo "Using Mail-in-a-Box daemon..."
-    sudo /opt/mailinabox/management/mailinabox-daemon restart || {
-        echo "MIAB daemon restart failed, using individual services..."
-        sudo systemctl start postfix || true
-        sudo systemctl start dovecot || true
-        sudo systemctl start nginx || true
-    }
-elif [ -x /usr/local/bin/mailinabox ]; then
-    echo "Using /usr/local/bin/mailinabox..."
-    sudo /usr/local/bin/mailinabox restart || {
-        echo "mailinabox restart failed, using individual services..."
-        sudo systemctl start postfix || true
-        sudo systemctl start dovecot || true
-        sudo systemctl start nginx || true
-    }
-else
-    echo "MIAB daemon not found, restarting individual services..."
-    sudo systemctl restart postfix || true
-    sudo systemctl restart dovecot || true
-    sudo systemctl restart nginx || true
-fi
+# Ensure no stale management gunicorn workers are left behind.
+pkill -f "gunicorn .*10222" 2>/dev/null || true
+
+# Restart management + core services.
+sudo systemctl restart mailinabox || true
+sudo systemctl restart postfix || true
+sudo systemctl restart dovecot || true
+sudo systemctl restart nginx || true
 
 # Wait for services to stabilize
-sleep 3
+sleep 5
 echo ""
 
 # Step 7: Verify service status
 echo "=== Step 7: Service Verification ==="
+MAILINABOX_STATUS=$(systemctl is-active mailinabox 2>/dev/null || echo "unknown")
 POSTFIX_STATUS=$(systemctl is-active postfix 2>/dev/null || echo "unknown")
 DOVECOT_STATUS=$(systemctl is-active dovecot 2>/dev/null || echo "unknown")
 NGINX_STATUS=$(systemctl is-active nginx 2>/dev/null || echo "unknown")
+ADMIN_HTTP_STATUS=$(curl -sk --max-time 20 -o /dev/null -w "%{http_code}" https://127.0.0.1/admin || echo "timeout")
 
+echo "Mailinabox: $MAILINABOX_STATUS"
 echo "Postfix: $POSTFIX_STATUS"
 echo "Dovecot: $DOVECOT_STATUS"
 echo "Nginx: $NGINX_STATUS"
+echo "AdminEndpoint: $ADMIN_HTTP_STATUS"
 echo ""
 
 # Step 8: Final system state
@@ -284,7 +291,12 @@ df -h / | tail -1
 echo ""
 
 # Determine success
-if [ "$POSTFIX_STATUS" = "active" ] && [ "$DOVECOT_STATUS" = "active" ]; then
+ADMIN_OK=0
+case "$ADMIN_HTTP_STATUS" in
+    2*|3*|4*) ADMIN_OK=1 ;;
+esac
+
+if [ "$MAILINABOX_STATUS" = "active" ] && [ "$POSTFIX_STATUS" = "active" ] && [ "$DOVECOT_STATUS" = "active" ] && [ "$ADMIN_OK" -eq 1 ]; then
     echo "=========================================="
     echo "✅ System reset completed successfully"
     echo "=========================================="
@@ -294,9 +306,11 @@ else
     echo "⚠️ System reset completed with warnings"
     echo "=========================================="
     echo "Some services may not be active:"
+    [ "$MAILINABOX_STATUS" != "active" ] && echo "  - Mailinabox: $MAILINABOX_STATUS"
     [ "$POSTFIX_STATUS" != "active" ] && echo "  - Postfix: $POSTFIX_STATUS"
     [ "$DOVECOT_STATUS" != "active" ] && echo "  - Dovecot: $DOVECOT_STATUS"
     [ "$NGINX_STATUS" != "active" ] && echo "  - Nginx: $NGINX_STATUS"
+    [ "$ADMIN_OK" -ne 1 ] && echo "  - Admin endpoint unhealthy: $ADMIN_HTTP_STATUS"
     exit 1
 fi
 """.replace('__DOMAIN_NAME__', domain_name)
@@ -309,7 +323,7 @@ fi
             InstanceIds=[instance_id],
             DocumentName="AWS-RunShellScript",
             Parameters={'commands': [reset_script]},
-            TimeoutSeconds=120
+            TimeoutSeconds=180
         )
         
         # Extract CommandId from nested response structure
@@ -324,8 +338,8 @@ fi
                 'error': f'No CommandId in response: {response}'
             }
         
-        # Wait for command completion (poll up to 110 seconds)
-        max_wait = 110
+        # Wait for command completion (poll up to 170 seconds)
+        max_wait = 170
         waited = 0
         while waited < max_wait:
             time.sleep(3)

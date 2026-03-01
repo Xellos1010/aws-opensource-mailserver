@@ -3,6 +3,7 @@
 ## Trigger
 - Alarm name contains `DiskUsageCritical-`.
 - Metric `MailServer/Health:DiskUsagePercent` is at or above threshold.
+- Note: this alarm is independent from `MailPrimaryUnhealthy`.
 
 ## Immediate Checks
 - `pnpm nx run cdk-emcnotary-observability-maintenance:admin:disk:monitor`
@@ -17,7 +18,7 @@
 
 ## Verification
 - Root disk usage drops below alarm threshold.
-- `/admin` and mail health checks pass.
+- `/admin` and mail health checks pass without requiring EC2 reset.
 
 ## Last Resort
 - Only after cleanup and volume expansion steps fail, proceed to EC2 stop/start through orchestrator fallback.

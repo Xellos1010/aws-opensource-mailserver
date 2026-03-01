@@ -20,9 +20,7 @@ export interface ServiceRestartLambdaProps {
 }
 
 /**
- * Service Restart Lambda - Restarts mail services (postfix/dovecot/nginx) without restarting EC2 instance
- *
- * Uses Mail-in-a-Box daemon if available, otherwise restarts individual services.
+ * Service Restart Lambda - Restarts Mail-in-a-Box services without restarting EC2 instance.
  */
 export class ServiceRestartLambda extends Construct {
   public readonly lambda: lambda.Function;
@@ -33,7 +31,7 @@ export class ServiceRestartLambda extends Construct {
     const {
       instanceId,
       domainName,
-      timeout = Duration.seconds(60),
+      timeout = Duration.seconds(90),
       memorySize = 256,
     } = props;
 
@@ -80,7 +78,7 @@ export class ServiceRestartLambda extends Construct {
 
     // Lambda Function
     this.lambda = new lambda.Function(this, 'Function', {
-      description: 'Restarts mail services (postfix/dovecot/nginx) via SSM without restarting EC2 instance',
+      description: 'Restarts Mail-in-a-Box services (mailinabox/postfix/dovecot/nginx) via SSM',
       runtime: lambda.Runtime.PYTHON_3_11,
       handler: 'index.handler',
       code: lambda.Code.fromInline(`
@@ -94,8 +92,7 @@ ec2 = boto3.client('ec2')
 
 def restart_mail_services(instance_id):
     """
-    Restart mail services (postfix, dovecot, nginx) without restarting the instance.
-    Uses Mail-in-a-Box daemon if available, otherwise restarts individual services.
+    Restart Mail-in-a-Box services (mailinabox, postfix, dovecot, nginx) without restarting EC2.
     """
     
     domain_name = os.environ.get('DOMAIN_NAME', '')
@@ -105,6 +102,19 @@ set -e
 echo "=== Mail Service Restart ==="
 echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 DOMAIN_NAME="__DOMAIN_NAME__"
+
+# Harden Mail-in-a-Box start script to avoid gunicorn listener wedging on localhost binding
+# and incorrect working directory.
+MIAB_START="/usr/local/lib/mailinabox/start"
+if [ -f "$MIAB_START" ]; then
+    if [ ! -f "\${MIAB_START}.bak-observability" ]; then
+        cp "$MIAB_START" "\${MIAB_START}.bak-observability" || true
+    fi
+    if ! grep -q "cd /opt/mailinabox/management" "$MIAB_START"; then
+        sed -i '/source \\/usr\\/local\\/lib\\/mailinabox\\/env\\/bin\\/activate/a cd \\/opt\\/mailinabox\\/management' "$MIAB_START" || true
+    fi
+    sed -i 's/-b localhost:10222/-b 127.0.0.1:10222/g' "$MIAB_START" || true
+fi
 
 # Repair common mailbox root ownership drift that breaks IMAP folder operations.
 if [ -n "$DOMAIN_NAME" ]; then
@@ -120,55 +130,51 @@ if [ -n "$DOMAIN_NAME" ]; then
     fi
 fi
 
-# Try Mail-in-a-Box daemon first (preferred method)
-if [ -x /opt/mailinabox/management/mailinabox-daemon ]; then
-    echo "Using Mail-in-a-Box daemon..."
-    sudo /opt/mailinabox/management/mailinabox-daemon restart || {
-        echo "MIAB daemon restart failed, falling back to individual services..."
-        sudo systemctl restart postfix || true
-        sudo systemctl restart dovecot || true
-        sudo systemctl restart nginx || true
-    }
-elif [ -x /usr/local/bin/mailinabox ]; then
-    echo "Using /usr/local/bin/mailinabox..."
-    sudo /usr/local/bin/mailinabox restart || {
-        echo "mailinabox restart failed, falling back to individual services..."
-        sudo systemctl restart postfix || true
-        sudo systemctl restart dovecot || true
-        sudo systemctl restart nginx || true
-    }
-else
-    echo "MIAB daemon not found, restarting individual services..."
-    sudo systemctl restart postfix || true
-    sudo systemctl restart dovecot || true
-    sudo systemctl restart nginx || true
-fi
+# Ensure no stale management gunicorn workers are left behind.
+pkill -f "gunicorn .*10222" 2>/dev/null || true
+
+# Restart Mail-in-a-Box management service first, then core mail services.
+sudo systemctl restart mailinabox || true
+sudo systemctl restart postfix || true
+sudo systemctl restart dovecot || true
+sudo systemctl restart nginx || true
 
 # Wait a moment for services to start
-sleep 2
+sleep 3
 
 # Verify service status
 echo ""
 echo "=== Service Status ==="
+echo "Mailinabox: $(systemctl is-active mailinabox || echo 'unknown')"
 echo "Postfix: $(systemctl is-active postfix || echo 'unknown')"
 echo "Dovecot: $(systemctl is-active dovecot || echo 'unknown')"
 echo "Nginx: $(systemctl is-active nginx || echo 'unknown')"
+ADMIN_HTTP_STATUS=$(curl -sk --max-time 20 -o /dev/null -w "%{http_code}" https://127.0.0.1/admin || echo "timeout")
+echo "AdminEndpoint: $ADMIN_HTTP_STATUS"
 
 # Check if services are active
+MAILINABOX_ACTIVE=$(systemctl is-active mailinabox 2>/dev/null || echo "inactive")
 POSTFIX_ACTIVE=$(systemctl is-active postfix 2>/dev/null || echo "inactive")
 DOVECOT_ACTIVE=$(systemctl is-active dovecot 2>/dev/null || echo "inactive")
 NGINX_ACTIVE=$(systemctl is-active nginx 2>/dev/null || echo "inactive")
 
-if [ "$POSTFIX_ACTIVE" = "active" ] && [ "$DOVECOT_ACTIVE" = "active" ]; then
+ADMIN_OK=0
+case "$ADMIN_HTTP_STATUS" in
+    2*|3*|4*) ADMIN_OK=1 ;;
+esac
+
+if [ "$MAILINABOX_ACTIVE" = "active" ] && [ "$POSTFIX_ACTIVE" = "active" ] && [ "$DOVECOT_ACTIVE" = "active" ] && [ "$ADMIN_OK" -eq 1 ]; then
     echo ""
-    echo "✅ Mail services restarted successfully"
+    echo "✅ Mail services restarted successfully (admin endpoint healthy)"
     exit 0
 else
     echo ""
     echo "⚠️ Some services may not be active:"
+    [ "$MAILINABOX_ACTIVE" != "active" ] && echo "  - Mailinabox: $MAILINABOX_ACTIVE"
     [ "$POSTFIX_ACTIVE" != "active" ] && echo "  - Postfix: $POSTFIX_ACTIVE"
     [ "$DOVECOT_ACTIVE" != "active" ] && echo "  - Dovecot: $DOVECOT_ACTIVE"
     [ "$NGINX_ACTIVE" != "active" ] && echo "  - Nginx: $NGINX_ACTIVE"
+    [ "$ADMIN_OK" -ne 1 ] && echo "  - Admin endpoint unhealthy: $ADMIN_HTTP_STATUS"
     exit 1
 fi
 """.replace('__DOMAIN_NAME__', domain_name)
@@ -181,7 +187,7 @@ fi
             InstanceIds=[instance_id],
             DocumentName="AWS-RunShellScript",
             Parameters={'commands': [restart_script]},
-            TimeoutSeconds=60
+            TimeoutSeconds=90
         )
         
         # Extract CommandId from nested response structure
@@ -196,8 +202,8 @@ fi
                 'error': f'No CommandId in response: {response}'
             }
         
-        # Wait for command completion (poll up to 50 seconds)
-        max_wait = 50
+        # Wait for command completion (poll up to 80 seconds)
+        max_wait = 80
         waited = 0
         while waited < max_wait:
             time.sleep(2)
@@ -222,7 +228,7 @@ fi
                 
                 # Check if services are actually active from output
                 if status == 'Success':
-                    if '✅ Mail services restarted successfully' in stdout:
+                    if '✅ Mail services restarted successfully (admin endpoint healthy)' in stdout:
                         result['services_healthy'] = True
                     else:
                         result['services_healthy'] = False

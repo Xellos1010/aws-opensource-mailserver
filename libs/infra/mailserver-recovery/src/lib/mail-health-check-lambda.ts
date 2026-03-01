@@ -27,10 +27,10 @@ export interface MailHealthCheckLambdaProps {
 }
 
 /**
- * Mail Health Check Lambda - Checks postfix/dovecot service status via SSM
+ * Mail Health Check Lambda - Checks Mail-in-a-Box service health via SSM
  *
- * Primary checks: service status (postfix, dovecot) - these determine health
- * Secondary checks: port connectivity (informational only - AWS may restrict port 25)
+ * Primary checks: postfix/dovecot/mailinabox + mailbox permissions + admin endpoint
+ * Secondary checks: disk usage + local port connectivity
  */
 export class MailHealthCheckLambda extends Construct {
   public readonly lambda: lambda.Function;
@@ -92,7 +92,7 @@ export class MailHealthCheckLambda extends Construct {
 
     // Lambda Function
     this.lambda = new lambda.Function(this, 'Function', {
-      description: 'Checks mail service health (postfix/dovecot) via SSM - port checks are informational only',
+      description: 'Checks Mail-in-a-Box service health (postfix/dovecot/mailinabox/admin) via SSM',
       runtime: lambda.Runtime.PYTHON_3_11,
       handler: 'index.handler',
       code: lambda.Code.fromInline(`
@@ -124,8 +124,8 @@ def parse_admin_healthy(raw_status):
 def check_mail_services(instance_id):
     """
     Check mail service health via SSM.
-    Primary checks: service status (postfix, dovecot) - these determine health
-    Secondary checks: port connectivity (informational only - AWS may restrict port 25)
+    Primary checks: postfix/dovecot/mailinabox + mailbox permissions + admin endpoint.
+    Secondary checks: disk usage + local port connectivity.
     """
     
     domain_name = os.environ.get('DOMAIN_NAME', '')
@@ -142,10 +142,11 @@ def check_mail_services(instance_id):
         'fi'
     )
 
-    # Primary health checks - service status (these determine health)
+    # Primary health checks - these drive MailPrimaryHealthy metric.
     primary_checks = {
         'postfix': 'systemctl is-active postfix',
         'dovecot': 'systemctl is-active dovecot',
+        'mailinabox_service': 'systemctl is-active mailinabox',
         'mailbox_root_permissions': mailbox_permission_cmd,
         'mail_queue': 'mailq | head -1 || echo "empty"',
         'admin_endpoint': f'curl -sk --max-time {ADMIN_TIMEOUT_SECONDS} -o /dev/null -w "%{{http_code}}" https://127.0.0.1/admin || echo timeout',
@@ -173,8 +174,9 @@ def check_mail_services(instance_id):
         'timestamp': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
     }
     
-    # Check primary services (these determine health)
-    all_primary_healthy = True
+    # Mail primary health is intentionally separate from disk pressure.
+    mail_primary_healthy = True
+    disk_ok = True
     for service, command in primary_checks.items():
         try:
             response = ssm.send_command(
@@ -206,14 +208,14 @@ def check_mail_services(instance_id):
             
             stdout = output.get('StandardOutputContent', '').strip()
             
-            if service in ['postfix', 'dovecot']:
+            if service in ['postfix', 'dovecot', 'mailinabox_service']:
                 is_active = stdout == 'active'
                 results['primary'][service] = {
                     'status': 'active' if is_active else 'inactive',
                     'raw': stdout
                 }
                 if not is_active:
-                    all_primary_healthy = False
+                    mail_primary_healthy = False
             elif service == 'mailbox_root_permissions':
                 permission_ok = stdout in ['ok', 'skip']
                 results['primary'][service] = {
@@ -221,7 +223,7 @@ def check_mail_services(instance_id):
                     'raw': stdout
                 }
                 if not permission_ok:
-                    all_primary_healthy = False
+                    mail_primary_healthy = False
             elif service == 'admin_endpoint':
                 admin_healthy = parse_admin_healthy(stdout)
                 results['primary'][service] = {
@@ -231,7 +233,7 @@ def check_mail_services(instance_id):
                 }
                 results['metrics']['admin_endpoint_healthy'] = 1 if admin_healthy else 0
                 if not admin_healthy:
-                    all_primary_healthy = False
+                    mail_primary_healthy = False
             elif service == 'disk_usage_percent':
                 try:
                     disk_percent = int(stdout)
@@ -245,7 +247,7 @@ def check_mail_services(instance_id):
                 }
                 results['metrics']['disk_usage_percent'] = disk_percent
                 if not disk_ok:
-                    all_primary_healthy = False
+                    disk_ok = False
             else:  # mail_queue
                 results['primary'][service] = {
                     'status': 'ok' if stdout and stdout != 'empty' else 'empty',
@@ -258,8 +260,10 @@ def check_mail_services(instance_id):
                 'status': 'error',
                 'error': str(e)
             }
-            if service in ['postfix', 'dovecot', 'mailbox_root_permissions', 'admin_endpoint', 'disk_usage_percent']:
-                all_primary_healthy = False
+            if service in ['postfix', 'dovecot', 'mailinabox_service', 'mailbox_root_permissions', 'admin_endpoint']:
+                mail_primary_healthy = False
+            if service == 'disk_usage_percent':
+                disk_ok = False
     
     # Check ports (informational only - don't affect health status)
     for port_name, command in port_checks.items():
@@ -294,24 +298,28 @@ def check_mail_services(instance_id):
                 'note': 'informational_only_aws_may_restrict'
             }
     
-    # Determine overall health based on primary checks only
-    results['healthy'] = all_primary_healthy
-    results['metrics']['mail_primary_healthy'] = 1 if all_primary_healthy else 0
-    if all_primary_healthy:
-        results['health_reason'] = 'All primary checks passed (postfix, dovecot, mailbox_root_permissions, admin_endpoint, disk_usage)'
+    # Determine overall health:
+    # - MailPrimaryHealthy is only service/admin related
+    # - Disk usage is tracked separately by DiskUsagePercent alarm
+    results['metrics']['mail_primary_healthy'] = 1 if mail_primary_healthy else 0
+    results['healthy'] = mail_primary_healthy and disk_ok
+
+    unhealthy_checks = []
+    for check_name, check_result in results['primary'].items():
+        status = check_result.get('status')
+        if check_name in ['postfix', 'dovecot', 'mailinabox_service'] and status != 'active':
+            unhealthy_checks.append(check_name)
+        if check_name == 'mailbox_root_permissions' and status != 'ok':
+            unhealthy_checks.append(f"{check_name}={check_result.get('raw', 'unknown')}")
+        if check_name == 'admin_endpoint' and status != 'healthy':
+            unhealthy_checks.append(f"{check_name}={check_result.get('raw', 'unknown')}")
+        if check_name == 'disk_usage_percent' and status != 'ok':
+            unhealthy_checks.append(f"{check_name}={check_result.get('usage_percent', 'unknown')}%")
+
+    if not unhealthy_checks:
+        results['health_reason'] = 'All checks passed (postfix, dovecot, mailinabox, mailbox permissions, admin endpoint, disk usage)'
     else:
-        unhealthy_checks = []
-        for check_name, check_result in results['primary'].items():
-            status = check_result.get('status')
-            if check_name in ['postfix', 'dovecot'] and status != 'active':
-                unhealthy_checks.append(check_name)
-            if check_name == 'mailbox_root_permissions' and status != 'ok':
-                unhealthy_checks.append(f"{check_name}={check_result.get('raw', 'unknown')}")
-            if check_name == 'admin_endpoint' and status != 'healthy':
-                unhealthy_checks.append(f"{check_name}={check_result.get('raw', 'unknown')}")
-            if check_name == 'disk_usage_percent' and status != 'ok':
-                unhealthy_checks.append(f"{check_name}={check_result.get('usage_percent', 'unknown')}%")
-        results['health_reason'] = f'Primary checks failing: {", ".join(unhealthy_checks)}'
+        results['health_reason'] = f'Checks failing: {", ".join(unhealthy_checks)}'
     
     return results
 
