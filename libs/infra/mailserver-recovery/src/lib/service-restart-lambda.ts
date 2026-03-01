@@ -114,6 +114,7 @@ if [ -f "$MIAB_START" ]; then
         sed -i '/source \\/usr\\/local\\/lib\\/mailinabox\\/env\\/bin\\/activate/a cd \\/opt\\/mailinabox\\/management' "$MIAB_START" || true
     fi
     sed -i 's/-b localhost:10222/-b 127.0.0.1:10222/g' "$MIAB_START" || true
+    sed -i 's#exec gunicorn .*#exec gunicorn -b 127.0.0.1:10222 -w 2 --timeout 120 wsgi:app#' "$MIAB_START" || true
 fi
 
 # Repair common mailbox root ownership drift that breaks IMAP folder operations.
