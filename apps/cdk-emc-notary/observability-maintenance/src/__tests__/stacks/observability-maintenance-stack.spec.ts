@@ -40,6 +40,7 @@ describe('MailServerObservabilityMaintenanceStack', () => {
     expect(alarms.some((a) => JSON.stringify(a.Properties?.AlarmName).includes('AdminEndpointUnhealthy-'))).toBe(true);
     expect(alarms.some((a) => JSON.stringify(a.Properties?.AlarmName).includes('DiskUsageCritical-'))).toBe(true);
     expect(alarms.some((a) => JSON.stringify(a.Properties?.AlarmName).includes('MailPrimaryUnhealthy-'))).toBe(true);
+    expect(alarms.some((a) => JSON.stringify(a.Properties?.AlarmName).includes('Fail2BanUnhealthy-'))).toBe(true);
   });
 
   it('creates a daily non-critical cleanup schedule and disables scheduled stop-start', () => {
@@ -55,6 +56,15 @@ describe('MailServerObservabilityMaintenanceStack', () => {
     expect(cleanupRule).toBeDefined();
     expect(String(cleanupRule?.Properties?.ScheduleExpression || '')).toContain('cron(');
     expect(stopStartRule).toBeUndefined();
+  });
+
+  it('creates remediation state store for lock/cooldown/suppression control', () => {
+    const tables = Object.values(template.findResources('AWS::DynamoDB::Table', {})) as any[];
+
+    expect(tables.length).toBeGreaterThanOrEqual(1);
+    expect(
+      tables.some((table) => String(table.Properties?.TimeToLiveSpecification?.AttributeName || '') === 'expiresAt')
+    ).toBe(true);
   });
 
   it('exports observability outputs required by admin tooling', () => {

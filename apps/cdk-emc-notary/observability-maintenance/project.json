@@ -155,6 +155,18 @@
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/monitor-disk-space.cli.ts ${DOMAIN:+--domain $DOMAIN} ${THRESHOLD:+--threshold $THRESHOLD}"
       },
       "description": "Monitor disk space on instance via observability wrapper"
+    },
+    "admin:disk:expand-root": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "^build",
+        "admin-stack-info:build",
+        "cdk-emcnotary-instance:admin:test:instance-deployed"
+      ],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=${APP_PATH:-apps/cdk-emc-notary/instance} DOMAIN=${DOMAIN:-emcnotary.com} TARGET_SIZE_GB=${TARGET_SIZE_GB:-20} pnpm exec tsx --tsconfig tools/tsconfig.json tools/expand-root-volume.cli.ts --target-size-gb ${TARGET_SIZE_GB:-20} ${DOMAIN:+--domain $DOMAIN} ${APP_PATH:+--app-path $APP_PATH}"
+      },
+      "description": "Expand root EBS volume in place with dry-run default (pass --execute to apply)"
     }
   }
 }

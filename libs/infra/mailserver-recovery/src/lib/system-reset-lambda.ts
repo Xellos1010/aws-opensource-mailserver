@@ -243,6 +243,18 @@ else
 fi
 echo ""
 
+# Step 5.6: Ensure log files required by fail2ban jails exist
+echo "=== Step 5.6: Fail2Ban Log File Integrity ==="
+mkdir -p /var/log/roundcubemail
+touch /var/log/roundcubemail/errors.log
+chown www-data:www-data /var/log/roundcubemail/errors.log 2>/dev/null || true
+chmod 640 /var/log/roundcubemail/errors.log 2>/dev/null || true
+touch /var/log/fail2ban.log
+chown root:adm /var/log/fail2ban.log 2>/dev/null || true
+chmod 640 /var/log/fail2ban.log 2>/dev/null || true
+echo "Fail2Ban log dependencies verified"
+echo ""
+
 # Step 6: Restart mail services
 echo "=== Step 6: Service Restart ==="
 # Stop services gracefully first
@@ -262,6 +274,7 @@ sudo systemctl restart mailinabox || true
 sudo systemctl restart postfix || true
 sudo systemctl restart dovecot || true
 sudo systemctl restart nginx || true
+sudo systemctl restart fail2ban || true
 
 # Wait for services to stabilize
 sleep 5
@@ -273,12 +286,14 @@ MAILINABOX_STATUS=$(systemctl is-active mailinabox 2>/dev/null || echo "unknown"
 POSTFIX_STATUS=$(systemctl is-active postfix 2>/dev/null || echo "unknown")
 DOVECOT_STATUS=$(systemctl is-active dovecot 2>/dev/null || echo "unknown")
 NGINX_STATUS=$(systemctl is-active nginx 2>/dev/null || echo "unknown")
+FAIL2BAN_STATUS=$(systemctl is-active fail2ban 2>/dev/null || echo "unknown")
 ADMIN_HTTP_STATUS=$(curl -sk --max-time 20 -o /dev/null -w "%{http_code}" https://127.0.0.1/admin || echo "timeout")
 
 echo "Mailinabox: $MAILINABOX_STATUS"
 echo "Postfix: $POSTFIX_STATUS"
 echo "Dovecot: $DOVECOT_STATUS"
 echo "Nginx: $NGINX_STATUS"
+echo "Fail2Ban: $FAIL2BAN_STATUS"
 echo "AdminEndpoint: $ADMIN_HTTP_STATUS"
 echo ""
 
@@ -297,7 +312,7 @@ case "$ADMIN_HTTP_STATUS" in
     2*|3*|4*) ADMIN_OK=1 ;;
 esac
 
-if [ "$MAILINABOX_STATUS" = "active" ] && [ "$POSTFIX_STATUS" = "active" ] && [ "$DOVECOT_STATUS" = "active" ] && [ "$ADMIN_OK" -eq 1 ]; then
+if [ "$MAILINABOX_STATUS" = "active" ] && [ "$POSTFIX_STATUS" = "active" ] && [ "$DOVECOT_STATUS" = "active" ] && [ "$FAIL2BAN_STATUS" = "active" ] && [ "$ADMIN_OK" -eq 1 ]; then
     echo "=========================================="
     echo "✅ System reset completed successfully"
     echo "=========================================="
@@ -311,6 +326,7 @@ else
     [ "$POSTFIX_STATUS" != "active" ] && echo "  - Postfix: $POSTFIX_STATUS"
     [ "$DOVECOT_STATUS" != "active" ] && echo "  - Dovecot: $DOVECOT_STATUS"
     [ "$NGINX_STATUS" != "active" ] && echo "  - Nginx: $NGINX_STATUS"
+    [ "$FAIL2BAN_STATUS" != "active" ] && echo "  - Fail2Ban: $FAIL2BAN_STATUS"
     [ "$ADMIN_OK" -ne 1 ] && echo "  - Admin endpoint unhealthy: $ADMIN_HTTP_STATUS"
     exit 1
 fi

@@ -33,8 +33,14 @@ export interface EmergencyAlarmsProps {
   adminEndpointHealthyThreshold?: number;
   /** Root disk usage critical threshold (percent) */
   diskUsageCriticalPercent?: number;
+  /** Root disk usage evaluation periods before alarm (default: 5). */
+  diskUsageEvaluationPeriods?: number;
+  /** Root disk usage datapoints to alarm (default: 3). */
+  diskUsageDatapointsToAlarm?: number;
   /** Primary health threshold (0/1 metric) */
   mailPrimaryHealthyThreshold?: number;
+  /** Fail2Ban healthy threshold (0/1 metric) */
+  fail2banHealthyThreshold?: number;
 }
 
 /**
@@ -55,6 +61,7 @@ export class EmergencyAlarms extends Construct {
   public readonly adminEndpointAlarm?: cw.Alarm;
   public readonly diskUsageCriticalAlarm?: cw.Alarm;
   public readonly mailPrimaryUnhealthyAlarm?: cw.Alarm;
+  public readonly fail2banUnhealthyAlarm?: cw.Alarm;
   public readonly syslogLogGroup: logs.LogGroup;
 
   constructor(scope: Construct, id: string, props: EmergencyAlarmsProps) {
@@ -72,7 +79,10 @@ export class EmergencyAlarms extends Construct {
       healthMetricsNamespace = 'MailServer/Health',
       adminEndpointHealthyThreshold = 1,
       diskUsageCriticalPercent = 92,
+      diskUsageEvaluationPeriods = 5,
+      diskUsageDatapointsToAlarm = 3,
       mailPrimaryHealthyThreshold = 1,
+      fail2banHealthyThreshold = 1,
     } = props;
 
     const alarmPrefix = alarmNamePrefix ? `${alarmNamePrefix}-` : '';
@@ -265,7 +275,8 @@ export class EmergencyAlarms extends Construct {
           statistic: 'Maximum',
         }),
         threshold: diskUsageCriticalPercent,
-        evaluationPeriods: 3,
+        evaluationPeriods: diskUsageEvaluationPeriods,
+        datapointsToAlarm: diskUsageDatapointsToAlarm,
         comparisonOperator: cw.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
         treatMissingData: cw.TreatMissingData.NOT_BREACHING,
       });
@@ -295,6 +306,30 @@ export class EmergencyAlarms extends Construct {
       });
       const mailPrimaryCfn = this.mailPrimaryUnhealthyAlarm.node.defaultChild as cw.CfnAlarm;
       mailPrimaryCfn.addPropertyOverride('AlarmActions', alarmActions);
+    }
+
+    if (enableProactiveHealthAlarms) {
+      this.fail2banUnhealthyAlarm = new cw.Alarm(this, 'Fail2BanUnhealthyAlarm', {
+        alarmName: `${alarmPrefix}Fail2BanUnhealthy-${instanceId}`,
+        alarmDescription:
+          'Alerts when fail2ban health degrades and triggers progressive non-reboot recovery (service restart first).',
+        metric: new cw.Metric({
+          namespace: healthMetricsNamespace,
+          metricName: 'Fail2BanHealthy',
+          dimensionsMap: {
+            InstanceId: instanceId,
+            Domain: domainName,
+          },
+          period: Duration.minutes(1),
+          statistic: 'Minimum',
+        }),
+        threshold: fail2banHealthyThreshold,
+        evaluationPeriods: 3,
+        comparisonOperator: cw.ComparisonOperator.LESS_THAN_THRESHOLD,
+        treatMissingData: cw.TreatMissingData.BREACHING,
+      });
+      const fail2banCfn = this.fail2banUnhealthyAlarm.node.defaultChild as cw.CfnAlarm;
+      fail2banCfn.addPropertyOverride('AlarmActions', alarmActions);
     }
   }
 }

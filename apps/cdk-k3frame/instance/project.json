@@ -877,6 +877,14 @@
         "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-k3frame/instance DOMAIN=${DOMAIN:-k3frame.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/repair-mail-delivery.cli.ts ${DOMAIN:+--domain $DOMAIN} --dry-run"
       },
       "description": "Preview mail repairs without applying changes"
+    },
+    "admin:disk:expand-root": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build", "admin-stack-info:build", "admin:test:instance-deployed"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=${APP_PATH:-apps/cdk-k3frame/instance} DOMAIN=${DOMAIN:-k3frame.com} TARGET_SIZE_GB=${TARGET_SIZE_GB:-20} pnpm exec tsx --tsconfig tools/tsconfig.json tools/expand-root-volume.cli.ts --target-size-gb ${TARGET_SIZE_GB:-20} ${DOMAIN:+--domain $DOMAIN} ${APP_PATH:+--app-path $APP_PATH}"
+      },
+      "description": "Expand root EBS volume in place with dry-run default (pass --execute to apply)"
     }
   }
 }

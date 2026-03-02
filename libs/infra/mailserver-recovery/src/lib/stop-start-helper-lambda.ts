@@ -12,6 +12,8 @@ import {
 } from 'aws-cdk-lib';
 
 export interface StopStartHelperLambdaProps {
+  /** Optional EC2 instance ID override (skips CloudFormation lookup when present). */
+  instanceId?: string;
   /** Mail server CloudFormation stack name to get instance ID from */
   mailServerStackName: string;
   /** Domain name for resource naming */
@@ -28,6 +30,10 @@ export interface StopStartHelperLambdaProps {
   maintenanceWindowEndHour?: number;
   /** Whether maintenance window suppression is enabled (default: true when scheduleExpression is set) */
   maintenanceWindowEnabled?: boolean;
+  /** Optional remediation state table for restart lock state. */
+  remediationStateTableName?: string;
+  /** Lock TTL in seconds for restart lock state (default: 900). */
+  restartLockTtlSeconds?: number;
   /** Timeout in seconds (default: 900 = 15 minutes) */
   timeout?: Duration;
   /** Memory size in MB (default: 256) */
@@ -54,6 +60,7 @@ export class StopStartHelperLambda extends Construct {
     super(scope, id);
 
     const {
+      instanceId,
       mailServerStackName,
       domainName,
       mailHealthCheckLambdaName,
@@ -62,6 +69,8 @@ export class StopStartHelperLambda extends Construct {
       maintenanceWindowStartHour = 8,
       maintenanceWindowEndHour = 8.25,
       maintenanceWindowEnabled = Boolean(scheduleExpression),
+      remediationStateTableName,
+      restartLockTtlSeconds = 15 * 60,
       timeout = Duration.minutes(15),
       memorySize = 256,
     } = props;
@@ -103,6 +112,21 @@ export class StopStartHelperLambda extends Construct {
       })
     );
 
+    if (remediationStateTableName) {
+      role.addToPolicy(
+        new iam.PolicyStatement({
+          actions: ['dynamodb:GetItem', 'dynamodb:PutItem', 'dynamodb:DeleteItem'],
+          resources: [
+            stack.formatArn({
+              service: 'dynamodb',
+              resource: 'table',
+              resourceName: remediationStateTableName,
+            }),
+          ],
+        })
+      );
+    }
+
     // Lambda invoke permissions for health check and service restart
     if (mailHealthCheckLambdaName || serviceRestartLambdaName) {
       role.addToPolicy(
@@ -132,6 +156,7 @@ const { EC2Client, StopInstancesCommand, StartInstancesCommand, DescribeInstance
 const { CloudFormationClient, DescribeStacksCommand } = require('@aws-sdk/client-cloudformation');
 const { LambdaClient, InvokeCommand } = require('@aws-sdk/client-lambda');
 const { CloudWatchLogsClient, FilterLogEventsCommand } = require('@aws-sdk/client-cloudwatch-logs');
+const { DynamoDBClient, PutItemCommand, DeleteItemCommand } = require('@aws-sdk/client-dynamodb');
 const { TextDecoder } = require('util');
 
 const region = process.env.AWS_REGION || 'us-east-1';
@@ -139,6 +164,7 @@ const ec2Client = new EC2Client({ region });
 const cfClient = new CloudFormationClient({ region });
 const lambdaClient = new LambdaClient({ region });
 const logsClient = new CloudWatchLogsClient({ region });
+const dynamodbClient = new DynamoDBClient({ region });
 
 async function getInstanceIdFromStack(stackName) {
   try {
@@ -361,15 +387,63 @@ function determineRestartReason(event) {
   return 'manual';
 }
 
+async function acquireRestartLock(instanceId, restartReason) {
+  const tableName = process.env.REMEDIATION_STATE_TABLE_NAME;
+  if (!tableName) {
+    return { acquired: true, stateKey: '' };
+  }
+
+  const ttlSeconds = parseInt(process.env.RESTART_LOCK_TTL_SECONDS || '900', 10);
+  const now = Math.floor(Date.now() / 1000);
+  const stateKey = 'lock#' + instanceId + '#restart';
+
+  try {
+    await dynamodbClient.send(new PutItemCommand({
+      TableName: tableName,
+      Item: {
+        stateKey: { S: stateKey },
+        kind: { S: 'restart-lock' },
+        reason: { S: restartReason || 'unknown' },
+        updatedAt: { N: String(now) },
+        expiresAt: { N: String(now + ttlSeconds) },
+      },
+      ConditionExpression: 'attribute_not_exists(stateKey) OR expiresAt < :now',
+      ExpressionAttributeValues: {
+        ':now': { N: String(now) },
+      },
+    }));
+    return { acquired: true, stateKey };
+  } catch (error) {
+    console.log('Restart lock is already held:', error.message);
+    return { acquired: false, stateKey };
+  }
+}
+
+async function releaseRestartLock(stateKey) {
+  const tableName = process.env.REMEDIATION_STATE_TABLE_NAME;
+  if (!tableName || !stateKey) {
+    return;
+  }
+  try {
+    await dynamodbClient.send(new DeleteItemCommand({
+      TableName: tableName,
+      Key: { stateKey: { S: stateKey } },
+    }));
+  } catch (error) {
+    console.log('Failed to release restart lock:', error.message);
+  }
+}
+
 exports.handler = async (event) => {
   const stackName = process.env.MAIL_SERVER_STACK_NAME;
+  const configuredInstanceId = process.env.INSTANCE_ID;
   const healthCheckLambdaName = process.env.MAIL_HEALTH_CHECK_LAMBDA_NAME;
   const serviceRestartLambdaName = process.env.SERVICE_RESTART_LAMBDA_NAME;
-  const logGroupName = '/aws/lambda/' + process.env.AWS_LAMBDA_FUNCTION_NAME;
+  const logGroupName = process.env.LOG_GROUP_NAME || '/aws/lambda/' + process.env.AWS_LAMBDA_FUNCTION_NAME;
 
-  if (!stackName) {
-    console.error('MAIL_SERVER_STACK_NAME environment variable not set');
-    throw new Error('MAIL_SERVER_STACK_NAME environment variable not set');
+  if (!stackName && !configuredInstanceId) {
+    console.error('MAIL_SERVER_STACK_NAME or INSTANCE_ID environment variable must be set');
+    throw new Error('MAIL_SERVER_STACK_NAME or INSTANCE_ID environment variable must be set');
   }
 
   // Determine restart reason
@@ -438,8 +512,8 @@ exports.handler = async (event) => {
     }
 
     // Get instance ID
-    console.log('Getting instance ID from stack: ' + stackName);
-    const instanceId = await getInstanceIdFromStack(stackName);
+    const instanceId = configuredInstanceId || await getInstanceIdFromStack(stackName);
+    console.log('Resolved instance ID: ' + instanceId);
     console.log('Found instance ID: ' + instanceId);
 
     // For alarm-triggered restarts, try service restart first (faster recovery)
@@ -468,7 +542,23 @@ exports.handler = async (event) => {
 
     // Proceed with instance restart (either scheduled, manual, or after failed service restart)
     console.log('Proceeding with instance restart (reason: ' + restartReason + ')');
-    await stopAndStart(instanceId);
+    const lock = await acquireRestartLock(instanceId, restartReason);
+    if (!lock.acquired) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({
+          message: 'Restart skipped - restart lock is already held',
+          instanceId,
+          restartReason,
+          skipped: true,
+        }),
+      };
+    }
+    try {
+      await stopAndStart(instanceId);
+    } finally {
+      await releaseRestartLock(lock.stateKey);
+    }
 
     return {
       statusCode: 200,
@@ -490,12 +580,16 @@ exports.handler = async (event) => {
       memorySize,
       logGroup,
       environment: {
+        INSTANCE_ID: instanceId || '',
         MAIL_SERVER_STACK_NAME: mailServerStackName,
         MAIL_HEALTH_CHECK_LAMBDA_NAME: mailHealthCheckLambdaName || '',
         SERVICE_RESTART_LAMBDA_NAME: serviceRestartLambdaName || '',
+        LOG_GROUP_NAME: logGroup.logGroupName,
         MAINTENANCE_WINDOW_START_HOUR: maintenanceWindowStartHour.toString(),
         MAINTENANCE_WINDOW_END_HOUR: maintenanceWindowEndHour.toString(),
         MAINTENANCE_WINDOW_ENABLED: maintenanceWindowEnabled ? 'true' : 'false',
+        REMEDIATION_STATE_TABLE_NAME: remediationStateTableName || '',
+        RESTART_LOCK_TTL_SECONDS: String(restartLockTtlSeconds),
       },
     });
 

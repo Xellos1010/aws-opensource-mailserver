@@ -69,6 +69,12 @@ async function runCleanup(instanceId) {
     'find /tmp -type f -mtime +1 -delete 2>/dev/null || true',
     'find /var/tmp -type f -mtime +2 -delete 2>/dev/null || true',
     'find /home/user-data -type f -name "*.tmp" -mtime +1 -delete 2>/dev/null || true',
+    'mkdir -p /var/log/roundcubemail',
+    'touch /var/log/roundcubemail/errors.log /var/log/fail2ban.log',
+    'chown www-data:www-data /var/log/roundcubemail/errors.log 2>/dev/null || true',
+    'chmod 640 /var/log/roundcubemail/errors.log /var/log/fail2ban.log 2>/dev/null || true',
+    'chown root:adm /var/log/fail2ban.log 2>/dev/null || true',
+    'systemctl is-active fail2ban >/dev/null 2>&1 || systemctl restart fail2ban 2>/dev/null || true',
     'echo "Disk after cleanup:" && df -h / | tail -1',
   ].join('\\n');
 

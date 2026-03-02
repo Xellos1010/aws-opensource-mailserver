@@ -1,11 +1,13 @@
 import { Construct } from 'constructs';
 import {
   Duration,
+  RemovalPolicy,
   aws_cloudwatch as cw,
   aws_cloudwatch_actions as cwa,
   aws_sns as sns,
   aws_events as events,
   aws_lambda as lambda,
+  aws_dynamodb as dynamodb,
 } from 'aws-cdk-lib';
 import { createDailySystemCleanup } from './daily-system-cleanup';
 import { MailHealthCheckLambda } from './mail-health-check-lambda';
@@ -42,6 +44,14 @@ export interface MailserverObservabilityMaintenanceProps {
   systemStatsScheduleExpression?: string;
   /** Optional prefix for explicitly named resources (alarms) */
   alarmNamePrefix?: string;
+  /** Root disk usage threshold used by both alarming and remediation (default: 92). */
+  diskCriticalPercent?: number;
+  /** Root disk usage percent that re-arms disk remediation after recovery (default: 88). */
+  diskRearmPercent?: number;
+  /** Cooldown for repeated remediation per alarm before re-attempt (default: 30). */
+  remediationCooldownMinutes?: number;
+  /** Disk unresolved suppression window to avoid repeated heavy remediation (default: 6). */
+  diskSuppressionHours?: number;
 }
 
 /**
@@ -51,6 +61,7 @@ export interface MailserverObservabilityMaintenanceProps {
  */
 export class MailserverObservabilityMaintenance extends Construct {
   public readonly alarmsTopic: sns.ITopic;
+  public readonly remediationStateTable: dynamodb.Table;
   public readonly dailyCleanupLambda: lambda.Function;
   public readonly dailyCleanupRule: events.Rule;
   /** @deprecated Alias retained for compatibility. */
@@ -85,9 +96,22 @@ export class MailserverObservabilityMaintenance extends Construct {
       healthCheckScheduleExpression = 'rate(5 minutes)',
       systemStatsScheduleExpression = 'rate(1 hour)',
       alarmNamePrefix,
+      diskCriticalPercent = 92,
+      diskRearmPercent = 88,
+      remediationCooldownMinutes = 30,
+      diskSuppressionHours = 6,
     } = props;
 
     this.alarmsTopic = sns.Topic.fromTopicArn(this, 'AlarmsTopic', alarmsTopicArn);
+    this.remediationStateTable = new dynamodb.Table(this, 'RemediationStateTable', {
+      partitionKey: {
+        name: 'stateKey',
+        type: dynamodb.AttributeType.STRING,
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      timeToLiveAttribute: 'expiresAt',
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
 
     const cleanupScheduleExpression =
       dailyCleanupScheduleExpression || (nightlyRebootSchedule ? `cron(${nightlyRebootSchedule})` : undefined);
@@ -115,6 +139,9 @@ export class MailserverObservabilityMaintenance extends Construct {
       domainName,
       scheduleExpression: healthCheckScheduleExpression,
       notificationTopic: this.alarmsTopic,
+      diskCriticalPercent,
+      diskRearmPercent,
+      remediationStateTableName: this.remediationStateTable.tableName,
     });
 
     this.serviceRestart = new ServiceRestartLambda(this, 'ServiceRestart', {
@@ -128,6 +155,7 @@ export class MailserverObservabilityMaintenance extends Construct {
     });
 
     this.stopStartHelper = new StopStartHelperLambda(this, 'StopStartHelper', {
+      instanceId,
       mailServerStackName: instanceStackName,
       domainName,
       mailHealthCheckLambdaName: this.mailHealthCheck.lambda.functionName,
@@ -136,6 +164,8 @@ export class MailserverObservabilityMaintenance extends Construct {
       maintenanceWindowEnabled: Boolean(stopStartScheduleExpression),
       maintenanceWindowStartHour: 8,
       maintenanceWindowEndHour: 8.25,
+      remediationStateTableName: this.remediationStateTable.tableName,
+      restartLockTtlSeconds: 15 * 60,
     });
 
     this.recoveryOrchestrator = new RecoveryOrchestratorLambda(this, 'RecoveryOrchestrator', {
@@ -143,8 +173,18 @@ export class MailserverObservabilityMaintenance extends Construct {
       systemResetLambdaArn: this.systemReset.lambda.functionArn,
       serviceRestartLambdaArn: this.serviceRestart.lambda.functionArn,
       stopStartLambdaArn: this.stopStartHelper.lambda.functionArn,
+      instanceId,
       domainName,
+      remediationStateTableName: this.remediationStateTable.tableName,
+      diskCriticalPercent,
+      diskRearmPercent,
+      remediationCooldownMinutes,
+      diskSuppressionHours,
     });
+
+    this.remediationStateTable.grantReadWriteData(this.mailHealthCheck.lambda);
+    this.remediationStateTable.grantReadWriteData(this.stopStartHelper.lambda);
+    this.remediationStateTable.grantReadWriteData(this.recoveryOrchestrator.lambda);
 
     this.emergencyAlarms = new EmergencyAlarms(this, 'EmergencyAlarms', {
       instanceId,
@@ -152,6 +192,9 @@ export class MailserverObservabilityMaintenance extends Construct {
       notificationTopic: this.alarmsTopic,
       domainName,
       alarmNamePrefix,
+      diskUsageCriticalPercent: diskCriticalPercent,
+      diskUsageEvaluationPeriods: 5,
+      diskUsageDatapointsToAlarm: 3,
     });
 
     const alarmPrefix = alarmNamePrefix ? `${alarmNamePrefix}-` : '';

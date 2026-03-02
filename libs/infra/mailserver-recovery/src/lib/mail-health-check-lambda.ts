@@ -24,6 +24,12 @@ export interface MailHealthCheckLambdaProps {
   timeout?: Duration;
   /** Memory size in MB (default: 256) */
   memorySize?: number;
+  /** Root disk usage threshold used for health evaluation (default: 92). */
+  diskCriticalPercent?: number;
+  /** Root disk usage re-arm threshold that clears suppression/cooldown state (default: 88). */
+  diskRearmPercent?: number;
+  /** Optional remediation state table name for suppression/cooldown re-arm updates. */
+  remediationStateTableName?: string;
 }
 
 /**
@@ -46,6 +52,9 @@ export class MailHealthCheckLambda extends Construct {
       notificationTopic,
       timeout = Duration.seconds(30),
       memorySize = 256,
+      diskCriticalPercent = 92,
+      diskRearmPercent = 88,
+      remediationStateTableName,
     } = props;
 
     // IAM Role - Use construct ID for naming (domainName is a token from SSM)
@@ -84,6 +93,21 @@ export class MailHealthCheckLambda extends Construct {
       })
     );
 
+    if (remediationStateTableName) {
+      role.addToPolicy(
+        new iam.PolicyStatement({
+          actions: ['dynamodb:GetItem', 'dynamodb:PutItem', 'dynamodb:DeleteItem', 'dynamodb:UpdateItem'],
+          resources: [
+            stack.formatArn({
+              service: 'dynamodb',
+              resource: 'table',
+              resourceName: remediationStateTableName,
+            }),
+          ],
+        })
+      );
+    }
+
     // CloudWatch Log Group
     const logGroup = new logs.LogGroup(this, 'LogGroup', {
       retention: logs.RetentionDays.ONE_MONTH,
@@ -104,10 +128,45 @@ from datetime import datetime
 
 ssm = boto3.client('ssm')
 cloudwatch = boto3.client('cloudwatch')
+dynamodb = boto3.client('dynamodb')
 
 METRICS_NAMESPACE = 'MailServer/Health'
 ADMIN_TIMEOUT_SECONDS = 10
-DISK_CRITICAL_PERCENT = 95
+
+def parse_int_env(name, default):
+    raw = os.environ.get(name)
+    if raw in [None, '']:
+        return default
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return default
+
+DISK_CRITICAL_PERCENT = parse_int_env('DISK_CRITICAL_PERCENT', 92)
+DISK_REARM_PERCENT = parse_int_env('DISK_REARM_PERCENT', 88)
+REMEDIATION_STATE_TABLE_NAME = os.environ.get('REMEDIATION_STATE_TABLE_NAME', '')
+
+def clear_disk_suppression_state(instance_id, disk_percent):
+    if not REMEDIATION_STATE_TABLE_NAME:
+        return False
+    if disk_percent >= DISK_REARM_PERCENT:
+        return False
+
+    keys = [
+        f'suppression#{instance_id}#DiskUsageCritical',
+        f'cooldown#{instance_id}#DiskUsageCritical',
+    ]
+    cleared_any = False
+    for key in keys:
+        try:
+            dynamodb.delete_item(
+                TableName=REMEDIATION_STATE_TABLE_NAME,
+                Key={'stateKey': {'S': key}}
+            )
+            cleared_any = True
+        except Exception as error:
+            print(f"Failed clearing remediation state {key}: {str(error)}")
+    return cleared_any
 
 def parse_admin_healthy(raw_status):
     if raw_status in ['timeout', '', None]:
@@ -147,6 +206,7 @@ def check_mail_services(instance_id):
         'postfix': 'systemctl is-active postfix',
         'dovecot': 'systemctl is-active dovecot',
         'mailinabox_service': 'systemctl is-active mailinabox',
+        'fail2ban_service': 'systemctl is-active fail2ban',
         'mailbox_root_permissions': mailbox_permission_cmd,
         'mail_queue': 'mailq | head -1 || echo "empty"',
         'admin_endpoint': f'curl -sk --max-time {ADMIN_TIMEOUT_SECONDS} -o /dev/null -w "%{{http_code}}" https://127.0.0.1/admin || echo timeout',
@@ -168,15 +228,18 @@ def check_mail_services(instance_id):
             'admin_endpoint_healthy': 0,
             'disk_usage_percent': 100,
             'mail_primary_healthy': 0,
+            'fail2ban_healthy': 0,
         },
         'healthy': False,
         'health_reason': '',
+        'disk_rearmed': False,
         'timestamp': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
     }
     
     # Mail primary health is intentionally separate from disk pressure.
     mail_primary_healthy = True
     disk_ok = True
+    fail2ban_healthy = True
     for service, command in primary_checks.items():
         try:
             response = ssm.send_command(
@@ -216,6 +279,13 @@ def check_mail_services(instance_id):
                 }
                 if not is_active:
                     mail_primary_healthy = False
+            elif service == 'fail2ban_service':
+                is_active = stdout == 'active'
+                fail2ban_healthy = is_active
+                results['primary'][service] = {
+                    'status': 'active' if is_active else 'inactive',
+                    'raw': stdout
+                }
             elif service == 'mailbox_root_permissions':
                 permission_ok = stdout in ['ok', 'skip']
                 results['primary'][service] = {
@@ -246,6 +316,8 @@ def check_mail_services(instance_id):
                     'raw': stdout
                 }
                 results['metrics']['disk_usage_percent'] = disk_percent
+                if clear_disk_suppression_state(instance_id, disk_percent):
+                    results['disk_rearmed'] = True
                 if not disk_ok:
                     disk_ok = False
             else:  # mail_queue
@@ -262,6 +334,8 @@ def check_mail_services(instance_id):
             }
             if service in ['postfix', 'dovecot', 'mailinabox_service', 'mailbox_root_permissions', 'admin_endpoint']:
                 mail_primary_healthy = False
+            if service == 'fail2ban_service':
+                fail2ban_healthy = False
             if service == 'disk_usage_percent':
                 disk_ok = False
     
@@ -302,7 +376,8 @@ def check_mail_services(instance_id):
     # - MailPrimaryHealthy is only service/admin related
     # - Disk usage is tracked separately by DiskUsagePercent alarm
     results['metrics']['mail_primary_healthy'] = 1 if mail_primary_healthy else 0
-    results['healthy'] = mail_primary_healthy and disk_ok
+    results['metrics']['fail2ban_healthy'] = 1 if fail2ban_healthy else 0
+    results['healthy'] = mail_primary_healthy and disk_ok and fail2ban_healthy
 
     unhealthy_checks = []
     for check_name, check_result in results['primary'].items():
@@ -313,11 +388,13 @@ def check_mail_services(instance_id):
             unhealthy_checks.append(f"{check_name}={check_result.get('raw', 'unknown')}")
         if check_name == 'admin_endpoint' and status != 'healthy':
             unhealthy_checks.append(f"{check_name}={check_result.get('raw', 'unknown')}")
+        if check_name == 'fail2ban_service' and status != 'active':
+            unhealthy_checks.append(check_name)
         if check_name == 'disk_usage_percent' and status != 'ok':
             unhealthy_checks.append(f"{check_name}={check_result.get('usage_percent', 'unknown')}%")
 
     if not unhealthy_checks:
-        results['health_reason'] = 'All checks passed (postfix, dovecot, mailinabox, mailbox permissions, admin endpoint, disk usage)'
+        results['health_reason'] = 'All checks passed (postfix, dovecot, mailinabox, fail2ban, mailbox permissions, admin endpoint, disk usage)'
     else:
         results['health_reason'] = f'Checks failing: {", ".join(unhealthy_checks)}'
     
@@ -338,6 +415,11 @@ def publish_metrics(instance_id, domain_name, health):
         {
             'MetricName': 'MailPrimaryHealthy',
             'Value': health['metrics']['mail_primary_healthy'],
+            'Unit': 'Count',
+        },
+        {
+            'MetricName': 'Fail2BanHealthy',
+            'Value': health['metrics']['fail2ban_healthy'],
             'Unit': 'Count',
         },
     ]
@@ -396,6 +478,9 @@ def handler(event, context):
       environment: {
         INSTANCE_ID: instanceId,
         DOMAIN_NAME: domainName,
+        DISK_CRITICAL_PERCENT: String(diskCriticalPercent),
+        DISK_REARM_PERCENT: String(diskRearmPercent),
+        REMEDIATION_STATE_TABLE_NAME: remediationStateTableName || '',
       },
     });
 

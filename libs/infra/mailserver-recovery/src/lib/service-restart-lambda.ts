@@ -131,6 +131,15 @@ if [ -n "$DOMAIN_NAME" ]; then
     fi
 fi
 
+# Ensure log files required by fail2ban jails exist (roundcube + fail2ban).
+mkdir -p /var/log/roundcubemail
+touch /var/log/roundcubemail/errors.log
+chown www-data:www-data /var/log/roundcubemail/errors.log 2>/dev/null || true
+chmod 640 /var/log/roundcubemail/errors.log 2>/dev/null || true
+touch /var/log/fail2ban.log
+chown root:adm /var/log/fail2ban.log 2>/dev/null || true
+chmod 640 /var/log/fail2ban.log 2>/dev/null || true
+
 # Ensure no stale management gunicorn workers are left behind.
 pkill -f "gunicorn .*10222" 2>/dev/null || true
 
@@ -139,6 +148,7 @@ sudo systemctl restart mailinabox || true
 sudo systemctl restart postfix || true
 sudo systemctl restart dovecot || true
 sudo systemctl restart nginx || true
+sudo systemctl restart fail2ban || true
 
 # Wait a moment for services to start
 sleep 3
@@ -150,6 +160,7 @@ echo "Mailinabox: $(systemctl is-active mailinabox || echo 'unknown')"
 echo "Postfix: $(systemctl is-active postfix || echo 'unknown')"
 echo "Dovecot: $(systemctl is-active dovecot || echo 'unknown')"
 echo "Nginx: $(systemctl is-active nginx || echo 'unknown')"
+echo "Fail2Ban: $(systemctl is-active fail2ban || echo 'unknown')"
 ADMIN_HTTP_STATUS=$(curl -sk --max-time 20 -o /dev/null -w "%{http_code}" https://127.0.0.1/admin || echo "timeout")
 echo "AdminEndpoint: $ADMIN_HTTP_STATUS"
 
@@ -158,13 +169,14 @@ MAILINABOX_ACTIVE=$(systemctl is-active mailinabox 2>/dev/null || echo "inactive
 POSTFIX_ACTIVE=$(systemctl is-active postfix 2>/dev/null || echo "inactive")
 DOVECOT_ACTIVE=$(systemctl is-active dovecot 2>/dev/null || echo "inactive")
 NGINX_ACTIVE=$(systemctl is-active nginx 2>/dev/null || echo "inactive")
+FAIL2BAN_ACTIVE=$(systemctl is-active fail2ban 2>/dev/null || echo "inactive")
 
 ADMIN_OK=0
 case "$ADMIN_HTTP_STATUS" in
     2*|3*|4*) ADMIN_OK=1 ;;
 esac
 
-if [ "$MAILINABOX_ACTIVE" = "active" ] && [ "$POSTFIX_ACTIVE" = "active" ] && [ "$DOVECOT_ACTIVE" = "active" ] && [ "$ADMIN_OK" -eq 1 ]; then
+if [ "$MAILINABOX_ACTIVE" = "active" ] && [ "$POSTFIX_ACTIVE" = "active" ] && [ "$DOVECOT_ACTIVE" = "active" ] && [ "$FAIL2BAN_ACTIVE" = "active" ] && [ "$ADMIN_OK" -eq 1 ]; then
     echo ""
     echo "✅ Mail services restarted successfully (admin endpoint healthy)"
     exit 0
@@ -175,6 +187,7 @@ else
     [ "$POSTFIX_ACTIVE" != "active" ] && echo "  - Postfix: $POSTFIX_ACTIVE"
     [ "$DOVECOT_ACTIVE" != "active" ] && echo "  - Dovecot: $DOVECOT_ACTIVE"
     [ "$NGINX_ACTIVE" != "active" ] && echo "  - Nginx: $NGINX_ACTIVE"
+    [ "$FAIL2BAN_ACTIVE" != "active" ] && echo "  - Fail2Ban: $FAIL2BAN_ACTIVE"
     [ "$ADMIN_OK" -ne 1 ] && echo "  - Admin endpoint unhealthy: $ADMIN_HTTP_STATUS"
     exit 1
 fi

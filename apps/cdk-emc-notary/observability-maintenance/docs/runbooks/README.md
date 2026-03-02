@@ -11,6 +11,7 @@ These runbooks are for `cdk-emcnotary-observability-maintenance` alarms and foll
 - `RUNBOOK-AdminEndpointUnhealthy.md`
 - `RUNBOOK-DiskUsageCritical.md`
 - `RUNBOOK-MailPrimaryUnhealthy.md`
+- `RUNBOOK-Fail2BanUnhealthy.md`
 - `RUNBOOK-InstanceStatusCheck.md`
 - `RUNBOOK-SystemStatusCheck.md`
 - `RUNBOOK-OOMKillDetected.md`
