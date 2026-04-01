@@ -114,17 +114,28 @@ function normalizeQname(qname: string, domain: string): string {
 }
 
 /**
- * Normalize DNS value for Mail-in-a-Box API
+ * Normalize DNS value for Mail-in-a-Box API.
+ *
+ * TXT records are normalized to be wrapped in a single pair of double quotes,
+ * even if the original value was already quoted, to avoid double-quoting.
  */
 function normalizeValue(value: string, rtype: string): string {
   // CNAME values MUST have a trailing period per Mail-in-a-Box API docs
   if (rtype === 'CNAME' && !value.endsWith('.')) {
     return `${value}.`;
   }
+
   // Keep trailing dots for CNAME, remove for others if present
   if ((rtype === 'MX' || rtype === 'NS') && value.endsWith('.')) {
     return value.slice(0, -1);
   }
+
+  if (rtype === 'TXT') {
+    const trimmed = value.trim();
+    const unquoted = trimmed.replace(/^['"]+|['"]+$/g, '');
+    return `"${unquoted}"`;
+  }
+
   return value;
 }
 

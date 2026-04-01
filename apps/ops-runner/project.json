@@ -103,6 +103,18 @@
       "options": {
         "command": "bash Archive/hepefoundation/generate-monitoring-report.sh"
       }
+    },
+    "hepe:check-instance-health": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bash archive/hepefoundation/check-instance-health.sh"
+      }
+    },
+    "hepe:diagnose-box-reachability": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bash Archive/hepefoundation/diagnose-box-reachability.sh"
+      }
     }
   }
 }

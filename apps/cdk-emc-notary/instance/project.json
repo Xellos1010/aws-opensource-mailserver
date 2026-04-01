@@ -531,6 +531,17 @@
       },
       "description": "Check SES status: Verifies SES domain verification, DKIM, and Mail-From status from AWS"
     },
+    "admin:verify:anti-spam-dns": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "^build",
+        "admin-stack-info:build"
+      ],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance CORE_APP_PATH=apps/cdk-emc-notary/core DOMAIN=${DOMAIN:-emcnotary.com} pnpm exec tsx --tsconfig tools/tsconfig.json tools/verify-anti-spam-dns.cli.ts ${DOMAIN:+--domain $DOMAIN}"
+      },
+      "description": "Verify anti-spam DNS: SPF, DMARC, DKIM, Mail-From (reduces risk of mail marked as spam)"
+    },
     "admin:ses:poll": {
       "executor": "nx:run-commands",
       "dependsOn": [
@@ -1029,7 +1040,7 @@
         "admin:test:bootstrap-complete"
       ],
       "options": {
-        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} STACK_NAME=${STACK_NAME:-emc-notary-web} BACKUP_FILE=${BACKUP_FILE:-Archive/backups/emcnotary.com/dns/dns-backup-20250915-120038.json} DRY_RUN=${DRY_RUN:-0} VERBOSE=${VERBOSE:-false} pnpm exec tsx --tsconfig tools/tsconfig.json tools/sync-react-dns.cli.ts ${DOMAIN:+--domain $DOMAIN} ${STACK_NAME:+--stack-name $STACK_NAME} ${BACKUP_FILE:+--backup-file $BACKUP_FILE} ${DRY_RUN:+--dry-run} ${VERBOSE:+--verbose}"
+        "command": "AWS_PROFILE=${AWS_PROFILE:-hepe-admin-mfa} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=apps/cdk-emc-notary/instance DOMAIN=${DOMAIN:-emcnotary.com} STACK_NAME=${STACK_NAME:-emc-notary-web} BACKUP_FILE=${BACKUP_FILE:-Archive/backups/emcnotary.com/dns/dns-backup-20250915-120038.json} DRY_RUN=${DRY_RUN:-0} VERBOSE=${VERBOSE:-false} pnpm exec tsx --tsconfig tools/tsconfig.json tools/sync-react-dns.cli.ts ${DOMAIN:+--domain $DOMAIN} ${STACK_NAME:+--stack-name $STACK_NAME} ${BACKUP_FILE:+--backup-file $BACKUP_FILE} $(if [ \"${DRY_RUN:-0}\" = \"1\" ] || [ \"${DRY_RUN:-0}\" = \"true\" ]; then printf '%s' '--dry-run'; fi) $(if [ \"${VERBOSE:-false}\" = \"1\" ] || [ \"${VERBOSE:-false}\" = \"true\" ]; then printf '%s' '--verbose'; fi)"
       },
       "description": "Sync React DNS records: Updates DNS A records from backup file with Elastic IP from CloudFormation stack (use DRY_RUN=1 to preview changes)"
     },

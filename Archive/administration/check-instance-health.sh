@@ -164,8 +164,14 @@ check_alarms() {
 check_memory_metrics() {
     echo "=== Memory Metrics (Last 15 minutes) ==="
 
-    local end_time=$(date -u +%Y-%m-%dT%H:%M:%S)
-    local start_time=$(date -u -d '15 minutes ago' +%Y-%m-%dT%H:%M:%S)
+    local end_time
+    local start_time
+    end_time=$(date -u +%Y-%m-%dT%H:%M:%S)
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        start_time=$(date -u -v-15M +%Y-%m-%dT%H:%M:%S)
+    else
+        start_time=$(date -u -d '15 minutes ago' +%Y-%m-%dT%H:%M:%S)
+    fi
 
     # Get memory usage
     local mem_data
@@ -230,8 +236,14 @@ check_memory_metrics() {
 check_oom_kills() {
     echo "=== OOM Kill Detection (Last 24 hours) ==="
 
-    local end_time=$(date -u +%Y-%m-%dT%H:%M:%S)
-    local start_time=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%S)
+    local end_time
+    local start_time
+    end_time=$(date -u +%Y-%m-%dT%H:%M:%S)
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        start_time=$(date -u -v-24H +%Y-%m-%dT%H:%M:%S)
+    else
+        start_time=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%S)
+    fi
 
     local oom_data
     oom_data=$(aws cloudwatch get-metric-statistics \

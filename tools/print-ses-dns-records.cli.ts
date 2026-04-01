@@ -20,6 +20,12 @@
 
 import { getStackInfoFromApp } from '@mm/admin-stack-info';
 
+function quoteTxt(value: string): string {
+  const trimmed = value.trim();
+  const unquoted = trimmed.replace(/^['"]+|['"]+$/g, '');
+  return `"${unquoted}"`;
+}
+
 const coreAppPath = process.env['APP_PATH'] || 'apps/cdk-emc-notary/core';
 const domain = process.env['DOMAIN'] || 'emcnotary.com';
 const region = process.env['AWS_REGION'] || 'us-east-1';
@@ -93,7 +99,7 @@ async function printDnsRecords() {
     console.log(`   Full QNAME: mail.${domain}`);
     console.log(`   Normalized: mail (for MIAB API)`);
     console.log(`   Type:        TXT`);
-    console.log(`   Value:       ${records.mailFromTxt}`);
+    console.log(`   Value:       ${quoteTxt(records.mailFromTxt)}`);
     console.log(`   API Endpoint: PUT /admin/dns/custom/mail/TXT`);
 
     console.log('\n\n📝 Instructions for Setting DNS Records via Mail-in-a-Box API:\n');
@@ -129,7 +135,8 @@ async function printDnsRecords() {
     console.log(`curl -k -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X PUT --data-raw "${records.mailFromMx}" -H "Content-Type: text/plain" "\${MIAB_HOST}/admin/dns/custom/${records.mailFromDomain}/MX"`);
     console.log('');
     console.log(`# Mail From SPF TXT Record`);
-    console.log(`curl -k -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X PUT --data-raw "${records.mailFromTxt}" -H "Content-Type: text/plain" "\${MIAB_HOST}/admin/dns/custom/${records.mailFromDomain}/TXT"`);
+    const mailFromTxtQuoted = quoteTxt(records.mailFromTxt).replace(/"/g, '\\"');
+    console.log(`curl -k -u "\${ADMIN_EMAIL}:\${ADMIN_PASSWORD}" -X PUT --data-raw "${mailFromTxtQuoted}" -H "Content-Type: text/plain" "\${MIAB_HOST}/admin/dns/custom/${records.mailFromDomain}/TXT"`);
     console.log('');
 
     console.log('\n' + '='.repeat(60) + '\n');
