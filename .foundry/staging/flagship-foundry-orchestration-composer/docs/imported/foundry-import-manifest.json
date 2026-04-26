@@ -1,0 +1,58 @@
+{
+  "projectName": "Flagship Foundry Orchestration Composer",
+  "phaseId": "foundry-orchestration-composer-plan-2026-03-30",
+  "importStage": "pre_implementation",
+  "targetWorkspace": "Flagship Foundry \u2014 Verification, Release & Learning (04-foundry-verification-docs)",
+  "artifacts": [
+    {
+      "path": "work-order-batch.json",
+      "purpose": "Primary executable work-order batch for implementation and follow-on verification.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "work-order-summary.md",
+      "purpose": "Human-readable sequencing and dependency context.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "dependency-graph.mmd",
+      "purpose": "Dependency and parallelization authority for orchestration.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "verification-plan.md",
+      "purpose": "Verification gate definitions and commands.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "artifact-manifest.json",
+      "purpose": "Artifact inventory for import tracking.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "next-workspace.txt",
+      "purpose": "Explicit handoff target and workspace instruction.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "foundry-import-manifest.json",
+      "purpose": "This import manifest.",
+      "requiredBeforeExecution": true
+    }
+  ],
+  "importOrder": [
+    "work-order-batch.json",
+    "dependency-graph.mmd",
+    "verification-plan.md",
+    "work-order-summary.md",
+    "artifact-manifest.json",
+    "next-workspace.txt",
+    "foundry-import-manifest.json"
+  ],
+  "postImportActions": [
+    "Validate work-order-batch.json against the batch schema before assigning any builder slice.",
+    "Queue only work orders with status=ready and honor dependencyOrder for the remainder.",
+    "Keep composer execution paths feature-flagged off until WO-007A passes.",
+    "Consume the uploaded architecture packet artifacts directly rather than reconstructing intent from memory."
+  ]
+}

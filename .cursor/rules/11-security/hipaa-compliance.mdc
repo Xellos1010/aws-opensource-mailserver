@@ -1,0 +1,32 @@
+---
+globs: apps/chrome-extensions/PMHNP-Administration-SummerySky/**,libs/summerysky/**,libs/Google-Chrome-Extension-Library/**
+alwaysApply: false
+description: "HIPAA-aligned PHI handling for SummerySky"
+---
+# HIPAA Compliance (SummerySky)
+
+Protect PHI end-to-end: minimize collection, encrypt at rest, redact before any external AI, and keep logs PHI-free.
+
+## Required Practices
+- Treat all direct identifiers and clinical data as PHI; follow the HHS Safe Harbor list for redaction coverage.
+- Store PHI only in encrypted local storage (IndexedDB + WebCrypto); never in plaintext `chrome.storage.*` or logs.
+- Redact PHI before any AI interaction; only send de-identified payloads to external providers.
+- When capturing UI HTML for AI guidance, strip text content and input values and remove URL query/path data; only share sanitized, redacted snapshots.
+- Keep redaction maps encrypted and local-only; rehydration is performed locally just before export.
+- Do not include PHI in issue reports, debug bundles, or telemetry; enforce redaction and PHI scanning checks.
+- Use least-privilege scopes and explicit user consent for any external API access.
+- Provide a user-visible "data purge" control to clear local PHI and redaction maps.
+
+## PHI Redaction Standards
+- Redact names, DOB, MRN, phone, email, address, portal identifiers, and any free-text that can identify a patient.
+- Use deterministic placeholders (e.g., `[[PATIENT_NAME_1]]`) scoped to a patient key.
+- Verify redaction coverage with automated tests and runtime checks before AI prompt generation.
+
+## Compliance Guardrails
+- No PHI in console logs or error messages; use hashed/internal ids.
+- Audit trail entries must be non-PHI and include correlation ids for traceability.
+- Retention policies must include TTL and size limits for logs, bundles, and transient caches.
+
+## Verification
+- Add PHI-leak tests for logs, prompts, issue bundles, and exported artifacts.
+- Document any exception explicitly in an ADR and get approval before shipping.

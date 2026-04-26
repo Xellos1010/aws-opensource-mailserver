@@ -1,0 +1,402 @@
+---
+globs: apps/chrome-extensions/**/src/service_worker/**,apps/chrome-extensions/**/src/recipes/**,libs/Google-Chrome-Extension-Library/automation/recipes/**
+alwaysApply: false
+description: Checkpoint-based resumption patterns for long-running recipe executions
+---
+
+# Checkpoints and Resume Standards
+
+Apply when implementing checkpoint-based resumption for long-running recipe executions that may be interrupted by navigation, service worker suspension, or user actions.
+
+**Justification:** Long-running extractions need checkpoint/resume capabilities to handle interruptions gracefully. Standardized patterns ensure reliable state persistence and resumption.
+
+## Checkpoint System Overview
+
+Checkpoints save execution state at key milestones, allowing recipes to resume from saved points after interruption.
+
+### When to Use Checkpoints
+
+- **Long-running recipes**: Extractions that take > 5 minutes
+- **Pagination**: Multi-page scraping operations
+- **User interruptions**: Allow users to pause and resume
+- **Error recovery**: Resume after transient failures
+- **State preservation**: Save progress before risky operations
+
+## Checkpoint Storage
+
+### Storage Location
+
+```typescript
+// Checkpoints stored in chrome.storage.local
+const checkpointKey = `checkpoint:${checkpointId}`;
+
+await chrome.storage.local.set({
+  [checkpointKey]: {
+    id: checkpointId,
+    savedAt: new Date().toISOString(),
+    tabId: context.tabId,
+    baseFolder: context.baseDownloadFolder,
+    variables: context.variables,
+    credentials: context.credentials,
+    metadata: { /* custom metadata */ },
+    correlationId: context.correlationId,
+  },
+});
+```
+
+### Checkpoint Structure
+
+```typescript
+interface Checkpoint {
+  id: string; // Unique checkpoint ID
+  savedAt: string; // ISO timestamp
+  tabId: number; // Tab ID (may be stale after resume)
+  baseFolder: string; // Base download folder
+  variables: Record<string, unknown>; // Recipe variables
+  credentials?: { username: string; password: string }; // Optional credentials
+  metadata?: Record<string, unknown>; // Custom metadata
+  correlationId: string; // Correlation ID for tracing
+}
+```
+
+## Recipe Step Types
+
+### Save Checkpoint
+
+```json
+{
+  "type": "saveCheckpoint",
+  "id": "page-{{currentPage}}",
+  "description": "Save checkpoint before processing page",
+  "metadata": {
+    "currentPage": "{{currentPage}}",
+    "totalPages": "{{totalPages}}"
+  }
+}
+```
+
+### Restore Checkpoint
+
+```json
+{
+  "type": "restoreCheckpoint",
+  "id": "page-{{resumePage}}",
+  "description": "Restore checkpoint to resume from page",
+  "fallbackSteps": [
+    {
+      "type": "goto",
+      "url": "{{baseUrl}}/page/{{resumePage}}"
+    }
+  ]
+}
+```
+
+## Checkpoint Implementation
+
+### Saving Checkpoints
+
+```typescript
+// In recipe executor
+if (step.type === 'saveCheckpoint') {
+  const checkpointId = substituteVariables(step.id, context.variables);
+  
+  const checkpoint: Checkpoint = {
+    id: checkpointId,
+    savedAt: new Date().toISOString(),
+    tabId: context.tabId,
+    baseFolder: context.baseDownloadFolder,
+    variables: { ...context.variables },
+    credentials: context.credentials,
+    metadata: step.metadata 
+      ? substituteVariables(step.metadata, context.variables)
+      : {},
+    correlationId: context.correlationId,
+  };
+
+  await chrome.storage.local.set({
+    [`checkpoint:${checkpointId}`]: checkpoint,
+  });
+
+  logger.info('Checkpoint saved', {
+    checkpointId,
+    correlationId: context.correlationId,
+    variables: Object.keys(checkpoint.variables),
+  });
+}
+```
+
+### Restoring Checkpoints
+
+```typescript
+// In service worker
+if (msg.type === 'RESUME_RECIPE') {
+  const { checkpointId, app, recipeId, tabId } = msg;
+  
+  // Load checkpoint
+  const checkpointKey = `checkpoint:${checkpointId}`;
+  const result = await chrome.storage.local.get(checkpointKey);
+  const checkpoint = result[checkpointKey];
+  
+  if (!checkpoint) {
+    throw new Error(`Checkpoint not found: ${checkpointId}`);
+  }
+
+  // Restore execution context
+  const executionContext: ExecutionContext = {
+    tabId, // Use provided tabId (may differ from checkpoint.tabId)
+    credentials: checkpoint.credentials,
+    correlationId: checkpoint.correlationId || generateCorrelationId(),
+    variables: checkpoint.variables || {},
+    baseDownloadFolder: checkpoint.baseFolder || getBaseDownloadFolder(),
+  };
+
+  // Get recipe
+  const recipe = getRecipe(app, recipeId);
+  
+  // Create runtime
+  const runtime = createContentRuntime(tabId, {
+    baseDownloadFolder: executionContext.baseDownloadFolder,
+    variables: executionContext.variables,
+    recipeKey: `${app}:${recipeId}`,
+  });
+
+  // Execute recipe (will restore checkpoint if recipe has restoreCheckpoint step)
+  const result = await executeRecipe(recipe, runtime, executionContext);
+}
+```
+
+## Checkpoint Hooks
+
+### Content Runtime Hooks
+
+```typescript
+import type { ContentRuntimeHooks } from '@chrome-ext/automation-recipes';
+
+export function createCheckpointHooks(): ContentRuntimeHooks {
+  return {
+    onCheckpointSaved: async (
+      checkpointId: string,
+      checkpoint: Record<string, unknown>
+    ) => {
+      logger.info('Checkpoint hook triggered', {
+        checkpointId,
+        checkpointType: checkpointId.startsWith('job-') ? 'job' : 
+                        checkpointId.startsWith('page-') ? 'page' : 'other',
+        metadataKeys: Object.keys(checkpoint),
+        correlationId: checkpoint.correlationId,
+      });
+
+      // Process checkpoint (e.g., convert to postings, update UI)
+      // This runs after checkpoint is saved
+    },
+  };
+}
+
+// Use in runtime creation
+const runtime = createContentRuntime(tabId, config, {
+  onCheckpointSaved: createCheckpointHooks().onCheckpointSaved,
+});
+```
+
+## Checkpoint Naming Conventions
+
+### Recommended Patterns
+
+- **Page checkpoints**: `page-{{pageNumber}}`
+- **Item checkpoints**: `item-{{itemId}}` or `job-{{jobId}}`
+- **Status checkpoints**: `status-{{statusName}}`
+- **Milestone checkpoints**: `milestone-{{milestoneName}}`
+
+### Deterministic IDs
+
+Checkpoint IDs should be deterministic based on recipe variables:
+
+```typescript
+// ✅ Good - deterministic
+id: `page-${currentPage}`
+
+// ✅ Good - includes context
+id: `patient-${patientId}-encounter-${encounterId}`
+
+// ❌ Bad - non-deterministic
+id: `checkpoint-${Date.now()}`
+```
+
+## UI Integration
+
+### List Available Checkpoints
+
+```typescript
+async function listCheckpoints(app: string, recipeId: string): Promise<Checkpoint[]> {
+  const allData = await chrome.storage.local.get(null);
+  const checkpoints: Checkpoint[] = [];
+
+  for (const [key, value] of Object.entries(allData)) {
+    if (key.startsWith('checkpoint:')) {
+      const checkpoint = value as Checkpoint;
+      // Filter by app/recipe if needed
+      checkpoints.push(checkpoint);
+    }
+  }
+
+  return checkpoints.sort((a, b) => 
+    new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime()
+  );
+}
+```
+
+### Resume from UI
+
+```typescript
+async function resumeFromCheckpoint(
+  checkpointId: string,
+  app: string,
+  recipeId: string
+) {
+  // Get current tab or create new one
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tabId = tabs[0]?.id;
+  
+  if (!tabId) {
+    throw new Error('No active tab');
+  }
+
+  // Send resume message
+  const response = await chrome.runtime.sendMessage({
+    type: 'RESUME_RECIPE',
+    checkpointId,
+    app,
+    recipeId,
+    tabId,
+  });
+
+  if (!response.ok) {
+    throw new Error(response.error);
+  }
+}
+```
+
+## Error Handling
+
+### Checkpoint Not Found
+
+```typescript
+try {
+  const checkpoint = await loadCheckpoint(checkpointId);
+  // Resume...
+} catch (error) {
+  if (error.message.includes('not found')) {
+    logger.error('Checkpoint not found', {
+      checkpointId,
+      correlationId,
+    });
+    
+    // Execute fallback steps if provided
+    if (fallbackSteps) {
+      await executeSteps(fallbackSteps, runtime, context);
+    } else {
+      throw error;
+    }
+  } else {
+    throw error;
+  }
+}
+```
+
+### Stale Checkpoints
+
+```typescript
+// Check if checkpoint is too old
+const checkpointAge = Date.now() - new Date(checkpoint.savedAt).getTime();
+const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+if (checkpointAge > maxAge) {
+  logger.warn('Checkpoint is stale', {
+    checkpointId,
+    age: checkpointAge,
+    maxAge,
+  });
+  
+  // Optionally skip or warn user
+}
+```
+
+## Best Practices
+
+### When to Save Checkpoints
+
+- **Before pagination**: Save before navigating to next page
+- **After major milestones**: Save after completing significant work
+- **Before risky operations**: Save before operations that might fail
+- **Periodic saves**: Save every N items processed
+
+### Checkpoint Granularity
+
+- **Too fine**: Checkpoints every step (overhead, storage bloat)
+- **Too coarse**: Checkpoints only at start/end (poor resume granularity)
+- **Just right**: Checkpoints at natural breakpoints (page boundaries, item boundaries)
+
+### Variable Management
+
+- **Include all necessary variables**: Variables needed to resume
+- **Don't include large data**: Store references, not full data
+- **Validate variables**: Ensure variables are valid before saving
+
+### Storage Management
+
+- **Cleanup old checkpoints**: Implement TTL or manual cleanup
+- **Limit checkpoint count**: Keep only N most recent checkpoints
+- **Archive important checkpoints**: Move to separate storage if needed
+
+## Logging
+
+### Checkpoint Logging
+
+```typescript
+logger.info('Checkpoint saved', {
+  checkpointId,
+  checkpointType: checkpointId.startsWith('page-') ? 'page' : 'item',
+  variables: Object.keys(checkpoint.variables),
+  metadata: Object.keys(checkpoint.metadata || {}),
+  correlationId: checkpoint.correlationId,
+});
+
+logger.info('Checkpoint restored', {
+  checkpointId,
+  restoredVariables: Object.keys(checkpoint.variables),
+  tabId: context.tabId,
+  correlationId: checkpoint.correlationId,
+});
+
+logger.info('Resume from checkpoint', {
+  checkpointId,
+  app,
+  recipeId,
+  tabId,
+  correlationId,
+});
+```
+
+## Checklist
+
+When implementing checkpoints:
+
+- [ ] Define checkpoint structure with required fields
+- [ ] Implement `saveCheckpoint` step handler
+- [ ] Implement `restoreCheckpoint` step handler
+- [ ] Add checkpoint hooks for post-processing
+- [ ] Use deterministic checkpoint IDs
+- [ ] Include all necessary variables in checkpoints
+- [ ] Handle checkpoint not found errors
+- [ ] Implement UI for listing/resuming checkpoints
+- [ ] Add logging for checkpoint operations
+- [ ] Test resume after interruption
+- [ ] Test resume after service worker suspension
+- [ ] Implement checkpoint cleanup policy
+
+## Related Rules
+
+- [mv3-lifecycle-and-state.mdc](mdc:.cursor/rules/15-chome-extension/mv3-lifecycle-and-state.mdc)
+- [batch-operations.mdc](mdc:.cursor/rules/15-chome-extension/batch-operations.mdc)
+- [error-recovery.mdc](mdc:.cursor/rules/15-chome-extension/error-recovery.mdc)
+- [logging-and-observability.mdc](mdc:.cursor/rules/15-chome-extension/logging-and-observability.mdc)

@@ -1,0 +1,169 @@
+{
+  "objectTypes": [
+    {
+      "id": "ecosystem",
+      "preferredViews": [
+        "map",
+        "board",
+        "timeline"
+      ],
+      "questions": [
+        "What exists?",
+        "What changed recently?",
+        "What is active now?"
+      ]
+    },
+    {
+      "id": "subsystem",
+      "preferredViews": [
+        "map",
+        "inspector",
+        "diff"
+      ],
+      "questions": [
+        "How does this subsystem connect?",
+        "What is risky?"
+      ]
+    },
+    {
+      "id": "module",
+      "preferredViews": [
+        "inspector",
+        "pseudocode",
+        "diff"
+      ],
+      "questions": [
+        "What does it do?",
+        "What changed?"
+      ]
+    },
+    {
+      "id": "work-order",
+      "preferredViews": [
+        "board",
+        "inspector",
+        "timeline"
+      ],
+      "questions": [
+        "What is blocked?",
+        "What files are in scope?",
+        "What approval is needed?"
+      ]
+    },
+    {
+      "id": "run-session",
+      "preferredViews": [
+        "timeline",
+        "session-board",
+        "evidence"
+      ],
+      "questions": [
+        "What is happening now?",
+        "What failed?",
+        "What evidence exists?"
+      ]
+    },
+    {
+      "id": "evidence-bundle",
+      "preferredViews": [
+        "evidence",
+        "diff",
+        "inspector"
+      ],
+      "questions": [
+        "What proof exists?",
+        "What gaps remain?"
+      ]
+    },
+    {
+      "id": "context-cart",
+      "preferredViews": [
+        "inspector",
+        "chat"
+      ],
+      "questions": [
+        "What context is loaded?",
+        "What is pinned?"
+      ]
+    },
+    {
+      "id": "pipeline",
+      "preferredViews": [
+        "map",
+        "timeline",
+        "board"
+      ],
+      "questions": [
+        "What stages exist?",
+        "What has completed?",
+        "Where is it blocked?"
+      ]
+    }
+  ],
+  "desktopShell": {
+    "topBar": [
+      "workspace target",
+      "global search/command palette",
+      "new feature",
+      "approvals",
+      "alerts",
+      "profile"
+    ],
+    "leftRail": [
+      "home",
+      "context",
+      "architecture",
+      "plan",
+      "runs",
+      "evidence",
+      "settings"
+    ],
+    "centerCanvasPeerViews": [
+      "map",
+      "board",
+      "timeline",
+      "diff"
+    ],
+    "rightInspector": [
+      "selection summary",
+      "valid actions",
+      "state",
+      "links"
+    ],
+    "bottomUtility": [
+      "logs",
+      "evidence",
+      "continuity",
+      "chat",
+      "agent suggestions"
+    ]
+  },
+  "savedLayouts": [
+    {
+      "id": "layout:architect",
+      "focus": "map + inspector + visual artifacts"
+    },
+    {
+      "id": "layout:planner",
+      "focus": "board + inspector + quick actions"
+    },
+    {
+      "id": "layout:operator",
+      "focus": "timeline + session board + alerts"
+    },
+    {
+      "id": "layout:investigator",
+      "focus": "diff + evidence + logs"
+    }
+  ],
+  "drillDownPath": [
+    "ecosystem map",
+    "subsystem",
+    "module",
+    "pseudocode",
+    "diff",
+    "work order",
+    "run session",
+    "evidence bundle"
+  ]
+}

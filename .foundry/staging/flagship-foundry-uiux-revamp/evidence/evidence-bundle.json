@@ -1,0 +1,86 @@
+{
+  "generatedAt": "2026-04-10T00:00:00Z",
+  "phaseId": "flagship-foundry-ui-ux-revamp-plan-2026-04-10",
+  "items": [
+    {
+      "id": "E-001",
+      "claim": "The current repo already supports operator artifacts such as workspace target, context carts, refinement sessions, visual artifacts, planning board, budget snapshot, session board, graph snapshot, RAG status, and pipelines.",
+      "sourceType": "repo-export",
+      "sourceRef": "full-repo export / operator collection loader",
+      "authority": "repo-grounding",
+      "freshness": "2026-04-10",
+      "impact": "High"
+    },
+    {
+      "id": "E-002",
+      "claim": "Cursor Companion is already the first editor surface and supports start plane, import, gap analysis, planning, focus graph, approval, start run, pause/stop, and refresh.",
+      "sourceType": "repo-export",
+      "sourceRef": "CURRENT_WORKSPACE_IMPORT_REPORT + CURSOR_EXTENSION_BOOTSTRAP",
+      "authority": "repo-grounding",
+      "freshness": "2026-04-10",
+      "impact": "High"
+    },
+    {
+      "id": "E-003",
+      "claim": "Current operator work added typed workspace targeting, context carts, requirement refinement, visual artifacts, planning board, provider posture, session board, and pop-out support.",
+      "sourceType": "repo-export",
+      "sourceRef": "current-task.json for flagship-foundry-cursor-companion-sdlc-operator",
+      "authority": "repo-grounding",
+      "freshness": "2026-04-10",
+      "impact": "High"
+    },
+    {
+      "id": "E-004",
+      "claim": "The architecture posture already distinguishes canonical write surface from read-only projections and separates declared artifacts from observed runtime state.",
+      "sourceType": "repo-export",
+      "sourceRef": "architecture-packet + trust-boundary diagrams",
+      "authority": "architecture-grounding",
+      "freshness": "2026-04-10",
+      "impact": "High"
+    },
+    {
+      "id": "E-005",
+      "claim": "The workspace already has a foundational knowledge base with 1124 documents mapped to domain packs.",
+      "sourceType": "repo-export",
+      "sourceRef": "CURRENT_WORKSPACE_IMPORT_REPORT",
+      "authority": "repo-grounding",
+      "freshness": "2026-04-10",
+      "impact": "Medium"
+    },
+    {
+      "id": "E-006",
+      "claim": "Apple HIG emphasizes clear hierarchy and toolbars that expose frequently used commands, navigation, and search, and requires obvious visual differences in toggle states.",
+      "sourceType": "official-guidance",
+      "sourceRef": "Apple HIG",
+      "authority": "platform-guidance",
+      "freshness": "2026-04-10",
+      "impact": "High"
+    },
+    {
+      "id": "E-007",
+      "claim": "Material 3 says transitions should help users understand how the app works, uses container transform for element-to-detail transitions, and recommends quick fades for top-level destination changes.",
+      "sourceType": "official-guidance",
+      "sourceRef": "Material 3 motion",
+      "authority": "platform-guidance",
+      "freshness": "2026-04-10",
+      "impact": "High"
+    },
+    {
+      "id": "E-008",
+      "claim": "W3C advises using WCAG 2.2 to maximize future applicability of accessibility efforts.",
+      "sourceType": "official-guidance",
+      "sourceRef": "WCAG 2.2",
+      "authority": "standards-guidance",
+      "freshness": "2026-04-10",
+      "impact": "High"
+    }
+  ],
+  "gates": [
+    "orientation",
+    "navigation",
+    "execution safety",
+    "interaction quality",
+    "accessibility",
+    "performance"
+  ]
+}

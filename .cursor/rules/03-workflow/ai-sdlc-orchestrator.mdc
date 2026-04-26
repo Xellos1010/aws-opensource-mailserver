@@ -1,0 +1,157 @@
+---
+alwaysApply: true
+description: Repo-wide SDLC orchestrator driven by Codex continuity state and Flagship Foundry agent hierarchy
+---
+
+# SDLC Orchestrator (Codex + Cursor + Claude Code)
+
+Use this rule to keep AI work aligned with the SDLC process defined in `/.cursor/rules/03-workflow/sdlc-setup.mdc` and to apply the practical feature/bug/hotfix workflows in `/.cursor/rules/03-workflow/ship-it-workflow.mdc`.
+
+When `.foundry/projects/**/current-task.json` exists (Flagship Foundry continuity, **ADR-011**), treat it as the phase source of truth for the matching project. If absent, legacy `.codex/projects/**/current-task.json` may still exist for Codex-only workflows:
+- Phase state: `sdlcPhase` (7-phase legacy) or `lifecycleStage` (11-phase Flagship)
+- Verification commands: `nextCommandSet`
+- Completion criteria: `doneCriteria`
+
+Specialist agents are defined in `.cursor/agents/` (Cursor) and `.claude/agents/` (Claude Code). Skills are in `.cursor/skills/` and `.claude/skills/`. Do not re-state every checklist item here — follow the existing SDLC and ship-it docs as canonical text, and use this file to orchestrate ordering, gates, and agent delegation.
+
+## 1) Detect change intent (silent inference)
+
+Infer the closest workflow from the user request:
+- If the user asks for “new feature”, “add capability”, “implement X”, follow the Feature workflow in `ship-it-workflow.mdc`.
+- If the user asks for “bug”, “fix”, “regression”, “broken”, follow the Bug Fix workflow in `ship-it-workflow.mdc`.
+- If the user asks for “urgent”, “prod break”, “sev-1”, “hotfix”, follow the Hotfix Fast Path in `ship-it-workflow.mdc`.
+- If the request is documentation-only, follow the SDLC phases up to and including `document` and run the smallest relevant verification gates.
+
+Also map intent to Flagship 11-phase lifecycle stages via the `sdlc-phase-router` skill:
+- discover / define / visualize / architect → delegate to `@systems-architect` (with `@context-curator` for source packet)
+- plan → orchestrate directly (break architecture into bounded implementation slices)
+- implement → delegate to `@builder` with explicit file scope and contracts
+- verify → delegate to `@verifier` (independent validation, never the builder)
+- release → delegate to `@docs-release-agent`
+- operate → delegate to `@performance-reviewer`
+- diagnose → delegate to `@verifier` + `@security-reviewer`
+- improve → delegate to `@docs-release-agent`
+
+## 2) Pick the SDLC state source
+
+Step A: Look for task-state continuity state (Foundry first)
+- Search for `.foundry/projects/**/current-task.json` (**ADR-011**).
+- If not found, search for legacy `.codex/projects/**/current-task.json`.
+- Choose the project whose `project.path` matches (or is closest to) the files being changed, mentioned paths, or the primary target app.
+- If no matching project exists:
+  - Search for a task-state file at a recommended path like `.cursor/sdlc/task-state/<project>/current-task.json`.
+  - If neither exists, treat the flow as generic and follow `sdlc-setup.mdc` phase ordering.
+
+Step B: If a task-state file exists, read:
+- `.foundry/projects/<project>/SDLC_CHARTER.md` or legacy `.codex/projects/<project>/SDLC_CHARTER.md` (project-specific SDLC sequence, guardrails, and quality gates)
+- the active task-state file for:
+  - `sdlcPhase`
+  - `currentPhase`
+  - `nextCommandSet`
+  - `doneCriteria`
+
+## 3) Map task-state phase to SDLC checklists
+
+**Legacy 7-phase (`sdlcPhase`) mapping:**
+- `plan`: Phase 1 (Project Initialization & Planning) from `sdlc-setup.mdc`
+- `design`: Phase 2 (Quality Gates & Development Standards) + design decisions (ADR if needed) from `sdlc-setup.mdc` and “Design the Change” in `ship-it-workflow.mdc`
+- `implement`: Phase 3 + Phase 4 implementation checklist from `sdlc-setup.mdc`
+- `verify`: Phase 4 verification checklist from `sdlc-setup.mdc`, plus “Run Affected Targets” in `ship-it-workflow.mdc`
+- `document`: Phase 7 documentation checklist from `sdlc-setup.mdc` and ADR expectations from `documentation-standards.mdc`
+- `release`: Phase 5 deployment & release checklist from `sdlc-setup.mdc` and “Staging Deploy / Production Rollout” in `ship-it-workflow.mdc`
+- `operate`: Phase 6 observability & operations checklist from `sdlc-setup.mdc`
+
+**Flagship 11-phase (`lifecycleStage`) mapping (when present, takes precedence):**
+- `discover` → define problem, stakeholders, constraints (use `@context-curator`)
+- `define` → scope, acceptance criteria, non-goals (use `@systems-architect`)
+- `visualize` → C4 diagrams, system context, trust boundaries (use `@systems-architect`)
+- `architect` → ADRs, contracts, schemas, decomposition (use `@systems-architect`)
+- `plan` → task tree, implementation slices (orchestrator)
+- `implement` → bounded code/config changes (use `@builder` with explicit file scope)
+- `verify` → independent validation against criteria (use `@verifier`, never builder)
+- `release` → release notes, handoff, deployment guide (use `@docs-release-agent`)
+- `operate` → baseline metrics, monitoring (use `@performance-reviewer`)
+- `diagnose` → root cause, evidence timeline (use `@verifier` + `@security-reviewer`)
+- `improve` → learning records, continuity patches (use `@docs-release-agent`)
+
+If both fields exist, `lifecycleStage` takes precedence. If neither exists, use ordered SDLC phases from `sdlc-setup.mdc`.
+
+**Phase Gate Quick Reference**: `.cursor/skills/sdlc-phase-router/reference/phase-gate-matrix.md`
+
+## 4) Verification command policy (Nx-first)
+
+If task-state `nextCommandSet` is non-empty:
+- Run commands from `nextCommandSet` in the given order.
+- After each command, confirm the specific gate it represents succeeded (typecheck/test/build/e2e slice).
+- Only proceed to the next SDLC phase when the completion criteria for the current phase are satisfied (use task-state `doneCriteria` when present, otherwise use the `sdlc-setup.mdc` quality gates).
+
+If task-state `nextCommandSet` is empty or task-state state is not present:
+- Prefer Nx affected pipelines:
+  - `pnpm exec nx affected:lint --parallel`
+  - `pnpm exec nx affected:test --parallel`
+  - `pnpm exec nx affected:build --parallel`
+- Add the smallest targeted e2e/smoke verification that matches the change surface (UI vs service worker vs integration boundaries).
+
+## 5) DoR / DoD gates (feature vs bug)
+
+Treat the “Definition of Ready (DoR)” and “Definition of Done (DoD)” as mandatory phase exit criteria:
+
+Feature DoR/DoD
+- DoR must include: one-sentence goal + clear acceptance criteria + identified risks + rollback strategy + test plan outline.
+- DoD must include: acceptance criteria pass + tests added and passing + documentation updated + staging smoke green + rollback plan validated, when applicable.
+
+Bug Fix DoR/DoD
+- DoR must include: a reproduction description and a failing test plan.
+- DoD must include: failing test now passes + minimal fix + regression coverage + verification gates green.
+
+Hotfix
+- DoD includes the Sev-1 fast path checklist: incident note, minimal fix with failing test, fast CI lane, production deploy, post-deploy smoke, and monitored stability window.
+
+## 6) Branch and commit safety
+
+Use `ship-it-workflow.mdc` branching guidance:
+- `feat/<scope>-<short-title>`
+- `fix/<scope>-<issue#>`
+- `hotfix/<short-title>`
+
+Safety constraints from SDLC/charters:
+- Keep work phase-scoped and independently verifiable.
+- Do not work directly in the user’s dirty workspace when an applicable charter forbids it (if `.foundry/**/SDLC_CHARTER.md` or `.codex/**/SDLC_CHARTER.md` includes a “do not work directly” guardrail, comply).
+- Before switching phases or branches, update the active task-state `currentPhase` and `nextCommandSet` for the new state.
+
+## 7) Task-state continuity updates (before phase close)
+
+If task-state state is present, maintain deterministic resumability:
+- Update the active task-state file when:
+  - `currentPhase.status` changes to `verified` or `done`
+  - `activeBranch` changes
+  - `nextCommit` / `nextCommandSet` changes
+  - verification gates complete and `doneCriteria` can be satisfied
+- Ensure the worktree matches the declared `currentPhase.branch` before continuing with the next phase.
+
+## Canonical references (follow these)
+
+These docs are the source of detailed checklist text; this rule only orchestrates ordering and agent delegation:
+- `/.cursor/rules/03-workflow/sdlc-setup.mdc`
+- `/.cursor/rules/03-workflow/ship-it-workflow.mdc`
+- `/.cursor/rules/03-workflow/dev-workflow-and-git.mdc`
+- `/.cursor/rules/03-workflow/documentation-standards.mdc`
+- `/.cursor/rules/nx-sdlc/RULE.md`
+
+**Agent definitions** (specialist roles and behavioral contracts):
+- `/.cursor/agents/orchestrator.md`
+- `/.cursor/agents/systems-architect.md`
+- `/.cursor/agents/builder.md`
+- `/.cursor/agents/verifier.md`
+- `/.cursor/agents/docs-release-agent.md`
+
+**Skills** (executable procedures):
+- `/.cursor/skills/sdlc-phase-router/SKILL.md`
+- `/.cursor/skills/continuity-writer/SKILL.md`
+- `/.cursor/skills/nx-verification/SKILL.md`
+- `/.cursor/skills/handoff-generator/SKILL.md`
+
+**Flagship Foundry doctrine**:
+- `/flagship-foundry/flagship_systems_sdlc_handbook.docx.md`
+- `/.claude/CHARTER.md`
+

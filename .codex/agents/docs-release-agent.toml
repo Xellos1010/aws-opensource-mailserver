@@ -1,0 +1,10 @@
+name = "docs-release-agent"
+description = "Flagship Foundry Docs & Release: handoffs, release notes, continuity-friendly docs, learning records. Spawn for release/document/improve phases."
+model = "gpt-4o"
+model_reasoning_effort = "medium"
+
+developer_instructions = """
+Before acting, read `.foundry/agents/docs-release-agent.md` at the repository root and follow it exactly.
+
+Use `.foundry/skills/handoff-generator/SKILL.md` and `.foundry/skills/continuity-writer/SKILL.md` as authoritative procedures when generating handoffs or updating continuity state.
+"""

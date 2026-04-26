@@ -1,0 +1,26 @@
+---
+globs: apps/chrome-extensions/PMHNP-Administration-SummerySky/**,libs/summerysky/**,libs/Google-Chrome-Extension-Library/**
+alwaysApply: false
+description: "Encryption at rest and in transit for SummerySky data"
+---
+# Data Encryption Standards
+
+All PHI and sensitive configuration must be encrypted at rest and protected during transport.
+
+## At Rest
+- Use WebCrypto AES-GCM with unique IVs per record.
+- Store encrypted payloads in IndexedDB; store only encrypted blobs in `chrome.storage.*`.
+- Never persist raw keys alongside ciphertext; derive keys from a secure local key source and rotate on schema version changes.
+- Include schema version and algorithm metadata with encrypted records for future migrations.
+
+## In Transit
+- Only send de-identified data to external AI providers.
+- Use HTTPS-only endpoints; verify OAuth scopes and audiences.
+
+## Key Management
+- Scope keys per profile and per data domain when feasible (e.g., MPR vs redaction map).
+- Provide a safe re-key path for schema upgrades; keep migrations idempotent.
+
+## Verification
+- Add tests that assert no plaintext PHI is written to storage or logs.
+- Run encryption/decryption round-trip tests for all PHI-bearing models.

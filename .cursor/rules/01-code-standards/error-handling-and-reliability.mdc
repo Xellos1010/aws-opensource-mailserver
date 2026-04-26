@@ -1,5 +1,6 @@
 ---
 alwaysApply: true
+description: Error handling, retries, and reliability standards
 ---
 
 # Error Taxonomy, Propagation, Retries & Timeouts
@@ -25,4 +26,3 @@ export class TransientNetworkError extends Error {
 - Use capped exponential backoff with jitter for network calls
 - Never retry non-idempotent operations
 - Apply request timeouts and circuit breakers for unstable deps
-

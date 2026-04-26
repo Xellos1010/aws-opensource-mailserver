@@ -1,0 +1,16 @@
+---
+globs: apps/chrome-extensions/PMHNP-Administration-SummerySky/**,libs/summerysky/**,libs/Google-Chrome-Extension-Library/**
+alwaysApply: false
+description: "Authorization and role gating (future-ready)"
+---
+# Authorization and Role Gating
+
+If role-based access is introduced, enforce explicit permissions and least privilege.
+
+## Requirements
+- Define roles and permissions in a single shared module.
+- Gate high-risk actions (bulk export, data purge, debug bundle export) behind explicit user confirmation.
+- Keep authorization checks in the orchestration layer, not just in UI controls.
+
+## Notes
+- Today the extension is single-user; treat this as future-proofing, not active enforcement.

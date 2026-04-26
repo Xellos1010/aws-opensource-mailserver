@@ -1,0 +1,17 @@
+{
+  "$schema": "../schemas/persona-pack.schema.json",
+  "id": "persona:plan-approval-governor",
+  "name": "Plan Approval Governor",
+  "category": "governance",
+  "purpose": "Own manual versus auto approval decisions and their policy boundaries.",
+  "activationCriteria": [
+    "plan drafted",
+    "auto approval toggle changed"
+  ],
+  "guardrailPackIds": [
+    "guardrail:workspace-governance"
+  ],
+  "runbookIds": [
+    "runbook:plan-approval"
+  ]
+}

@@ -1,5 +1,6 @@
 ---
 alwaysApply: true
+description: TypeScript strictness, imports, and public API standards
 ---
 
 # TypeScript Standards: Strictness, Imports & Public Surfaces
@@ -48,6 +49,54 @@ For projects using ES modules in tests, ensure tsconfig supports both build and 
 
 ⚠️ **Warning:** Do not disable strict mode in project tsconfigs; request waivers via ADR if absolutely necessary.
 
+### tsconfig.json Path Calculation (NX Best Practice)
+
+When creating `tsconfig.json` files in NX libraries, the `extends` path must correctly reference `tsconfig.base.json` at the workspace root. **Count directory levels carefully** to avoid build failures.
+
+**Path Calculation Rules:**
+
+1. Count the number of directory levels from the library's `tsconfig.json` to the workspace root
+2. Use that many `../` segments in the `extends` path
+3. Always verify the path exists before committing
+
+**Examples:**
+
+```json
+// For libs/Google-Chrome-Extension-Library/core/runtime/tsconfig.json
+// Path: libs/ -> Google-Chrome-Extension-Library/ -> core/ -> runtime/
+// Levels: 4 (libs, Google-Chrome-Extension-Library, core, runtime)
+{
+  "extends": "../../../../tsconfig.base.json"
+}
+
+// For libs/Google-Chrome-Extension-Library/ui/shared-components/tsconfig.json
+// Path: libs/ -> Google-Chrome-Extension-Library/ -> ui/ -> shared-components/
+// Levels: 4 (libs, Google-Chrome-Extension-Library, ui, shared-components)
+{
+  "extends": "../../../../tsconfig.base.json"
+}
+
+// For apps/chrome-extensions/job-hunt-extension/tsconfig.json
+// Path: apps/ -> chrome-extensions/ -> job-hunt-extension/
+// Levels: 3 (apps, chrome-extensions, job-hunt-extension)
+{
+  "extends": "../../../tsconfig.base.json"
+}
+```
+
+**Verification Command:**
+
+Before committing, verify the path resolves correctly:
+
+```bash
+cd <library-directory>
+ls -la <calculated-path>/tsconfig.base.json
+```
+
+**Common Error:** Using too many `../` segments (e.g., `../../../../../tsconfig.base.json` when `../../../../tsconfig.base.json` is correct) causes Vite/esbuild to fail with "Cannot read file" errors.
+
+💡 **Tip:** When copying a `tsconfig.json` from another library, always verify the path depth matches your library's location.
+
 ## No `any` & Safer Assertions
 
 Disallow `any`. Prefer `unknown` with user-defined type guards. Use `as` assertions sparingly at boundaries.
@@ -83,4 +132,3 @@ Expose only `src/index.ts` from each library through path aliases. Internal file
 
 - architecture-and-nx-boundaries
 - testing-strategy
-

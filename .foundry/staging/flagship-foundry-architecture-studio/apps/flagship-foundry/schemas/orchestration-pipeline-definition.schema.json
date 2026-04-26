@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flagship-foundry.local/contracts/orchestration-pipeline-definition.schema.json",
+  "title": "Orchestration Pipeline Definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pipelineId",
+    "name",
+    "stages",
+    "runtimePolicy",
+    "governance"
+  ],
+  "properties": {
+    "pipelineId": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "stageId",
+          "configurationRef",
+          "lifecycleStage",
+          "dependsOn"
+        ],
+        "properties": {
+          "stageId": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "configurationRef": {
+            "type": "string"
+          },
+          "lifecycleStage": {
+            "type": "string",
+            "enum": [
+              "discover",
+              "define",
+              "visualize",
+              "architect",
+              "plan",
+              "implement",
+              "verify",
+              "release",
+              "operate",
+              "diagnose",
+              "improve"
+            ]
+          },
+          "dependsOn": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "inputContracts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "outputContracts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "approvalGate": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "required": {
+                "type": "boolean"
+              },
+              "policyRef": {
+                "type": "string"
+              }
+            }
+          },
+          "verificationGate": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "required": {
+                "type": "boolean"
+              },
+              "verifierRole": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "runtimePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "executionMode",
+        "maxParallelStages"
+      ],
+      "properties": {
+        "executionMode": {
+          "type": "string",
+          "enum": [
+            "compile-only",
+            "simulation",
+            "local",
+            "adapter-backed"
+          ]
+        },
+        "maxParallelStages": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "adapterConstraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "featureFlagRef": {
+          "type": "string"
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mustCompileToWorkOrders",
+        "approvalRequiredBeforeLaunch"
+      ],
+      "properties": {
+        "mustCompileToWorkOrders": {
+          "type": "boolean",
+          "const": true
+        },
+        "approvalRequiredBeforeLaunch": {
+          "type": "boolean"
+        },
+        "approvalPolicyRef": {
+          "type": "string"
+        },
+        "evidenceBundlePolicyRef": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,764 @@
+{
+  "projectName": "Flagship Foundry UI/UX Revamp",
+  "phaseId": "flagship-foundry-ui-ux-revamp-plan-2026-04-10",
+  "workOrders": [
+    {
+      "id": "foundry-uiux-revamp/WO-UX-001",
+      "lifecycleStage": "discover",
+      "phaseId": "uiux-discover-task-corpus",
+      "systemId": "apps/flagship-foundry/docs/uiux",
+      "taskClass": "analysis_and_structuring",
+      "agentRole": "systems-architect",
+      "personaIds": [
+        "persona:ui-intent-analyst",
+        "persona:ux-orchestrator"
+      ],
+      "modelTier": "high_reasoning_architect",
+      "fileScope": [
+        "change-request.md",
+        "intent-packet.md",
+        "docs/packs/task-corpus.md",
+        "machine/view-registry.json"
+      ],
+      "sourceArtifacts": [
+        "full-repo export",
+        "current operator docs",
+        "user request"
+      ],
+      "constraints": [
+        "Start from existing operator surfaces; do not assume a greenfield product shell.",
+        "Identify top 10 operator decisions and top 10 quick actions.",
+        "Separate high-frequency triage tasks from deep architecture work."
+      ],
+      "expectedOutputs": [
+        "task-corpus.md",
+        "intent packet updates",
+        "quick-action matrix"
+      ],
+      "acceptanceCriteria": [
+        "Top operator goals are documented as jobs-to-be-done.",
+        "Quick actions are ranked by urgency and frequency.",
+        "At least one drill-down chain from ecosystem to evidence is explicitly defined."
+      ],
+      "commands": [
+        "Manual review of task corpus completeness",
+        "Cross-check with architecture packet and plan"
+      ],
+      "dependencies": [],
+      "approvalRequirements": {
+        "required": false,
+        "reason": "none"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "foundry-uiux-revamp/WO-UX-002",
+      "lifecycleStage": "define",
+      "phaseId": "uiux-define-object-model",
+      "systemId": "apps/flagship-foundry/schemas",
+      "taskClass": "contract_definition",
+      "agentRole": "systems-architect",
+      "personaIds": [
+        "persona:information-architecture-architect",
+        "persona:ux-orchestrator"
+      ],
+      "modelTier": "high_reasoning_architect",
+      "fileScope": [
+        "architecture-packet.md",
+        "state-authority-matrix.md",
+        "machine/state-authority-matrix.json"
+      ],
+      "sourceArtifacts": [
+        "WO-UX-001",
+        "existing operator schemas",
+        "architecture studio packet"
+      ],
+      "constraints": [
+        "No new source of truth.",
+        "Keep declared artifacts separate from observed runtime state.",
+        "Align with current workspace target, context cart, visual artifact, planning board, and session board artifacts."
+      ],
+      "expectedOutputs": [
+        "state authority matrix",
+        "object model",
+        "ADR inputs"
+      ],
+      "acceptanceCriteria": [
+        "Every first-class object has an owner and authority defined.",
+        "Declared and observed artifacts are not conflated.",
+        "Primary and secondary surfaces are explicit."
+      ],
+      "commands": [
+        "Schema and architecture review",
+        "ADR review"
+      ],
+      "dependencies": [
+        "WO-UX-001"
+      ],
+      "approvalRequirements": {
+        "required": true,
+        "reason": "Architecture lock / platform fit / release gate"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "foundry-uiux-revamp/WO-UX-003",
+      "lifecycleStage": "visualize",
+      "phaseId": "uiux-visualize-shell",
+      "systemId": "apps/flagship-foundry/apps/cursor-companion",
+      "taskClass": "ux_architecture",
+      "agentRole": "systems-architect",
+      "personaIds": [
+        "persona:visualization-systems-architect",
+        "persona:ux-orchestrator"
+      ],
+      "modelTier": "high_reasoning_architect",
+      "fileScope": [
+        "docs/packs/screen-map.md",
+        "docs/diagrams/c4-context.mmd",
+        "docs/diagrams/c4-container.mmd"
+      ],
+      "sourceArtifacts": [
+        "WO-UX-001",
+        "WO-UX-002"
+      ],
+      "constraints": [
+        "Top bar, left rail, center canvas, right inspector, bottom utility are the baseline desktop shell.",
+        "Do not introduce hidden navigation as the primary path.",
+        "Favor object-based navigation over menu-based navigation."
+      ],
+      "expectedOutputs": [
+        "screen map",
+        "updated C4 diagrams"
+      ],
+      "acceptanceCriteria": [
+        "Desktop shell shows stable spatial frame.",
+        "Map/Board/Timeline/Diff are defined as peer views.",
+        "Inspector and utility drawer are explicit."
+      ],
+      "commands": [
+        "Design review walkthrough",
+        "operator path trace review"
+      ],
+      "dependencies": [
+        "WO-UX-002"
+      ],
+      "approvalRequirements": {
+        "required": true,
+        "reason": "Architecture lock / platform fit / release gate"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "foundry-uiux-revamp/WO-UX-004",
+      "lifecycleStage": "architect",
+      "phaseId": "uiux-architect-surface-authority",
+      "systemId": "apps/flagship-foundry/docs/adr",
+      "taskClass": "architecture_decision_record",
+      "agentRole": "systems-architect",
+      "personaIds": [
+        "persona:information-architecture-architect",
+        "persona:ux-orchestrator"
+      ],
+      "modelTier": "high_reasoning_architect",
+      "fileScope": [
+        "docs/adr/adr-001-select-cockpit-shell-as-canonical-operator-surface.md",
+        "docs/adr/adr-002-separate-view-registry-from-runtime-state.md"
+      ],
+      "sourceArtifacts": [
+        "WO-UX-002",
+        "WO-UX-003"
+      ],
+      "constraints": [
+        "Cursor Companion remains the write-capable first surface.",
+        "Foundry app / graph viewer remain read/projection surfaces.",
+        "Execution still flows through policy gateway and existing run control."
+      ],
+      "expectedOutputs": [
+        "ADR-001",
+        "ADR-002"
+      ],
+      "acceptanceCriteria": [
+        "Canonical write surface is explicit.",
+        "Projection surfaces are read-only by default.",
+        "State authority separation is locked by ADR."
+      ],
+      "commands": [
+        "ADR review and approval"
+      ],
+      "dependencies": [
+        "WO-UX-002",
+        "WO-UX-003"
+      ],
+      "approvalRequirements": {
+        "required": true,
+        "reason": "Architecture lock / platform fit / release gate"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "foundry-uiux-revamp/WO-UX-005",
+      "lifecycleStage": "architect",
+      "phaseId": "uiux-architect-drilldown-motion",
+      "systemId": "apps/flagship-foundry/docs/adr",
+      "taskClass": "architecture_decision_record",
+      "agentRole": "systems-architect",
+      "personaIds": [
+        "persona:interaction-motion-designer",
+        "persona:ux-orchestrator"
+      ],
+      "modelTier": "high_reasoning_architect",
+      "fileScope": [
+        "docs/adr/adr-003-adopt-operator-drilldown-chain.md",
+        "docs/adr/adr-004-adopt-motion-toggle-and-accessibility-baseline.md",
+        "docs/diagrams/operator-drilldown-sequence.mmd",
+        "docs/diagrams/state-authority.mmd"
+      ],
+      "sourceArtifacts": [
+        "WO-UX-001",
+        "WO-UX-003"
+      ],
+      "constraints": [
+        "Drill-down must move from ecosystem → subsystem → module → pseudocode → diff → work order → run → evidence.",
+        "Toggle controls are for immediate binary settings, not consequential workflow actions.",
+        "Reduced-motion and keyboard semantics must be part of the baseline."
+      ],
+      "expectedOutputs": [
+        "ADR-003",
+        "ADR-004",
+        "sequence and state diagrams"
+      ],
+      "acceptanceCriteria": [
+        "A stable drill-down chain is defined.",
+        "Motion categories and toggle rules are explicit.",
+        "Accessibility baseline is listed as a release gate."
+      ],
+      "commands": [
+        "ADR review and approval"
+      ],
+      "dependencies": [
+        "WO-UX-003"
+      ],
+      "approvalRequirements": {
+        "required": true,
+        "reason": "Architecture lock / platform fit / release gate"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "foundry-uiux-revamp/WO-UX-006",
+      "lifecycleStage": "implement",
+      "phaseId": "uiux-implement-contracts",
+      "systemId": "apps/flagship-foundry/schemas",
+      "taskClass": "contract_definition",
+      "agentRole": "builder",
+      "personaIds": [
+        "persona:design-system-governor",
+        "persona:ux-orchestrator"
+      ],
+      "modelTier": "mid_cost_builder",
+      "fileScope": [
+        "apps/flagship-foundry/schemas/view-registry.schema.json",
+        "apps/flagship-foundry/schemas/saved-layout.schema.json",
+        "apps/flagship-foundry/schemas/inspector-selection.schema.json",
+        "apps/flagship-foundry/schemas/chat-command-session.schema.json",
+        "apps/flagship-foundry/schemas/operator-quick-action.schema.json"
+      ],
+      "sourceArtifacts": [
+        "WO-UX-002",
+        "WO-UX-004",
+        "WO-UX-005"
+      ],
+      "constraints": [
+        "Extend the existing operator schema family; do not create duplicate artifact classes.",
+        "Every new artifact must identify whether it is declared or observed.",
+        "Saved layouts must be user-scoped and reversible."
+      ],
+      "expectedOutputs": [
+        "new schemas",
+        "schema tests"
+      ],
+      "acceptanceCriteria": [
+        "All new schemas validate.",
+        "View registry supports peer views and drill-down targets.",
+        "Quick actions and saved layouts are represented as typed artifacts."
+      ],
+      "commands": [
+        "pnpm exec nx run flagship-foundry:typecheck",
+        "pnpm exec nx test flagship-foundry"
+      ],
+      "dependencies": [
+        "WO-UX-004",
+        "WO-UX-005"
+      ],
+      "approvalRequirements": {
+        "required": false,
+        "reason": "none"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "foundry-uiux-revamp/WO-UX-007",
+      "lifecycleStage": "implement",
+      "phaseId": "uiux-implement-shell",
+      "systemId": "apps/flagship-foundry/apps/cursor-companion",
+      "taskClass": "ui_surface_implementation",
+      "agentRole": "builder",
+      "personaIds": [
+        "persona:interaction-motion-designer",
+        "persona:ux-orchestrator"
+      ],
+      "modelTier": "mid_cost_builder",
+      "fileScope": [
+        "apps/flagship-foundry/apps/cursor-companion/operator-panel.js",
+        "apps/flagship-foundry/apps/cursor-companion/panel-state.js",
+        "apps/flagship-foundry/apps/cursor-companion/window-launcher.js",
+        "apps/flagship-foundry/apps/cursor-companion/control-plane-client.js"
+      ],
+      "sourceArtifacts": [
+        "WO-UX-003",
+        "WO-UX-006"
+      ],
+      "constraints": [
+        "Preserve existing run controls while re-composing shell layout.",
+        "Do not remove current plan/import/gap analysis flows.",
+        "Shell must support dock/undock/hide/show inspector and utility panels."
+      ],
+      "expectedOutputs": [
+        "shell implementation",
+        "saved layout support",
+        "panel manager"
+      ],
+      "acceptanceCriteria": [
+        "Desktop shell exposes top bar, left rail, center canvas, right inspector, and bottom utility drawer.",
+        "Panels can be shown/hidden without losing context.",
+        "At least Architect, Planner, Operator, and Investigator saved layouts exist."
+      ],
+      "commands": [
+        "pnpm exec nx run cursor-companion:test",
+        "pnpm exec nx run cursor-companion:typecheck"
+      ],
+      "dependencies": [
+        "WO-UX-006"
+      ],
+      "approvalRequirements": {
+        "required": false,
+        "reason": "none"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "foundry-uiux-revamp/WO-UX-008",
+      "lifecycleStage": "implement",
+      "phaseId": "uiux-implement-graph-interactions",
+      "systemId": "apps/flagship-foundry/apps/graph-viewer",
+      "taskClass": "visualization_implementation",
+      "agentRole": "builder",
+      "personaIds": [
+        "persona:visualization-systems-architect",
+        "persona:ux-orchestrator"
+      ],
+      "modelTier": "mid_cost_builder",
+      "fileScope": [
+        "apps/flagship-foundry/apps/graph-viewer/src/*",
+        "apps/flagship-foundry/apps/cursor-companion/diagram-panel.js"
+      ],
+      "sourceArtifacts": [
+        "WO-UX-003",
+        "WO-UX-006"
+      ],
+      "constraints": [
+        "Graph remains navigation and projection, not a second editor.",
+        "Support fit-to-selection, reset view, minimap, zoom, pan, focus path, and compare selection.",
+        "Overlay run and evidence state without mutating declared topology."
+      ],
+      "expectedOutputs": [
+        "graph navigation enhancements",
+        "focus path overlay",
+        "compare mode"
+      ],
+      "acceptanceCriteria": [
+        "Operators can focus, zoom, compare, and reset quickly.",
+        "Run/evidence overlays are distinct from declared graph structure.",
+        "Graph nodes expose drill-down destinations."
+      ],
+      "commands": [
+        "pnpm exec nx run graph-viewer:test",
+        "pnpm exec nx run graph-viewer:build"
+      ],
+      "dependencies": [
+        "WO-UX-006"
+      ],
+      "approvalRequirements": {
+        "required": false,
+        "reason": "none"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "foundry-uiux-revamp/WO-UX-009",
+      "lifecycleStage": "implement",
+      "phaseId": "uiux-implement-inspector-drilldown",
+      "systemId": "apps/flagship-foundry/apps/cursor-companion",
+      "taskClass": "ui_surface_implementation",
+      "agentRole": "builder",
+      "personaIds": [
+        "persona:information-architecture-architect",
+        "persona:ux-orchestrator"
+      ],
+      "modelTier": "mid_cost_builder",
+      "fileScope": [
+        "apps/flagship-foundry/apps/cursor-companion/diagram-panel.js",
+        "apps/flagship-foundry/apps/cursor-companion/session-board.js",
+        "apps/flagship-foundry/apps/cursor-companion/planning-board.js",
+        "apps/flagship-foundry/packages/core/src/*"
+      ],
+      "sourceArtifacts": [
+        "WO-UX-005",
+        "WO-UX-007",
+        "WO-UX-008"
+      ],
+      "constraints": [
+        "Use a single inspector pattern instead of scattered modal dialogs.",
+        "Preserve artifact authority and evidence provenance in drill-down views.",
+        "Diff view must explain what changed, what was added/removed, and why."
+      ],
+      "expectedOutputs": [
+        "inspector implementation",
+        "drill-down tabs",
+        "diff and pseudocode entrypoints"
+      ],
+      "acceptanceCriteria": [
+        "Operators can reach pseudocode, diff, work orders, runs, and evidence from a selected node/module.",
+        "Breadcrumbs reflect the drill-down path.",
+        "Inspector always shows valid actions and current state."
+      ],
+      "commands": [
+        "pnpm exec nx run cursor-companion:test",
+        "manual path trace: node → pseudocode → diff → work order → run → evidence"
+      ],
+      "dependencies": [
+        "WO-UX-007",
+        "WO-UX-008"
+      ],
+      "approvalRequirements": {
+        "required": false,
+        "reason": "none"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "foundry-uiux-revamp/WO-UX-010",
+      "lifecycleStage": "implement",
+      "phaseId": "uiux-implement-command-chat",
+      "systemId": "apps/flagship-foundry/apps/cursor-companion",
+      "taskClass": "workflow_acceleration",
+      "agentRole": "builder",
+      "personaIds": [
+        "persona:ui-intent-analyst",
+        "persona:ux-orchestrator"
+      ],
+      "modelTier": "mid_cost_builder",
+      "fileScope": [
+        "apps/flagship-foundry/apps/cursor-companion/operator-panel.js",
+        "apps/flagship-foundry/apps/cursor-companion/requirement-panel.js",
+        "apps/flagship-foundry/apps/cursor-companion/control-plane-client.js"
+      ],
+      "sourceArtifacts": [
+        "WO-UX-001",
+        "WO-UX-007",
+        "WO-UX-009"
+      ],
+      "constraints": [
+        "Quick actions must expose the top-ranked operator actions with minimal navigation.",
+        "Chat suggestions may recommend agents and pipelines but must still honor approval boundaries.",
+        "Command palette is global; it cannot bypass policy or state authority."
+      ],
+      "expectedOutputs": [
+        "command palette",
+        "quick-action strip",
+        "chat suggestion contract"
+      ],
+      "acceptanceCriteria": [
+        "Create feature, compile pipeline, inspect evidence, open workspace target, and switch layout are reachable from a command palette.",
+        "Quick actions are visible in contextually appropriate places.",
+        "Chat suggestions can pre-fill a work-order draft or pipeline recommendation without auto-executing."
+      ],
+      "commands": [
+        "manual key command review",
+        "manual chat suggestion safety review"
+      ],
+      "dependencies": [
+        "WO-UX-001",
+        "WO-UX-007",
+        "WO-UX-009"
+      ],
+      "approvalRequirements": {
+        "required": false,
+        "reason": "none"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "foundry-uiux-revamp/WO-UX-011",
+      "lifecycleStage": "implement",
+      "phaseId": "uiux-implement-plan-session-convergence",
+      "systemId": "apps/flagship-foundry/apps/cursor-companion",
+      "taskClass": "workflow_state_modeling",
+      "agentRole": "builder",
+      "personaIds": [
+        "persona:visualization-systems-architect",
+        "persona:ux-orchestrator"
+      ],
+      "modelTier": "mid_cost_builder",
+      "fileScope": [
+        "apps/flagship-foundry/apps/cursor-companion/planning-board.js",
+        "apps/flagship-foundry/apps/cursor-companion/session-board.js",
+        "apps/flagship-foundry/packages/core/src/*"
+      ],
+      "sourceArtifacts": [
+        "WO-UX-002",
+        "WO-UX-007",
+        "WO-UX-009"
+      ],
+      "constraints": [
+        "Plan state, approval posture, and session state must remain distinguishable but linked.",
+        "Show blocked conditions, verifier posture, evidence refs, and continuity refs together when relevant.",
+        "Do not conflate draft plan status with observed run progress."
+      ],
+      "expectedOutputs": [
+        "board convergence",
+        "linked plan/run/evidence cards"
+      ],
+      "acceptanceCriteria": [
+        "Operator can move from plan dependency to live session view without context loss.",
+        "Blocked conditions and approval posture are visible.",
+        "Evidence links appear on the same object path."
+      ],
+      "commands": [
+        "manual workflow walkthrough",
+        "pnpm exec nx run cursor-companion:test"
+      ],
+      "dependencies": [
+        "WO-UX-007",
+        "WO-UX-009"
+      ],
+      "approvalRequirements": {
+        "required": false,
+        "reason": "none"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "foundry-uiux-revamp/WO-UX-012",
+      "lifecycleStage": "implement",
+      "phaseId": "uiux-implement-motion-tokens",
+      "systemId": "apps/flagship-foundry/apps/cursor-companion",
+      "taskClass": "design_system_implementation",
+      "agentRole": "builder",
+      "personaIds": [
+        "persona:design-system-governor",
+        "persona:ux-orchestrator"
+      ],
+      "modelTier": "mid_cost_builder",
+      "fileScope": [
+        "apps/flagship-foundry/apps/cursor-companion/styles/*",
+        "apps/flagship-foundry/apps/graph-viewer/src/*"
+      ],
+      "sourceArtifacts": [
+        "WO-UX-005",
+        "WO-UX-007"
+      ],
+      "constraints": [
+        "Toggle controls are only for immediate binary settings such as live updates, telemetry overlay, or follow selection.",
+        "Compile, Approve, Launch, Stop remain explicit action controls.",
+        "Reduced-motion behavior must exist from the start."
+      ],
+      "expectedOutputs": [
+        "token set",
+        "motion rules",
+        "feedback state matrix"
+      ],
+      "acceptanceCriteria": [
+        "Motion clarifies state changes and navigation relationships.",
+        "Toggle states are visually obvious and semantically correct.",
+        "Loading, empty, success, warning, and error states are defined."
+      ],
+      "commands": [
+        "component visual review",
+        "reduced-motion check"
+      ],
+      "dependencies": [
+        "WO-UX-005",
+        "WO-UX-007"
+      ],
+      "approvalRequirements": {
+        "required": false,
+        "reason": "none"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "foundry-uiux-revamp/WO-UX-013",
+      "lifecycleStage": "implement",
+      "phaseId": "uiux-implement-mobile-adaptation",
+      "systemId": "apps/flagship-foundry/mobile",
+      "taskClass": "platform_adaptation",
+      "agentRole": "systems-architect",
+      "personaIds": [
+        "persona:mobile-surface-adapter",
+        "persona:ux-orchestrator"
+      ],
+      "modelTier": "high_reasoning_architect",
+      "fileScope": [
+        "docs/packs/platform-adaptation.md",
+        "machine/knowledge-base-blueprint.json"
+      ],
+      "sourceArtifacts": [
+        "WO-UX-003",
+        "WO-UX-005",
+        "WO-UX-010"
+      ],
+      "constraints": [
+        "Do not force full desktop parity on mobile.",
+        "Mobile focuses on triage, approvals, alerts, search, and lightweight evidence review.",
+        "Graph authoring remains desktop-first."
+      ],
+      "expectedOutputs": [
+        "platform adaptation plan",
+        "mobile screen map"
+      ],
+      "acceptanceCriteria": [
+        "A clear capability split exists between desktop and mobile.",
+        "iOS and Android navigation models are explicit.",
+        "Approval/monitoring tasks are prioritized."
+      ],
+      "commands": [
+        "architecture review",
+        "platform heuristic review"
+      ],
+      "dependencies": [
+        "WO-UX-003",
+        "WO-UX-010"
+      ],
+      "approvalRequirements": {
+        "required": true,
+        "reason": "Architecture lock / platform fit / release gate"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "foundry-uiux-revamp/WO-UX-014",
+      "lifecycleStage": "verify",
+      "phaseId": "uiux-verify",
+      "systemId": "apps/flagship-foundry",
+      "taskClass": "verification_and_review",
+      "agentRole": "verifier",
+      "personaIds": [
+        "persona:ux-verification-judge",
+        "persona:ux-orchestrator"
+      ],
+      "modelTier": "skeptical_verifier",
+      "fileScope": [
+        "evidence/evidence-bundle.md",
+        "evidence/evidence-bundle.json",
+        "verification-plan.md"
+      ],
+      "sourceArtifacts": [
+        "WO-UX-007",
+        "WO-UX-008",
+        "WO-UX-009",
+        "WO-UX-010",
+        "WO-UX-011",
+        "WO-UX-012",
+        "WO-UX-013"
+      ],
+      "constraints": [
+        "Verify scenario outcomes, not just component existence.",
+        "Include keyboard/focus, reduced-motion, graph performance, and safe launch/recovery.",
+        "Do not merge observed evidence into declared truth without annotation."
+      ],
+      "expectedOutputs": [
+        "verification report",
+        "evidence bundle",
+        "blocking issues list"
+      ],
+      "acceptanceCriteria": [
+        "Can the operator find the active run in under 10 seconds?",
+        "Can the operator explain why a work order is blocked?",
+        "Can the operator get from topology to pseudocode diff in 3 clicks?",
+        "Can the operator recover from a failed launch without losing context?"
+      ],
+      "commands": [
+        "scenario walkthrough",
+        "keyboard navigation check",
+        "graph performance measurement",
+        "reduced-motion check"
+      ],
+      "dependencies": [
+        "WO-UX-007",
+        "WO-UX-008",
+        "WO-UX-009",
+        "WO-UX-010",
+        "WO-UX-011",
+        "WO-UX-012",
+        "WO-UX-013"
+      ],
+      "approvalRequirements": {
+        "required": false,
+        "reason": "none"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "foundry-uiux-revamp/WO-UX-015",
+      "lifecycleStage": "release",
+      "phaseId": "uiux-release-learning",
+      "systemId": "apps/flagship-foundry/docs",
+      "taskClass": "release_and_learning",
+      "agentRole": "docs-release-agent",
+      "personaIds": [
+        "persona:workflow-telemetry-curator",
+        "persona:ux-orchestrator"
+      ],
+      "modelTier": "sync_editor",
+      "fileScope": [
+        "evidence/evidence-bundle.md",
+        "artifact-manifest.json",
+        "foundry-import-manifest.json",
+        "next-workspace.txt",
+        "README.md"
+      ],
+      "sourceArtifacts": [
+        "WO-UX-014"
+      ],
+      "constraints": [
+        "Every release claim must reference evidence.",
+        "Emit telemetry and learning hooks for the next improvement cycle.",
+        "Preserve import/export compatibility for downstream workspaces."
+      ],
+      "expectedOutputs": [
+        "release packet",
+        "learning record",
+        "next workspace pointer"
+      ],
+      "acceptanceCriteria": [
+        "Bundle includes plan, architecture, ADRs, work orders, evidence, and import manifest.",
+        "Next workspace and approval steps are explicit.",
+        "Learning loop and telemetry hooks are documented."
+      ],
+      "commands": [
+        "artifact manifest completeness review",
+        "zip creation and inspection"
+      ],
+      "dependencies": [
+        "WO-UX-014"
+      ],
+      "approvalRequirements": {
+        "required": false,
+        "reason": "none"
+      },
+      "status": "ready"
+    }
+  ]
+}

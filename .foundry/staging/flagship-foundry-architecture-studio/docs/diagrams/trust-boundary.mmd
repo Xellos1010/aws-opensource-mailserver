@@ -1,0 +1,51 @@
+%% Trust Boundary Diagram — Foundry Orchestration Composer
+flowchart TB
+    subgraph tb1["Trust Boundary 1 — Operator workstation"]
+        operator["Operator"]
+        cc["Cursor Companion Composer"]
+        gv["Graph Viewer / Foundry Projection"]
+    end
+
+    subgraph tb2["Trust Boundary 2 — Local-first control plane"]
+        api["Composer API Gateway"]
+        policy["Execution Policy Gateway"]
+        session["Session Projection"]
+        repoSvc["Composition Repository"]
+    end
+
+    subgraph tb3["Trust Boundary 3 — Repo authority"]
+        repo["Repo-native personas / skills / templates / runbooks"]
+        registry["Registry Projection Service"]
+    end
+
+    subgraph tb4["Trust Boundary 4 — Execution boundary"]
+        approvals["Plan + Work-order approvals"]
+        runCtrl["Existing run control"]
+        adapters["Runtime adapters"]
+    end
+
+    subgraph tb5["Trust Boundary 5 — Observed state"]
+        continuity["Continuity state"]
+        evidence["Evidence bundle targets"]
+        logs["Logs / telemetry references"]
+        verifier["Verifier status"]
+    end
+
+    operator -->|interactive commands| cc
+    cc -->|authenticated local session / feature flag| api
+    gv -->|read projections| session
+
+    api -->|read-only source projection| registry
+    registry --> repo
+
+    api -->|declared artifacts only| repoSvc
+    api -->|launch request with approval refs| policy
+    policy -->|verify approval and lifecycle rules| approvals
+    policy -->|only approved launch / pause / resume / stop| runCtrl
+    runCtrl --> adapters
+    runCtrl --> continuity
+    runCtrl --> evidence
+    adapters --> logs
+    runCtrl --> verifier
+
+    classDef trust fill:#f6f6f6,stroke:#555,stroke-width:1px;

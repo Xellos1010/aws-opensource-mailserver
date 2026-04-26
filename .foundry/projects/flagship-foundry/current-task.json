@@ -1,0 +1,78 @@
+{
+  "authority": {
+    "contractAuthority": "apps/flagship-foundry/schemas/continuity-state.schema.json",
+    "runtimeInstanceAuthority": ".foundry/projects/flagship-foundry/current-task.json",
+    "derivedMirrors": []
+  },
+  "project": {
+    "name": "flagship-foundry",
+    "path": ".foundry/projects/flagship-foundry",
+    "worktree": ".foundry/projects/flagship-foundry",
+    "baseBranch": "main",
+    "technicalBaseBranch": "main",
+    "ruleReferences": []
+  },
+  "objective": "Unify Cursor Companion windowing: browser-based pop-out, bidirectional state sync, and consistent styling.",
+  "sdlcPhase": "release",
+  "lifecycleStage": "release",
+  "currentPhase": {
+    "id": "unified-windowing-release-handoff",
+    "title": "release",
+    "status": "done",
+    "branch": "main",
+    "notes": [
+      "Intent packet complete: docs/intent/intent-cursor-companion-unified-windowing-2026-04-10.md.",
+      "All five work orders WO-UW-001 through WO-UW-005 are implemented and verified.",
+      "Focused verification completed successfully: /usr/local/bin/node --test apps/flagship-foundry/tests/browser-popout-contracts.test.mjs apps/flagship-foundry/tests/cursor-companion-browser-popout.test.mjs apps/flagship-foundry/tests/cursor-companion-windowing.test.mjs apps/flagship-foundry/tests/cursor-companion-observability.test.mjs (16/16 passed).",
+      "Unified-windowing release documentation has been created under apps/flagship-foundry/docs/release/.",
+      "Source, test, continuity, and release artifacts for the unified-windowing slice are all present in the working tree and ready for commit."
+    ],
+    "updatedAt": "2026-04-10T05:56:31Z"
+  },
+  "activeBranch": "main",
+  "nextCommit": {
+    "branch": "main",
+    "message": "feat(cursor-companion): unified windowing with browser pop-out, state sync, and styling",
+    "scope": [
+      "apps/flagship-foundry/schemas/browser-popout-message.schema.json",
+      "apps/flagship-foundry/apps/cursor-companion/browser-popout-server.js",
+      "apps/flagship-foundry/apps/cursor-companion/browser-theme.css",
+      "apps/flagship-foundry/apps/cursor-companion/operator-panel.js",
+      "apps/flagship-foundry/apps/cursor-companion/extension.js",
+      "apps/flagship-foundry/apps/cursor-companion/window-session.js",
+      "apps/flagship-foundry/apps/cursor-companion/window-launcher.js",
+      "apps/flagship-foundry/apps/cursor-companion/package.json",
+      "apps/flagship-foundry/tests/browser-popout-contracts.test.mjs",
+      "apps/flagship-foundry/tests/cursor-companion-browser-popout.test.mjs",
+      "apps/flagship-foundry/tests/cursor-companion-windowing.test.mjs",
+      "apps/flagship-foundry/tests/cursor-companion-observability.test.mjs",
+      ".foundry/projects/flagship-foundry/current-task.json",
+      "apps/flagship-foundry/docs/release/cursor-companion-unified-windowing-release.md"
+    ]
+  },
+  "nextCommandSet": [
+    "Completed: /usr/local/bin/node --test apps/flagship-foundry/tests/browser-popout-contracts.test.mjs apps/flagship-foundry/tests/cursor-companion-browser-popout.test.mjs apps/flagship-foundry/tests/cursor-companion-windowing.test.mjs apps/flagship-foundry/tests/cursor-companion-observability.test.mjs (16/16 passed)"
+  ],
+  "blockedBy": [],
+  "artifacts": {
+    "unifiedWindowing20260410": [
+      "docs/intent/intent-cursor-companion-unified-windowing-2026-04-10.md",
+      "docs/plan/work-orders-unified-windowing-2026-04-10.md"
+    ],
+    "releaseDocs": [
+      "apps/flagship-foundry/docs/release/cursor-companion-unified-windowing-release.md"
+    ]
+  },
+  "nextWorkOrders": [],
+  "verificationPlan": [
+    "Completed: /usr/local/bin/node --test apps/flagship-foundry/tests/browser-popout-contracts.test.mjs apps/flagship-foundry/tests/cursor-companion-browser-popout.test.mjs apps/flagship-foundry/tests/cursor-companion-windowing.test.mjs apps/flagship-foundry/tests/cursor-companion-observability.test.mjs (16/16 passed)"
+  ],
+  "doneCriteria": [
+    "WO-UW-001 through WO-UW-005 are implemented and verified.",
+    "Focused verification evidence exists for browser pop-out contracts, browser pop-out behavior, windowing, and observability with 16/16 passing tests.",
+    "Browser pop-out opens as free-floating window connected to active extension host.",
+    "Bidirectional state sync works between webview tab and browser pop-out.",
+    "Browser pop-out renders with consistent dark-theme styling.",
+    "Release documentation captures the completed unified-windowing slice and verification evidence."
+  ]
+}

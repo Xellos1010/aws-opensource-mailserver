@@ -1,0 +1,28 @@
+%% State authority diagram
+flowchart TB
+  subgraph declared["Declared artifacts"]
+    wt["Workspace Target"]
+    cc["Context Cart"]
+    rr["Refinement Session"]
+    va["Visual Artifact"]
+    pb["Plan / Work Orders"]
+    pd["Pipeline Definition"]
+    cr["Compilation Result"]
+  end
+
+  subgraph observed["Observed state"]
+    rs["Run Session"]
+    vs["Verifier Status"]
+    eb["Evidence Bundle Ref"]
+    lg["Logs / Telemetry Ref"]
+  end
+
+  wt --> pb
+  cc --> pb
+  rr --> pb
+  pb --> pd
+  pd --> cr
+  cr --> rs
+  rs --> vs
+  rs --> eb
+  rs --> lg

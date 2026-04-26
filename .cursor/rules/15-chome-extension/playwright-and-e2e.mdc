@@ -1,0 +1,13 @@
+---
+globs: apps/chrome-extensions/**/src/tests/**,apps/chrome-extensions/**/src/**
+alwaysApply: false
+description: Playwright/E2E expectations for Chrome extensions
+---
+## Use existing targets & tags
+- Smoke: `pnpm nx run pmhnp-administration-summerysky:e2e -- --grep @smoke`
+- Recipe slices: use `pnpm nx run pmhnp-administration-summerysky:e2e -- --grep "@recipes"` and extend existing tags.
+- Side panel slice: `pnpm nx run pmhnp-administration-summerysky:e2e -- --grep @sidepanel`
+
+## Authoring rules
+- Tests must **load the unpacked extension** and **exercise the exact waits** used by content scripts (spy on logs if needed).
+- Prefer **route-anchored** assertions over hard sleeps: `expect(page.url()).toMatch(/contacts\/\d+/)` **before** waiting for `[data-test-id="fieldSectionWrapperShowAll"]`.

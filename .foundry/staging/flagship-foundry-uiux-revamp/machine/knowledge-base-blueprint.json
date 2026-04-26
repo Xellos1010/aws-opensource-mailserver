@@ -1,0 +1,105 @@
+{
+  "authorityModel": {
+    "existingSeedKnowledgeBase": {
+      "id": "state/knowledge/foundry-foundational-docs",
+      "evidenceDocumentCount": 1124,
+      "purpose": "Existing foundational repo knowledge base already mapped to domain packs."
+    },
+    "sla": {
+      "authority": "adr-001",
+      "completenessPolicy": "canonical-contract-plus-lineage-and-downstream-linkage",
+      "freshnessWindowsDays": {
+        "critical": 14,
+        "important": 30
+      }
+    }
+  },
+  "knowledgeBases": [
+    {
+      "id": "kb:repo-authority-and-contracts",
+      "name": "Repo Authority & Contracts",
+      "purpose": "Schemas, charters, ADRs, runbooks, imported packets, current-task continuity, operator surface contracts.",
+      "freshnessTier": "critical",
+      "seedSources": [
+        "full-repo export",
+        ".claude/CHARTER.md",
+        ".claude/CLAUDE.md",
+        ".foundry/projects/*/current-task.json",
+        "apps/flagship-foundry/schemas/*.schema.json",
+        "apps/flagship-foundry/docs/adr/*.md"
+      ]
+    },
+    {
+      "id": "kb:operator-surface-runtime-projections",
+      "name": "Operator Surface Runtime Projections",
+      "purpose": "Workspace targets, context carts, refinement sessions, visual artifacts, planning board, session board, graph and pipeline projections.",
+      "freshnessTier": "critical",
+      "seedSources": [
+        "apps/cursor-companion/*",
+        "apps/flagship-foundry/packages/core/src/*",
+        "current operator runtime artifacts"
+      ]
+    },
+    {
+      "id": "kb:ui-ux-standards-web-ios-android",
+      "name": "UI/UX Standards — Web, iOS, Android",
+      "purpose": "Official platform guidance for navigation, motion, toggles, accessibility, and cross-platform adaptation.",
+      "freshnessTier": "important",
+      "seedSources": [
+        "Apple Human Interface Guidelines",
+        "Material Design 3",
+        "WCAG 2.2",
+        "Fluent 2"
+      ]
+    },
+    {
+      "id": "kb:visualization-pattern-library",
+      "name": "Visualization Pattern Library",
+      "purpose": "Maps problem types to graphs, boards, timelines, diffs, inspectors, chat, evidence drawers, and saved views.",
+      "freshnessTier": "important",
+      "seedSources": [
+        "current visual artifact catalog",
+        "architecture packets",
+        "existing graph-viewer behavior",
+        "internal examples and fix-memory"
+      ]
+    },
+    {
+      "id": "kb:user-task-and-decision-corpus",
+      "name": "User Task & Decision Corpus",
+      "purpose": "Operator JTBD, decision timing, failure modes, quick actions, and drill-down patterns.",
+      "freshnessTier": "critical",
+      "seedSources": [
+        "change requests",
+        "task handoffs",
+        "session board events",
+        "usability notes"
+      ]
+    },
+    {
+      "id": "kb:telemetry-evidence-learning",
+      "name": "Telemetry, Evidence & Learning",
+      "purpose": "Run timelines, evidence bundles, verifier posture, logs references, and fix-memory records for UX learning loops.",
+      "freshnessTier": "critical",
+      "seedSources": [
+        "evidence bundles",
+        "run timelines",
+        "session board",
+        "learning records",
+        "telemetry-driven improvement runbooks"
+      ]
+    },
+    {
+      "id": "kb:platform-adaptation",
+      "name": "Platform Adaptation",
+      "purpose": "Shared object model plus web/desktop, iOS, and Android-specific capability split.",
+      "freshnessTier": "important",
+      "seedSources": [
+        "screen maps",
+        "platform guidelines",
+        "component inventories",
+        "mobile release feedback"
+      ]
+    }
+  ]
+}

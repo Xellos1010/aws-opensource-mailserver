@@ -23,6 +23,15 @@ Every project declares Nx tags to enable lint rules for dependency constraints.
 - e2e/: Playwright-based end-to-end suites
 - docs/: ADRs, architecture diagrams, API references
 
+## Cross-Initiative Reuse (SummerySky)
+
+Features for `apps/chrome-extensions/PMHNP-Administration-SummerySky` MUST be implemented as reusable libs first. The app should only wire UI, routing, and Chrome/MV3 entry points.
+
+- Place reusable code in `libs/summerysky/*` (or `libs/Google-Chrome-Extension-Library/*` for shared extension utilities).
+- Avoid portal-specific assumptions in shared libs; keep portal adapters in data-access libraries.
+- Expose clean public APIs via `index.ts`; do not import deep paths across libs.
+- If a feature is SummerySky-only today, still design it as a portable library so other initiatives can adopt it with minimal changes.
+
 ## Dependency Constraints
 
 Enforce domain and layer constraints using Nx and ESLint. Higher layers may depend on lower layers; never the reverse.
@@ -71,4 +80,3 @@ Only import from a library's public surface (index.ts).
 - ts-standards-and-strictness
 - dev-workflow-and-git
 - ci-cd-and-releases
-

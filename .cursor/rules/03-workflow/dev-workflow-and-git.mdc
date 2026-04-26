@@ -1,5 +1,6 @@
 ---
 alwaysApply: true
+description: Development workflow, branching, and review standards
 ---
 
 # Development Workflow, Branching & Reviews
@@ -46,4 +47,3 @@ Automate formatting, linting, and typechecking with Husky/lefthook.
 ## Related Rules
 
 - ci-cd-and-releases
-

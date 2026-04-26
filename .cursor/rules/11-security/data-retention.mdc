@@ -1,0 +1,21 @@
+---
+globs: apps/chrome-extensions/PMHNP-Administration-SummerySky/**,libs/summerysky/**,libs/Google-Chrome-Extension-Library/**
+alwaysApply: false
+description: "Retention and purge policies for local data"
+---
+# Data Retention and Purge
+
+Ensure all local data has explicit retention boundaries and user-controlled purge paths.
+
+## Requirements
+- Define TTL and maximum size for logs, audit entries, and issue bundles.
+- Default to the minimum necessary retention; avoid indefinite storage of PHI.
+- Provide a user-visible "clear data" action that removes PHI, redaction maps, and cached artifacts.
+- Purge transient caches on sign-out or when feature flags are disabled.
+
+## PHI Handling
+- Retain encrypted MPRs only as long as needed for local workflows.
+- Avoid duplicating PHI across multiple stores; use a single source of truth.
+
+## Verification
+- Add tests to confirm TTL purge and size limits work under load.

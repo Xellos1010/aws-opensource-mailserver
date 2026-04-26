@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flagship-foundry.local/contracts/dashboard-execution-request.schema.json",
+  "title": "Dashboard Execution Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "requestId",
+    "action",
+    "sourceType",
+    "sourceRef",
+    "requestedBy",
+    "requestedAt"
+  ],
+  "properties": {
+    "requestId": {
+      "type": "string"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "start",
+        "pause",
+        "resume",
+        "stop",
+        "rerun-failed-slice"
+      ]
+    },
+    "sourceType": {
+      "type": "string",
+      "enum": [
+        "approved-work-order",
+        "approved-plan",
+        "compiled-pipeline"
+      ]
+    },
+    "sourceRef": {
+      "type": "string"
+    },
+    "approvalArtifactRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "requestedBy": {
+      "type": "string"
+    },
+    "requestedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "runtimeMode": {
+      "type": "string",
+      "enum": [
+        "simulation",
+        "local",
+        "adapter-backed"
+      ]
+    },
+    "featureFlagContext": {
+      "type": "object"
+    }
+  }
+}

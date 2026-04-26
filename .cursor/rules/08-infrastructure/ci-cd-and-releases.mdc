@@ -1,5 +1,6 @@
 ---
 alwaysApply: true
+description: CI/CD, caching, and release workflow standards
 ---
 
 # CI/CD, Caching & Automated Releases
@@ -44,4 +45,3 @@ pnpm changeset version && pnpm i --lockfile-only && pnpm nx release publish
 
 - security-and-secrets-policy
 - testing-strategy
-

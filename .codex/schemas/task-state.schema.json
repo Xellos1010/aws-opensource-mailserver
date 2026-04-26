@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://web-automation-workspace.local/.codex/schemas/task-state.schema.json",
+  "title": "Codex Task State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "project",
+    "objective",
+    "sdlcPhase",
+    "activeBranch",
+    "currentPhase",
+    "nextCommit",
+    "nextCommandSet",
+    "blockedBy",
+    "artifacts",
+    "doneCriteria"
+  ],
+  "properties": {
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "path",
+        "worktree",
+        "baseBranch",
+        "technicalBaseBranch",
+        "ruleReferences"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "worktree": {
+          "type": "string"
+        },
+        "baseBranch": {
+          "type": "string"
+        },
+        "technicalBaseBranch": {
+          "type": "string"
+        },
+        "ruleReferences": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "objective": {
+      "type": "string"
+    },
+    "sdlcPhase": {
+      "type": "string",
+      "enum": [
+        "plan",
+        "design",
+        "implement",
+        "verify",
+        "document",
+        "release",
+        "operate"
+      ]
+    },
+    "lifecycleStage": {
+      "type": "string",
+      "description": "Flagship Foundry 11-phase lifecycle stage. Optional. When present, takes precedence over sdlcPhase for agent routing. See flagship-foundry/schemas/continuity-state.schema.json for the authoritative schema.",
+      "enum": [
+        "discover",
+        "define",
+        "visualize",
+        "architect",
+        "plan",
+        "implement",
+        "verify",
+        "release",
+        "operate",
+        "diagnose",
+        "improve"
+      ]
+    },
+    "activeBranch": {
+      "type": "string"
+    },
+    "currentPhase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "status",
+        "branch",
+        "updatedAt"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "in_progress",
+            "blocked",
+            "verified",
+            "done"
+          ]
+        },
+        "branch": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "nextCommit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "branch",
+        "message",
+        "scope"
+      ],
+      "properties": {
+        "branch": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "nextCommandSet": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blockedBy": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "doneCriteria": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

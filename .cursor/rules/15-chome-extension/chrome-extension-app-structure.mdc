@@ -1,0 +1,30 @@
+---
+globs: apps/chrome-extensions/**
+alwaysApply: false
+description: Expected MV3 extension app structure (service worker, content, sidepanel, recipes)
+---
+# Chrome Extension App Structure (MV3 + Side Panel)
+
+**Goal:** Standardize structure for MV3 service worker, content scripts, side panel UI, and shared automation recipes so state stays reliable across navigations.
+
+> Build context: Vite multi-entry builds copy MV3 artifacts into `dist/` during `nx build`.
+
+## Directory Layout (SummerySky example)
+
+```text
+apps/chrome-extensions/PMHNP-Administration-SummerySky/
+├─ src/
+│  ├─ service_worker/            # MV3 background orchestration + storage + messaging
+│  ├─ content/                   # Content scripts (DOM extraction + guidance)
+│  ├─ sidepanel/                 # Side panel UI (React)
+│  ├─ popup/                     # Optional popup entry
+│  ├─ recipes/                   # JSON recipes + loader/registry
+│  ├─ utils/                     # Shared utilities
+│  └─ tests/                     # unit/integration/e2e
+├─ scripts/                      # manifest/build helpers
+├─ vite.config.mjs               # UI bundle
+├─ vite.config.content.ts        # content/service worker bundles
+├─ tsconfig.json
+├─ project.json                  # nx targets (build/test/e2e)
+└─ README.md
+```

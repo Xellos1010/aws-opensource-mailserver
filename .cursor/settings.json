@@ -1,0 +1,10 @@
+{
+  "plugins": {
+    "deploy-on-aws": {
+      "enabled": true
+    }
+  },
+  "nxConsole.disableFileWatching": true,
+  "nxConsole.enableDebugLogging": true,
+  "nxConsole.refreshOnBranchSwitch": true
+}

@@ -1,0 +1,388 @@
+---
+globs: apps/chrome-extensions/**/src/**
+alwaysApply: false
+description: Logging, telemetry, and run status expectations for extension flows
+---
+
+# Logging and Observability Standards
+
+Apply to all logging, telemetry, and observability implementations across service worker, content scripts, and sidepanel.
+
+**Justification:** Comprehensive logging with correlation IDs, structured data, and proper log levels enables debugging, monitoring, and troubleshooting of complex automation workflows.
+
+## Logger Usage
+
+### Logger Wrapper
+
+Use `@chrome-ext/core-telemetry` logger with levels: `debug`, `info`, `warn`, `error`.
+
+```typescript
+import { logger } from '@chrome-ext/core-telemetry';
+
+logger.debug('Detailed debugging information', { /* context */ });
+logger.info('Informational message', { /* context */ });
+logger.warn('Warning message', { /* context */ });
+logger.error('Error occurred', error, { /* context */ });
+```
+
+### App Tag Prefixing
+
+Prefix automation logs with app tag for filtering:
+
+```typescript
+logger.info('[Bravado] Patient extraction started', {
+  patientId,
+  correlationId,
+});
+
+logger.info('[Indeed] Job scraping completed', {
+  jobCount,
+  correlationId,
+});
+```
+
+## Structured Logging
+
+### Required Context Fields
+
+Always include these fields in log context:
+
+```typescript
+logger.info('Operation started', {
+  operation: 'executeRecipe',
+  app: 'bravado',
+  recipeId: 'patients-export-v3',
+  tabId: context.tabId,
+  correlationId: context.correlationId,
+  runId: runId, // If batch operation
+  stepId: step.id, // If recipe step
+});
+```
+
+### Log Levels
+
+- **debug**: Detailed debugging information (development only)
+- **info**: Normal operation events (start, progress, completion)
+- **warn**: Warning conditions (retries, fallbacks, degraded performance)
+- **error**: Error conditions (failures, exceptions)
+
+## Run Log Storage
+
+### Session Storage
+
+Store last 1000 entries in `chrome.storage.session` keyed by `runId`:
+
+```typescript
+const RUN_LOG_KEY = `run_log:${runId}`;
+const MAX_LOG_ENTRIES = 1000;
+
+interface LogEntry {
+  timestamp: string;
+  level: 'debug' | 'info' | 'warn' | 'error';
+  message: string;
+  context?: Record<string, unknown>;
+}
+
+async function appendToRunLog(
+  runId: string,
+  entry: LogEntry
+): Promise<void> {
+  const key = `run_log:${runId}`;
+  const result = await chrome.storage.session.get(key);
+  const logs = (result[key] as LogEntry[]) || [];
+  
+  logs.push(entry);
+  
+  // Keep only last MAX_LOG_ENTRIES
+  if (logs.length > MAX_LOG_ENTRIES) {
+    logs.splice(0, logs.length - MAX_LOG_ENTRIES);
+  }
+  
+  await chrome.storage.session.set({ [key]: logs });
+}
+```
+
+## Recipe Execution Logging
+
+### Step Execution
+
+```typescript
+logger.info('Step started', {
+  stepType: step.type,
+  stepDescription: step.description,
+  stepId: step.id,
+  tabId: context.tabId,
+  correlationId: context.correlationId,
+});
+
+logger.info('Step completed', {
+  stepType: step.type,
+  stepDescription: step.description,
+  stepId: step.id,
+  duration: Date.now() - startTime,
+  tabId: context.tabId,
+  correlationId: context.correlationId,
+});
+```
+
+### Step Progress
+
+```typescript
+logger.info('Step progress', {
+  stepType: step.type,
+  stepId: step.id,
+  progress: {
+    current: currentIndex,
+    total: totalItems,
+    percentage: (currentIndex / totalItems) * 100,
+  },
+  correlationId: context.correlationId,
+});
+```
+
+## Batch Operation Logging
+
+### Batch Run Events
+
+```typescript
+logger.info('Batch run started', {
+  runId,
+  appId,
+  operationId,
+  taskCount: tasks.length,
+  maxConcurrency: options.maxConcurrency,
+  correlationId,
+});
+
+logger.info('Task started', {
+  runId,
+  taskId: task.id,
+  attempt: taskState.attempts + 1,
+  correlationId,
+});
+
+logger.info('Task completed', {
+  runId,
+  taskId: task.id,
+  status: 'succeeded',
+  duration: Date.now() - startTime,
+  correlationId,
+});
+
+logger.error('Task failed', error, {
+  runId,
+  taskId: task.id,
+  attempts: taskState.attempts,
+  willRetry: shouldRetry,
+  correlationId,
+});
+```
+
+## Checkpoint Logging
+
+### Checkpoint Operations
+
+```typescript
+logger.info('Checkpoint saved', {
+  checkpointId,
+  checkpointType: checkpointId.startsWith('page-') ? 'page' : 'item',
+  variables: Object.keys(checkpoint.variables),
+  metadata: Object.keys(checkpoint.metadata || {}),
+  correlationId: checkpoint.correlationId,
+});
+
+logger.info('Checkpoint restored', {
+  checkpointId,
+  restoredVariables: Object.keys(checkpoint.variables),
+  tabId: context.tabId,
+  correlationId: checkpoint.correlationId,
+});
+```
+
+## Error Logging
+
+### Error Context
+
+```typescript
+logger.error('Operation failed', error, {
+  operation: 'executeStep',
+  stepType: step.type,
+  stepDescription: step.description,
+  attempt: attempt + 1,
+  maxRetries: config.maxRetries + 1,
+  willRetry: attempt < config.maxRetries && isTransientError(error),
+  errorType: isTransientError(error) ? 'transient' : 'permanent',
+  correlationId: context.correlationId,
+  tabId: context.tabId,
+  errorDetails: {
+    name: error.name,
+    message: error.message,
+    stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+  },
+});
+```
+
+## State Transition Logging
+
+### State Changes
+
+```typescript
+logger.info('State transition', {
+  from: previousState,
+  to: newState,
+  reason: 'user_action' | 'error' | 'completion' | 'timeout',
+  correlationId,
+  runId, // If batch operation
+});
+```
+
+## Sidepanel Log Display
+
+### Live Tail
+
+Sidepanel should show live tail of run logs:
+
+```typescript
+function useRunLog(runId: string) {
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+
+  useEffect(() => {
+    // Load initial logs
+    chrome.storage.session.get(`run_log:${runId}`).then(result => {
+      setLogs(result[`run_log:${runId}`] || []);
+    });
+
+    // Subscribe to updates
+    const listener = (changes: { [key: string]: chrome.storage.StorageChange }) => {
+      if (changes[`run_log:${runId}`]) {
+        setLogs(changes[`run_log:${runId}`].newValue || []);
+      }
+    };
+
+    chrome.storage.onChanged.addListener(listener);
+    return () => chrome.storage.onChanged.removeListener(listener);
+  }, [runId]);
+
+  return logs;
+}
+```
+
+### Log Export
+
+Export run log as JSON:
+
+```typescript
+async function exportRunLog(runId: string): Promise<string> {
+  const result = await chrome.storage.session.get(`run_log:${runId}`);
+  const logs = result[`run_log:${runId}`] || [];
+  
+  return JSON.stringify(logs, null, 2);
+}
+```
+
+## PHI-Safe Logging
+
+### Redaction
+
+Never log PHI in plaintext:
+
+```typescript
+function redactUrl(url: string): string {
+  // Mask URLs in PHI mode
+  if (phiMode) {
+    return '[REDACTED]';
+  }
+  return url;
+}
+
+logger.info('Navigation', {
+  url: redactUrl(url),
+  correlationId,
+});
+```
+
+### Secure Logging
+
+```typescript
+// Store sensitive logs in secure storage
+if (phiMode) {
+  await secureStorage.append('secure_log', logEntry);
+} else {
+  await appendToRunLog(runId, logEntry);
+}
+```
+
+## Performance Logging
+
+### Duration Tracking
+
+```typescript
+const startTime = Date.now();
+
+// ... operation ...
+
+logger.info('Operation completed', {
+  operation: 'executeRecipe',
+  duration: Date.now() - startTime,
+  correlationId,
+});
+```
+
+### Metrics
+
+```typescript
+logger.info('Metrics', {
+  operation: 'batchRun',
+  metrics: {
+    totalTasks: 100,
+    completedTasks: 95,
+    failedTasks: 3,
+    deferredTasks: 2,
+    averageTaskDuration: 5000,
+    totalDuration: 500000,
+  },
+  correlationId,
+});
+```
+
+## Best Practices
+
+### Logging Guidelines
+
+- **Be concise**: Include only necessary context
+- **Use structured data**: Always use context objects, not string interpolation
+- **Include correlation IDs**: Every log entry should have correlation ID
+- **Log at appropriate levels**: Don't log debug info in production
+- **Don't log PHI**: Redact sensitive data
+- **Log state transitions**: Important state changes should be logged
+- **Log errors with context**: Always include full error context
+
+### Log Volume
+
+- **Limit log entries**: Keep last 1000 entries per run
+- **Rotate logs**: Clean up old logs periodically
+- **Use log levels**: Filter by level to reduce noise
+
+## Checklist
+
+When implementing logging:
+
+- [ ] Use `@chrome-ext/core-telemetry` logger
+- [ ] Prefix logs with app tag
+- [ ] Include correlation ID in all logs
+- [ ] Include tabId, stepId, runId where applicable
+- [ ] Store run logs in chrome.storage.session
+- [ ] Implement live tail in sidepanel
+- [ ] Implement log export functionality
+- [ ] Redact PHI in logs
+- [ ] Log state transitions
+- [ ] Log errors with full context
+- [ ] Track performance metrics
+- [ ] Limit log volume (1000 entries per run)
+
+## Related Rules
+
+- [batch-operations.mdc](mdc:.cursor/rules/15-chome-extension/batch-operations.mdc)
+- [checkpoints-and-resume.mdc](mdc:.cursor/rules/15-chome-extension/checkpoints-and-resume.mdc)
+- [error-recovery.mdc](mdc:.cursor/rules/15-chome-extension/error-recovery.mdc)
+- [mv3-lifecycle-and-state.mdc](mdc:.cursor/rules/15-chome-extension/mv3-lifecycle-and-state.mdc)

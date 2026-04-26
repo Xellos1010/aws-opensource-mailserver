@@ -1,0 +1,119 @@
+{
+  "initiative": {
+    "name": "HomoPlasticus WP Rebuild — Stage 1: Plugin Foundation (Milestone A)",
+    "slug": "homoplasticus-wp-rebuild-stage-01",
+    "objective": "Deliver an installable, marketplace-ready WordPress plugin with the Abilities Registry, Auth layer, Site Admin Pack, Content Pack (block-editor aligned), and Setup Wizard. Block patterns visible in theme editor. MCP discovery endpoint live.",
+    "sdlcCycle": "monorepo/.foundry",
+    "startingPhase": "implement",
+    "createdAt": "2026-04-20T00:00:00Z",
+    "status": "complete",
+    "lastLaunchedAt": "2026-04-20T00:00:00Z",
+    "completedAt": "2026-04-21T00:00:00Z"
+  },
+  "team": {
+    "planApprovalRequired": false,
+    "teammates": [
+      {
+        "name": "builder-foundation",
+        "objective": "Build the plugin shell (WO-001), Discovery endpoint (WO-003), Site Admin Pack (WO-005), and Setup Wizard (WO-012). Owns the packaging, admin screen, and operator onboarding surface.",
+        "subagentType": "builder",
+        "model": "sonnet",
+        "scope": [
+          "apps/wp-plugin-foundry-bridge/ai-foundry.php",
+          "apps/wp-plugin-foundry-bridge/uninstall.php",
+          "apps/wp-plugin-foundry-bridge/readme.txt",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-loader.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-activator.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-deactivator.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-migrator.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-admin.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-discovery.php",
+          "apps/wp-plugin-foundry-bridge/includes/abilities/site-admin/",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-wizard.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-export.php",
+          "apps/wp-plugin-foundry-bridge/includes/templates/",
+          "apps/wp-plugin-foundry-bridge/languages/",
+          "apps/wp-plugin-foundry-bridge/project.json",
+          "change-orders-to-implement/website_platform_execution_bundle/scaffold/apps/wp-plugin-foundry-bridge/"
+        ],
+        "dependsOn": [],
+        "planApprovalRequired": false,
+        "taskSequence": ["WO-001", "WO-003", "WO-005", "WO-012"],
+        "notes": "WO-001 runs first (no deps). WO-003 unblocks after WO-002 signals registry ready. WO-005 unblocks after security gate on WO-004. WO-012 is last — depends on WO-003, WO-010, WO-011 all complete."
+      },
+      {
+        "name": "builder-registry-auth",
+        "objective": "Build the Abilities Registry core (WO-002) and Auth/Authorization layer (WO-004). These are the two security-gate work orders — both use frontier model and require security-reviewer sign-off before downstream pack work begins.",
+        "subagentType": "builder",
+        "model": "opus",
+        "scope": [
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-abilities-registry.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-ability.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-ability-category.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-schema-validator.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-auth.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-permissions.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-audit-hook.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-capability-map.php"
+        ],
+        "dependsOn": ["builder-foundation"],
+        "planApprovalRequired": false,
+        "taskSequence": ["WO-002", "WO-004"],
+        "notes": "WO-002 runs first (depends on WO-001 from builder-foundation). WO-004 runs after WO-002 is complete. After BOTH are done, broadcast to lead for security-reviewer gate before builder-content can start WO-006."
+      },
+      {
+        "name": "builder-content",
+        "objective": "Build the Content Pack (WO-006): all 11 content abilities, centralized URL builder, block content sanitizer, and HomoPlasticus block patterns in the theme. Also updates wp-mcp-server to proxy page operations to the new PHP abilities.",
+        "subagentType": "builder",
+        "model": "sonnet",
+        "scope": [
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-url-builder.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-block-sanitizer.php",
+          "apps/wp-plugin-foundry-bridge/includes/abilities/content/",
+          "apps/wp-theme-homoplasticus-base/theme.json",
+          "apps/wp-theme-homoplasticus-base/patterns/",
+          "apps/wp-theme-homoplasticus-base/functions.php",
+          "apps/wp-mcp-server/src/url-builder.ts",
+          "apps/wp-mcp-server/src/server.ts",
+          "change-orders-to-implement/website_platform_execution_bundle/scaffold/apps/wp-theme-homoplasticus-base/"
+        ],
+        "dependsOn": ["builder-registry-auth"],
+        "planApprovalRequired": false,
+        "taskSequence": ["WO-006"],
+        "notes": "MUST wait for security-reviewer gate on WO-002 + WO-004 before starting. This is the highest-value delivery in Milestone A."
+      },
+      {
+        "name": "security-reviewer",
+        "objective": "Independently validate the Abilities Registry permission model (WO-002) and Auth/Authorization layer (WO-004). Produce a security sign-off or findings list before any pack work proceeds.",
+        "subagentType": "security-reviewer",
+        "model": "sonnet",
+        "scope": [
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-abilities-registry.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-ability.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-schema-validator.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-auth.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-permissions.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-capability-map.php"
+        ],
+        "dependsOn": ["builder-registry-auth"],
+        "planApprovalRequired": false,
+        "taskSequence": ["GATE: security review of WO-002 + WO-004"],
+        "notes": "READ-ONLY. Produces findings report. Lead unblocks builder-content only after this agent reports PASS."
+      }
+    ]
+  },
+  "doneCriteria": [
+    "pnpm nx run wp-plugin-foundry-bridge:build succeeds and produces installable zip",
+    "pnpm nx run wp-plugin-foundry-bridge:lint passes WPCS with zero violations",
+    "pnpm nx run wp-plugin-foundry-bridge:test passes — registry, auth, content pack, URL builder unit tests",
+    "pnpm nx run wp-mcp-server:typecheck passes with zero errors",
+    "GET /wp-json/ai-foundry/v1/discovery returns valid JSON with abilities count >= 22",
+    "WP block editor shows HomoPlasticus patterns in Insert > Patterns panel",
+    "content.propose-update returns proposal_id, preview_url (absolute HTTPS), canonical_url",
+    "security-reviewer reports PASS on abilities registry and auth layer",
+    "readme.txt passes WordPress.org validator format check"
+  ],
+  "workOrdersPath": ".foundry/staging/homoplasticus-wp-rebuild/stage-01-milestone-a/work-orders.md",
+  "leadPromptPath": ".foundry/staging/homoplasticus-wp-rebuild/stage-01-milestone-a/lead-prompt.md",
+  "continuityPath": ".foundry/projects/homoplasticus/current-task.json"
+}

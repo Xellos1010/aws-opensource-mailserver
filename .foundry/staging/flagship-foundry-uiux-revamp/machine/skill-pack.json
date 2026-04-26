@@ -1,0 +1,230 @@
+{
+  "bundleName": "foundry-uiux-skill-pack",
+  "generatedAt": "2026-04-10T00:00:00Z",
+  "skills": [
+    {
+      "id": "skill:uiux-phase-router",
+      "name": "uiux-phase-router",
+      "description": "Routes UI/UX work into discover, define, visualize, architect, plan, implement, verify, release with explicit DoR/DoD.",
+      "inherits": [
+        "sdlc-phase-router"
+      ],
+      "inputs": [
+        "change request",
+        "continuity state",
+        "risk register"
+      ],
+      "outputs": [
+        "phase decision",
+        "required artifacts",
+        "gate checklist"
+      ]
+    },
+    {
+      "id": "skill:operator-task-corpus-builder",
+      "name": "operator-task-corpus-builder",
+      "description": "Extracts jobs-to-be-done, decisions, pain points, quick actions, and drill-down needs from a request and current system state.",
+      "inputs": [
+        "change request",
+        "current workflow evidence"
+      ],
+      "outputs": [
+        "task corpus",
+        "decision inventory",
+        "top quick actions"
+      ]
+    },
+    {
+      "id": "skill:intent-normalizer",
+      "name": "intent-normalizer",
+      "description": "Converts a feature or upgrade request into a bounded UI/UX objective, in-scope objects, non-goals, and measurable success outcomes.",
+      "inputs": [
+        "raw request"
+      ],
+      "outputs": [
+        "intent packet"
+      ]
+    },
+    {
+      "id": "skill:object-model-extractor",
+      "name": "object-model-extractor",
+      "description": "Defines first-class objects, their relationships, and the declared-vs-observed authority boundary for each object.",
+      "inputs": [
+        "intent packet",
+        "repo contracts"
+      ],
+      "outputs": [
+        "object model",
+        "state authority matrix"
+      ]
+    },
+    {
+      "id": "skill:view-registry-selector",
+      "name": "view-registry-selector",
+      "description": "Assigns each object and operator question to the best view: graph, board, timeline, diff, form, inspector, evidence drawer, or chat.",
+      "inputs": [
+        "object model",
+        "operator questions"
+      ],
+      "outputs": [
+        "view registry",
+        "screen map"
+      ]
+    },
+    {
+      "id": "skill:layout-shell-composer",
+      "name": "layout-shell-composer",
+      "description": "Designs the shell layout, navigation rails, toolbar/command palette, dockable panels, and saved layouts.",
+      "inputs": [
+        "view registry"
+      ],
+      "outputs": [
+        "cockpit layout",
+        "panel rules",
+        "navigation contract"
+      ]
+    },
+    {
+      "id": "skill:interaction-contract-writer",
+      "name": "interaction-contract-writer",
+      "description": "Specifies click, keyboard, drag, hover, selection, compare, pop-out, and chat behaviors with valid actions per state.",
+      "inputs": [
+        "screen map",
+        "component catalog"
+      ],
+      "outputs": [
+        "interaction contract"
+      ]
+    },
+    {
+      "id": "skill:motion-feedback-spec",
+      "name": "motion-feedback-spec",
+      "description": "Defines transitions, loading states, status changes, toggle behavior, and reduced-motion rules.",
+      "inputs": [
+        "interaction contract",
+        "platform guidance"
+      ],
+      "outputs": [
+        "motion spec",
+        "feedback matrix"
+      ]
+    },
+    {
+      "id": "skill:quick-action-prioritizer",
+      "name": "quick-action-prioritizer",
+      "description": "Ranks quick actions by frequency, urgency, and recovery impact and chooses where they must be visible.",
+      "inputs": [
+        "task corpus",
+        "telemetry"
+      ],
+      "outputs": [
+        "quick-action matrix"
+      ]
+    },
+    {
+      "id": "skill:drilldown-path-designer",
+      "name": "drilldown-path-designer",
+      "description": "Designs stable paths from ecosystem overview to subsystem, module, pseudocode, diff, work order, run, and evidence.",
+      "inputs": [
+        "object model",
+        "view registry"
+      ],
+      "outputs": [
+        "drill-down map",
+        "breadcrumb rules"
+      ]
+    },
+    {
+      "id": "skill:platform-adaptation-planner",
+      "name": "platform-adaptation-planner",
+      "description": "Maps the shared object model and interaction contract onto web/desktop, iOS, and Android without false parity.",
+      "inputs": [
+        "screen map",
+        "platform guidance"
+      ],
+      "outputs": [
+        "platform capability matrix",
+        "mobile adaptation plan"
+      ]
+    },
+    {
+      "id": "skill:accessibility-scenario-tester",
+      "name": "accessibility-scenario-tester",
+      "description": "Evaluates keyboard/focus/motion/target-size/semantic issues and verifies recovery paths for disabled, screen reader, and low-precision inputs.",
+      "inputs": [
+        "interaction contract",
+        "prototype or build"
+      ],
+      "outputs": [
+        "accessibility findings",
+        "blocking issues",
+        "repair suggestions"
+      ]
+    },
+    {
+      "id": "skill:ux-scenario-tester",
+      "name": "ux-scenario-tester",
+      "description": "Runs outcome-based scenario tests such as reachability, state comprehension, safe launch, and failure recovery.",
+      "inputs": [
+        "acceptance criteria",
+        "prototype or build"
+      ],
+      "outputs": [
+        "scenario verdicts",
+        "timing benchmarks",
+        "gaps"
+      ]
+    },
+    {
+      "id": "skill:ux-evidence-collector",
+      "name": "ux-evidence-collector",
+      "description": "Collects repo grounding, prototype screenshots, scenario results, telemetry, accessibility results, and release evidence into one bundle.",
+      "inherits": [
+        "evidence-collector",
+        "handoff-generator"
+      ],
+      "inputs": [
+        "verification plan",
+        "scenario results",
+        "telemetry"
+      ],
+      "outputs": [
+        "evidence bundle",
+        "release packet",
+        "learning record"
+      ]
+    },
+    {
+      "id": "skill:design-system-diff-checker",
+      "name": "design-system-diff-checker",
+      "description": "Detects token drift, inconsistent component states, naming collisions, and motion/accessibility deviations across surfaces.",
+      "inputs": [
+        "component registry",
+        "tokens",
+        "implementation diff"
+      ],
+      "outputs": [
+        "consistency report",
+        "blocking deviations"
+      ]
+    },
+    {
+      "id": "skill:work-order-chunker",
+      "name": "work-order-chunker",
+      "description": "Converts architecture into bounded UI/UX work orders with file scope, dependencies, acceptance criteria, and verification commands.",
+      "inherits": [
+        "scope-chunker"
+      ],
+      "inputs": [
+        "architecture packet",
+        "ADR set",
+        "screen map"
+      ],
+      "outputs": [
+        "work-order batch",
+        "dependency graph",
+        "verification plan"
+      ]
+    }
+  ]
+}

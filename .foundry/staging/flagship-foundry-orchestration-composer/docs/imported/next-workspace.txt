@@ -1,0 +1,3 @@
+Flagship Foundry — Verification, Release & Learning
+04-foundry-verification-docs
+Consume the uploaded artifacts directly rather than reconstructing context from memory.

@@ -1,0 +1,328 @@
+{
+  "authority": {
+    "contractAuthority": "apps/flagship-foundry/schemas/continuity-state.schema.json",
+    "runtimeInstanceAuthority": ".foundry/projects/homoplasticus/current-task.json",
+    "derivedMirrors": [
+      "projects/homoplasticus/project.manifest.json"
+    ]
+  },
+  "project": {
+    "name": "homoplasticus",
+    "path": ".foundry/projects/homoplasticus",
+    "worktree": ".",
+    "baseBranch": "main",
+    "technicalBaseBranch": "main",
+    "ruleReferences": [
+      "docs/adr/adr-012-v1-launch-scope-and-topology.md",
+      "docs/adr/adr-011-multi-tenant-mcp-and-per-client-wordpress-cells.md",
+      "docs/adr/adr-013-cloud-control-plane.md"
+    ]
+  },
+  "objective": "Deliver Homo Plasticus WordPress + MCP platform L0 launch per ADR-012 Part I by 2026-05-09.",
+  "sdlcPhase": "implement",
+  "lifecycleStage": "implement",
+  "currentPhase": {
+    "id": "ai-foundry-theme-platform-implementation-wave-1",
+    "title": "AI Foundry Theme Platform — Review Sync And Release Positioning",
+    "status": "review-ready-awaiting-runtime-validation",
+    "branch": "main",
+    "notes": [
+      "2026-04-21 Stage 1 (Milestone A) PASS — verifier sign-off received.",
+      "2026-04-21 Stage 2 (Milestone B) PASS on the live Docker WordPress stack; Stage 3 code and verification slices landed across discovery, proposals, audit, media, SEO, WooCommerce, and MCP exposure.",
+      "2026-04-22 AI Foundry platform direction stabilized around a reusable block theme plus governed bridge plugin and Node MCP transport.",
+      "2026-04-24 AIF-WO-001 through AIF-WO-009 were implemented; AIF-WO-010 remained blocked on local runtime and dependency access for live smoke verification.",
+      "2026-04-24 GOH-WO-001 implemented locally: shortcode-only header/footer template parts replaced with Gutenberg-native block parts and default header/footer pattern files added.",
+      "2026-04-24 Repository work-order summary established GOH-WO-001 through GOH-WO-008 as implemented and shell-verified, with GOH-WO-009 reserved for release-gate verification.",
+      "2026-04-25 Review-state sync completed: continuity now matches repository reality, with GOH-WO-002 through GOH-WO-008 treated as implemented rather than pending.",
+      "2026-04-25 Follow-up editor parity refinement landed: homoplasticus/motion-group now supports editor-only replay controls and step-through preview without dirtying saved content.",
+      "2026-04-25 Current posture: implementation-complete enough for review and AI Foundry base-theme positioning; comprehensive runtime validation remains intentionally deferred until after current client release sequencing."
+    ],
+    "updatedAt": "2026-04-25T23:35:00Z"
+  },
+  "activeBranch": "main",
+  "nextCommit": {
+    "branch": "main",
+    "message": "chore(review): sync HomoPlasticus continuity and review handoff state",
+    "scope": [
+      ".foundry/projects/homoplasticus/current-task.json",
+      "runs/evidence/go-homoplasticus-transplant-hardening-2026-04-24.md",
+      "docs/handoff/homoplasticus-ai-foundry-review-state-sync-2026-04-25.md"
+    ]
+  },
+  "nextCommandSet": [
+    "finish the current client release and sign-off path",
+    "start Docker and run bash tools/scripts/dev-up.sh when runtime validation is scheduled",
+    "perform live Site Editor and front-end smoke for header/footer parts, patterns, Woo templates, and motion preview behavior",
+    "verify proposal-required theme write governance through the live bridge/MCP surface",
+    "run pnpm nx run wp-theme-homoplasticus-base:build",
+    "run pnpm nx run wp-theme-homoplasticus-base:sync-local",
+    "run pnpm nx run wp-plugin-foundry-bridge:test",
+    "run pnpm nx run @platform/wp-mcp-server:typecheck",
+    "run pnpm nx run @platform/wp-mcp-server:test",
+    "perform the broader post-release client-overlay to AI Foundry base-theme state-sync check"
+  ],
+  "blockedBy": [
+    "principal-action:delegate-homoplasticus.com-NS-from-godaddy-to-route53-at-wave1-deploy-time",
+    "release-sequencing:comprehensive-runtime-validation-is-deferred-until-after-current-client-file-release",
+    "release-gate:worker-pack-needs-execution-path-beyond-unconfigured-degradation",
+    "release-gate:compat-pack-runtime-activation-checks-and-wordpress-plugin-check-docs-not-done",
+    "approval-gate:confirm-functions-php-and-non-allowlisted-php-files-remain-human-only-or-proposal-only",
+    "contract-gate:approve-first-dynamic-parity-block-location-theme-vs-plugin-vs-dedicated-block-package",
+    "runtime-blocker:docker-and-dependency-backed-verification-not-yet-available-for-final-goh-aif-validation"
+  ],
+  "decisionsAccepted": [
+    "2026-04-18:ADR-012-amendment-01:portfolio-budget-50usd/mo",
+    "2026-04-18:ADR-012-amendment-01:ALB-retained-at-L0",
+    "2026-04-18:ADR-012-amendment-01:day1-multi-tenant-design-single-tenant-launch",
+    "2026-04-18:ADR-012-amendment-01:hepefoundation+emcnotary-DNS-deferred-post-homoplasticus-launch",
+    "2026-04-18:principal:budget-drift-alarm=35usd,primary=45usd,cap=50usd",
+    "2026-04-18:principal:instance-class=t4g.small",
+    "2026-04-18:principal:CloudFront-omitted-at-L0-WAF-on-ALB",
+    "2026-04-18:ADR-012-amendment-02:prototype-phase-ALB-less-cloudflare-tunnel-timeboxed-to-2026-05-06",
+    "2026-04-21:principal:approved-wo013-proposal-db-schema",
+    "2026-04-22:principal:accepted-adr-013-cloud-control-plane-separation-premise"
+  ],
+  "artifacts": {
+    "adrs": [
+      "docs/adr/adr-011-multi-tenant-mcp-and-per-client-wordpress-cells.md",
+      "docs/adr/adr-012-v1-launch-scope-and-topology.md",
+      "docs/adr/adr-013-cloud-control-plane.md",
+      "docs/adr/adr-014-ai-foundry-theme-surface-and-dynamic-block-contracts.md"
+    ],
+    "intent": [
+      "docs/intent/readiness-assessment-aws-launch-2026-04-18.md",
+      "docs/intent/intent-ai-foundry-theme-platform-2026-04-23.md"
+    ],
+    "plan": [
+      "docs/plan/aws-launch-and-content-sync-plan-2026-04-18.md",
+      "docs/plan/parallel-builder-phase-ai-foundry-theme-platform-2026-04-24.md",
+      "docs/plan/go-to-homoplasticus-gap-transplant-plan-2026-04-24.md"
+    ],
+    "handoff": [
+      "docs/handoff/aws-launch-handoff-2026-04-18.md",
+      "docs/handoff/homoplasticus-ai-foundry-review-state-sync-2026-04-25.md"
+    ],
+    "orchestrationPrompt": [
+      "docs/prompts/claude-stagger-wordpress-platform-initiative.md",
+      "docs/prompts/codex-execution-prompt-wordpress-aligned-rebuild.md"
+    ],
+    "workOrderTree": [
+      "docs/plan/work-order-tree-wordpress-aligned-rebuild.md",
+      "docs/plan/work-order-tree-ai-foundry-theme-platform-2026-04-23.md",
+      "docs/plan/work-order-tree-go-homoplasticus-transplant-hardening-2026-04-24.md"
+    ],
+    "evidence": [
+      "runs/evidence/go-homoplasticus-transplant-hardening-2026-04-24.md"
+    ]
+  },
+  "workOrderTree": "docs/plan/work-order-tree-go-homoplasticus-transplant-hardening-2026-04-24.md",
+  "nextWorkOrders": [
+    {
+      "id": "AIF-WO-001",
+      "title": "Define AI Foundry theme contracts, SOP rules, and file-surface policy",
+      "status": "done",
+      "agent": "systems-architect",
+      "modelTier": "frontier_reasoner",
+      "milestone": "Theme Platform",
+      "wave": 1,
+      "dependsOn": []
+    },
+    {
+      "id": "AIF-WO-002",
+      "title": "Expand block-theme baseline, patterns, and style variations",
+      "status": "done",
+      "agent": "builder-A",
+      "modelTier": "low_cost_executor",
+      "milestone": "Theme Platform",
+      "wave": 2,
+      "dependsOn": ["AIF-WO-001"]
+    },
+    {
+      "id": "AIF-WO-003",
+      "title": "Implement governed theme asset manifest and ability pack",
+      "status": "done",
+      "agent": "builder-B",
+      "modelTier": "low_cost_executor",
+      "milestone": "Theme Platform",
+      "wave": 2,
+      "dependsOn": ["AIF-WO-001"]
+    },
+    {
+      "id": "AIF-WO-004",
+      "title": "Define dynamic parity block contract",
+      "status": "done",
+      "agent": "builder-C",
+      "modelTier": "frontier_reasoner",
+      "milestone": "Theme Platform",
+      "wave": 2,
+      "dependsOn": ["AIF-WO-001"]
+    },
+    {
+      "id": "AIF-WO-005",
+      "title": "Implement homoplasticus/book-cover dynamic block parity",
+      "status": "done",
+      "agent": "builder-C",
+      "modelTier": "low_cost_executor",
+      "milestone": "Theme Platform",
+      "wave": 3,
+      "dependsOn": ["AIF-WO-004"]
+    },
+    {
+      "id": "AIF-WO-006",
+      "title": "Wire MCP/discovery exposure for new theme capabilities",
+      "status": "done",
+      "agent": "builder-B",
+      "modelTier": "low_cost_executor",
+      "milestone": "Theme Platform",
+      "wave": 3,
+      "dependsOn": ["AIF-WO-003", "AIF-WO-005"]
+    },
+    {
+      "id": "AIF-WO-007",
+      "title": "Join block conversion, draft governance, and theme asset workflows",
+      "status": "done",
+      "agent": "builder-B",
+      "modelTier": "low_cost_executor",
+      "milestone": "Theme Platform",
+      "wave": 4,
+      "dependsOn": ["AIF-WO-003", "AIF-WO-006"]
+    },
+    {
+      "id": "AIF-WO-008",
+      "title": "Port Go-inspired commerce and editor polish",
+      "status": "done",
+      "agent": "builder-A",
+      "modelTier": "low_cost_executor",
+      "milestone": "Theme Platform",
+      "wave": 4,
+      "dependsOn": ["AIF-WO-002"]
+    },
+    {
+      "id": "AIF-WO-009",
+      "title": "Produce operator docs and HomoPlasticus overlay guidance",
+      "status": "done",
+      "agent": "docs-release-agent",
+      "modelTier": "balanced_reasoner",
+      "milestone": "Theme Platform",
+      "wave": 5,
+      "dependsOn": ["AIF-WO-002", "AIF-WO-006", "AIF-WO-007"]
+    },
+    {
+      "id": "AIF-WO-010",
+      "title": "Verify end-to-end on HomoPlasticus",
+      "status": "blocked",
+      "agent": "verifier",
+      "modelTier": "balanced_reasoner",
+      "milestone": "Theme Platform",
+      "wave": 6,
+      "dependsOn": ["AIF-WO-007", "AIF-WO-008", "AIF-WO-009"]
+    },
+    {
+      "id": "GOH-WO-001",
+      "title": "Replace shortcode-only header/footer shell with Gutenberg-native block parts",
+      "status": "done",
+      "agent": "local-codex-after-builder-role-failure",
+      "modelTier": "low_cost_executor",
+      "milestone": "Go Transplant Hardening",
+      "wave": 1,
+      "dependsOn": []
+    },
+    {
+      "id": "GOH-WO-002",
+      "title": "Complete pattern registration and metadata governance",
+      "status": "done",
+      "agent": "builder",
+      "modelTier": "low_cost_executor",
+      "milestone": "Go Transplant Hardening",
+      "wave": 2,
+      "dependsOn": ["GOH-WO-001"]
+    },
+    {
+      "id": "GOH-WO-003",
+      "title": "Convert raw HTML first-class patterns to native block markup",
+      "status": "done",
+      "agent": "builder",
+      "modelTier": "low_cost_executor",
+      "milestone": "Go Transplant Hardening",
+      "wave": 3,
+      "dependsOn": ["GOH-WO-002"]
+    },
+    {
+      "id": "GOH-WO-004",
+      "title": "Normalize style variations, experience modes, and token usage",
+      "status": "done",
+      "agent": "builder",
+      "modelTier": "low_cost_executor",
+      "milestone": "Go Transplant Hardening",
+      "wave": 4,
+      "dependsOn": ["GOH-WO-003"]
+    },
+    {
+      "id": "GOH-WO-005",
+      "title": "Transplant Go-inspired WooCommerce polish into block templates and patterns",
+      "status": "done",
+      "agent": "builder",
+      "modelTier": "low_cost_executor",
+      "milestone": "Go Transplant Hardening",
+      "wave": 2,
+      "dependsOn": ["GOH-WO-001"]
+    },
+    {
+      "id": "GOH-WO-006",
+      "title": "Replace product/book shortcodes with dynamic blocks or Woo block compositions",
+      "status": "done",
+      "agent": "builder",
+      "modelTier": "low_cost_executor",
+      "milestone": "Go Transplant Hardening",
+      "wave": 2,
+      "dependsOn": ["GOH-WO-001"]
+    },
+    {
+      "id": "GOH-WO-007",
+      "title": "Harden MCP/theme write governance and pattern tooling",
+      "status": "done",
+      "agent": "builder",
+      "modelTier": "low_cost_executor",
+      "milestone": "Go Transplant Hardening",
+      "wave": 1,
+      "dependsOn": []
+    },
+    {
+      "id": "GOH-WO-008",
+      "title": "Add build, i18n, RTL, and pattern verification targets",
+      "status": "done",
+      "agent": "builder",
+      "modelTier": "low_cost_executor",
+      "milestone": "Go Transplant Hardening",
+      "wave": 3,
+      "dependsOn": ["GOH-WO-002"]
+    },
+    {
+      "id": "GOH-WO-009",
+      "title": "Verify the Go-transplant hardening wave end to end",
+      "status": "blocked",
+      "agent": "verifier",
+      "modelTier": "balanced_reasoner",
+      "milestone": "Go Transplant Hardening",
+      "wave": 5,
+      "dependsOn": ["GOH-WO-004", "GOH-WO-005", "GOH-WO-006", "GOH-WO-007", "GOH-WO-008"]
+    }
+  ],
+  "verificationPlan": [
+    "pnpm nx run-many -t typecheck",
+    "node tools/scripts/validate-config.mjs",
+    "pnpm nx run wp-theme-homoplasticus-base:build",
+    "pnpm nx run wp-plugin-foundry-bridge:test",
+    "pnpm nx run @platform/wp-mcp-server:test",
+    "live WordPress, Site Editor, WooCommerce, and proposal-governance smoke after client release sequencing"
+  ],
+  "doneCriteria": [
+    "L0 production: one ALB + one EC2 (WP + MariaDB + MCP) + ACM + S3 backups + MCP bearer auth + CloudWatch alarms live.",
+    "wp.<domain> and mcp.<domain> respond with valid TLS.",
+    "Nightly S3 DB snapshot job proven with restore.",
+    "Lighthouse post-deploy mobile scores within 5 points of 2026-04-13 baseline.",
+    "UAT smoke-test script PASS; evidence archived under runs/evidence/.",
+    "projects/homoplasticus/project.manifest.json launchStage updated to production.",
+    "Client presentation 2026-05-09 delivered."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "../schemas/persona-pack.schema.json",
+  "id": "persona:knowledge-curator",
+  "name": "Knowledge Curator",
+  "category": "knowledge",
+  "purpose": "Ingest, tag, version, and map documentation into reusable knowledge packs and retrieval artifacts.",
+  "activationCriteria": [
+    "documentation ingestion",
+    "knowledge refresh",
+    "coverage audits"
+  ],
+  "guardrailPackIds": [
+    "guardrail:workspace-governance"
+  ],
+  "runbookIds": [
+    "runbook:knowledge-ingestion",
+    "runbook:knowledge-gap-analysis"
+  ]
+}

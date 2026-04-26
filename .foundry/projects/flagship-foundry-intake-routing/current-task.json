@@ -1,0 +1,65 @@
+{
+  "authority": {
+    "contractAuthority": "apps/flagship-foundry/schemas/continuity-state.schema.json",
+    "runtimeInstanceAuthority": ".foundry/projects/flagship-foundry-intake-routing/current-task.json",
+    "derivedMirrors": []
+  },
+  "project": {
+    "name": "flagship-foundry-intake-routing",
+    "path": ".foundry/projects/flagship-foundry-intake-routing",
+    "worktree": ".foundry/projects/flagship-foundry-intake-routing",
+    "baseBranch": "main",
+    "technicalBaseBranch": "main",
+    "ruleReferences": []
+  },
+  "objective": "Imported from Flagship Foundry — Intake & Routing",
+  "sdlcPhase": "plan",
+  "lifecycleStage": "plan",
+  "currentPhase": {
+    "id": "flagship-foundry-intake-routing-pre_implementation",
+    "title": "plan",
+    "status": "pending",
+    "branch": "import/flagship-foundry-intake-routing",
+    "notes": [
+      "Imported 7 artifacts from Flagship Foundry — Intake & Routing"
+    ],
+    "updatedAt": "2026-04-01T02:44:45.109Z"
+  },
+  "activeBranch": "import/flagship-foundry-intake-routing",
+  "nextCommit": {
+    "branch": "import/flagship-foundry-intake-routing",
+    "message": "feat(import-bridge): import flagship-foundry-intake-routing",
+    "scope": [
+      "docs/imported/change-request.md",
+      "docs/imported/intent-packet.md",
+      "docs/imported/impacted-systems-list.md",
+      "docs/imported/risk-register.md",
+      "docs/imported/dor-checklist.md",
+      "docs/imported/open-questions.md",
+      "docs/imported/next-workspace.txt"
+    ]
+  },
+  "nextCommandSet": [
+    "foundry-bridge dry-run",
+    "foundry-bridge validate"
+  ],
+  "blockedBy": [],
+  "artifacts": {
+    "importedArtifacts": [
+      "docs/imported/change-request.md",
+      "docs/imported/intent-packet.md",
+      "docs/imported/impacted-systems-list.md",
+      "docs/imported/risk-register.md",
+      "docs/imported/dor-checklist.md",
+      "docs/imported/open-questions.md",
+      "docs/imported/next-workspace.txt"
+    ],
+    "manifests": [
+      "chatgpt-workspace-orders/SDLC-Building-Blocks/foundry-intake-ai-orchestration-pipeline-2026-03-28/foundry-import-manifest.json"
+    ]
+  },
+  "doneCriteria": [
+    "Import now as design authority before implementation.",
+    "Do not treat this bundle as implementation approval."
+  ]
+}

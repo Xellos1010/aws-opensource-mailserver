@@ -1,14 +1,13 @@
 ---
-description: 
-globs: 
+description: Separation of concerns for layering and responsibilities
 alwaysApply: true
 ---
 # Separation of Concerns (SoC)
 
-Ensure that the codebase is divided into distinct layers: presentation (UI components in `components/` or `screens/`), business logic (services in `services/`), and data access (repositories in `backend/src/services/` or frontend equivalents). Each layer should handle its specific concern without overlapping responsibilities. For example, UI components should not directly interact with AWS APIs or perform business logic.
+Ensure the codebase is divided into distinct layers: presentation (UI components), business logic (services), and data access (stores/adapters). Each layer should handle its specific concern without overlapping responsibilities. UI components should not contain parsing, storage, or network logic.
 
-**Justification**: This separation prevents tight coupling, making the TelassistMD app easier to maintain, test, and extend, especially given its complex interactions between UI, real-time services (e.g., AWS Chime), and data handling.
+**Justification**: Separation prevents tight coupling, making the SummerySky extension easier to maintain, test, and extend across portals and workflows.
 
-**Example**: The `VideoConference` component should not call AWS Chime APIs directly. Instead, delegate to `VideoConferenceService` in `services/`, which may interact with a repository for persistence.
+**Example**: Keep portal-specific parsing in `libs/summerysky/portal-*` and invoke it from the service worker, rather than parsing directly inside sidepanel components.
 
-**Related Rules**: [single-responsibility.mdc](mdc:.cursor/rules/single-responsibility.mdc), [modularity.mdc](mdc:.cursor/rules/modularity.mdc)
+**Related Rules**: [single-responsibility.mdc](mdc:.cursor/rules/01-code-standards/single-responsibility.mdc), [simplicity.mdc](mdc:.cursor/rules/01-code-standards/simplicity.mdc)

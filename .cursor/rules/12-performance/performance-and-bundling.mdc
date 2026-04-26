@@ -1,5 +1,6 @@
 ---
 alwaysApply: true
+description: Performance, caching, and bundling standards
 ---
 
 # Performance: Caching, Named Inputs & Bundling
@@ -27,4 +28,3 @@ Enable Nx local+remote cache, incremental typechecking, code-splitting, and lazy
 - Tree-shake and split vendor/runtime chunks
 - Lazy load admin/analytics routes
 - Defer non-critical work with requestIdleCallback
-

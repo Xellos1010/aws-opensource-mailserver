@@ -1,0 +1,28 @@
+---
+globs: apps/chrome-extensions/PMHNP-Administration-SummerySky/**,libs/summerysky/**,libs/Google-Chrome-Extension-Library/**
+alwaysApply: false
+description: "Audit logging for compliance and troubleshooting"
+---
+# Audit Logging Standards
+
+Maintain a minimal, non-PHI audit trail for regulated workflows and user actions.
+
+## Requirements
+- Record key workflow events: artifact import, parse, redaction, draft import, validation, export, and issue report creation.
+- Use correlation ids to link events across background, content, and UI contexts.
+- Store only non-PHI identifiers (patientKey, encounterId); hash any external ids.
+- Make audit logs append-only; avoid editing or deleting individual entries (purge by TTL only).
+
+## Event Shape
+Each audit entry should include:
+- timestamp (ISO-8601)
+- eventType
+- correlationId
+- patientKey (non-PHI)
+- encounterId (if applicable)
+- actor (user action vs automation)
+- outcome (success/failure) and errorCode (non-PHI)
+
+## Retention
+- Retain audit logs with TTL and max size bounds.
+- Provide export only through the redacted issue bundle workflow.

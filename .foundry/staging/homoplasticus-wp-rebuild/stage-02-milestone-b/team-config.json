@@ -1,0 +1,109 @@
+{
+  "initiative": {
+    "name": "HomoPlasticus WP Rebuild — Stage 2: Core Packs + MCP + Governance (Milestone B)",
+    "slug": "homoplasticus-wp-rebuild-stage-02",
+    "objective": "Deliver Media Pack, SEO Pack, MCP Adapter (PHP + Node restructure), Proposal/Approval DB system, and Audit Event system. MCP Node tools/list becomes auto-populated from PHP ability registry.",
+    "sdlcCycle": "monorepo/.foundry",
+    "startingPhase": "implement",
+    "createdAt": "2026-04-20T00:00:00Z",
+    "status": "pending",
+    "prerequisite": "Stage 01 WO-WP-S1-DONE acceptance check must PASS"
+  },
+  "team": {
+    "planApprovalRequired": false,
+    "teammates": [
+      {
+        "name": "builder-media-seo",
+        "objective": "Build Media Pack (WO-007) and SEO Pack (WO-008). Both depend only on Stage 1 output. Can run in parallel as separate task sequences within one agent.",
+        "subagentType": "builder",
+        "model": "sonnet",
+        "scope": [
+          "apps/wp-plugin-foundry-bridge/includes/abilities/media/",
+          "apps/wp-plugin-foundry-bridge/includes/abilities/seo/",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-seo-adapter.php"
+        ],
+        "dependsOn": [],
+        "planApprovalRequired": false,
+        "taskSequence": ["WO-007", "WO-008"],
+        "notes": "WO-007 first (Media Pack). WO-008 after (SEO Pack — adapter auto-detects Yoast/RankMath/AIOSEO/raw). Both update Node MCP proxy for relevant tools."
+      },
+      {
+        "name": "builder-mcp-adapter",
+        "objective": "Build the PHP MCP Adapter Module (WO-010) and restructure the Node MCP server as a thin transport adapter (WO-011). After WO-011, Node tools/list auto-populates from /wp-json/ai-foundry/v1/mcp-tools.",
+        "subagentType": "builder",
+        "model": "sonnet",
+        "scope": [
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-mcp-adapter.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-mcp-policy.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-mcp-capability-registry.php",
+          "apps/wp-mcp-server/src/server.ts",
+          "apps/wp-mcp-server/src/abilities-client.ts",
+          "apps/wp-mcp-server/src/rest-facade.ts",
+          "apps/wp-mcp-server/src/url-builder.ts"
+        ],
+        "dependsOn": [],
+        "planApprovalRequired": false,
+        "taskSequence": ["WO-010", "WO-011"],
+        "notes": "WO-010: PHP adapter auto-generates MCP tool schemas from ability registry. WO-011: Node restructure — all ability-backed tools become proxy calls to abilities-client.ts. New tool: abilities.list."
+      },
+      {
+        "name": "builder-governance",
+        "objective": "Build the Proposal/Approval DB system (WO-013) and Audit/Event system (WO-014). Migrates existing JSON file proposals to DB table. Implements FSM, admin approval screen, audit log.",
+        "subagentType": "builder",
+        "model": "opus",
+        "scope": [
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-proposal-table.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-proposal.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-proposal-store.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-proposal-diff.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-approval-screen.php",
+          "apps/wp-plugin-foundry-bridge/includes/abilities/proposals/",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-audit-log.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-audit-event.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-audit-exporter.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-audit-screen.php",
+          "apps/wp-plugin-foundry-bridge/includes/abilities/audit/"
+        ],
+        "dependsOn": [],
+        "planApprovalRequired": true,
+        "taskSequence": ["WO-013", "WO-014"],
+        "notes": "WO-013 uses opus — FSM design and DB schema are correctness-critical. PLAN APPROVAL REQUIRED before WO-013 implementation: principal must approve DB schema before migration runs. WO-014 (audit) runs after WO-013 DB table exists."
+      },
+      {
+        "name": "verifier-b",
+        "objective": "Run Stage 2 acceptance criteria after all three builder streams complete. Verify discovery endpoint reflects new packs, MCP tools/list auto-populated from PHP, proposal FSM enforced, audit log writes on all paths.",
+        "subagentType": "verifier",
+        "model": "sonnet",
+        "scope": [
+          "apps/wp-plugin-foundry-bridge/",
+          "apps/wp-mcp-server/src/"
+        ],
+        "dependsOn": ["builder-media-seo", "builder-mcp-adapter", "builder-governance"],
+        "planApprovalRequired": false,
+        "taskSequence": ["WO-WP-S2-DONE"]
+      }
+    ]
+  },
+  "approvalGates": [
+    {
+      "id": "db-schema-gate",
+      "description": "Principal must review and approve wp_ai_foundry_proposals DB schema before WO-013 migration runs on any production site",
+      "requiredBefore": "WO-013 implementation",
+      "approver": "principal"
+    }
+  ],
+  "doneCriteria": [
+    "pnpm nx run wp-plugin-foundry-bridge:test passes — media, SEO, proposal FSM, audit unit tests",
+    "pnpm nx run wp-mcp-server:typecheck passes with zero errors",
+    "GET /wp-json/ai-foundry/v1/mcp-tools returns auto-generated MCP tool list (not hardcoded)",
+    "Node MCP tools/list populated from PHP ability registry — adding new ability auto-adds MCP tool",
+    "media.upload accepts base64 file, stores via wp_handle_sideload, returns absolute URL",
+    "seo.read returns data with Yoast active, Rank Math active, and no SEO plugin",
+    "Proposal FSM enforced: cannot approve rejected proposal, cannot revert unapplied proposal",
+    "Every ability execution writes an audit event with actor, ability, result, timestamp",
+    "Existing JSON file proposals migrated to DB table on plugin upgrade"
+  ],
+  "workOrdersPath": ".foundry/staging/homoplasticus-wp-rebuild/stage-02-milestone-b/work-orders.md",
+  "leadPromptPath": ".foundry/staging/homoplasticus-wp-rebuild/stage-02-milestone-b/lead-prompt.md",
+  "continuityPath": ".foundry/projects/homoplasticus/current-task.json"
+}

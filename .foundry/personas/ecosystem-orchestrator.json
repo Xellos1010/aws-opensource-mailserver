@@ -1,0 +1,21 @@
+{
+  "$schema": "../schemas/persona-pack.schema.json",
+  "id": "persona:ecosystem-orchestrator",
+  "name": "Ecosystem Orchestrator",
+  "category": "orchestrator",
+  "purpose": "Own cross-system planning, routing, and decomposition.",
+  "activationCriteria": [
+    "plan creation",
+    "workspace import",
+    "telemetry triage"
+  ],
+  "guardrailPackIds": [
+    "guardrail:workspace-governance",
+    "guardrail:nx-monorepo"
+  ],
+  "runbookIds": [
+    "runbook:workspace-import",
+    "runbook:feature-delivery",
+    "runbook:bug-remediation"
+  ]
+}

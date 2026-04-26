@@ -1,0 +1,170 @@
+{
+  "authority": {
+    "contractAuthority": "apps/flagship-foundry/schemas/continuity-state.schema.json",
+    "runtimeInstanceAuthority": ".foundry/projects/flagship-foundry-cursor-companion-sdlc-operator/current-task.json",
+    "derivedMirrors": []
+  },
+  "project": {
+    "name": "flagship-foundry-cursor-companion-sdlc-operator",
+    "path": ".foundry/projects/flagship-foundry-cursor-companion-sdlc-operator",
+    "worktree": ".foundry/projects/flagship-foundry-cursor-companion-sdlc-operator",
+    "baseBranch": "main",
+    "technicalBaseBranch": "main",
+    "ruleReferences": []
+  },
+  "objective": "Turn cursor-companion into the extension-first SDLC operator surface for any repository opened in Cursor or a VS Code compatible host.",
+  "sdlcPhase": "implement",
+  "lifecycleStage": "implement",
+  "currentPhase": {
+    "id": "cursor-companion-operator-release-handoff",
+    "title": "release",
+    "status": "in_progress",
+    "branch": "feature/cursor-companion-sdlc-operator",
+    "notes": [
+      "WO-CC-001 complete: added strict operator-surface schemas for workspace target, context cart, requirement refinement session, visual artifact, and execution budget snapshot.",
+      "WO-CC-001 complete: added apps/flagship-foundry/docs/adr/adr-cursor-companion-operator-surface.md to lock the contract-first extension posture.",
+      "WO-CC-002 complete: extracted control-plane-client.js, operator-panel.js, and panel-state.js from the cursor-companion shell while preserving the existing command surface.",
+      "WO-CC-003 through WO-CC-009 complete: workspace targeting, context carts, refinement sessions, visual artifacts, planning board, provider posture, session board, and host-window pop-out are wired through the control plane and companion shell.",
+      "Targeted operator-surface tests pass for contracts, workspace targeting, refinement, visual artifacts, planning board, provider budget surface, session board, and companion shell helpers.",
+      "Repo-wide flagship-foundry:test remains red due to pre-existing import-bridge module-resolution failures plus existing run-isolation rollback failures unrelated to this slice.",
+      "WO-CC-010 complete at the slice level: focused verification is green and repo-wide blockers are documented.",
+      "WO-CC-011 complete: rollout and handoff docs are written for operator sign-off.",
+      "Pop-out now snapshots the current operator window state, reopens the same workspace in a host-supported new window, and auto-restores the overlay there before clearing the pending flag."
+    ],
+    "updatedAt": "2026-04-08T23:53:13Z"
+  },
+  "activeBranch": "feature/cursor-companion-sdlc-operator",
+  "nextCommit": {
+    "branch": "feature/cursor-companion-sdlc-operator",
+    "message": "feat(cursor-companion): add operator surface control plane and release docs",
+    "scope": [
+      "apps/flagship-foundry/schemas/workspace-target.schema.json",
+      "apps/flagship-foundry/schemas/context-cart.schema.json",
+      "apps/flagship-foundry/schemas/requirement-refinement-session.schema.json",
+      "apps/flagship-foundry/schemas/visual-artifact.schema.json",
+      "apps/flagship-foundry/schemas/execution-budget-snapshot.schema.json",
+      "apps/flagship-foundry/docs/adr/adr-cursor-companion-operator-surface.md",
+      "apps/flagship-foundry/apps/cursor-companion/control-plane-client.js",
+      "apps/flagship-foundry/apps/cursor-companion/workspace-target.js",
+      "apps/flagship-foundry/apps/cursor-companion/context-cart.js",
+      "apps/flagship-foundry/apps/cursor-companion/requirement-panel.js",
+      "apps/flagship-foundry/apps/cursor-companion/diagram-panel.js",
+      "apps/flagship-foundry/apps/cursor-companion/planning-board.js",
+      "apps/flagship-foundry/apps/cursor-companion/provider-dashboard.js",
+      "apps/flagship-foundry/apps/cursor-companion/session-board.js",
+      "apps/flagship-foundry/apps/cursor-companion/window-launcher.js",
+      "apps/flagship-foundry/apps/cursor-companion/operator-panel.js",
+      "apps/flagship-foundry/apps/cursor-companion/panel-state.js",
+      "apps/flagship-foundry/apps/cursor-companion/extension.js",
+      "apps/flagship-foundry/apps/control-plane/src/server.mjs",
+      "apps/flagship-foundry/packages/core/src/workspace-targets.mjs",
+      "apps/flagship-foundry/packages/core/src/context-cart.mjs",
+      "apps/flagship-foundry/packages/core/src/requirement-refinement.mjs",
+      "apps/flagship-foundry/packages/core/src/visual-artifacts.mjs",
+      "apps/flagship-foundry/packages/core/src/session-projection.mjs",
+      "apps/flagship-foundry/packages/core/src/plans.mjs",
+      "apps/flagship-foundry/packages/model-gateway/src/gateway.mjs",
+      "apps/flagship-foundry/configs/providers/providers.json",
+      "apps/flagship-foundry/configs/terminal-adapters/claude-code.json",
+      "apps/flagship-foundry/configs/terminal-adapters/codex-cli.json",
+      "apps/flagship-foundry/configs/terminal-adapters/cursor-agent.json",
+      "apps/flagship-foundry/configs/terminal-adapters/dry-run.json",
+      "apps/flagship-foundry/configs/terminal-adapters/gemini-cli.json",
+      "apps/flagship-foundry/configs/terminal-adapters/openclaw.json",
+      "apps/flagship-foundry/tests/operator-surface-contracts.test.mjs",
+      "apps/flagship-foundry/tests/cursor-companion-shell.test.mjs",
+      "apps/flagship-foundry/tests/workspace-targets.test.mjs",
+      "apps/flagship-foundry/tests/context-cart.test.mjs",
+      "apps/flagship-foundry/tests/visual-artifacts.test.mjs",
+      "apps/flagship-foundry/tests/planning-board.test.mjs",
+      "apps/flagship-foundry/tests/provider-budget-surface.test.mjs",
+      "apps/flagship-foundry/tests/session-board.test.mjs",
+      "apps/flagship-foundry/docs/release/cursor-companion-operator-rollout.md",
+      "docs/handoff/handoff-cursor-companion-operator-2026-04-02.md",
+      ".foundry/projects/flagship-foundry-cursor-companion-sdlc-operator/current-task.json"
+    ]
+  },
+  "nextCommandSet": [
+    "PATH=/usr/local/bin:$PATH /usr/local/bin/node --test apps/flagship-foundry/tests/workspace-targets.test.mjs apps/flagship-foundry/tests/context-cart.test.mjs apps/flagship-foundry/tests/visual-artifacts.test.mjs apps/flagship-foundry/tests/planning-board.test.mjs apps/flagship-foundry/tests/provider-budget-surface.test.mjs apps/flagship-foundry/tests/session-board.test.mjs apps/flagship-foundry/tests/cursor-companion-shell.test.mjs apps/flagship-foundry/tests/operator-surface-contracts.test.mjs",
+    "PATH=/usr/local/bin:$PATH /usr/local/bin/pnpm exec nx run flagship-foundry:test"
+  ],
+  "blockedBy": [],
+  "artifacts": {
+    "intentPacket": [
+      "docs/intent/intent-cursor-companion-sdlc-operator-2026-04-02.md"
+    ],
+    "diagrams": [
+      "docs/diagrams/cursor-companion-sdlc-operator-context-2026-04-02.mmd",
+      "docs/diagrams/cursor-companion-sdlc-operator-containers-2026-04-02.mmd"
+    ],
+    "planPacket": [
+      "docs/plan/work-orders-cursor-companion-sdlc-operator-2026-04-02.md"
+    ],
+    "contractPack": [
+      "apps/flagship-foundry/schemas/workspace-target.schema.json",
+      "apps/flagship-foundry/schemas/context-cart.schema.json",
+      "apps/flagship-foundry/schemas/requirement-refinement-session.schema.json",
+      "apps/flagship-foundry/schemas/visual-artifact.schema.json",
+      "apps/flagship-foundry/schemas/execution-budget-snapshot.schema.json",
+      "apps/flagship-foundry/docs/adr/adr-cursor-companion-operator-surface.md",
+      "apps/flagship-foundry/tests/operator-surface-contracts.test.mjs"
+    ],
+    "shellRefactor": [
+      "apps/flagship-foundry/apps/cursor-companion/control-plane-client.js",
+      "apps/flagship-foundry/apps/cursor-companion/operator-panel.js",
+      "apps/flagship-foundry/apps/cursor-companion/panel-state.js",
+      "apps/flagship-foundry/apps/cursor-companion/extension.js",
+      "apps/flagship-foundry/tests/cursor-companion-shell.test.mjs"
+    ],
+    "operatorSurface": [
+      "apps/flagship-foundry/apps/control-plane/src/server.mjs",
+      "apps/flagship-foundry/packages/core/src/workspace-targets.mjs",
+      "apps/flagship-foundry/packages/core/src/context-cart.mjs",
+      "apps/flagship-foundry/packages/core/src/requirement-refinement.mjs",
+      "apps/flagship-foundry/packages/core/src/visual-artifacts.mjs",
+      "apps/flagship-foundry/packages/core/src/session-projection.mjs",
+      "apps/flagship-foundry/packages/core/src/plans.mjs",
+      "apps/flagship-foundry/packages/model-gateway/src/gateway.mjs",
+      "apps/flagship-foundry/configs/providers/providers.json",
+      "apps/flagship-foundry/configs/terminal-adapters/claude-code.json",
+      "apps/flagship-foundry/configs/terminal-adapters/codex-cli.json",
+      "apps/flagship-foundry/configs/terminal-adapters/cursor-agent.json",
+      "apps/flagship-foundry/configs/terminal-adapters/dry-run.json",
+      "apps/flagship-foundry/configs/terminal-adapters/gemini-cli.json",
+      "apps/flagship-foundry/configs/terminal-adapters/openclaw.json",
+      "apps/flagship-foundry/tests/workspace-targets.test.mjs",
+      "apps/flagship-foundry/tests/context-cart.test.mjs",
+      "apps/flagship-foundry/tests/visual-artifacts.test.mjs",
+      "apps/flagship-foundry/tests/planning-board.test.mjs",
+      "apps/flagship-foundry/tests/provider-budget-surface.test.mjs",
+      "apps/flagship-foundry/tests/session-board.test.mjs"
+    ],
+    "releaseDocs": [
+      "apps/flagship-foundry/docs/release/cursor-companion-operator-rollout.md",
+      "docs/handoff/handoff-cursor-companion-operator-2026-04-02.md"
+    ]
+  },
+  "doneCriteria": [
+    "Intent packet defines scope, constraints, acceptance criteria, rollback, diagrams, principles, and guardrails for the cursor-companion operator surface.",
+    "Scope chunk identifies executable work orders with dependencies, file scope, and verification plans.",
+    "WO-CC-001 implemented with contract-first schemas, ADR, and targeted tests.",
+    "WO-CC-002 implemented with helper-module shell refactor and targeted tests.",
+    "WO-CC-003 through WO-CC-009 implemented with persisted operator artifacts, control-plane routes, extension UI sections, and targeted tests.",
+    "WO-CC-010 verification evidence recorded with targeted passes and repo-wide blocker summary.",
+    "WO-CC-011 rollout and handoff docs written for operator review."
+  ],
+  "nextWorkOrders": [],
+  "verificationPlan": [
+    "PATH=/usr/local/bin:$PATH /usr/local/bin/node --test apps/flagship-foundry/tests/workspace-targets.test.mjs apps/flagship-foundry/tests/context-cart.test.mjs apps/flagship-foundry/tests/visual-artifacts.test.mjs apps/flagship-foundry/tests/planning-board.test.mjs apps/flagship-foundry/tests/provider-budget-surface.test.mjs apps/flagship-foundry/tests/session-board.test.mjs apps/flagship-foundry/tests/cursor-companion-shell.test.mjs apps/flagship-foundry/tests/operator-surface-contracts.test.mjs",
+    "PATH=/usr/local/bin:$PATH /usr/local/bin/pnpm exec nx run flagship-foundry:test"
+  ],
+  "impactedSystems": [
+    "apps/flagship-foundry/apps/cursor-companion",
+    "apps/flagship-foundry/apps/control-plane",
+    "apps/flagship-foundry/packages/core",
+    "apps/flagship-foundry/packages/model-gateway",
+    "apps/flagship-foundry/configs/model-routing",
+    "apps/flagship-foundry/configs/terminal-adapters",
+    "apps/flagship-foundry/configs/providers"
+  ]
+}

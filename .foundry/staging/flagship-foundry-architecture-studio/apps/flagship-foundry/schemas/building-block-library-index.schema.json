@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flagship-foundry.local/contracts/building-block-library-index.schema.json",
+  "title": "Building Block Library Index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "generatedAt",
+    "sourceAuthority",
+    "blocks"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sourceAuthority": {
+      "type": "string",
+      "description": "Canonical repo or projection authority for the registry."
+    },
+    "registryVersion": {
+      "type": "string"
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "blockId",
+          "kind",
+          "displayName",
+          "sourceUri",
+          "immutability",
+          "capabilities"
+        ],
+        "properties": {
+          "blockId": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "persona",
+              "skill",
+              "agent-role",
+              "runbook-phase",
+              "work-order-template",
+              "model-route"
+            ]
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "sourceUri": {
+            "type": "string"
+          },
+          "versionRef": {
+            "type": "string"
+          },
+          "immutability": {
+            "type": "string",
+            "enum": [
+              "repo-authority",
+              "projected",
+              "derived"
+            ]
+          },
+          "editableInComposer": {
+            "type": "boolean",
+            "default": false
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "constraints": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "interfaceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

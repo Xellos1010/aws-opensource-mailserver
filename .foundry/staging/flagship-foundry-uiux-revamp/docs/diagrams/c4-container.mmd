@@ -1,0 +1,54 @@
+%% C4 Container Diagram — Foundry UI/UX Revamp
+flowchart LR
+  operator["Operator"]
+
+  subgraph desktop["Desktop cockpit shell"]
+    top["Top Bar"]
+    rail["Left Rail"]
+    canvas["Center Canvas
+Map / Board / Timeline / Diff"]
+    inspector["Right Inspector"]
+    utility["Bottom Utility
+Logs / Evidence / Continuity / Chat"]
+  end
+
+  subgraph services["Services"]
+    registry["View Registry"]
+    selection["Selection / Inspector Service"]
+    plan["Plan Board Service"]
+    session["Session Board Service"]
+    graph["Graph Projection Service"]
+    chat["Chat Suggestion Service"]
+    quick["Quick Action Resolver"]
+  end
+
+  subgraph authorities["Authorities"]
+    declared["Declared artifacts
+workspace target / context cart / refinement / plans / pipelines"]
+    observed["Observed state
+runs / verifier / evidence / logs"]
+  end
+
+  subgraph execution["Execution boundary"]
+    policy["Execution Policy Gateway"]
+    runctrl["Existing Run Control"]
+  end
+
+  operator --> top
+  operator --> rail
+  operator --> canvas
+  operator --> inspector
+  operator --> utility
+  canvas --> graph
+  rail --> plan
+  utility --> session
+  top --> quick
+  utility --> chat
+  inspector --> selection
+  selection --> registry
+  plan --> declared
+  graph --> declared
+  session --> observed
+  quick --> policy
+  policy --> runctrl
+  runctrl --> observed

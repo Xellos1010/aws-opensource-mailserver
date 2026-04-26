@@ -1,0 +1,67 @@
+{
+  "authority": {
+    "contractAuthority": "apps/flagship-foundry/schemas/continuity-state.schema.json",
+    "runtimeInstanceAuthority": ".foundry/projects/flagship-foundry-orchestration-composer/current-task.json",
+    "derivedMirrors": []
+  },
+  "project": {
+    "name": "flagship-foundry-orchestration-composer",
+    "path": ".foundry/projects/flagship-foundry-orchestration-composer",
+    "worktree": ".foundry/projects/flagship-foundry-orchestration-composer",
+    "baseBranch": "main",
+    "technicalBaseBranch": "main",
+    "ruleReferences": []
+  },
+  "objective": "Imported from Flagship Foundry Orchestration Composer",
+  "sdlcPhase": "plan",
+  "lifecycleStage": "plan",
+  "currentPhase": {
+    "id": "foundry-orchestration-composer-plan-2026-03-30",
+    "title": "plan",
+    "status": "pending",
+    "branch": "import/flagship-foundry-orchestration-composer",
+    "notes": [
+      "Imported 7 artifacts from Flagship Foundry Orchestration Composer"
+    ],
+    "updatedAt": "2026-04-01T02:44:45.109Z"
+  },
+  "activeBranch": "import/flagship-foundry-orchestration-composer",
+  "nextCommit": {
+    "branch": "import/flagship-foundry-orchestration-composer",
+    "message": "feat(import-bridge): import flagship-foundry-orchestration-composer",
+    "scope": [
+      "docs/imported/work-order-batch.json",
+      "docs/diagrams/dependency-graph.mmd",
+      "docs/imported/verification-plan.md",
+      "docs/imported/work-order-summary.md",
+      "docs/imported/artifact-manifest.json",
+      "docs/imported/next-workspace.txt",
+      "docs/imported/foundry-import-manifest.json"
+    ]
+  },
+  "nextCommandSet": [
+    "foundry-bridge dry-run",
+    "foundry-bridge validate"
+  ],
+  "blockedBy": [],
+  "artifacts": {
+    "importedArtifacts": [
+      "docs/imported/work-order-batch.json",
+      "docs/diagrams/dependency-graph.mmd",
+      "docs/imported/verification-plan.md",
+      "docs/imported/work-order-summary.md",
+      "docs/imported/artifact-manifest.json",
+      "docs/imported/next-workspace.txt",
+      "docs/imported/foundry-import-manifest.json"
+    ],
+    "manifests": [
+      "chatgpt-workspace-orders/SDLC-Building-Blocks/foundry-orchestration-composer-work-order-batch-2026-03-30/foundry-import-manifest.json"
+    ]
+  },
+  "doneCriteria": [
+    "Validate work-order-batch.json against the batch schema before assigning any builder slice.",
+    "Queue only work orders with status=ready and honor dependencyOrder for the remainder.",
+    "Keep composer execution paths feature-flagged off until WO-007A passes.",
+    "Consume the uploaded architecture packet artifacts directly rather than reconstructing intent from memory."
+  ]
+}

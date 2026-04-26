@@ -1,0 +1,113 @@
+{
+  "authority": {
+    "contractAuthority": "apps/flagship-foundry/schemas/continuity-state.schema.json",
+    "runtimeInstanceAuthority": ".foundry/projects/flagship-foundry-cursor-companion-rag-graph-pipelines/current-task.json",
+    "derivedMirrors": []
+  },
+  "project": {
+    "name": "flagship-foundry-cursor-companion-rag-graph-pipelines",
+    "path": ".foundry/projects/flagship-foundry-cursor-companion-rag-graph-pipelines",
+    "worktree": ".foundry/projects/flagship-foundry-cursor-companion-rag-graph-pipelines",
+    "baseBranch": "master",
+    "technicalBaseBranch": "master",
+    "ruleReferences": []
+  },
+  "objective": "Turn cursor-companion into a graph-backed SDLC lifecycle manager with RAG context assembly, artifact traversal, and typed multi-agent pipeline orchestration.",
+  "sdlcPhase": "verify",
+  "lifecycleStage": "verify",
+  "currentPhase": {
+    "id": "cursor-companion-rgp-verify",
+    "title": "verify",
+    "status": "done",
+    "branch": "master",
+    "notes": [
+      "Intent packet finalized for Stream A RAG graph, Stream B artifact graph, and Stream C pipeline orchestration.",
+      "System context and container diagrams were saved for the RAG/graph/pipeline architecture slice.",
+      "Scope chunk completed with 21 work orders across architect, implement, verify, and release stages.",
+      "WO-RGP-001 and WO-RGP-017 are explicit approval gates before downstream work can proceed.",
+      "WO-RGP-001 execution started: ADR-014 through ADR-017 drafted to resolve the contract-first gate.",
+      "WO-RGP-002 through WO-RGP-004 contract files drafted for the RAG, graph, and pipeline schema batches.",
+      "Implementation for the graph, RAG, pipeline runtime, export/import, and companion UI surfaces is in place.",
+      "Focused verification passes for artifact graph, retrieval, pipeline runtime, session board, planning board, provider surface, visual artifacts, and workspace targets.",
+      "Nx project test target completed successfully after adding import-bridge source shims and path resolution fixes."
+    ],
+    "updatedAt": "2026-04-07T22:00:00.000Z"
+  },
+  "activeBranch": "master",
+  "nextCommit": {
+    "branch": "master",
+    "message": "chore(flagship-foundry): mark cursor-companion rag graph pipelines slice complete",
+    "scope": [
+      "apps/flagship-foundry/packages/core/src/artifact-graph.mjs",
+      "apps/flagship-foundry/packages/core/src/derived-artifacts.mjs",
+      "apps/flagship-foundry/packages/core/src/embedding-pipeline.mjs",
+      "apps/flagship-foundry/packages/core/src/retrieval-engine.mjs",
+      "apps/flagship-foundry/packages/core/src/stage-dispatcher.mjs",
+      "apps/flagship-foundry/packages/core/src/result-ingestor.mjs",
+      "apps/flagship-foundry/packages/core/src/pipeline-composer.mjs",
+      "apps/flagship-foundry/packages/core/src/context-assembler.mjs",
+      "apps/flagship-foundry/apps/control-plane/src/server.mjs",
+      "apps/flagship-foundry/apps/cursor-companion/extension.js",
+      "apps/flagship-foundry/apps/cursor-companion/control-plane-client.js",
+      "apps/flagship-foundry/apps/cursor-companion/context-cart.js",
+      "apps/flagship-foundry/apps/cursor-companion/requirement-panel.js",
+      "apps/flagship-foundry/apps/cursor-companion/session-board.js",
+      "apps/flagship-foundry/apps/cursor-companion/operator-panel.js",
+      ".foundry/projects/flagship-foundry-cursor-companion-rag-graph-pipelines/current-task.json"
+    ]
+  },
+  "nextCommandSet": [
+    "Completed: /usr/local/bin/node --test apps/flagship-foundry/tests/*.test.mjs",
+    "Completed: PATH=/usr/local/bin:$PATH /usr/local/bin/node ./node_modules/nx/bin/nx.js test flagship-foundry"
+  ],
+  "blockedBy": [],
+  "artifacts": {
+    "intentPacket": [
+      "docs/intent/intent-cursor-companion-rag-graph-pipelines-2026-04-03.md"
+    ],
+    "adrs": [
+      "apps/flagship-foundry/docs/adr/adr-014-vector-store-technology.md",
+      "apps/flagship-foundry/docs/adr/adr-015-artifact-graph-derivation.md",
+      "apps/flagship-foundry/docs/adr/adr-016-pipeline-failure-propagation.md",
+      "apps/flagship-foundry/docs/adr/adr-017-context-packet-budget-enforcement.md"
+    ],
+    "schemas": [
+      "apps/flagship-foundry/schemas/embedding-index-entry.schema.json",
+      "apps/flagship-foundry/schemas/rag-query.schema.json",
+      "apps/flagship-foundry/schemas/rag-result.schema.json",
+      "apps/flagship-foundry/schemas/artifact-graph-node.schema.json",
+      "apps/flagship-foundry/schemas/artifact-graph-edge.schema.json",
+      "apps/flagship-foundry/schemas/graph-traversal-query.schema.json",
+      "apps/flagship-foundry/schemas/export-manifest.schema.json",
+      "apps/flagship-foundry/schemas/import-receipt.schema.json",
+      "apps/flagship-foundry/schemas/pipeline-definition.schema.json",
+      "apps/flagship-foundry/schemas/context-packet.schema.json",
+      "apps/flagship-foundry/schemas/pipeline-stage-result.schema.json"
+    ],
+    "diagrams": [
+      "docs/diagrams/cursor-companion-rag-graph-pipelines-context-2026-04-03.mmd",
+      "docs/diagrams/cursor-companion-rag-graph-pipelines-containers-2026-04-03.mmd"
+    ],
+    "planPacket": [
+      "docs/plan/work-orders-cursor-companion-rag-graph-pipelines-2026-04-03.md"
+    ]
+  },
+  "doneCriteria": [
+    "Intent packet defines the three streams, constraints, risks, acceptance criteria, rollback posture, diagrams, and guardrail mapping.",
+    "Scope chunk identifies 21 executable work orders with dependencies, file scope, verification plans, approval gates, and principle attachments.",
+    "Continuity captures planning completion, architecture decisions, schema contracts, implementation progress, and verification status."
+  ],
+  "nextWorkOrders": [],
+  "verificationPlan": [
+    "Completed: /usr/local/bin/node --test apps/flagship-foundry/tests/*.test.mjs",
+    "Completed: PATH=/usr/local/bin:$PATH /usr/local/bin/node ./node_modules/nx/bin/nx.js test flagship-foundry"
+  ],
+  "impactedSystems": [
+    "apps/flagship-foundry/apps/cursor-companion",
+    "apps/flagship-foundry/apps/control-plane",
+    "apps/flagship-foundry/packages/core",
+    "apps/flagship-foundry/packages/model-gateway",
+    "apps/flagship-foundry/packages/runtime-adapters",
+    "apps/flagship-foundry/schemas"
+  ]
+}

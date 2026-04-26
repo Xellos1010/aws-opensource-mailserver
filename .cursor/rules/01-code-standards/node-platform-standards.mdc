@@ -1,5 +1,6 @@
 ---
 alwaysApply: true
+description: Node platform standards for reliability and performance
 ---
 
 # Node Platform Standards
@@ -19,4 +20,3 @@ if (!validate(body)) throw new Error('invalid');
 
 - Reject long CPU work on request threads; offload to workers/queues
 - Enforce per-request timeouts and sensible connection pooling
-

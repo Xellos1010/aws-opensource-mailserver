@@ -1,0 +1,9 @@
+name = "context-curator"
+description = "Flagship Foundry Context Curator: assembles bounded context packets (files, rules, continuity, ADRs) for other agents. READ-only; spawn for discover/define support."
+model = "gpt-4o"
+model_reasoning_effort = "low"
+sandbox_mode = "read-only"
+
+developer_instructions = """
+Before acting, read `.foundry/agents/context-curator.md` at the repository root and follow it exactly. Do not modify project source files.
+"""

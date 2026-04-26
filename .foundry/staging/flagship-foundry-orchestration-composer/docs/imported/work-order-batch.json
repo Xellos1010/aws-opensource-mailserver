@@ -1,0 +1,1707 @@
+{
+  "projectName": "Flagship Foundry Orchestration Composer",
+  "phaseId": "foundry-orchestration-composer-plan-2026-03-30",
+  "systemId": "flagship-foundry-orchestration-composer",
+  "sourceAuthority": [
+    "architecture-packet.md",
+    "decomposition-plan.md",
+    "work-order-tree.json",
+    "foundry-import-manifest.json",
+    "artifact-manifest.json"
+  ],
+  "assumptionsLockedForExecution": [
+    "New composer contracts live under apps/flagship-foundry/schemas/ to match the current canonical repo layout.",
+    "Declared composer artifacts persist under a composer-specific subtree in apps/flagship-foundry/state/ and stay separate from plan/run state.",
+    "Control-plane composer routes use /composer/* plus /catalogs/building-blocks following the existing route naming style.",
+    "Cursor Companion remains the canonical write-capable surface; graph-viewer remains read-only.",
+    "Composer launch remains feature-flagged and approval-gated by default."
+  ],
+  "dependencyGroups": [
+    {
+      "milestone": "M1 \u2014 contract and registry foundation",
+      "workOrders": [
+        "WO-001A",
+        "WO-001B",
+        "WO-002A",
+        "WO-002B",
+        "WO-003A"
+      ]
+    },
+    {
+      "milestone": "M2 \u2014 control plane and operator surfaces",
+      "workOrders": [
+        "WO-003B",
+        "WO-003C",
+        "WO-004A",
+        "WO-005A",
+        "WO-005B",
+        "WO-006A",
+        "WO-006B"
+      ]
+    },
+    {
+      "milestone": "M3 \u2014 verification and hardening",
+      "workOrders": [
+        "WO-007A"
+      ]
+    },
+    {
+      "milestone": "M4 \u2014 release and learning",
+      "workOrders": [
+        "WO-008A",
+        "WO-009A"
+      ]
+    }
+  ],
+  "criticalPath": [
+    "WO-001A",
+    "WO-001B",
+    "WO-002A",
+    "WO-002B",
+    "WO-003A",
+    "WO-003C",
+    "WO-006A",
+    "WO-006B",
+    "WO-007A",
+    "WO-008A"
+  ],
+  "parallelizableLanes": [
+    [
+      "WO-003B",
+      "WO-005A"
+    ],
+    [
+      "WO-004A",
+      "WO-005B"
+    ]
+  ],
+  "dependencyOrder": [
+    "WO-001A",
+    "WO-001B",
+    "WO-002A",
+    "WO-002B",
+    "WO-003A",
+    "WO-003B",
+    "WO-003C",
+    "WO-004A",
+    "WO-005A",
+    "WO-005B",
+    "WO-006A",
+    "WO-006B",
+    "WO-007A",
+    "WO-008A",
+    "WO-009A"
+  ],
+  "readyToExecute": [
+    "WO-001A"
+  ],
+  "nextWorkspace": "Flagship Foundry \u2014 Verification, Release & Learning (04-foundry-verification-docs)",
+  "workOrders": [
+    {
+      "workOrderId": "WO-001A",
+      "title": "composer-schema-pack",
+      "parentWorkOrderId": "WO-001",
+      "dependsOn": [],
+      "lifecycleStage": "implement",
+      "phaseId": "composer-schema-pack",
+      "systemId": "flagship-foundry-orchestration-composer",
+      "taskClass": "structured_generation",
+      "agentRole": "builder",
+      "agentPersona": "conservative_builder",
+      "modelTier": "low_cost_executor",
+      "contextBudget": {
+        "maxArtifacts": 3,
+        "maxFiles": 8,
+        "tokenBudget": 12000
+      },
+      "fileScope": [
+        "apps/flagship-foundry/schemas/building-block-library-index.schema.json",
+        "apps/flagship-foundry/schemas/composed-agent-configuration.schema.json",
+        "apps/flagship-foundry/schemas/orchestration-pipeline-definition.schema.json",
+        "apps/flagship-foundry/schemas/pipeline-compilation-result.schema.json",
+        "apps/flagship-foundry/schemas/dashboard-execution-request.schema.json",
+        "apps/flagship-foundry/schemas/dashboard-execution-session.schema.json",
+        "apps/flagship-foundry/tests/composer-schema-contracts.test.mjs"
+      ],
+      "sourceArtifacts": [
+        "architecture-packet.md",
+        "decomposition-plan.md",
+        "work-order-tree.json",
+        "model-tier-routing.md",
+        "work-order-contract-reference.md",
+        "phase-gate-matrix.md",
+        "building-block-library-index.schema.json",
+        "composed-agent-configuration.schema.json",
+        "orchestration-pipeline-definition.schema.json",
+        "pipeline-compilation-result.schema.json",
+        "dashboard-execution-request.schema.json",
+        "dashboard-execution-session.schema.json"
+      ],
+      "allowedTools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "constraints": [
+        "Keep compile logic separate from execution logic.",
+        "Keep declared artifact management separate from observed runtime/session projection.",
+        "Treat repo-native personas, skills, runbooks, templates, and model-routing policy as read-only authorities.",
+        "Preserve existing run-control as the sole execution authority.",
+        "Do not enable execution-affecting endpoints without explicit approval artifacts and a feature flag.",
+        "Do not introduce new dependencies unless the work order explicitly authorizes it.",
+        "Place all new contracts under apps/flagship-foundry/schemas to match the current repo layout.",
+        "Use JSON Schema draft 2020-12 and keep additionalProperties false for external-facing contracts unless explicitly justified.",
+        "Keep contract names aligned with the approved architecture packet terminology."
+      ],
+      "frameworkRules": [
+        "Canonical app root is apps/flagship-foundry within the Nx repo root.",
+        "packages/core and apps/control-plane use Node ESM modules.",
+        "apps/cursor-companion remains CommonJS/VS Code extension entrypoint via extension.js.",
+        "apps/graph-viewer uses React 19 + TypeScript + Vite and must continue to build with its local build script.",
+        "Verification must use existing node --test and Nx targets before adding any new harness."
+      ],
+      "testsToCreateFirst": [
+        "Create tests/composer-schema-contracts.test.mjs before adding schema files.",
+        "Start with failing fixtures that prove enum, required-field, and additionalProperties enforcement."
+      ],
+      "inputSchemas": [
+        "Approved architecture packet contract names and field responsibilities.",
+        "Existing flagship-foundry schema conventions under apps/flagship-foundry/schemas/*.json."
+      ],
+      "outputSchemas": [
+        "Validated JSON Schemas for registry index, composed configuration, pipeline definition, compilation result, execution request, and session projection."
+      ],
+      "functionSpecs": [
+        {
+          "name": "loadComposerSchemas",
+          "inputSchema": "array<string:filePath>",
+          "outputSchema": "record<string,object:schema>",
+          "pseudocode": "for each requested schema path:\n  read file as UTF-8\n  JSON.parse contents\n  store parsed schema by basename\nreturn parsed schema map"
+        },
+        {
+          "name": "validateComposerFixtureSet",
+          "inputSchema": "object{schema:object, validFixtures:array<object>, invalidFixtures:array<object>}",
+          "outputSchema": "object{validPassCount:number, invalidFailCount:number, errors:array<string>}",
+          "pseudocode": "create JSON Schema validator from provided schema\nfor each valid fixture: assert validator returns true\nfor each invalid fixture: assert validator returns false\ncollect unexpected pass/fail details\nreturn counts and errors"
+        }
+      ],
+      "expectedOutputs": [
+        "Six machine-readable composer/orchestration schemas under apps/flagship-foundry/schemas.",
+        "One contract test file that loads each schema and validates at least one good fixture and one bad fixture per schema."
+      ],
+      "acceptanceCriteria": [
+        "All six schema files exist and each validates its approved happy-path fixture.",
+        "The test suite rejects malformed fixtures for missing required fields, invalid enums, and undeclared extra properties.",
+        "Schema naming and field names match the approved architecture packet contract set."
+      ],
+      "verificationPlan": [
+        "cd apps/flagship-foundry && node --test tests/composer-schema-contracts.test.mjs"
+      ],
+      "docsRequirements": [
+        "Add a short contract inventory header comment at the top of tests/composer-schema-contracts.test.mjs describing fixture coverage."
+      ],
+      "knowledgeCapture": [
+        "Record any contract field that required interpretation beyond the architecture packet so the verifier can review it explicitly."
+      ],
+      "approvalRequirements": [
+        "None; contract generation is pre-execution and feature-flag neutral."
+      ],
+      "rollbackNotes": [
+        "Delete only the six new schema files and the companion test file if the contract pack is rejected."
+      ],
+      "status": "ready"
+    },
+    {
+      "workOrderId": "WO-001B",
+      "title": "registry-projection-loader",
+      "parentWorkOrderId": "WO-001",
+      "dependsOn": [
+        "WO-001A"
+      ],
+      "lifecycleStage": "implement",
+      "phaseId": "registry-projection-loader",
+      "systemId": "flagship-foundry-orchestration-composer",
+      "taskClass": "deterministic_transformation",
+      "agentRole": "builder",
+      "agentPersona": "conservative_builder",
+      "modelTier": "low_cost_executor",
+      "contextBudget": {
+        "maxArtifacts": 4,
+        "maxFiles": 10,
+        "tokenBudget": 16000
+      },
+      "fileScope": [
+        "apps/flagship-foundry/packages/core/src/composer-registry.mjs",
+        "apps/flagship-foundry/tests/composer-registry.test.mjs"
+      ],
+      "sourceArtifacts": [
+        "architecture-packet.md",
+        "decomposition-plan.md",
+        "work-order-tree.json",
+        "model-tier-routing.md",
+        "work-order-contract-reference.md",
+        "phase-gate-matrix.md",
+        "agent-role-matrix.md",
+        "model-tier-routing.md",
+        "apps/flagship-foundry/packages/core/src/catalogs.mjs",
+        "apps/flagship-foundry/schemas/building-block-library-index.schema.json"
+      ],
+      "allowedTools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "constraints": [
+        "Keep compile logic separate from execution logic.",
+        "Keep declared artifact management separate from observed runtime/session projection.",
+        "Treat repo-native personas, skills, runbooks, templates, and model-routing policy as read-only authorities.",
+        "Preserve existing run-control as the sole execution authority.",
+        "Do not enable execution-affecting endpoints without explicit approval artifacts and a feature flag.",
+        "Do not introduce new dependencies unless the work order explicitly authorizes it.",
+        "Registry projection must be read-only over repo-native sources and must not rewrite persona/skill/runbook files.",
+        "Projection output must carry sourceUri and immutability markers for every block.",
+        "Do not fold runtime session state into the registry index."
+      ],
+      "frameworkRules": [
+        "Canonical app root is apps/flagship-foundry within the Nx repo root.",
+        "packages/core and apps/control-plane use Node ESM modules.",
+        "apps/cursor-companion remains CommonJS/VS Code extension entrypoint via extension.js.",
+        "apps/graph-viewer uses React 19 + TypeScript + Vite and must continue to build with its local build script.",
+        "Verification must use existing node --test and Nx targets before adding any new harness."
+      ],
+      "testsToCreateFirst": [
+        "Create tests/composer-registry.test.mjs before implementing composer-registry.mjs.",
+        "Start with a failing test that asserts at least one block exists for each required kind in the projection."
+      ],
+      "inputSchemas": [
+        "BuildingBlockLibraryIndex schema from WO-001A.",
+        "Repo-native personas/skills/roles/model routes as input authorities."
+      ],
+      "outputSchemas": [
+        "Schema-compliant building-block index document and projection helper functions."
+      ],
+      "functionSpecs": [
+        {
+          "name": "buildBuildingBlockIndex",
+          "inputSchema": "object{repoRoot:string, registryVersion:string}",
+          "outputSchema": "BuildingBlockLibraryIndex",
+          "pseudocode": "scan repo-authority folders and config files that define personas, skills, roles, runbook phases, templates, and model routes\nnormalize each source into a block record with blockId, kind, displayName, sourceUri, immutability, capabilities, and constraints\nsort blocks deterministically by kind then blockId\nreturn the completed BuildingBlockLibraryIndex document"
+        }
+      ],
+      "expectedOutputs": [
+        "A registry loader that projects personas, skills, agent roles, runbook phases, work-order templates, and model routes into BuildingBlockLibraryIndex.",
+        "A focused test file that verifies sourceUri, immutability, and capabilities are present on every projected block."
+      ],
+      "acceptanceCriteria": [
+        "buildBuildingBlockIndex() returns schema-compliant output for a fixture workspace.",
+        "Each projected block includes a blockId, kind, displayName, sourceUri, immutability, and capabilities array.",
+        "No registry function mutates repo-authority source files in place."
+      ],
+      "verificationPlan": [
+        "cd apps/flagship-foundry && node --test tests/composer-registry.test.mjs",
+        "cd apps/flagship-foundry && node --test tests/composer-schema-contracts.test.mjs"
+      ],
+      "docsRequirements": [
+        "Document in test comments which folders or config files are treated as source authorities for the projection."
+      ],
+      "knowledgeCapture": [
+        "Capture any missing block kind in a skipped/expected-failure note rather than silently omitting it."
+      ],
+      "approvalRequirements": [
+        "None; read-only projection loader."
+      ],
+      "rollbackNotes": [
+        "Remove composer-registry.mjs and its test file only; do not touch source authorities."
+      ],
+      "status": "pending"
+    },
+    {
+      "workOrderId": "WO-002A",
+      "title": "composition-artifact-store",
+      "parentWorkOrderId": "WO-003",
+      "dependsOn": [
+        "WO-001A",
+        "WO-001B"
+      ],
+      "lifecycleStage": "implement",
+      "phaseId": "composition-artifact-store",
+      "systemId": "flagship-foundry-orchestration-composer",
+      "taskClass": "deterministic_transformation",
+      "agentRole": "builder",
+      "agentPersona": "conservative_builder",
+      "modelTier": "low_cost_executor",
+      "contextBudget": {
+        "maxArtifacts": 4,
+        "maxFiles": 10,
+        "tokenBudget": 16000
+      },
+      "fileScope": [
+        "apps/flagship-foundry/packages/core/src/composer-artifacts.mjs",
+        "apps/flagship-foundry/tests/composer-artifacts.test.mjs"
+      ],
+      "sourceArtifacts": [
+        "architecture-packet.md",
+        "decomposition-plan.md",
+        "work-order-tree.json",
+        "model-tier-routing.md",
+        "work-order-contract-reference.md",
+        "phase-gate-matrix.md",
+        "apps/flagship-foundry/packages/core/src/io.mjs",
+        "apps/flagship-foundry/packages/core/src/plans.mjs",
+        "apps/flagship-foundry/schemas/composed-agent-configuration.schema.json",
+        "apps/flagship-foundry/schemas/orchestration-pipeline-definition.schema.json"
+      ],
+      "allowedTools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "constraints": [
+        "Keep compile logic separate from execution logic.",
+        "Keep declared artifact management separate from observed runtime/session projection.",
+        "Treat repo-native personas, skills, runbooks, templates, and model-routing policy as read-only authorities.",
+        "Preserve existing run-control as the sole execution authority.",
+        "Do not enable execution-affecting endpoints without explicit approval artifacts and a feature flag.",
+        "Do not introduce new dependencies unless the work order explicitly authorizes it.",
+        "Persist declared composer artifacts separately from runtime plans and runs.",
+        "Use stable refs and deterministic filenames so recompilation is idempotent.",
+        "Store provenance metadata and never overwrite source authorities."
+      ],
+      "frameworkRules": [
+        "Canonical app root is apps/flagship-foundry within the Nx repo root.",
+        "packages/core and apps/control-plane use Node ESM modules.",
+        "apps/cursor-companion remains CommonJS/VS Code extension entrypoint via extension.js.",
+        "apps/graph-viewer uses React 19 + TypeScript + Vite and must continue to build with its local build script.",
+        "Verification must use existing node --test and Nx targets before adding any new harness."
+      ],
+      "testsToCreateFirst": [
+        "Create tests/composer-artifacts.test.mjs before implementing the storage module.",
+        "Start with failing tests for create/load/list round-trips and a missing-document error path."
+      ],
+      "inputSchemas": [
+        "ComposedAgentConfiguration schema.",
+        "OrchestrationPipelineDefinition schema."
+      ],
+      "outputSchemas": [
+        "Stable storage/retrieval helpers for declared composer artifacts."
+      ],
+      "functionSpecs": [
+        {
+          "name": "saveComposedConfiguration",
+          "inputSchema": "ComposedAgentConfiguration",
+          "outputSchema": "object{configurationRef:string, savedAt:string}",
+          "pseudocode": "validate incoming configuration against schema\nderive state path under state/composer/configurations/\nwrite detail document and a lightweight header projection\nreturn configuration ref and timestamp"
+        },
+        {
+          "name": "savePipelineDefinition",
+          "inputSchema": "OrchestrationPipelineDefinition",
+          "outputSchema": "object{pipelineRef:string, savedAt:string}",
+          "pseudocode": "validate pipeline against schema\nderive state path under state/composer/pipelines/\nwrite detail document and header projection\nreturn pipeline ref and timestamp"
+        }
+      ],
+      "expectedOutputs": [
+        "Storage helpers for save/load/list of composed agent configurations and orchestration pipeline definitions.",
+        "Tests covering create, update, load, list, and not-found behaviors for declared composer artifacts."
+      ],
+      "acceptanceCriteria": [
+        "Configurations and pipelines persist under a composer-specific state subtree instead of the live run directories.",
+        "load* functions return exact saved documents without mutating field order or dropping provenance metadata.",
+        "list* functions return stable headers sorted by updatedAt descending then id."
+      ],
+      "verificationPlan": [
+        "cd apps/flagship-foundry && node --test tests/composer-artifacts.test.mjs",
+        "cd apps/flagship-foundry && node --test tests/composer-schema-contracts.test.mjs"
+      ],
+      "docsRequirements": [
+        "Add a top-of-file path contract comment in composer-artifacts.mjs documenting the state subtree used."
+      ],
+      "knowledgeCapture": [
+        "If state layout needs a second header/index optimization, note it as a follow-up rather than adding speculative indexing now."
+      ],
+      "approvalRequirements": [
+        "None; declared-state persistence only."
+      ],
+      "rollbackNotes": [
+        "Delete state/composer/* documents created by tests and remove composer-artifacts.mjs if the storage layout is rejected."
+      ],
+      "status": "pending"
+    },
+    {
+      "workOrderId": "WO-002B",
+      "title": "pipeline-compiler-core",
+      "parentWorkOrderId": "WO-003",
+      "dependsOn": [
+        "WO-001A",
+        "WO-002A"
+      ],
+      "lifecycleStage": "implement",
+      "phaseId": "pipeline-compiler-core",
+      "systemId": "flagship-foundry-orchestration-composer",
+      "taskClass": "deterministic_transformation",
+      "agentRole": "builder",
+      "agentPersona": "conservative_builder",
+      "modelTier": "low_cost_executor",
+      "contextBudget": {
+        "maxArtifacts": 4,
+        "maxFiles": 10,
+        "tokenBudget": 16000
+      },
+      "fileScope": [
+        "apps/flagship-foundry/packages/core/src/pipeline-compiler.mjs",
+        "apps/flagship-foundry/tests/pipeline-compiler.test.mjs"
+      ],
+      "sourceArtifacts": [
+        "architecture-packet.md",
+        "decomposition-plan.md",
+        "work-order-tree.json",
+        "model-tier-routing.md",
+        "work-order-contract-reference.md",
+        "phase-gate-matrix.md",
+        "apps/flagship-foundry/schemas/orchestration-pipeline-definition.schema.json",
+        "apps/flagship-foundry/schemas/pipeline-compilation-result.schema.json",
+        "apps/flagship-foundry/schemas/agent-work-order.schema.json",
+        "work-order-tree.json"
+      ],
+      "allowedTools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "constraints": [
+        "Keep compile logic separate from execution logic.",
+        "Keep declared artifact management separate from observed runtime/session projection.",
+        "Treat repo-native personas, skills, runbooks, templates, and model-routing policy as read-only authorities.",
+        "Preserve existing run-control as the sole execution authority.",
+        "Do not enable execution-affecting endpoints without explicit approval artifacts and a feature flag.",
+        "Do not introduce new dependencies unless the work order explicitly authorizes it.",
+        "Compilation must emit draft work-order refs or a draft plan ref; it may not launch runs directly.",
+        "Compilation must be deterministic for identical pipeline inputs.",
+        "Warnings and errors must be surfaced in PipelineCompilationResult instead of hidden in logs."
+      ],
+      "frameworkRules": [
+        "Canonical app root is apps/flagship-foundry within the Nx repo root.",
+        "packages/core and apps/control-plane use Node ESM modules.",
+        "apps/cursor-companion remains CommonJS/VS Code extension entrypoint via extension.js.",
+        "apps/graph-viewer uses React 19 + TypeScript + Vite and must continue to build with its local build script.",
+        "Verification must use existing node --test and Nx targets before adding any new harness."
+      ],
+      "testsToCreateFirst": [
+        "Create tests/pipeline-compiler.test.mjs before implementing the compiler.",
+        "Start with a failing cycle-detection test and a happy-path linear compile test."
+      ],
+      "inputSchemas": [
+        "OrchestrationPipelineDefinition schema.",
+        "Agent work-order schema."
+      ],
+      "outputSchemas": [
+        "Deterministic pipeline compiler producing PipelineCompilationResult documents."
+      ],
+      "functionSpecs": [
+        {
+          "name": "compilePipelineToDraftArtifacts",
+          "inputSchema": "object{pipeline:OrchestrationPipelineDefinition, registryVersion:string}",
+          "outputSchema": "PipelineCompilationResult",
+          "pseudocode": "validate pipeline schema\ntopologically sort stages and detect cycles or missing refs\nderive draft work-order metadata from lifecycleStage, configurationRef, and governance gates\naccumulate required approvals and warnings\nreturn PipelineCompilationResult with draft refs, approvals, warnings, and errors"
+        }
+      ],
+      "expectedOutputs": [
+        "A compiler that turns an orchestration pipeline definition into a draft-work-order-oriented compilation result.",
+        "Tests that cover linear pipelines, fan-out, missing dependency references, and approval-gated stages."
+      ],
+      "acceptanceCriteria": [
+        "compilePipelineToDraftArtifacts() returns PipelineCompilationResult for valid pipelines and surfaces errors for invalid dependencies.",
+        "Compilation preserves stage order and respects declared dependsOn relationships.",
+        "Compilation never calls the existing run-control functions directly."
+      ],
+      "verificationPlan": [
+        "cd apps/flagship-foundry && node --test tests/pipeline-compiler.test.mjs",
+        "cd apps/flagship-foundry && node --test tests/composer-schema-contracts.test.mjs"
+      ],
+      "docsRequirements": [
+        "Describe the compiler invariants in a header comment inside pipeline-compiler.mjs: deterministic order, no execution, explicit warnings/errors."
+      ],
+      "knowledgeCapture": [
+        "Record any stage-to-work-order field mapping that is not obvious from the schemas so the verifier can review it."
+      ],
+      "approvalRequirements": [
+        "None; compile-only logic."
+      ],
+      "rollbackNotes": [
+        "Remove pipeline-compiler.mjs and its tests if draft-artifact compilation is redesigned."
+      ],
+      "status": "pending"
+    },
+    {
+      "workOrderId": "WO-003A",
+      "title": "execution-policy-gateway-core",
+      "parentWorkOrderId": "WO-004",
+      "dependsOn": [
+        "WO-002B"
+      ],
+      "lifecycleStage": "implement",
+      "phaseId": "execution-policy-gateway-core",
+      "systemId": "flagship-foundry-orchestration-composer",
+      "taskClass": "deterministic_transformation",
+      "agentRole": "builder",
+      "agentPersona": "conservative_builder",
+      "modelTier": "low_cost_executor",
+      "contextBudget": {
+        "maxArtifacts": 4,
+        "maxFiles": 10,
+        "tokenBudget": 16000
+      },
+      "fileScope": [
+        "apps/flagship-foundry/packages/core/src/execution-policy-gateway.mjs",
+        "apps/flagship-foundry/tests/execution-policy-gateway.test.mjs"
+      ],
+      "sourceArtifacts": [
+        "architecture-packet.md",
+        "decomposition-plan.md",
+        "work-order-tree.json",
+        "model-tier-routing.md",
+        "work-order-contract-reference.md",
+        "phase-gate-matrix.md",
+        "apps/flagship-foundry/packages/core/src/runs.mjs",
+        "apps/flagship-foundry/packages/core/src/run-executor.mjs",
+        "apps/flagship-foundry/schemas/dashboard-execution-request.schema.json",
+        "apps/flagship-foundry/schemas/dashboard-execution-session.schema.json"
+      ],
+      "allowedTools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "constraints": [
+        "Keep compile logic separate from execution logic.",
+        "Keep declared artifact management separate from observed runtime/session projection.",
+        "Treat repo-native personas, skills, runbooks, templates, and model-routing policy as read-only authorities.",
+        "Preserve existing run-control as the sole execution authority.",
+        "Do not enable execution-affecting endpoints without explicit approval artifacts and a feature flag.",
+        "Do not introduce new dependencies unless the work order explicitly authorizes it.",
+        "Existing run-control remains the sole execution authority.",
+        "Launch, resume, stop, and rerun-failed-slice require approval artifacts or an already-approved plan/work-order.",
+        "Feature flag default must remain off until human approval changes it."
+      ],
+      "frameworkRules": [
+        "Canonical app root is apps/flagship-foundry within the Nx repo root.",
+        "packages/core and apps/control-plane use Node ESM modules.",
+        "apps/cursor-companion remains CommonJS/VS Code extension entrypoint via extension.js.",
+        "apps/graph-viewer uses React 19 + TypeScript + Vite and must continue to build with its local build script.",
+        "Verification must use existing node --test and Nx targets before adding any new harness."
+      ],
+      "testsToCreateFirst": [
+        "Create tests/execution-policy-gateway.test.mjs before implementing the gateway module.",
+        "Start with failing tests for approval enforcement and feature-flag-off behavior."
+      ],
+      "inputSchemas": [
+        "DashboardExecutionRequest schema.",
+        "DashboardExecutionSession schema."
+      ],
+      "outputSchemas": [
+        "Execution policy gateway module with explicit approve-or-deny outcomes and delegation to existing run-control only."
+      ],
+      "functionSpecs": [
+        {
+          "name": "validateExecutionRequest",
+          "inputSchema": "DashboardExecutionRequest",
+          "outputSchema": "object{ok:boolean, normalizedRequest?:DashboardExecutionRequest, errors?:array<string>}",
+          "pseudocode": "validate request schema and required action/sourceType fields\ncheck approval refs against action and sourceType rules\ncheck runtimeMode against allowedRuntimeModes from the approved source\nreturn normalized request or validation errors"
+        },
+        {
+          "name": "dispatchExecutionRequest",
+          "inputSchema": "object{request:DashboardExecutionRequest, featureFlags:object}",
+          "outputSchema": "DashboardExecutionSession",
+          "pseudocode": "call validateExecutionRequest\nif composer execution feature flag is off: reject with policy error\nmap allowed action to existing run-control helper\nreturn normalized DashboardExecutionSession projection referencing the underlying run"
+        }
+      ],
+      "expectedOutputs": [
+        "A gateway module that validates execution requests, checks approvals/runtime mode legality, and delegates only approved actions to existing run-control.",
+        "Tests covering denied launch without approval, denied illegal runtime mode, approved delegation, and feature-flag disable paths."
+      ],
+      "acceptanceCriteria": [
+        "validateExecutionRequest() rejects missing approval refs for execution-affecting actions.",
+        "dispatchExecutionRequest() delegates only to existing run-control helpers and records the resulting session ref.",
+        "A disabled feature flag blocks composer launch paths without affecting legacy run-control behavior."
+      ],
+      "verificationPlan": [
+        "cd apps/flagship-foundry && node --test tests/execution-policy-gateway.test.mjs",
+        "cd apps/flagship-foundry && node --test tests/auth-trust-boundary.test.mjs"
+      ],
+      "docsRequirements": [
+        "Document every policy denial reason string in tests so the UI layer can map them predictably."
+      ],
+      "knowledgeCapture": [
+        "Any ambiguity around runtimeMode legality must be surfaced as an explicit TODO for verifier review instead of auto-permitting."
+      ],
+      "approvalRequirements": [
+        "Human approval required before any execution-affecting endpoint using this gateway is enabled by default."
+      ],
+      "rollbackNotes": [
+        "Remove execution-policy-gateway.mjs and revert only the new gateway tests; leave existing run-control untouched."
+      ],
+      "status": "pending"
+    },
+    {
+      "workOrderId": "WO-003B",
+      "title": "composer-control-plane-crud-routes",
+      "parentWorkOrderId": "WO-003",
+      "dependsOn": [
+        "WO-001B",
+        "WO-002A"
+      ],
+      "lifecycleStage": "implement",
+      "phaseId": "composer-control-plane-crud-routes",
+      "systemId": "flagship-foundry-orchestration-composer",
+      "taskClass": "deterministic_transformation",
+      "agentRole": "builder",
+      "agentPersona": "conservative_builder",
+      "modelTier": "low_cost_executor",
+      "contextBudget": {
+        "maxArtifacts": 4,
+        "maxFiles": 10,
+        "tokenBudget": 16000
+      },
+      "fileScope": [
+        "apps/flagship-foundry/apps/control-plane/src/server.mjs",
+        "apps/flagship-foundry/tests/composer-control-plane-crud.test.mjs"
+      ],
+      "sourceArtifacts": [
+        "architecture-packet.md",
+        "decomposition-plan.md",
+        "work-order-tree.json",
+        "model-tier-routing.md",
+        "work-order-contract-reference.md",
+        "phase-gate-matrix.md",
+        "apps/flagship-foundry/packages/core/src/composer-registry.mjs",
+        "apps/flagship-foundry/packages/core/src/composer-artifacts.mjs"
+      ],
+      "allowedTools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "constraints": [
+        "Keep compile logic separate from execution logic.",
+        "Keep declared artifact management separate from observed runtime/session projection.",
+        "Treat repo-native personas, skills, runbooks, templates, and model-routing policy as read-only authorities.",
+        "Preserve existing run-control as the sole execution authority.",
+        "Do not enable execution-affecting endpoints without explicit approval artifacts and a feature flag.",
+        "Do not introduce new dependencies unless the work order explicitly authorizes it.",
+        "Follow existing control-plane route style and critical payload validation behavior.",
+        "Expose composer CRUD under a dedicated namespace and keep route semantics aligned with existing /plans and /catalogs conventions.",
+        "Do not mix compile or launch behavior into this CRUD slice."
+      ],
+      "frameworkRules": [
+        "Canonical app root is apps/flagship-foundry within the Nx repo root.",
+        "packages/core and apps/control-plane use Node ESM modules.",
+        "apps/cursor-companion remains CommonJS/VS Code extension entrypoint via extension.js.",
+        "apps/graph-viewer uses React 19 + TypeScript + Vite and must continue to build with its local build script.",
+        "Verification must use existing node --test and Nx targets before adding any new harness."
+      ],
+      "testsToCreateFirst": [
+        "Create tests/composer-control-plane-crud.test.mjs before editing server.mjs.",
+        "Start with failing tests for GET /catalogs/building-blocks and POST/GET /composer/configurations."
+      ],
+      "inputSchemas": [
+        "BuildingBlockLibraryIndex schema.",
+        "ComposedAgentConfiguration schema.",
+        "OrchestrationPipelineDefinition schema."
+      ],
+      "outputSchemas": [
+        "Composer CRUD routes in the control plane."
+      ],
+      "functionSpecs": [
+        {
+          "name": "handleComposerCrudRoutes",
+          "inputSchema": "object{method:string, pathname:string, body?:object}",
+          "outputSchema": "object{statusCode:number, payload:object}",
+          "pseudocode": "if GET /catalogs/building-blocks: return buildBuildingBlockIndex()\nif POST /composer/configurations: validate and save composed configuration\nif GET configuration routes: list or load configuration\nif POST /composer/pipelines and GET pipeline routes: save/list/load pipeline definitions\notherwise return no match"
+        }
+      ],
+      "expectedOutputs": [
+        "Control-plane routes for listing building blocks and save/load/list of composed configurations and pipelines.",
+        "Route tests covering happy-path CRUD and 404/not-found behaviors."
+      ],
+      "acceptanceCriteria": [
+        "The control plane exposes read-only building-block listing and declared composer artifact CRUD without any execution side effects.",
+        "Route handlers return JSON with stable refs and timestamps from the composer artifact store.",
+        "Invalid payloads receive 400 responses with explicit error messages."
+      ],
+      "verificationPlan": [
+        "cd apps/flagship-foundry && node --test tests/composer-control-plane-crud.test.mjs",
+        "cd apps/flagship-foundry && node --test tests/composer-artifacts.test.mjs",
+        "cd apps/flagship-foundry && node --test tests/composer-registry.test.mjs"
+      ],
+      "docsRequirements": [
+        "Update route-level inline comments in server.mjs only where they clarify new composer namespaces; do not rewrite unrelated route comments."
+      ],
+      "knowledgeCapture": [
+        "Note any route naming divergence from existing control-plane conventions for verifier review."
+      ],
+      "approvalRequirements": [
+        "None; declared-state CRUD only."
+      ],
+      "rollbackNotes": [
+        "Revert only the new /catalogs/building-blocks and /composer/* CRUD branches in server.mjs plus their tests."
+      ],
+      "status": "pending"
+    },
+    {
+      "workOrderId": "WO-003C",
+      "title": "composer-control-plane-compile-launch-routes",
+      "parentWorkOrderId": "WO-003",
+      "dependsOn": [
+        "WO-002B",
+        "WO-003A",
+        "WO-003B"
+      ],
+      "lifecycleStage": "implement",
+      "phaseId": "composer-control-plane-compile-launch-routes",
+      "systemId": "flagship-foundry-orchestration-composer",
+      "taskClass": "deterministic_transformation",
+      "agentRole": "builder",
+      "agentPersona": "conservative_builder",
+      "modelTier": "low_cost_executor",
+      "contextBudget": {
+        "maxArtifacts": 4,
+        "maxFiles": 10,
+        "tokenBudget": 16000
+      },
+      "fileScope": [
+        "apps/flagship-foundry/apps/control-plane/src/server.mjs",
+        "apps/flagship-foundry/tests/composer-control-plane-compile-launch.test.mjs"
+      ],
+      "sourceArtifacts": [
+        "architecture-packet.md",
+        "decomposition-plan.md",
+        "work-order-tree.json",
+        "model-tier-routing.md",
+        "work-order-contract-reference.md",
+        "phase-gate-matrix.md",
+        "apps/flagship-foundry/packages/core/src/pipeline-compiler.mjs",
+        "apps/flagship-foundry/packages/core/src/execution-policy-gateway.mjs"
+      ],
+      "allowedTools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "constraints": [
+        "Keep compile logic separate from execution logic.",
+        "Keep declared artifact management separate from observed runtime/session projection.",
+        "Treat repo-native personas, skills, runbooks, templates, and model-routing policy as read-only authorities.",
+        "Preserve existing run-control as the sole execution authority.",
+        "Do not enable execution-affecting endpoints without explicit approval artifacts and a feature flag.",
+        "Do not introduce new dependencies unless the work order explicitly authorizes it.",
+        "Compile and launch routes must stay separate from CRUD routes in both code branches and tests.",
+        "Launch routes must invoke the execution-policy gateway rather than existing run-control directly.",
+        "The compile route may create draft refs but may not start execution."
+      ],
+      "frameworkRules": [
+        "Canonical app root is apps/flagship-foundry within the Nx repo root.",
+        "packages/core and apps/control-plane use Node ESM modules.",
+        "apps/cursor-companion remains CommonJS/VS Code extension entrypoint via extension.js.",
+        "apps/graph-viewer uses React 19 + TypeScript + Vite and must continue to build with its local build script.",
+        "Verification must use existing node --test and Nx targets before adding any new harness."
+      ],
+      "testsToCreateFirst": [
+        "Create tests/composer-control-plane-compile-launch.test.mjs before editing server.mjs for compile/launch routes.",
+        "Start with a failing compile-only test that proves no run is created as a side effect."
+      ],
+      "inputSchemas": [
+        "PipelineCompilationResult schema.",
+        "DashboardExecutionRequest schema.",
+        "DashboardExecutionSession schema."
+      ],
+      "outputSchemas": [
+        "Composer compile/launch/session routes in the control plane."
+      ],
+      "functionSpecs": [
+        {
+          "name": "handleComposerExecutionRoutes",
+          "inputSchema": "object{method:string, pathname:string, body?:object}",
+          "outputSchema": "object{statusCode:number, payload:object}",
+          "pseudocode": "if POST /composer/compile: load pipeline and call compilePipelineToDraftArtifacts\nif POST /composer/execute: validate request through execution-policy gateway and return session projection\nif POST /composer/executions/:id/{pause|resume|stop}: route action through execution-policy gateway\nif GET execution routes: return session projection payload"
+        }
+      ],
+      "expectedOutputs": [
+        "Control-plane routes for compile, request-approval-ready launch, session load/list, and pause/resume/stop via the gateway.",
+        "Tests covering compile-only behavior, denied launch without approval, approved launch, and session projection retrieval."
+      ],
+      "acceptanceCriteria": [
+        "POST /composer/compile returns PipelineCompilationResult and does not start a run.",
+        "POST /composer/execute and /composer/executions/:id/{pause|resume|stop} go through the execution-policy gateway.",
+        "GET /composer/executions and /composer/executions/:id return session projection payloads suitable for UI polling."
+      ],
+      "verificationPlan": [
+        "cd apps/flagship-foundry && node --test tests/composer-control-plane-compile-launch.test.mjs",
+        "cd apps/flagship-foundry && node --test tests/execution-policy-gateway.test.mjs",
+        "cd apps/flagship-foundry && node --test tests/auth-trust-boundary.test.mjs"
+      ],
+      "docsRequirements": [
+        "Record the compile-vs-launch separation in the test file header so future edits do not collapse the boundary."
+      ],
+      "knowledgeCapture": [
+        "Capture any response-shape assumption needed by the UI layers in the test file, not in hidden implementation notes."
+      ],
+      "approvalRequirements": [
+        "Human approval required before enabling /composer/execute routes by default.",
+        "Feature flag must remain default-off until verifier sign-off."
+      ],
+      "rollbackNotes": [
+        "Remove only compile/execute/session branches and tests; keep CRUD routes intact."
+      ],
+      "status": "pending"
+    },
+    {
+      "workOrderId": "WO-004A",
+      "title": "cursor-companion-composer-overlay",
+      "parentWorkOrderId": "WO-002",
+      "dependsOn": [
+        "WO-003B",
+        "WO-003C"
+      ],
+      "lifecycleStage": "implement",
+      "phaseId": "cursor-companion-composer-overlay",
+      "systemId": "flagship-foundry-orchestration-composer",
+      "taskClass": "deterministic_transformation",
+      "agentRole": "builder",
+      "agentPersona": "conservative_builder",
+      "modelTier": "low_cost_executor",
+      "contextBudget": {
+        "maxArtifacts": 4,
+        "maxFiles": 10,
+        "tokenBudget": 16000
+      },
+      "fileScope": [
+        "apps/flagship-foundry/apps/cursor-companion/composer-client.js",
+        "apps/flagship-foundry/apps/cursor-companion/composer-panel.js",
+        "apps/flagship-foundry/apps/cursor-companion/extension.js",
+        "apps/flagship-foundry/apps/cursor-companion/README.md",
+        "apps/flagship-foundry/tests/cursor-companion-composer.test.mjs"
+      ],
+      "sourceArtifacts": [
+        "architecture-packet.md",
+        "decomposition-plan.md",
+        "work-order-tree.json",
+        "model-tier-routing.md",
+        "work-order-contract-reference.md",
+        "phase-gate-matrix.md",
+        "apps/flagship-foundry/apps/cursor-companion/package.json",
+        "apps/flagship-foundry/apps/cursor-companion/extension.js"
+      ],
+      "allowedTools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "constraints": [
+        "Keep compile logic separate from execution logic.",
+        "Keep declared artifact management separate from observed runtime/session projection.",
+        "Treat repo-native personas, skills, runbooks, templates, and model-routing policy as read-only authorities.",
+        "Preserve existing run-control as the sole execution authority.",
+        "Do not enable execution-affecting endpoints without explicit approval artifacts and a feature flag.",
+        "Do not introduce new dependencies unless the work order explicitly authorizes it.",
+        "Keep the entrypoint in extension.js and add helper modules rather than expanding a single monolithic file further.",
+        "Use the existing controlPlaneUrl setting; do not add network destinations other than the control plane.",
+        "Keep registry browsing, configuration save/load, pipeline save/load, compile, and execute controls in one canonical overlay surface."
+      ],
+      "frameworkRules": [
+        "Canonical app root is apps/flagship-foundry within the Nx repo root.",
+        "packages/core and apps/control-plane use Node ESM modules.",
+        "apps/cursor-companion remains CommonJS/VS Code extension entrypoint via extension.js.",
+        "apps/graph-viewer uses React 19 + TypeScript + Vite and must continue to build with its local build script.",
+        "Verification must use existing node --test and Nx targets before adding any new harness.",
+        "Cursor companion files are CommonJS; do not introduce ESM-only syntax into extension.js helpers."
+      ],
+      "testsToCreateFirst": [
+        "Create tests/cursor-companion-composer.test.mjs before adding composer-client.js and composer-panel.js.",
+        "Start with failing tests for overlay model grouping and compile/execute button enablement rules."
+      ],
+      "inputSchemas": [
+        "BuildingBlockLibraryIndex schema.",
+        "ComposedAgentConfiguration schema.",
+        "OrchestrationPipelineDefinition schema.",
+        "PipelineCompilationResult schema.",
+        "DashboardExecutionSession schema."
+      ],
+      "outputSchemas": [
+        "Canonical write-capable composer overlay for Cursor Companion."
+      ],
+      "functionSpecs": [
+        {
+          "name": "createComposerOverlayModel",
+          "inputSchema": "object{registry:BuildingBlockLibraryIndex, configurations:array<object>, pipelines:array<object>, compileResult?:PipelineCompilationResult, session?:DashboardExecutionSession}",
+          "outputSchema": "object{sections:array<object>, actions:array<object>, warnings:array<string>}",
+          "pseudocode": "group registry blocks by kind for browsing\nattach saved configurations and pipelines to overlay sections\nif compile result exists: surface warnings, required approvals, and generated refs\nif session exists: surface current state, approvals, evidence ref, and logs ref\nreturn render-ready overlay model"
+        }
+      ],
+      "expectedOutputs": [
+        "Companion helper modules for composer API calls and overlay HTML/state rendering.",
+        "An updated extension command path that opens a composer overlay with browse, compose, compile, approve-ready execute, and refresh controls.",
+        "A focused Node test file covering helper-module state transitions and payload formatting."
+      ],
+      "acceptanceCriteria": [
+        "The extension can render a composer overlay without requiring a second editor surface.",
+        "The overlay can list building blocks, list/save/load configurations, list/save/load pipelines, call compile, and call execute against approved sources.",
+        "All control-plane requests flow through composer-client.js rather than hand-built fetch calls sprinkled throughout extension.js."
+      ],
+      "verificationPlan": [
+        "cd apps/flagship-foundry && node --test tests/cursor-companion-composer.test.mjs",
+        "cd apps/flagship-foundry && node --test tests/composer-control-plane-crud.test.mjs",
+        "cd apps/flagship-foundry && node --test tests/composer-control-plane-compile-launch.test.mjs"
+      ],
+      "docsRequirements": [
+        "Update apps/cursor-companion/README.md with the composer overlay command flow and control-plane prerequisites."
+      ],
+      "knowledgeCapture": [
+        "Document any UI copy needed to explain approval-required states before execution."
+      ],
+      "approvalRequirements": [
+        "Execution buttons must remain visibly gated when compile results list required approvals."
+      ],
+      "rollbackNotes": [
+        "Revert only composer-client.js, composer-panel.js, extension.js overlay wiring, README updates, and the test file."
+      ],
+      "status": "pending"
+    },
+    {
+      "workOrderId": "WO-005A",
+      "title": "pipeline-graph-projection-core",
+      "parentWorkOrderId": "WO-005",
+      "dependsOn": [
+        "WO-002B"
+      ],
+      "lifecycleStage": "implement",
+      "phaseId": "pipeline-graph-projection-core",
+      "systemId": "flagship-foundry-orchestration-composer",
+      "taskClass": "deterministic_transformation",
+      "agentRole": "builder",
+      "agentPersona": "conservative_builder",
+      "modelTier": "low_cost_executor",
+      "contextBudget": {
+        "maxArtifacts": 4,
+        "maxFiles": 10,
+        "tokenBudget": 16000
+      },
+      "fileScope": [
+        "apps/flagship-foundry/packages/core/src/pipeline-graph-projection.mjs",
+        "apps/flagship-foundry/tests/pipeline-graph-projection.test.mjs"
+      ],
+      "sourceArtifacts": [
+        "architecture-packet.md",
+        "decomposition-plan.md",
+        "work-order-tree.json",
+        "model-tier-routing.md",
+        "work-order-contract-reference.md",
+        "phase-gate-matrix.md",
+        "apps/flagship-foundry/schemas/orchestration-pipeline-definition.schema.json",
+        "trust-boundary.mmd",
+        "system-sequence.mmd"
+      ],
+      "allowedTools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "constraints": [
+        "Keep compile logic separate from execution logic.",
+        "Keep declared artifact management separate from observed runtime/session projection.",
+        "Treat repo-native personas, skills, runbooks, templates, and model-routing policy as read-only authorities.",
+        "Preserve existing run-control as the sole execution authority.",
+        "Do not enable execution-affecting endpoints without explicit approval artifacts and a feature flag.",
+        "Do not introduce new dependencies unless the work order explicitly authorizes it.",
+        "Graph projection is read-only and must not become a second authoring surface.",
+        "Projection must explicitly surface stage dependencies, approval boundaries, and blast-radius references.",
+        "Projection output must stay separate from live session state."
+      ],
+      "frameworkRules": [
+        "Canonical app root is apps/flagship-foundry within the Nx repo root.",
+        "packages/core and apps/control-plane use Node ESM modules.",
+        "apps/cursor-companion remains CommonJS/VS Code extension entrypoint via extension.js.",
+        "apps/graph-viewer uses React 19 + TypeScript + Vite and must continue to build with its local build script.",
+        "Verification must use existing node --test and Nx targets before adding any new harness."
+      ],
+      "testsToCreateFirst": [
+        "Create tests/pipeline-graph-projection.test.mjs before implementing the projection helper.",
+        "Start with failing tests for edge generation and approval boundary overlays."
+      ],
+      "inputSchemas": [
+        "OrchestrationPipelineDefinition schema.",
+        "PipelineCompilationResult schema."
+      ],
+      "outputSchemas": [
+        "Reusable pipeline graph projection model for read-only surfaces."
+      ],
+      "functionSpecs": [
+        {
+          "name": "buildPipelineGraphProjection",
+          "inputSchema": "object{pipeline:OrchestrationPipelineDefinition, compilationResult?:PipelineCompilationResult}",
+          "outputSchema": "object{nodes:array<object>, edges:array<object>, overlays:array<object>}",
+          "pseudocode": "emit one graph node per pipeline stage\nemit one edge per dependsOn relationship\nmark nodes and edges that cross approval boundaries\nattach blastRadiusRef and requiredApprovals overlay data when available\nreturn a deterministic view model for the graph viewer"
+        }
+      ],
+      "expectedOutputs": [
+        "A pure projection helper that turns a pipeline definition into node/edge/view-model data for graph rendering.",
+        "Tests covering linear, fan-out, and approval-gated stages."
+      ],
+      "acceptanceCriteria": [
+        "Projection output contains deterministic node ids, edge ids, stage labels, and approval boundary markers.",
+        "A pipeline with approval gates yields overlay markers without mutating the input pipeline definition.",
+        "Projection can attach blastRadiusRef when present in compilation outputs."
+      ],
+      "verificationPlan": [
+        "cd apps/flagship-foundry && node --test tests/pipeline-graph-projection.test.mjs",
+        "cd apps/flagship-foundry && node --test tests/pipeline-compiler.test.mjs"
+      ],
+      "docsRequirements": [
+        "Add a short comment in the test file describing why this projection must stay read-only."
+      ],
+      "knowledgeCapture": [
+        "Any extra overlay field added for visualization must be documented in the test fixtures."
+      ],
+      "approvalRequirements": [
+        "None; read-only projection helper."
+      ],
+      "rollbackNotes": [
+        "Remove only the projection helper and its tests."
+      ],
+      "status": "pending"
+    },
+    {
+      "workOrderId": "WO-005B",
+      "title": "graph-viewer-composer-projections",
+      "parentWorkOrderId": "WO-005",
+      "dependsOn": [
+        "WO-005A",
+        "WO-003C"
+      ],
+      "lifecycleStage": "implement",
+      "phaseId": "graph-viewer-composer-projections",
+      "systemId": "flagship-foundry-orchestration-composer",
+      "taskClass": "deterministic_transformation",
+      "agentRole": "builder",
+      "agentPersona": "conservative_builder",
+      "modelTier": "low_cost_executor",
+      "contextBudget": {
+        "maxArtifacts": 4,
+        "maxFiles": 10,
+        "tokenBudget": 16000
+      },
+      "fileScope": [
+        "apps/flagship-foundry/apps/graph-viewer/src/views/PipelineTopologyView.tsx",
+        "apps/flagship-foundry/apps/graph-viewer/src/views/SessionProjectionView.tsx",
+        "apps/flagship-foundry/apps/graph-viewer/src/App.tsx",
+        "apps/flagship-foundry/apps/graph-viewer/src/App.css",
+        "apps/flagship-foundry/apps/graph-viewer/src/types.ts"
+      ],
+      "sourceArtifacts": [
+        "architecture-packet.md",
+        "decomposition-plan.md",
+        "work-order-tree.json",
+        "model-tier-routing.md",
+        "work-order-contract-reference.md",
+        "phase-gate-matrix.md",
+        "apps/flagship-foundry/apps/graph-viewer/src/views/RunTimelineView.tsx",
+        "apps/flagship-foundry/apps/graph-viewer/src/components/EvidencePanel.tsx",
+        "apps/flagship-foundry/packages/core/src/pipeline-graph-projection.mjs"
+      ],
+      "allowedTools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "constraints": [
+        "Keep compile logic separate from execution logic.",
+        "Keep declared artifact management separate from observed runtime/session projection.",
+        "Treat repo-native personas, skills, runbooks, templates, and model-routing policy as read-only authorities.",
+        "Preserve existing run-control as the sole execution authority.",
+        "Do not enable execution-affecting endpoints without explicit approval artifacts and a feature flag.",
+        "Do not introduce new dependencies unless the work order explicitly authorizes it.",
+        "Graph viewer remains projection/read-only; no in-view editing or save actions.",
+        "Use pipeline-graph-projection output instead of reconstructing graph logic inside React components.",
+        "Keep existing HomeView, lifecycle, and run-timeline behaviors intact when composer data is absent."
+      ],
+      "frameworkRules": [
+        "Canonical app root is apps/flagship-foundry within the Nx repo root.",
+        "packages/core and apps/control-plane use Node ESM modules.",
+        "apps/cursor-companion remains CommonJS/VS Code extension entrypoint via extension.js.",
+        "apps/graph-viewer uses React 19 + TypeScript + Vite and must continue to build with its local build script.",
+        "Verification must use existing node --test and Nx targets before adding any new harness.",
+        "Do not add a new React test framework in this slice; stay inside the existing Vite/TypeScript build path."
+      ],
+      "testsToCreateFirst": [
+        "Tests to create first: none in this slice; consume the contract/projection tests from WO-005A and verify the UI by build output because the repo does not yet contain a React test harness."
+      ],
+      "inputSchemas": [
+        "Pipeline graph projection view-model from WO-005A.",
+        "DashboardExecutionSession schema."
+      ],
+      "outputSchemas": [
+        "Read-only graph-viewer pipeline and session projection views."
+      ],
+      "functionSpecs": [
+        {
+          "name": "renderPipelineTopologyView",
+          "inputSchema": "object{projection:object{nodes:array<object>,edges:array<object>,overlays:array<object>}}",
+          "outputSchema": "ReactElement",
+          "pseudocode": "receive precomputed projection model\nrender nodes and edges using existing graph-viewer primitives\nshow approval overlays and blast-radius badges in a read-only panel\nrender fallback empty state when no pipeline is selected"
+        },
+        {
+          "name": "renderSessionProjectionView",
+          "inputSchema": "DashboardExecutionSession",
+          "outputSchema": "ReactElement",
+          "pseudocode": "render session state, timeline summary, approval refs, verifier status, evidence ref, and logs ref\nsurface read-only badges and links/pointers only\navoid any start/pause/resume/stop controls in this projection surface"
+        }
+      ],
+      "expectedOutputs": [
+        "A read-only graph-viewer view for pipeline topology and approval boundaries.",
+        "A read-only session/evidence view that displays session state, verifier status, evidence target, and logs pointer."
+      ],
+      "acceptanceCriteria": [
+        "The graph viewer can render pipeline topology and session projection data without adding a second editor surface.",
+        "App.tsx routes cleanly between existing views and the new composer views.",
+        "The graph-viewer build passes after the new composer views are added."
+      ],
+      "verificationPlan": [
+        "cd apps/flagship-foundry/apps/graph-viewer && pnpm build"
+      ],
+      "docsRequirements": [
+        "Leave the view read-only and make that explicit in component comments or empty-state copy."
+      ],
+      "knowledgeCapture": [
+        "Any missing UX affordance that would require a new test harness should be noted as a future work item, not added here."
+      ],
+      "approvalRequirements": [
+        "None; projection/read-only viewer changes."
+      ],
+      "rollbackNotes": [
+        "Remove the new composer views and App.tsx route changes only; preserve existing graph-viewer views."
+      ],
+      "status": "pending"
+    },
+    {
+      "workOrderId": "WO-006A",
+      "title": "session-projection-core",
+      "parentWorkOrderId": "WO-006",
+      "dependsOn": [
+        "WO-003A",
+        "WO-003C"
+      ],
+      "lifecycleStage": "implement",
+      "phaseId": "session-projection-core",
+      "systemId": "flagship-foundry-orchestration-composer",
+      "taskClass": "deterministic_transformation",
+      "agentRole": "builder",
+      "agentPersona": "conservative_builder",
+      "modelTier": "low_cost_executor",
+      "contextBudget": {
+        "maxArtifacts": 4,
+        "maxFiles": 10,
+        "tokenBudget": 16000
+      },
+      "fileScope": [
+        "apps/flagship-foundry/packages/core/src/session-projection.mjs",
+        "apps/flagship-foundry/tests/session-projection.test.mjs"
+      ],
+      "sourceArtifacts": [
+        "architecture-packet.md",
+        "decomposition-plan.md",
+        "work-order-tree.json",
+        "model-tier-routing.md",
+        "work-order-contract-reference.md",
+        "phase-gate-matrix.md",
+        "apps/flagship-foundry/packages/core/src/runs.mjs",
+        "apps/flagship-foundry/packages/core/src/continuity.mjs",
+        "apps/flagship-foundry/packages/core/src/evidence-bundle.mjs",
+        "apps/flagship-foundry/schemas/dashboard-execution-session.schema.json"
+      ],
+      "allowedTools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "constraints": [
+        "Keep compile logic separate from execution logic.",
+        "Keep declared artifact management separate from observed runtime/session projection.",
+        "Treat repo-native personas, skills, runbooks, templates, and model-routing policy as read-only authorities.",
+        "Preserve existing run-control as the sole execution authority.",
+        "Do not enable execution-affecting endpoints without explicit approval artifacts and a feature flag.",
+        "Do not introduce new dependencies unless the work order explicitly authorizes it.",
+        "Observed session projection must remain separate from declared composer artifacts.",
+        "Projection must aggregate continuityRef, evidenceBundleTargetRef, verifierStatus, approvalRefs, blastRadiusRef, logsRef, and timeline state.",
+        "Projection must tolerate partial data and return explicit null/empty arrays rather than throwing on missing optional refs."
+      ],
+      "frameworkRules": [
+        "Canonical app root is apps/flagship-foundry within the Nx repo root.",
+        "packages/core and apps/control-plane use Node ESM modules.",
+        "apps/cursor-companion remains CommonJS/VS Code extension entrypoint via extension.js.",
+        "apps/graph-viewer uses React 19 + TypeScript + Vite and must continue to build with its local build script.",
+        "Verification must use existing node --test and Nx targets before adding any new harness."
+      ],
+      "testsToCreateFirst": [
+        "Create tests/session-projection.test.mjs before implementing the projection helper.",
+        "Start with a failing test for a partial session that lacks optional refs but still validates."
+      ],
+      "inputSchemas": [
+        "DashboardExecutionSession schema.",
+        "Run state and continuity references."
+      ],
+      "outputSchemas": [
+        "Reusable session projection helper for both control-plane and UI polling surfaces."
+      ],
+      "functionSpecs": [
+        {
+          "name": "buildDashboardExecutionSession",
+          "inputSchema": "object{run:object, compilationResult?:PipelineCompilationResult, continuityRef?:string, verifierStatus?:string, evidenceBundleTargetRef?:string}",
+          "outputSchema": "DashboardExecutionSession",
+          "pseudocode": "copy core identifiers and run status into session projection\nmap run timeline entries into DashboardExecutionSession.timeline\nattach continuityRef, evidenceBundleTargetRef, approvalRefs, verifierStatus, blastRadiusRef, logsRef, and cost/model usage refs when present\nreturn schema-compliant session object"
+        }
+      ],
+      "expectedOutputs": [
+        "A session projection helper that aggregates run state and related refs into DashboardExecutionSession payloads.",
+        "Tests covering queued, in-progress, paused, failed, and completed session shapes."
+      ],
+      "acceptanceCriteria": [
+        "buildDashboardExecutionSession() returns schema-compliant session objects from underlying run and metadata inputs.",
+        "Projection handles missing optional refs without crashing.",
+        "Timeline entries remain ordered by timestamp ascending."
+      ],
+      "verificationPlan": [
+        "cd apps/flagship-foundry && node --test tests/session-projection.test.mjs",
+        "cd apps/flagship-foundry && node --test tests/runs-telemetry-correlation.test.mjs"
+      ],
+      "docsRequirements": [
+        "Add a comment in the projection helper distinguishing declared artifact refs from observed session data."
+      ],
+      "knowledgeCapture": [
+        "Record any field sourced from heuristics rather than authoritative runtime data so the verifier can challenge it."
+      ],
+      "approvalRequirements": [
+        "None; observed-state aggregation only."
+      ],
+      "rollbackNotes": [
+        "Remove session-projection.mjs and its tests only."
+      ],
+      "status": "pending"
+    },
+    {
+      "workOrderId": "WO-006B",
+      "title": "runtime-observability-surfaces",
+      "parentWorkOrderId": "WO-006",
+      "dependsOn": [
+        "WO-004A",
+        "WO-005B",
+        "WO-006A"
+      ],
+      "lifecycleStage": "implement",
+      "phaseId": "runtime-observability-surfaces",
+      "systemId": "flagship-foundry-orchestration-composer",
+      "taskClass": "deterministic_transformation",
+      "agentRole": "builder",
+      "agentPersona": "conservative_builder",
+      "modelTier": "low_cost_executor",
+      "contextBudget": {
+        "maxArtifacts": 4,
+        "maxFiles": 10,
+        "tokenBudget": 16000
+      },
+      "fileScope": [
+        "apps/flagship-foundry/apps/cursor-companion/session-panel.js",
+        "apps/flagship-foundry/apps/cursor-companion/extension.js",
+        "apps/flagship-foundry/apps/graph-viewer/src/components/EvidencePanel.tsx",
+        "apps/flagship-foundry/apps/graph-viewer/src/views/RunTimelineView.tsx",
+        "apps/flagship-foundry/apps/graph-viewer/src/views/SessionProjectionView.tsx",
+        "apps/flagship-foundry/tests/cursor-companion-session-panel.test.mjs"
+      ],
+      "sourceArtifacts": [
+        "architecture-packet.md",
+        "decomposition-plan.md",
+        "work-order-tree.json",
+        "model-tier-routing.md",
+        "work-order-contract-reference.md",
+        "phase-gate-matrix.md",
+        "apps/flagship-foundry/packages/core/src/session-projection.mjs",
+        "apps/flagship-foundry/schemas/dashboard-execution-session.schema.json"
+      ],
+      "allowedTools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "constraints": [
+        "Keep compile logic separate from execution logic.",
+        "Keep declared artifact management separate from observed runtime/session projection.",
+        "Treat repo-native personas, skills, runbooks, templates, and model-routing policy as read-only authorities.",
+        "Preserve existing run-control as the sole execution authority.",
+        "Do not enable execution-affecting endpoints without explicit approval artifacts and a feature flag.",
+        "Do not introduce new dependencies unless the work order explicitly authorizes it.",
+        "Surface continuity, verifier, evidence, and logs data without introducing a second execution authority.",
+        "Cursor Companion remains the write-capable dashboard; graph-viewer remains read-only.",
+        "Do not duplicate session-shaping logic in the UI layers; consume the shared session projection contract."
+      ],
+      "frameworkRules": [
+        "Canonical app root is apps/flagship-foundry within the Nx repo root.",
+        "packages/core and apps/control-plane use Node ESM modules.",
+        "apps/cursor-companion remains CommonJS/VS Code extension entrypoint via extension.js.",
+        "apps/graph-viewer uses React 19 + TypeScript + Vite and must continue to build with its local build script.",
+        "Verification must use existing node --test and Nx targets before adding any new harness.",
+        "Keep Cursor Companion write-capable and graph-viewer read-only; do not cross those authority boundaries in UI code."
+      ],
+      "testsToCreateFirst": [
+        "Create tests/cursor-companion-session-panel.test.mjs before adding session-panel.js.",
+        "Start with failing tests for missing-evidence warning badges and timeline ordering."
+      ],
+      "inputSchemas": [
+        "DashboardExecutionSession schema."
+      ],
+      "outputSchemas": [
+        "Runtime observability surfaces for composer sessions."
+      ],
+      "functionSpecs": [
+        {
+          "name": "createSessionPanelModel",
+          "inputSchema": "DashboardExecutionSession",
+          "outputSchema": "object{statusBadge:string, timelineItems:array<object>, refRows:array<object>, warnings:array<string>}",
+          "pseudocode": "derive human-readable status badge from session.state and verifierStatus\nmap timeline entries into compact rows\ngroup continuity/evidence/log refs into render rows\nsurface warnings for missing approvals or evidence refs\nreturn render-ready panel model"
+        }
+      ],
+      "expectedOutputs": [
+        "A companion session panel for polling/rendering composer session state in the write-capable surface.",
+        "Updated graph-viewer read-only session/evidence panels fed by shared session projection data.",
+        "A focused companion helper test covering session badge rendering and stale-session refresh decisions."
+      ],
+      "acceptanceCriteria": [
+        "Cursor Companion can display session state, approvals, verifier status, continuity ref, evidence target ref, and logs pointer for composer runs.",
+        "Graph viewer displays the same session projection fields in read-only form without action buttons.",
+        "Both surfaces degrade gracefully when session polling returns partial data."
+      ],
+      "verificationPlan": [
+        "cd apps/flagship-foundry && node --test tests/cursor-companion-session-panel.test.mjs",
+        "cd apps/flagship-foundry/apps/graph-viewer && pnpm build"
+      ],
+      "docsRequirements": [
+        "Update session copy in the companion and graph-viewer only where it clarifies declared-vs-observed truth."
+      ],
+      "knowledgeCapture": [
+        "Document any polling interval or stale-session decision made for the companion session panel."
+      ],
+      "approvalRequirements": [
+        "None; observability-only UI changes."
+      ],
+      "rollbackNotes": [
+        "Revert session-panel.js, related extension wiring, graph-viewer session panel updates, and the companion helper test only."
+      ],
+      "status": "pending"
+    },
+    {
+      "workOrderId": "WO-007A",
+      "title": "verification-and-hardening",
+      "parentWorkOrderId": "WO-007",
+      "dependsOn": [
+        "WO-004A",
+        "WO-005B",
+        "WO-006B"
+      ],
+      "lifecycleStage": "verify",
+      "phaseId": "verification-and-hardening",
+      "systemId": "flagship-foundry-orchestration-composer",
+      "taskClass": "verification",
+      "agentRole": "verifier",
+      "agentPersona": "skeptical_verifier",
+      "modelTier": "balanced_reasoner",
+      "contextBudget": {
+        "maxArtifacts": 5,
+        "maxFiles": 12,
+        "tokenBudget": 20000
+      },
+      "fileScope": [
+        "apps/flagship-foundry/tests/composer-integration.test.mjs",
+        "apps/flagship-foundry/tests/composer-feature-flag-regression.test.mjs",
+        "apps/flagship-foundry/docs/verification/composer-hardening-checklist.md"
+      ],
+      "sourceArtifacts": [
+        "architecture-packet.md",
+        "decomposition-plan.md",
+        "work-order-tree.json",
+        "model-tier-routing.md",
+        "work-order-contract-reference.md",
+        "phase-gate-matrix.md",
+        "apps/flagship-foundry/tests/auth-trust-boundary.test.mjs",
+        "apps/flagship-foundry/apps/control-plane/src/server.mjs",
+        "apps/flagship-foundry/packages/core/src/execution-policy-gateway.mjs"
+      ],
+      "allowedTools": [
+        "Read",
+        "Bash"
+      ],
+      "constraints": [
+        "Keep compile logic separate from execution logic.",
+        "Keep declared artifact management separate from observed runtime/session projection.",
+        "Treat repo-native personas, skills, runbooks, templates, and model-routing policy as read-only authorities.",
+        "Preserve existing run-control as the sole execution authority.",
+        "Do not enable execution-affecting endpoints without explicit approval artifacts and a feature flag.",
+        "Do not introduce new dependencies unless the work order explicitly authorizes it.",
+        "Verification must be independent enough to disagree with builder claims.",
+        "Security review must cover approval checks, trust-boundary enforcement, and feature-flag default-off behavior.",
+        "Performance review must focus on graph-viewer build stability and session polling refresh behavior, not speculative optimization."
+      ],
+      "frameworkRules": [
+        "Canonical app root is apps/flagship-foundry within the Nx repo root.",
+        "packages/core and apps/control-plane use Node ESM modules.",
+        "apps/cursor-companion remains CommonJS/VS Code extension entrypoint via extension.js.",
+        "apps/graph-viewer uses React 19 + TypeScript + Vite and must continue to build with its local build script.",
+        "Verification must use existing node --test and Nx targets before adding any new harness."
+      ],
+      "testsToCreateFirst": [
+        "Create composer-integration.test.mjs and composer-feature-flag-regression.test.mjs before writing the hardening checklist.",
+        "Start with failing tests for disabled-feature fallback and missing-approval launch denial."
+      ],
+      "inputSchemas": [
+        "All composer schemas and shared session/compile contracts."
+      ],
+      "outputSchemas": [
+        "Independent verification suite and hardening checklist for the composer slice."
+      ],
+      "functionSpecs": [
+        {
+          "name": "verifyComposerFlow",
+          "inputSchema": "object{configurationRef:string, pipelineRef:string, approvalRefs:array<string>}",
+          "outputSchema": "object{compileOnlyPass:boolean, approvedExecutePass:boolean, monitoringPass:boolean, findings:array<string>}",
+          "pseudocode": "exercise compile route and assert no run side effect\nexercise approved execute path and assert session projection is returned\npoll session read endpoint and verify observability fields exist\nrecord any security/performance findings in findings array"
+        }
+      ],
+      "expectedOutputs": [
+        "Integration and regression tests covering compose -> compile -> approved execute -> monitor flows.",
+        "A hardening checklist documenting security, performance, and feature-flag gates for the composer slice."
+      ],
+      "acceptanceCriteria": [
+        "Integration tests prove compile does not execute and approved execute does.",
+        "Regression tests prove legacy run-control still works when composer features are disabled.",
+        "Hardening checklist explicitly records approval gate, trust-boundary, and graph-viewer build checks."
+      ],
+      "verificationPlan": [
+        "cd apps/flagship-foundry && node --test tests/composer-integration.test.mjs tests/composer-feature-flag-regression.test.mjs",
+        "cd apps/flagship-foundry && node --test tests/auth-trust-boundary.test.mjs",
+        "cd apps/flagship-foundry/apps/graph-viewer && pnpm build"
+      ],
+      "docsRequirements": [
+        "Populate apps/flagship-foundry/docs/verification/composer-hardening-checklist.md with explicit PASS/FAIL/TODO sections rather than prose only."
+      ],
+      "knowledgeCapture": [
+        "Record any unresolved security or performance finding as a blocker for the release work order."
+      ],
+      "approvalRequirements": [
+        "Release work may not proceed until this work order records a PASS-equivalent verdict for approval and feature-flag checks."
+      ],
+      "rollbackNotes": [
+        "Remove only new verification artifacts; do not relax any hardening checks to force a pass."
+      ],
+      "status": "pending"
+    },
+    {
+      "workOrderId": "WO-008A",
+      "title": "release-handoff-and-import-packet",
+      "parentWorkOrderId": "WO-007",
+      "dependsOn": [
+        "WO-007A"
+      ],
+      "lifecycleStage": "release",
+      "phaseId": "release-handoff-and-import-packet",
+      "systemId": "flagship-foundry-orchestration-composer",
+      "taskClass": "structured_generation",
+      "agentRole": "docs-release-agent",
+      "agentPersona": "sync_editor",
+      "modelTier": "low_cost_executor",
+      "contextBudget": {
+        "maxArtifacts": 3,
+        "maxFiles": 8,
+        "tokenBudget": 12000
+      },
+      "fileScope": [
+        "apps/flagship-foundry/docs/release/composer-rollout-and-rollback.md",
+        "apps/flagship-foundry/docs/handoffs/handoff-composer-release.md",
+        "apps/flagship-foundry/docs/release/composer-import-packet.md"
+      ],
+      "sourceArtifacts": [
+        "architecture-packet.md",
+        "decomposition-plan.md",
+        "work-order-tree.json",
+        "model-tier-routing.md",
+        "work-order-contract-reference.md",
+        "phase-gate-matrix.md",
+        "apps/flagship-foundry/docs/verification/composer-hardening-checklist.md",
+        "foundry-import-protocol.md",
+        "next-workspace.txt"
+      ],
+      "allowedTools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "constraints": [
+        "Keep compile logic separate from execution logic.",
+        "Keep declared artifact management separate from observed runtime/session projection.",
+        "Treat repo-native personas, skills, runbooks, templates, and model-routing policy as read-only authorities.",
+        "Preserve existing run-control as the sole execution authority.",
+        "Do not enable execution-affecting endpoints without explicit approval artifacts and a feature flag.",
+        "Do not introduce new dependencies unless the work order explicitly authorizes it.",
+        "Release documentation must consume verification evidence and not restate builder claims as facts.",
+        "Rollout and rollback steps must preserve default-off feature-flag posture until approval is granted.",
+        "Import guidance must reference the ready-now work-order artifacts and verification outputs explicitly."
+      ],
+      "frameworkRules": [
+        "Canonical app root is apps/flagship-foundry within the Nx repo root.",
+        "packages/core and apps/control-plane use Node ESM modules.",
+        "apps/cursor-companion remains CommonJS/VS Code extension entrypoint via extension.js.",
+        "apps/graph-viewer uses React 19 + TypeScript + Vite and must continue to build with its local build script.",
+        "Verification must use existing node --test and Nx targets before adding any new harness."
+      ],
+      "testsToCreateFirst": [
+        "Tests to create first: none in this slice; this is evidence-backed documentation work and verifies by artifact presence and content review."
+      ],
+      "inputSchemas": [
+        "Verification checklist and evidence references."
+      ],
+      "outputSchemas": [
+        "Release/handoff/import documentation for the composer slice."
+      ],
+      "functionSpecs": [
+        {
+          "name": "buildComposerReleasePacket",
+          "inputSchema": "object{verificationChecklistPath:string, nextWorkspace:string}",
+          "outputSchema": "object{rolloutDocPath:string, handoffDocPath:string, importPacketPath:string}",
+          "pseudocode": "read verification checklist and summarize only PASS/FAIL-backed evidence\nwrite rollout/rollback instructions with feature-flag-off default preserved\nwrite handoff doc with evidence references and next-step pointers\nwrite import packet for the next workspace\nreturn created file paths"
+        }
+      ],
+      "expectedOutputs": [
+        "Release-ready rollout/rollback doc, handoff doc, and import packet for the next workspace."
+      ],
+      "acceptanceCriteria": [
+        "Release docs reference verification evidence rather than assumptions.",
+        "Rollback steps explicitly disable composer feature flags and preserve legacy run-control.",
+        "Import packet tells the next workspace to consume uploaded artifacts directly instead of reconstructing from memory."
+      ],
+      "verificationPlan": [
+        "test -f apps/flagship-foundry/docs/release/composer-rollout-and-rollback.md",
+        "test -f apps/flagship-foundry/docs/handoffs/handoff-composer-release.md",
+        "test -f apps/flagship-foundry/docs/release/composer-import-packet.md"
+      ],
+      "docsRequirements": [
+        "All three docs must include explicit evidence references and next-step actions."
+      ],
+      "knowledgeCapture": [
+        "If rollout guidance uncovers missing evidence, push that note back to WO-007A instead of guessing."
+      ],
+      "approvalRequirements": [
+        "Human approval is required before any rollout step changes the composer feature flag from off to on."
+      ],
+      "rollbackNotes": [
+        "Delete only the release/handoff/import docs if release sequencing changes."
+      ],
+      "status": "pending"
+    },
+    {
+      "workOrderId": "WO-009A",
+      "title": "learning-capture-and-kb-promotion",
+      "parentWorkOrderId": "WO-007",
+      "dependsOn": [
+        "WO-007A",
+        "WO-008A"
+      ],
+      "lifecycleStage": "improve",
+      "phaseId": "learning-capture-and-kb-promotion",
+      "systemId": "flagship-foundry-orchestration-composer",
+      "taskClass": "learning",
+      "agentRole": "docs-release-agent",
+      "agentPersona": "sync_editor",
+      "modelTier": "balanced_reasoner",
+      "contextBudget": {
+        "maxArtifacts": 4,
+        "maxFiles": 10,
+        "tokenBudget": 16000
+      },
+      "fileScope": [
+        "apps/flagship-foundry/docs/learning/composer-learning-record.md",
+        "apps/flagship-foundry/docs/learning/composer-kb-promotion-candidates.md"
+      ],
+      "sourceArtifacts": [
+        "architecture-packet.md",
+        "decomposition-plan.md",
+        "work-order-tree.json",
+        "model-tier-routing.md",
+        "work-order-contract-reference.md",
+        "phase-gate-matrix.md",
+        "apps/flagship-foundry/docs/verification/composer-hardening-checklist.md",
+        "apps/flagship-foundry/docs/handoffs/handoff-composer-release.md",
+        "learning-record.schema.json"
+      ],
+      "allowedTools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "constraints": [
+        "Keep compile logic separate from execution logic.",
+        "Keep declared artifact management separate from observed runtime/session projection.",
+        "Treat repo-native personas, skills, runbooks, templates, and model-routing policy as read-only authorities.",
+        "Preserve existing run-control as the sole execution authority.",
+        "Do not enable execution-affecting endpoints without explicit approval artifacts and a feature flag.",
+        "Do not introduce new dependencies unless the work order explicitly authorizes it.",
+        "Promote only verified learning; do not write unverified implementation folklore into knowledge assets.",
+        "Separate observations from recommendations in the learning record.",
+        "KB promotion candidates must be clearly marked candidate/deferred/approved."
+      ],
+      "frameworkRules": [
+        "Canonical app root is apps/flagship-foundry within the Nx repo root.",
+        "packages/core and apps/control-plane use Node ESM modules.",
+        "apps/cursor-companion remains CommonJS/VS Code extension entrypoint via extension.js.",
+        "apps/graph-viewer uses React 19 + TypeScript + Vite and must continue to build with its local build script.",
+        "Verification must use existing node --test and Nx targets before adding any new harness."
+      ],
+      "testsToCreateFirst": [
+        "Tests to create first: none in this slice; this is verified-learning capture and verifies by schema-aligned content review."
+      ],
+      "inputSchemas": [
+        "LearningRecord schema."
+      ],
+      "outputSchemas": [
+        "Learning artifacts for future KB or doctrine promotion."
+      ],
+      "functionSpecs": [
+        {
+          "name": "buildComposerLearningRecord",
+          "inputSchema": "object{verificationEvidence:array<string>, releaseEvidence:array<string>}",
+          "outputSchema": "LearningRecord",
+          "pseudocode": "collect only verified findings from verification and release artifacts\nseparate context, observation, recommendation, and applicable scope\nmark promotion status candidate/approved/deferred explicitly\nwrite learning record and any KB promotion candidate notes"
+        }
+      ],
+      "expectedOutputs": [
+        "A learning record summarizing verified lessons from the composer implementation and verification cycle.",
+        "A promotion-candidates note for any KB/runbook/doctrine updates that deserve future import."
+      ],
+      "acceptanceCriteria": [
+        "The learning record distinguishes context, observation, recommendation, and applicable scope.",
+        "Only verified findings from WO-007A and WO-008A are promoted as learning candidates.",
+        "Deferred or blocked knowledge items remain explicitly marked instead of promoted silently."
+      ],
+      "verificationPlan": [
+        "test -f apps/flagship-foundry/docs/learning/composer-learning-record.md",
+        "test -f apps/flagship-foundry/docs/learning/composer-kb-promotion-candidates.md"
+      ],
+      "docsRequirements": [
+        "Use the LearningRecord schema headings directly in composer-learning-record.md for easy future promotion."
+      ],
+      "knowledgeCapture": [
+        "This work order is the knowledge-capture step; mark every candidate with approved/deferred status."
+      ],
+      "approvalRequirements": [
+        "Only verified learning may be marked approved for KB promotion."
+      ],
+      "rollbackNotes": [
+        "Delete only the learning docs if the learning record is superseded."
+      ],
+      "status": "pending"
+    }
+  ]
+}

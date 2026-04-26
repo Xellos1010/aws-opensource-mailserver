@@ -1,6 +1,5 @@
 ---
-description: 
-globs: 
+description: Favor simple, maintainable solutions over complexity
 alwaysApply: true
 ---
 # Simplicity
@@ -9,6 +8,6 @@ Favor simple, straightforward solutions over complex ones, avoiding unnecessary 
 
 **Justification**: Simplicity reduces technical debt and enhances maintainability.
 
-**Example**: Use basic hooks in `HomeScreen.tsx` instead of complex state management unless needed.
+**Example**: Use basic hooks in `HomeTab.tsx` instead of complex state management unless needed.
 
-**Related Rules**: [kiss.mdc](mdc:.cursor/rules/kiss.mdc)
+**Related Rules**: [separation-of-concerns.mdc](mdc:.cursor/rules/01-code-standards/separation-of-concerns.mdc), [single-responsibility.mdc](mdc:.cursor/rules/01-code-standards/single-responsibility.mdc)

@@ -1,0 +1,47 @@
+{
+  "bundleName": "foundry-orchestration-composer-work-order-batch-2026-03-30",
+  "projectName": "Flagship Foundry Orchestration Composer",
+  "phaseId": "foundry-orchestration-composer-plan-2026-03-30",
+  "artifacts": [
+    {
+      "path": "work-order-batch.json",
+      "artifactType": "work-order-batch",
+      "purpose": "Primary machine-readable execution batch."
+    },
+    {
+      "path": "work-order-summary.md",
+      "artifactType": "summary",
+      "purpose": "Human-readable work-order overview and sequencing guidance."
+    },
+    {
+      "path": "dependency-graph.mmd",
+      "artifactType": "diagram",
+      "purpose": "Dependency graph for orchestration and parallelization."
+    },
+    {
+      "path": "verification-plan.md",
+      "artifactType": "verification-plan",
+      "purpose": "Batch-level verification gates and per-work-order commands."
+    },
+    {
+      "path": "artifact-manifest.json",
+      "artifactType": "artifact-manifest",
+      "purpose": "Inventory of generated artifacts."
+    },
+    {
+      "path": "next-workspace.txt",
+      "artifactType": "handoff-pointer",
+      "purpose": "Target workspace for the next phase."
+    },
+    {
+      "path": "foundry-import-manifest.json",
+      "artifactType": "import-manifest",
+      "purpose": "Import order and execution-prep instructions for Foundry."
+    },
+    {
+      "path": "foundry-orchestration-composer-work-order-batch-2026-03-30.zip",
+      "artifactType": "bundle",
+      "purpose": "Single-file package containing the full work-order batch."
+    }
+  ]
+}

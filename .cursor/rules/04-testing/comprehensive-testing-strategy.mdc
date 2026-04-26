@@ -25,8 +25,6 @@ This rule defines testing standards, patterns, and coverage requirements. It doe
 - [ ] Configure mutation testing (Stryker)
 - [ ] Set up visual regression testing
 - [ ] Configure performance testing
-- [ ] **NEW:** Configure TypeScript for test compatibility (isolatedModules, esModuleInterop)
-- [ ] **NEW:** Set up proper module name mapping for workspace aliases
 ```
 
 ## 🏗️ Test Structure & Organization
@@ -123,35 +121,13 @@ export default defineConfig({
 
 ### Jest Configuration (Legacy Projects)
 ```typescript
-// jest.config.cjs (recommended for ES module projects)
-module.exports = {
-  preset: 'ts-jest/presets/default-esm',
-  testEnvironment: 'jsdom', // or 'node' for backend
-  extensionsToTreatAsEsm: ['.ts'],
-  globals: {
-    'ts-jest': {
-      useESM: true,
-      tsconfig: {
-        module: 'ESNext',
-        target: 'ES2022',
-        isolatedModules: true,
-        esModuleInterop: true,
-        allowSyntheticDefaultImports: true,
-      },
-    },
-  },
-  transform: {
-    '^.+\\.ts$': [
-      'ts-jest',
-      {
-        useESM: true,
-      },
-    ],
-  },
-  roots: ['<rootDir>/src'],
+// jest.config.ts
+export default {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/src', '<rootDir>/tests'],
   testMatch: [
     '**/__tests__/**/*.ts',
-    '**/__it__/**/*.ts',
     '**/*.spec.ts',
     '**/*.test.ts',
   ],
@@ -162,161 +138,18 @@ module.exports = {
   ],
   coverageThreshold: {
     global: {
-      branches: 70,
+      branches: 75,
       functions: 80,
       lines: 80,
       statements: 80,
     },
   },
-  setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    '^@org/(.*)$': '<rootDir>/../../libs/$1/src/index.ts',
+    '^@mm/(.*)$': '<rootDir>/packages/$1',
   },
-  transformIgnorePatterns: [
-    'node_modules/',
-  ],
 };
-```
-
-### ES Module Handling in Tests
-
-#### Node.js Built-in Module Imports
-```typescript
-// ❌ Incorrect - ES module syntax for Node.js built-ins
-import fs from 'fs';
-import path from 'path';
-import http from 'http';
-
-// ✅ Correct - Namespace imports for Node.js built-ins
-import * as fs from 'fs';
-import * as path from 'path';
-import * as http from 'http';
-```
-
-#### Import.meta.url Fallback
-```typescript
-// Handle import.meta.url for both build and test environments
-const currentDir = typeof import.meta !== 'undefined' && import.meta.url
-  ? path.dirname(fileURLToPath(import.meta.url))
-  : path.dirname(__filename);
-```
-
-### Constructor and Dependency Testing
-
-#### Testing Classes with Dependencies
-```typescript
-// ❌ Incorrect - Testing implementation details
-describe('MyService', () => {
-  it('should call logger.info', () => {
-    const service = new MyService(logger, db);
-    service.doWork();
-    expect(logger.info).toHaveBeenCalled();
-  });
-});
-
-// ✅ Correct - Test behavior, not implementation
-describe('MyService', () => {
-  let mockLogger: Logger;
-  let mockDb: Database;
-  let service: MyService;
-
-  beforeEach(() => {
-    mockLogger = {
-      info: jest.fn(),
-      error: jest.fn(),
-      child: jest.fn().mockReturnValue({
-        info: jest.fn(),
-        error: jest.fn(),
-      }),
-    } as any;
-
-    mockDb = { query: jest.fn() } as any;
-    service = new MyService(mockLogger, mockDb);
-  });
-
-  it('should perform work successfully', async () => {
-    mockDb.query.mockResolvedValue([{ id: 1 }]);
-    const result = await service.doWork();
-    expect(result).toEqual([{ id: 1 }]);
-  });
-});
-```
-
-#### Mocking Complex Dependencies
-```typescript
-// For classes with complex constructor requirements
-jest.mock('../logger', () => ({
-  CloudLogger: jest.fn().mockImplementation(() => ({
-    info: jest.fn(),
-    error: jest.fn(),
-    child: jest.fn().mockReturnValue({
-      info: jest.fn(),
-      error: jest.fn(),
-    }),
-  })),
-}));
-
-jest.mock('../database', () => ({
-  DatabaseConnection: jest.fn().mockImplementation(() => ({
-    connect: jest.fn(),
-    query: jest.fn(),
-    disconnect: jest.fn(),
-  })),
-}));
-
-// Import after mocking
-import { MyService } from './my-service';
-```
-
-### Testing Anti-Patterns to Avoid
-
-#### Constructor Signature Changes
-```typescript
-// ❌ Problem - Tests break when constructor changes
-it('should work', () => {
-  const service = new Service({ logger, db, config });
-});
-
-// ✅ Solution - Use dependency injection with mocks
-it('should work', () => {
-  const mockLogger = createMockLogger();
-  const mockDb = createMockDb();
-  const service = new Service(mockLogger, mockDb);
-});
-```
-
-#### Private Method Testing
-```typescript
-// ❌ Problem - Testing private methods couples to implementation
-it('should validate input', () => {
-  const service = new Service();
-  (service as any).validateInput('test'); // Accessing private method
-});
-
-// ✅ Solution - Test public behavior, not private methods
-it('should reject invalid input', async () => {
-  const service = new Service();
-  await expect(service.processInput('invalid')).rejects.toThrow('Invalid input');
-});
-```
-
-#### Incorrect Mock Return Types
-```typescript
-// ❌ Problem - Jest mock typing issues
-mockPage.locator().innerText.mockResolvedValue('text'); // Type error
-
-// ✅ Solution - Proper type assertions
-mockPage.locator().innerText.mockResolvedValue('text' as any);
-```
-
-#### Node.js Built-in Module Imports
-```typescript
-// ❌ Problem - ES module syntax for Node.js built-ins
-import fs from 'fs'; // Fails in test environment
-
-// ✅ Solution - Namespace imports
-import * as fs from 'fs';
 ```
 
 ### Unit Test Patterns
@@ -448,6 +281,523 @@ describe('ApiClient', () => {
     await vi.advanceTimersByTimeAsync(5000);
     
     await expect(promise).rejects.toThrow('Request timeout');
+  });
+});
+```
+
+#### Testing Error Handling & Propagation Chains
+
+**Critical:** Error handling must be tested at every layer to ensure errors propagate correctly and maintain structure.
+
+##### HTTP Interceptor Error Tests
+```typescript
+// error.interceptor.spec.ts (Angular/React)
+import { TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HTTP_INTERCEPTORS, HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { ErrorInterceptor } from './error.interceptor';
+
+describe('ErrorInterceptor', () => {
+  let httpMock: HttpTestingController;
+  let httpClient: HttpClient;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule],
+      providers: [
+        {
+          provide: HTTP_INTERCEPTORS,
+          useClass: ErrorInterceptor,
+          multi: true,
+        },
+      ],
+    });
+
+    httpMock = TestBed.inject(HttpTestingController);
+    httpClient = TestBed.inject(HttpClient);
+  });
+
+  describe('error object structure', () => {
+    it('should create error with userMessage and recoverable properties', (done) => {
+      httpClient.get('/api/test').subscribe({
+        next: () => fail('should have failed'),
+        error: (error) => {
+          // CRITICAL: Verify error structure is correct
+          expect(error).toBeInstanceOf(HttpErrorResponse);
+          expect(error.userMessage).toBeDefined();
+          expect(typeof error.userMessage).toBe('string');
+          expect(error.recoverable).toBeDefined();
+          expect(typeof error.recoverable).toBe('boolean');
+          expect(error.status).toBe(500);
+          done();
+        },
+      });
+
+      const req = httpMock.expectOne('/api/test');
+      req.flush({ error: 'Server error' }, { status: 500, statusText: 'Internal Server Error' });
+    });
+
+    it('should preserve original error properties', (done) => {
+      httpClient.get('/api/test').subscribe({
+        next: () => fail('should have failed'),
+        error: (error) => {
+          expect(error.status).toBe(404);
+          expect(error.statusText).toBe('Not Found');
+          expect(error.url).toContain('/api/test');
+          expect(error.userMessage).toBeDefined();
+          done();
+        },
+      });
+
+      const req = httpMock.expectOne('/api/test');
+      req.flush({}, { status: 404, statusText: 'Not Found' });
+    });
+
+    it('should handle network errors (status 0)', (done) => {
+      httpClient.get('/api/test').subscribe({
+        next: () => fail('should have failed'),
+        error: (error) => {
+          expect(error.status).toBe(0);
+          expect(error.userMessage).toContain('connect');
+          expect(error.recoverable).toBe(true);
+          done();
+        },
+      });
+
+      const req = httpMock.expectOne('/api/test');
+      req.error(new ErrorEvent('Network error'));
+    });
+  });
+
+  describe('error extraction downstream', () => {
+    it('should allow error message extraction in catch blocks', async () => {
+      let extractedMessage = '';
+      let extractedStatus: number | undefined;
+
+      try {
+        await httpClient.get('/api/test').toPromise();
+      } catch (error) {
+        // Test the actual extraction pattern used in components
+        if (error && typeof error === 'object') {
+          const err = error as { userMessage?: string; message?: string; status?: number };
+          extractedMessage = err.userMessage || err.message || 'Unknown error';
+          extractedStatus = err.status;
+        }
+      }
+
+      const req = httpMock.expectOne('/api/test');
+      req.flush({ error: 'Test error' }, { status: 500, statusText: 'Server Error' });
+
+      // Wait for error to propagate
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      expect(extractedMessage).toBeTruthy();
+      expect(extractedStatus).toBe(500);
+    });
+  });
+});
+```
+
+##### Error Service Tests - All Error Types
+```typescript
+// error.service.spec.ts
+import { ErrorService } from './error.service';
+import { HttpErrorResponse } from '@angular/common/http';
+
+describe('ErrorService', () => {
+  let service: ErrorService;
+
+  beforeEach(() => {
+    service = new ErrorService();
+  });
+
+  describe('setHttpError - error type handling', () => {
+    it('should handle HttpErrorResponse with userMessage', (done) => {
+      const httpError = Object.assign(
+        new HttpErrorResponse({ status: 500, statusText: 'Server Error' }),
+        { userMessage: 'User-friendly message', recoverable: true }
+      );
+
+      service.setHttpError(httpError);
+      service.getCurrentError().pipe(take(1)).subscribe((error) => {
+        expect(error?.message).toBe('User-friendly message');
+        expect(error?.recoverable).toBe(true);
+        done();
+      });
+    });
+
+    it('should handle HttpErrorResponse with nested error.error', (done) => {
+      const httpError = new HttpErrorResponse({
+        status: 500,
+        statusText: 'Server Error',
+        error: { error: 'Nested error message' }
+      });
+
+      service.setHttpError(httpError);
+      service.getCurrentError().pipe(take(1)).subscribe((error) => {
+        expect(error?.message).toContain('Nested error message');
+        done();
+      });
+    });
+
+    it('should handle HttpErrorResponse with nested error.message', (done) => {
+      const httpError = new HttpErrorResponse({
+        status: 500,
+        statusText: 'Server Error',
+        error: { message: 'Nested message' }
+      });
+
+      service.setHttpError(httpError);
+      service.getCurrentError().pipe(take(1)).subscribe((error) => {
+        expect(error?.message).toContain('Nested message');
+        done();
+      });
+    });
+
+    it('should handle plain Error instances', (done) => {
+      const error = new Error('Plain error message');
+      service.setHttpError(error);
+      service.getCurrentError().pipe(take(1)).subscribe((error) => {
+        expect(error?.message).toBe('Plain error message');
+        expect(error?.recoverable).toBe(true); // Network/timeout errors are recoverable
+        done();
+      });
+    });
+
+    it('should handle string errors', (done) => {
+      service.setHttpError('String error');
+      service.getCurrentError().pipe(take(1)).subscribe((error) => {
+        expect(error?.message).toBe('String error');
+        done();
+      });
+    });
+
+    it('should handle errors with status 0 (network errors)', (done) => {
+      const httpError = Object.assign(
+        new HttpErrorResponse({ status: 0, statusText: 'Unknown Error' }),
+        { userMessage: 'Network error', recoverable: true }
+      );
+
+      service.setHttpError(httpError);
+      service.getCurrentError().pipe(take(1)).subscribe((error) => {
+        expect(error?.message).toContain('Network error');
+        expect(error?.recoverable).toBe(true);
+        done();
+      });
+    });
+
+    it('should handle unknown error types gracefully', (done) => {
+      service.setHttpError(null as unknown);
+      service.getCurrentError().pipe(take(1)).subscribe((error) => {
+        expect(error?.message).toBe('An unexpected error occurred');
+        done();
+      });
+    });
+  });
+});
+```
+
+##### Component Error Handling Tests
+```typescript
+// search.page.spec.ts
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { SearchPage } from './search.page';
+import { ErrorService } from 'src/services/error/error.service';
+import { LoggingService } from 'src/services/logging/logging.service';
+import { HttpErrorResponse } from '@angular/common/http';
+
+describe('SearchPage - Error Handling', () => {
+  let component: SearchPage;
+  let fixture: ComponentFixture<SearchPage>;
+  let errorService: jasmine.SpyObj<ErrorService>;
+  let loggingService: jasmine.SpyObj<LoggingService>;
+
+  beforeEach(() => {
+    errorService = jasmine.createSpyObj('ErrorService', ['setHttpError']);
+    loggingService = jasmine.createSpyObj('LoggingService', ['error']);
+
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule],
+      declarations: [SearchPage],
+      providers: [
+        { provide: ErrorService, useValue: errorService },
+        { provide: LoggingService, useValue: loggingService },
+      ],
+    });
+
+    fixture = TestBed.createComponent(SearchPage);
+    component = fixture.componentInstance;
+  });
+
+  describe('error extraction in catch blocks', () => {
+    it('should extract userMessage from HttpErrorResponse', async () => {
+      const httpError = Object.assign(
+        new HttpErrorResponse({ status: 500, statusText: 'Server Error' }),
+        { userMessage: 'User-friendly error', recoverable: true }
+      );
+
+      // Mock the service to throw the error
+      spyOn(component.indeedClient, 'getSearchFirstPage').and.returnValue(
+        Promise.reject(httpError)
+      );
+
+      await component.search();
+
+      // Verify error was logged with correct message
+      expect(loggingService.error).toHaveBeenCalledWith(
+        'Search failed',
+        jasmine.objectContaining({
+          error: 'User-friendly error',
+          status: 500,
+        })
+      );
+
+      // Verify error service was called
+      expect(errorService.setHttpError).toHaveBeenCalledWith(
+        httpError,
+        jasmine.any(Function)
+      );
+    });
+
+    it('should extract message from nested error.error', async () => {
+      const httpError = new HttpErrorResponse({
+        status: 500,
+        statusText: 'Server Error',
+        error: { error: 'Nested error message' }
+      });
+
+      spyOn(component.indeedClient, 'getSearchFirstPage').and.returnValue(
+        Promise.reject(httpError)
+      );
+
+      await component.search();
+
+      expect(loggingService.error).toHaveBeenCalledWith(
+        'Search failed',
+        jasmine.objectContaining({
+          error: jasmine.stringContaining('Nested error message'),
+        })
+      );
+    });
+
+    it('should handle Error instances', async () => {
+      const error = new Error('Plain error');
+      spyOn(component.indeedClient, 'getSearchFirstPage').and.returnValue(
+        Promise.reject(error)
+      );
+
+      await component.search();
+
+      expect(loggingService.error).toHaveBeenCalledWith(
+        'Search failed',
+        jasmine.objectContaining({
+          error: 'Plain error',
+        })
+      );
+    });
+
+    it('should handle string errors', async () => {
+      spyOn(component.indeedClient, 'getSearchFirstPage').and.returnValue(
+        Promise.reject('String error')
+      );
+
+      await component.search();
+
+      expect(loggingService.error).toHaveBeenCalledWith(
+        'Search failed',
+        jasmine.objectContaining({
+          error: 'String error',
+        })
+      );
+    });
+  });
+});
+```
+
+##### Logging Interceptor Error Tests
+```typescript
+// logging.interceptor.spec.ts
+import { TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HTTP_INTERCEPTORS, HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { LoggingInterceptor } from './logging.interceptor';
+import { LoggingService } from 'src/services/logging/logging.service';
+
+describe('LoggingInterceptor - Error Logging', () => {
+  let httpMock: HttpTestingController;
+  let httpClient: HttpClient;
+  let loggingService: jasmine.SpyObj<LoggingService>;
+
+  beforeEach(() => {
+    loggingService = jasmine.createSpyObj('LoggingService', ['apiError']);
+
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule],
+      providers: [
+        {
+          provide: HTTP_INTERCEPTORS,
+          useClass: LoggingInterceptor,
+          multi: true,
+        },
+        { provide: LoggingService, useValue: loggingService },
+      ],
+    });
+
+    httpMock = TestBed.inject(HttpTestingController);
+    httpClient = TestBed.inject(HttpClient);
+  });
+
+  describe('error message extraction', () => {
+    it('should extract userMessage from enhanced errors', (done) => {
+      httpClient.get('/api/test').subscribe({
+        next: () => fail('should have failed'),
+        error: () => {
+          expect(loggingService.apiError).toHaveBeenCalledWith(
+            'GET',
+            '/api/test',
+            jasmine.stringContaining('User-friendly'),
+            jasmine.any(Object)
+          );
+          done();
+        },
+      });
+
+      const req = httpMock.expectOne('/api/test');
+      const error = Object.assign(
+        new HttpErrorResponse({ status: 500, statusText: 'Server Error' }),
+        { userMessage: 'User-friendly error message' }
+      );
+      req.error(error);
+    });
+
+    it('should extract message from nested error.error', (done) => {
+      httpClient.get('/api/test').subscribe({
+        next: () => fail('should have failed'),
+        error: () => {
+          expect(loggingService.apiError).toHaveBeenCalledWith(
+            'GET',
+            '/api/test',
+            jasmine.stringContaining('Nested error'),
+            jasmine.any(Object)
+          );
+          done();
+        },
+      });
+
+      const req = httpMock.expectOne('/api/test');
+      const error = new HttpErrorResponse({
+        status: 500,
+        statusText: 'Server Error',
+        error: { error: 'Nested error message' }
+      });
+      req.error(error);
+    });
+
+    it('should handle Error instances', (done) => {
+      httpClient.get('/api/test').subscribe({
+        next: () => fail('should have failed'),
+        error: () => {
+          expect(loggingService.apiError).toHaveBeenCalledWith(
+            'GET',
+            '/api/test',
+            'Plain error message',
+            jasmine.any(Object)
+          );
+          done();
+        },
+      });
+
+      const req = httpMock.expectOne('/api/test');
+      req.error(new Error('Plain error message'));
+    });
+  });
+});
+```
+
+##### Integration Tests - Full Error Flow
+```typescript
+// error-flow.integration.spec.ts
+import { TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HTTP_INTERCEPTORS, HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { ErrorInterceptor } from 'src/interceptors/error.interceptor';
+import { LoggingInterceptor } from 'src/interceptors/logging.interceptor';
+import { ErrorService } from 'src/services/error/error.service';
+import { LoggingService } from 'src/services/logging/logging.service';
+import { Store } from 'src/store/store';
+
+describe('Error Flow Integration', () => {
+  let httpMock: HttpTestingController;
+  let httpClient: HttpClient;
+  let errorService: ErrorService;
+  let loggingService: jasmine.SpyObj<LoggingService>;
+
+  beforeEach(() => {
+    loggingService = jasmine.createSpyObj('LoggingService', ['error', 'apiError']);
+
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule],
+      providers: [
+        {
+          provide: HTTP_INTERCEPTORS,
+          useClass: LoggingInterceptor,
+          multi: true,
+        },
+        {
+          provide: HTTP_INTERCEPTORS,
+          useClass: ErrorInterceptor,
+          multi: true,
+        },
+        ErrorService,
+        { provide: LoggingService, useValue: loggingService },
+        Store,
+      ],
+    });
+
+    httpMock = TestBed.inject(HttpTestingController);
+    httpClient = TestBed.inject(HttpClient);
+    errorService = TestBed.inject(ErrorService);
+  });
+
+  it('should propagate error through full chain: HTTP → Interceptor → Service → Component', async () => {
+    let componentError: any;
+
+    // Simulate component catch block
+    try {
+      await httpClient.get('/api/test').toPromise();
+    } catch (error) {
+      componentError = error;
+      
+      // Extract error message (as components do)
+      let errorMessage = 'Unknown error';
+      if (error && typeof error === 'object') {
+        const err = error as { userMessage?: string; message?: string; error?: { error?: string } };
+        errorMessage = err.userMessage || err.message || err.error?.error || 'Unknown error';
+      }
+
+      // Use error service (as components do)
+      errorService.setHttpError(error);
+    }
+
+    const req = httpMock.expectOne('/api/test');
+    req.flush({ error: 'Server error' }, { status: 500, statusText: 'Internal Server Error' });
+
+    // Wait for async operations
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    // Verify error structure
+    expect(componentError).toBeDefined();
+    expect(componentError.userMessage).toBeDefined();
+    expect(componentError.recoverable).toBeDefined();
+
+    // Verify error service received correct error
+    const currentError = await errorService.getCurrentError().pipe(take(1)).toPromise();
+    expect(currentError?.message).toBeTruthy();
+
+    // Verify logging was called
+    expect(loggingService.error).toHaveBeenCalled();
+    expect(loggingService.apiError).toHaveBeenCalled();
   });
 });
 ```
@@ -864,6 +1214,52 @@ pnpm vitest run --coverage.thresholds.lines=80
 - [ ] Performance benchmarks included (where relevant)
 ```
 
+### Error Handling Test Checklist (CRITICAL)
+```markdown
+**For HTTP Interceptors:**
+- [ ] Error object structure verified (userMessage, recoverable properties exist)
+- [ ] Error type is correct (HttpErrorResponse with custom properties)
+- [ ] Original error properties preserved (status, statusText, url)
+- [ ] Network errors (status 0) handled correctly
+- [ ] Error can be extracted downstream in catch blocks
+- [ ] Error logging includes correct message extraction
+
+**For Error Services:**
+- [ ] HttpErrorResponse with userMessage handled
+- [ ] HttpErrorResponse with nested error.error handled
+- [ ] HttpErrorResponse with nested error.message handled
+- [ ] Plain Error instances handled
+- [ ] String errors handled
+- [ ] Network errors (status 0) marked as recoverable
+- [ ] Unknown error types handled gracefully (fallback message)
+- [ ] Error extraction logic tested for all paths
+
+**For Components:**
+- [ ] Error extraction in catch blocks tested
+- [ ] userMessage extracted correctly
+- [ ] Nested error.error extracted correctly
+- [ ] Plain Error.message extracted correctly
+- [ ] String errors handled
+- [ ] Error logging includes extracted message (not function stringification)
+- [ ] Error service integration tested
+
+**For Logging Interceptors:**
+- [ ] Error message extraction from userMessage
+- [ ] Error message extraction from nested error.error
+- [ ] Error message extraction from nested error.message
+- [ ] Error message extraction from Error.message
+- [ ] Correlation ID extraction from error headers
+- [ ] All error types logged correctly
+
+**For Integration Tests:**
+- [ ] Full error flow: HTTP → Interceptor → Service → Component
+- [ ] Error structure preserved through chain
+- [ ] Error messages remain user-friendly
+- [ ] Error extraction works at each layer
+- [ ] Error logging occurs at appropriate points
+- [ ] Error state management verified
+```
+
 ## 🚨 Anti-Patterns to Avoid
 
 ```typescript
@@ -887,6 +1283,25 @@ beforeEach(() => {
   sharedUser = { name: 'Test' }; // Can cause test pollution
 });
 
+// ❌ BAD: Not testing error object structure
+it('should handle errors', (done) => {
+  httpClient.get('/api/test').subscribe({
+    error: (error) => {
+      expect(error).toBeDefined(); // Too vague!
+      done();
+    },
+  });
+});
+
+// ❌ BAD: Not testing error extraction in catch blocks
+it('should catch errors', async () => {
+  try {
+    await service.doSomething();
+  } catch (error) {
+    expect(error).toBeDefined(); // Doesn't verify extraction works!
+  }
+});
+
 // ✅ GOOD: Test behavior, not implementation
 it('should return formatted user name', () => {
   const result = service.getFormattedName({ first: 'John', last: 'Doe' });
@@ -905,6 +1320,33 @@ it('should create user', () => {
   const userData = UserFactory.create(); // Fresh data each test
   // Test code
 });
+
+// ✅ GOOD: Verify error object structure
+it('should create error with userMessage and recoverable properties', (done) => {
+  httpClient.get('/api/test').subscribe({
+    error: (error) => {
+      expect(error.userMessage).toBeDefined();
+      expect(typeof error.userMessage).toBe('string');
+      expect(error.recoverable).toBeDefined();
+      expect(typeof error.recoverable).toBe('boolean');
+      done();
+    },
+  });
+});
+
+// ✅ GOOD: Test error extraction pattern used in components
+it('should allow error message extraction in catch blocks', async () => {
+  let extractedMessage = '';
+  try {
+    await httpClient.get('/api/test').toPromise();
+  } catch (error) {
+    if (error && typeof error === 'object') {
+      const err = error as { userMessage?: string; message?: string };
+      extractedMessage = err.userMessage || err.message || 'Unknown error';
+    }
+  }
+  expect(extractedMessage).toBeTruthy();
+});
 ```
 
 ## 📈 Testing Metrics
@@ -915,9 +1357,6 @@ it('should create user', () => {
 - **Coverage Trend**: Increasing or stable, never decreasing
 - **Mutation Score**: > 80% for critical modules
 - **Test-to-Code Ratio**: ~1.5:1 for business logic
-- **TypeScript Compilation Errors**: 0 in test files (prevents ts-jest issues)
-- **Mock Configuration Failures**: < 1% of tests (proper dependency injection)
-- **Test Environment Compatibility**: 100% tests run in CI (isolatedModules, ES module support)
 
 ## 🔗 Related Rules
 - [ci-pipeline](../08-infrastructure/ci-pipeline.mdc) - For test automation in CI

@@ -1,0 +1,88 @@
+%% UML / Component Change Diagram — Foundry Orchestration Composer
+classDiagram
+    class CursorCompanionComposer {
+      +browseBuildingBlocks()
+      +editComposition()
+      +editPipeline()
+      +requestCompile()
+      +requestExecution()
+    }
+
+    class ComposerApiGateway {
+      +validateComposition()
+      +validatePipeline()
+      +compilePipeline()
+      +handleExecutionRequest()
+    }
+
+    class BuildingBlockRegistryProjection {
+      +projectRepoAuthorities()
+      +publishLibraryIndex()
+    }
+
+    class CompositionRepository {
+      +saveComposition()
+      +savePipeline()
+      +loadArtifact()
+    }
+
+    class PipelineCompiler {
+      +resolveBlocks()
+      +emitCompilationResult()
+      +emitDraftWorkOrders()
+    }
+
+    class ExecutionPolicyGateway {
+      +authorizeAction()
+      +verifyApprovalRefs()
+      +delegateToRunControl()
+    }
+
+    class SessionProjectionService {
+      +aggregateRunState()
+      +aggregateVerifierState()
+      +aggregateEvidenceRefs()
+    }
+
+    class ExistingRunControl {
+      +start()
+      +pause()
+      +resume()
+      +stop()
+    }
+
+    class RepoNativeAuthorities {
+      +personas
+      +skills
+      +agentRoles
+      +runbooks
+      +templates
+      +modelRoutes
+    }
+
+    class DeclaredArtifacts {
+      +buildingBlockLibraryIndex
+      +composedAgentConfiguration
+      +pipelineDefinition
+      +pipelineCompilationResult
+    }
+
+    class ObservedArtifacts {
+      +dashboardExecutionSession
+      +continuityRef
+      +evidenceBundleTarget
+      +verifierStatus
+      +logsRef
+    }
+
+    CursorCompanionComposer --> ComposerApiGateway
+    ComposerApiGateway --> BuildingBlockRegistryProjection
+    ComposerApiGateway --> CompositionRepository
+    ComposerApiGateway --> PipelineCompiler
+    ComposerApiGateway --> ExecutionPolicyGateway
+    ComposerApiGateway --> SessionProjectionService
+    BuildingBlockRegistryProjection --> RepoNativeAuthorities
+    CompositionRepository --> DeclaredArtifacts
+    PipelineCompiler --> DeclaredArtifacts
+    ExecutionPolicyGateway --> ExistingRunControl
+    SessionProjectionService --> ObservedArtifacts

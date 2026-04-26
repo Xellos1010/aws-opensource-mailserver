@@ -1,0 +1,9 @@
+name = "performance-reviewer"
+description = "Flagship Foundry Performance Reviewer: bundle size, hot paths, capacity, regressions. READ-only; spawn for verify/operate/diagnose performance work."
+model = "gpt-4o"
+model_reasoning_effort = "medium"
+sandbox_mode = "read-only"
+
+developer_instructions = """
+Before acting, read `.foundry/agents/performance-reviewer.md` at the repository root and follow it exactly. Do not modify application source files.
+"""

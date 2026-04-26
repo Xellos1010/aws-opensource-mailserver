@@ -1,5 +1,6 @@
 ---
 alwaysApply: true
+description: Configuration and environment variable standards
 ---
 
 # Configuration Standards
@@ -12,4 +13,3 @@ Centralize configuration, document required variables, and keep environment-spec
 
 - Document all required env vars in project READMEs
 - Prefer .env.example with typed validation at boot
-

@@ -22,6 +22,41 @@ Comprehensive checklist for managing the Software Development Life Cycle in a Fr
 
 Use this checklist for new apps/services or major features. Each phase builds on the previous.
 
+## Task Progress Tracking & Verification Orchestration (Codex optional)
+
+Use this checklist for human-readable SDLC gates, but drive *phase progress* and *verification execution order* from a task-state file.
+
+### Source of truth (Flagship Foundry + legacy Codex)
+- Foundry projects (**ADR-011**):
+  - Machine-readable task state: `.foundry/projects/<project>/current-task.json`
+  - Project charter / guardrails: `.foundry/projects/<project>/SDLC_CHARTER.md` (optional but preferred)
+- Legacy Codex-only paths (if present without `.foundry`):
+  - `.codex/projects/<project>/current-task.json` and `SDLC_CHARTER.md`
+- Non-Codex projects (fallback):
+  - Create and maintain a task-state file using the same schema fields at a recommended path like `.cursor/sdlc/task-state/<project>/current-task.json`.
+  - Use `.codex/schemas/task-state.schema.json` as the reference shape for required fields.
+
+### Task-state fields and how they map to SDLC progression
+- `sdlcPhase` selects the SDLC phase to target (`plan/design/implement/verify/document/release/operate`).
+- `currentPhase` drives phase-level tracking:
+  - `currentPhase.id` identifies the current phase artifact/bundle.
+  - `currentPhase.status` must move through `pending` → `in_progress` → (`verified` or `blocked`) → `done`.
+  - `currentPhase.branch` is the worktree/branch that must be checked out when continuing work for that phase.
+- `nextCommandSet` is the verification execution plan for the *current* phase:
+  - Prefer running those commands in order.
+  - Only mark phase progress complete when the represented quality gates succeed.
+- `doneCriteria` defines the completion/exit conditions for the phase:
+  - Use it as the “can we close this phase?” checklist in addition to the SDLC quality gates below.
+- `blockedBy` indicates known blockers:
+  - If non-empty, set `currentPhase.status` to `blocked` and do not advance until blockers are resolved/cleared.
+- `artifacts` is where required phase outputs (handoff docs, diagrams, exports, runbook snippets) should be created/updated before phase close.
+
+### Resume protocol (deterministic restart)
+Before continuing from an interruption, ensure the repo state matches the active task-state:
+- Verify `activeBranch` and `currentPhase.branch`.
+- Verify `nextCommit` and `nextCommandSet` match the intended phase.
+- Run the commands in `nextCommandSet` and only continue when the phase’s `doneCriteria` can be satisfied.
+
 ### 🚀 Phase 1: Project Initialization & Planning
 
 **Repository & Workspace Setup**

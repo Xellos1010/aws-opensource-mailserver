@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flagship-foundry.local/contracts/pipeline-compilation-result.schema.json",
+  "title": "Pipeline Compilation Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "compilationId",
+    "pipelineRef",
+    "compiledAt",
+    "outputs",
+    "requiredApprovals"
+  ],
+  "properties": {
+    "compilationId": {
+      "type": "string"
+    },
+    "pipelineRef": {
+      "type": "string"
+    },
+    "compiledAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "outputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "draftWorkOrderRefs"
+      ],
+      "properties": {
+        "draftPlanRef": {
+          "type": "string"
+        },
+        "draftWorkOrderRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "blastRadiusRef": {
+          "type": "string"
+        }
+      }
+    },
+    "requiredApprovals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

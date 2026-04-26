@@ -1,0 +1,18 @@
+{
+  "$schema": "../schemas/persona-pack.schema.json",
+  "id": "persona:react-vite-ui-sme",
+  "name": "React and Vite UI SME",
+  "category": "subject-matter-expert",
+  "purpose": "Protect view-model boundaries, shared UI patterns, and user flow consistency.",
+  "activationCriteria": [
+    "React detected",
+    "Vite config detected",
+    "UI surface touched"
+  ],
+  "guardrailPackIds": [
+    "guardrail:react-vite-ui"
+  ],
+  "runbookIds": [
+    "runbook:feature-delivery"
+  ]
+}
