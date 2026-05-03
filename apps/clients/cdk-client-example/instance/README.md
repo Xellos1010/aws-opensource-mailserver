@@ -69,7 +69,7 @@ const domain = 'example.org';
 const domainConfig: DomainConfig = {
   domainName: domain,
   instanceDns: 'box',
-  coreParamPrefix: coreParamPrefix(domain), // e.g. '/sampletenant/core'
+  coreParamPrefix: coreParamPrefix(domain), // e.g. '/example/core' for example.com
   stackName: toMailserverInstanceStackName(domain), // 'example-org-mailserver-instance'
 };
 ```
@@ -81,7 +81,7 @@ Domain configuration can be provided via:
 
 ### Default Configuration
 
-For backward compatibility, `EmcNotaryInstanceStack` is provided with hardcoded sample mailserver configuration. For new domains, use `MailServerInstanceStack` with explicit domain configuration.
+For backward compatibility, `EmcNotaryInstanceStack` (legacy class name) is provided with hardcoded sample mailserver configuration. For new domains, use `MailServerInstanceStack` with explicit domain configuration.
 
 ## Usage
 

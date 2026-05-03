@@ -118,7 +118,7 @@ Re-run your stack’s **anti-spam / SES verification** admin target after change
 
 ## 10. Testing
 
-Prefer `pnpm nx affected` for day-to-day work. For mail stacks, use the **instance** app’s `test` / `e2e` targets and any `admin:miab:status-check` style tasks. Pass real `--domain` and backup paths only in secured environments; never commit customer paths.
+Prefer `pnpm nx affected` for day-to-day work. For mail stacks, use the **instance** app’s `test` / `e2e` targets and any `admin:miab:status-check` style tasks. Pass real `--domain` and backup paths only in secured environments; never commit production mailbox paths or tenant-specific identifiers into the public tree.
 
 ## 11. Backup bucket sanity check
 

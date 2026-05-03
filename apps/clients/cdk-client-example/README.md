@@ -1,9 +1,9 @@
 # CDK mailserver example (`cdk-client-example`)
 
-This directory is a **sanitized template** derived from the internal sample mailserver CDK layout. It is intended for documentation, onboarding, and open-source consumers.
+This directory is the **public reference CDK layout** for Mail-in-a-Box on AWS. Use it for documentation, learning, and as a copy-paste starting point for your own deployment folder under `apps/clients/`.
 
 - **Nx projects:** `cdk-client-example-core`, `cdk-client-example-instance`, `cdk-client-example-observability-maintenance`
 - **Placeholder domain:** `example.com`, SSM prefixes `/example/core` and `/example/instance`
-- **Synth / deploy gate:** set `FEATURE_CDK_EMC_NOTARY_EXAMPLE_STACKS_ENABLED=1` (used in `project.json` commands the same way as the original app’s feature flag)
+- **Synth / deploy gate:** set `FEATURE_CDK_EMC_NOTARY_EXAMPLE_STACKS_ENABLED=1` in the environment when running Nx `synth` / `deploy` / `destroy` targets (see each `project.json`). This prevents accidental AWS changes from a fresh clone.
 
-Internal-only CDK trees are omitted from the public repository; use this example app as the reference implementation.
+Additional private deployment trees are normally gitignored at `apps/clients/**`; see [docs/public/creating-a-mail-deployment-client.md](../../docs/public/creating-a-mail-deployment-client.md) to add your own tracked or private client.

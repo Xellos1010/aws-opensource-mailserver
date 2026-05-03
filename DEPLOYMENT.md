@@ -34,7 +34,7 @@ This two-stage approach provides several benefits:
 5. Enter a stack name (e.g., `mail-infrastructure`)
 6. Fill in the parameters:
    - `MailInABoxDomain`: Your domain name (e.g., example.com)
-   - `KeyPairName`: Name for the EC2 key pair (default: sampletenant_opensource_mailservers)
+   - `KeyPairName`: Name for the EC2 key pair (example: `example-com-opensource-mailservers`)
    - `BackupBucketName`: (Optional) Name for S3 backup bucket
    - `NextCloudBucketName`: (Optional) Name for NextCloud S3 bucket
 

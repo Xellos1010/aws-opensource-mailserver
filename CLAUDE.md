@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Project Is
 
-An Nx monorepo that automates deployment and lifecycle management of [Mail-in-a-Box](https://mailinabox.email/) on AWS. It covers infrastructure-as-code (CDK/CloudFormation), a custom CMS for managing mail server fleets, and many operational CLI tools for backup/restore, DNS, cost reporting, and incident management.
+An Nx monorepo that automates deployment and lifecycle management of [Mail-in-a-Box](https://mailinabox.email/) on AWS. It covers infrastructure-as-code (CDK/CloudFormation), a custom CMS for managing mail server fleets, and many operational CLI tools for backup/restore, DNS, cost reporting, and incident management. For **adding a new CDK deployment** (`apps/clients/<name>`), see [docs/public/creating-a-mail-deployment-client.md](docs/public/creating-a-mail-deployment-client.md).
 
 ## Common Commands
 

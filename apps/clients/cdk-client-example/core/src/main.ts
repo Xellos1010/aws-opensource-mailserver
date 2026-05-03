@@ -7,7 +7,7 @@ import { toMailserverCoreStackName } from '@mm/infra-naming';
 const app = new cdk.App();
 
 // Domain can be provided via CDK context or environment variable
-// Default domain for this example CDK app (replace for your tenant)
+// Default domain for this example CDK app (override with DOMAIN or CDK context)
 const defaultDomain = 'example.com';
 const domain = app.node.tryGetContext('domain') || process.env['DOMAIN'] || defaultDomain;
 

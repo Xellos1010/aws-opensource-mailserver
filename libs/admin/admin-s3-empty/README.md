@@ -24,14 +24,13 @@ pnpm nx run admin-s3-empty:empty:mailexample
 pnpm nx run admin-s3-empty:empty:mailexample:dry-run
 ```
 
-#### Empty buckets for AskDaoKapra
-```bash
-pnpm nx run admin-s3-empty:empty:sampletenant
-```
+#### Empty buckets using a workspace-specific Nx configuration
+
+If your fork defines additional `admin-s3-empty` targets (see `project.json` for this library), invoke those by name. Otherwise use the generic pattern below.
 
 #### Generic usage with environment variables
 ```bash
-APP_PATH=apps/cdk-client-example-core \
+APP_PATH=apps/clients/cdk-client-example/core \
 STACK_NAME=example-com-mailserver-core \
 AWS_PROFILE=your-aws-profile \
 AWS_REGION=us-east-1 \

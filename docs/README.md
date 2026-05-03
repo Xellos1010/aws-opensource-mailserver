@@ -9,6 +9,7 @@
 Start here for open-source / external contributors:
 
 - **[docs/public/README.md](./public/README.md)** — index of public guides
+- **[Creating a new mail deployment (CDK client)](./public/creating-a-mail-deployment-client.md)** — purpose of the monorepo and how to fork the reference CDK apps
 - **[Mail server operations bible](./public/mail-server-operations.md)** — CDK, MIAB, monitoring, recovery, DNS
 - **[Nx / CDK reference](./public/nx-cdk-reference.md)** — reference stack Nx targets
 - **[Local operations (ops-runner)](./public/local-operations.md)** — MFA, backups, EC2, KMS

@@ -50,7 +50,7 @@ chmod +x tools/extract-master-docs-simple.sh
 ## What Gets Extracted
 
 ### Codebase Files
-- **Folders**: administration, sampletenant, sample-mail, legacy-mailstack, policies, sample-vendor
+- **Folders**: example topical groupings such as `administration`, `sample-mail`, `legacy-mailstack`, `policies`, `sample-vendor` (configure in the extraction script for your tree)
 - **Individual Files**: .pre-commit-config.yaml, mfa-user.sh, mailserver-infrastructure-mvp.yaml, README.md
 - **File Types**: .yaml, .sh, .py, .guard, .md files
 
