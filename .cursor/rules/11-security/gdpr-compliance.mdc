@@ -1,0 +1,17 @@
+---
+globs: apps/chrome-extensions/PMHNP-Administration-SummerySky/**,libs/summerysky/**,libs/Google-Chrome-Extension-Library/**
+alwaysApply: false
+description: "GDPR considerations when handling EU personal data"
+---
+# GDPR Compliance (Conditional)
+
+Apply these rules if EU personal data is processed.
+
+## Requirements
+- Minimize collection; document lawful basis for processing.
+- Support data access and deletion requests via a documented procedure.
+- Keep data localized to the user device unless explicit consent and safeguards exist.
+- Maintain retention limits and purge paths consistent with GDPR principles.
+
+## Notes
+- HIPAA requirements still apply to PHI; GDPR does not replace HIPAA obligations.

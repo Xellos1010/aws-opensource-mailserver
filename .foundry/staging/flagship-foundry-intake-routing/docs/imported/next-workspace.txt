@@ -1,0 +1,3 @@
+Flagship Foundry — Architecture Studio
+02-foundry-architecture-studio
+Consume the uploaded artifacts directly rather than reconstructing context from memory.

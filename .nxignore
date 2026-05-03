@@ -1,0 +1,19 @@
+# Generated and third-party (Nx file hashing / inputs)
+node_modules/
+dist/
+build/
+out/
+out-tsc/
+coverage/
+cdk.out/
+.nx/cache/
+.next/
+.output/
+.turbo/
+.cache/
+test-results/
+playwright-report/
+blob-report/
+storybook-static/
+*.tsbuildinfo
+.eslintcache

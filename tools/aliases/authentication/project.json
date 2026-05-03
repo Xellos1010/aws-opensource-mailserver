@@ -1,0 +1,7 @@
+{
+  "name": "authentication-alias",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {},
+  "tags": ["alias:authentication"]
+}
+

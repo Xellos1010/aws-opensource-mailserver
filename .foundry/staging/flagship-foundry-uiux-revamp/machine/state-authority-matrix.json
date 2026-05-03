@@ -1,0 +1,104 @@
+{
+  "generatedAt": "2026-04-10T00:00:00Z",
+  "entries": [
+    {
+      "object": "Workspace Target",
+      "kind": "declared",
+      "authority": "typed operator artifact",
+      "owner": "Cursor Companion",
+      "primarySurface": "write-capable cockpit",
+      "secondarySurface": "none",
+      "notes": "Must be explicit before plan/run actions."
+    },
+    {
+      "object": "Context Cart",
+      "kind": "declared",
+      "authority": "typed operator artifact",
+      "owner": "Cursor Companion",
+      "primarySurface": "write-capable cockpit",
+      "secondarySurface": "none",
+      "notes": "Reusable bounded context selection."
+    },
+    {
+      "object": "Requirement Refinement Session",
+      "kind": "declared",
+      "authority": "typed operator artifact",
+      "owner": "Cursor Companion",
+      "primarySurface": "write-capable cockpit",
+      "secondarySurface": "projection allowed",
+      "notes": "Tracks DoR readiness and unresolved assumptions."
+    },
+    {
+      "object": "Visual Artifact",
+      "kind": "declared",
+      "authority": "typed operator artifact",
+      "owner": "Cursor Companion",
+      "primarySurface": "write-capable cockpit",
+      "secondarySurface": "graph viewer / foundry",
+      "notes": "Saved diagrams and explainers."
+    },
+    {
+      "object": "Plan Board",
+      "kind": "declared",
+      "authority": "work-order and plan artifacts",
+      "owner": "Control plane",
+      "primarySurface": "write-capable cockpit",
+      "secondarySurface": "projection allowed",
+      "notes": "Approval posture, blockers, dependencies."
+    },
+    {
+      "object": "Pipeline Definition",
+      "kind": "declared",
+      "authority": "pipeline-definition schema",
+      "owner": "Control plane",
+      "primarySurface": "write-capable cockpit",
+      "secondarySurface": "graph viewer read-only",
+      "notes": "Must stay separate from runs."
+    },
+    {
+      "object": "Compilation Result",
+      "kind": "declared",
+      "authority": "compiler outputs",
+      "owner": "Control plane",
+      "primarySurface": "write-capable cockpit",
+      "secondarySurface": "graph viewer read-only",
+      "notes": "Traceable outputs; not runtime state."
+    },
+    {
+      "object": "Run Session",
+      "kind": "observed",
+      "authority": "existing run control",
+      "owner": "Execution policy gateway + run control",
+      "primarySurface": "session board",
+      "secondarySurface": "graph overlay",
+      "notes": "Pause/resume/stop only through run control."
+    },
+    {
+      "object": "Verifier Status",
+      "kind": "observed",
+      "authority": "verifier output",
+      "owner": "Verifier",
+      "primarySurface": "session board + evidence drawer",
+      "secondarySurface": "graph overlay",
+      "notes": "Independent of builder claims."
+    },
+    {
+      "object": "Evidence Bundle Target",
+      "kind": "observed/declared link",
+      "authority": "evidence bundle schema",
+      "owner": "Docs-release / verifier",
+      "primarySurface": "evidence drawer",
+      "secondarySurface": "session board",
+      "notes": "Links observed execution to declared acceptance criteria."
+    },
+    {
+      "object": "Logs / Telemetry Ref",
+      "kind": "observed",
+      "authority": "telemetry systems",
+      "owner": "run control + adapters",
+      "primarySurface": "bottom utility drawer",
+      "secondarySurface": "evidence drawer",
+      "notes": "Deep telemetry stays secondary to high-signal summaries."
+    }
+  ]
+}

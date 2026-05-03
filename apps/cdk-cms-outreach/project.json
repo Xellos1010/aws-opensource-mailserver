@@ -1,0 +1,70 @@
+{
+  "name": "cdk-cms-outreach",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cdk-cms-outreach/src",
+  "projectType": "application",
+  "tags": ["type:cdk", "scope:infra", "domain:cms"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/cdk-cms-outreach",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/cdk-cms-outreach/src/main.ts",
+        "tsConfig": "apps/cdk-cms-outreach/tsconfig.app.json",
+        "assets": ["apps/cdk-cms-outreach/cdk.json"],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "external": ["aws-sdk"]
+        }
+      }
+    },
+    "synth": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "cdk synth ${DOMAIN:+--context domain=$DOMAIN}",
+        "cwd": "dist/apps/cdk-cms-outreach"
+      }
+    },
+    "diff": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "cdk diff ${DOMAIN:+--context domain=$DOMAIN}",
+        "cwd": "dist/apps/cdk-cms-outreach"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "cdk deploy --require-approval never ${DOMAIN:+--context domain=$DOMAIN}",
+        "cwd": "dist/apps/cdk-cms-outreach"
+      }
+    },
+    "destroy": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "cdk destroy --force ${DOMAIN:+--context domain=$DOMAIN}",
+        "cwd": "dist/apps/cdk-cms-outreach"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/cdk-cms-outreach"],
+      "options": {
+        "jestConfig": "apps/cdk-cms-outreach/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

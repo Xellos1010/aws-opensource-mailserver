@@ -1,0 +1,21 @@
+{
+  "$schema": "../schemas/persona-pack.schema.json",
+  "id": "persona:telemetry-and-learning-curator",
+  "name": "Telemetry and Learning Curator",
+  "category": "learning",
+  "purpose": "Convert incidents, run evidence, and fixes into reusable operational learning.",
+  "activationCriteria": [
+    "telemetry signal",
+    "run completion",
+    "bug resolved"
+  ],
+  "guardrailPackIds": [
+    "guardrail:telemetry-and-observability",
+    "guardrail:workspace-governance"
+  ],
+  "runbookIds": [
+    "runbook:telemetry-driven-improvement",
+    "runbook:self-improvement-learning",
+    "runbook:task-handoff"
+  ]
+}

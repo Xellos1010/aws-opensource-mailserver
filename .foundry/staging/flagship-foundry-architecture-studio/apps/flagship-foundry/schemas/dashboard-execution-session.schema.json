@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flagship-foundry.local/contracts/dashboard-execution-session.schema.json",
+  "title": "Dashboard Execution Session",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sessionId",
+    "sourceRef",
+    "state",
+    "timeline",
+    "continuityRef",
+    "evidenceBundleTargetRef"
+  ],
+  "properties": {
+    "sessionId": {
+      "type": "string"
+    },
+    "runId": {
+      "type": "string"
+    },
+    "sourceRef": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "in_progress",
+        "paused",
+        "stopped",
+        "failed",
+        "completed"
+      ]
+    },
+    "timeline": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "at",
+          "state"
+        ],
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "continuityRef": {
+      "type": "string"
+    },
+    "evidenceBundleTargetRef": {
+      "type": "string"
+    },
+    "approvalRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "verifierStatus": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "completed",
+        "failed",
+        "not_applicable"
+      ]
+    },
+    "blastRadiusRef": {
+      "type": "string"
+    },
+    "logsRef": {
+      "type": "string"
+    },
+    "costAndModelUsageRef": {
+      "type": "string"
+    }
+  }
+}

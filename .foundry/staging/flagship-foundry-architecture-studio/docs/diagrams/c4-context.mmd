@@ -1,0 +1,37 @@
+%% C4 Context Diagram — Foundry Orchestration Composer
+flowchart TB
+    operator["Operator
+(platform / engineering)"]
+    repo["Repo Native Authorities
+personas, skills, roles, runbooks, templates, model routing"]
+    runtimes["Runtime Adapters
+simulation / terminal / future real executors"]
+    models["Model Providers / Gateways
+existing Foundry routing"]
+    evidence["Continuity + Evidence Authorities
+continuity state, approvals, evidence bundle targets"]
+
+    subgraph foundry["Flagship Foundry System"]
+        companion["Cursor Companion
+canonical write surface"]
+        composer["Orchestration Composer
+compose + pipeline + review"]
+        control["Control Plane + Composer APIs
+validate, persist, compile, execute"]
+        graph["Graph / Viewer Projection
+read-only topology + blast radius"]
+        registry["Building Block Registry Projection"]
+    end
+
+    operator -->|browse, compose, approve, launch| companion
+    companion --> composer
+    companion --> graph
+    composer -->|save/read declared artifacts| control
+    control -->|project blocks| registry
+    registry -->|read only| repo
+    control -->|compile to draft work orders / approved plans| evidence
+    control -->|launch approved runs only| runtimes
+    runtimes -->|status + logs + telemetry refs| evidence
+    control -->|session projection| companion
+    control -->|topology + run overlays| graph
+    runtimes --> models

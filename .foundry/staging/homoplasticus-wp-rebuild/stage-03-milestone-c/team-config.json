@@ -1,0 +1,125 @@
+{
+  "initiative": {
+    "name": "HomoPlasticus WP Rebuild — Stage 3: Ecosystem + Release (Milestone C)",
+    "slug": "homoplasticus-wp-rebuild-stage-03",
+    "objective": "Deliver WooCommerce Pack, Worker Integration Pack, Extension SDK, 5 Compat Packs, and Community Release. Plugin submitted to WordPress marketplace. Cloud Control Plane designed (ADR) and implemented.",
+    "sdlcCycle": "monorepo/.foundry",
+    "startingPhase": "implement",
+    "createdAt": "2026-04-20T00:00:00Z",
+    "status": "pending",
+    "prerequisite": "Stage 02 WO-WP-S2-DONE acceptance check must PASS"
+  },
+  "team": {
+    "planApprovalRequired": false,
+    "teammates": [
+      {
+        "name": "builder-woocommerce-worker",
+        "objective": "Build WooCommerce Pack (WO-009) and Worker Integration Pack (WO-015). Both are optional addon packs that degrade gracefully when their dependencies (WooCommerce, worker service URL) are absent.",
+        "subagentType": "builder",
+        "model": "sonnet",
+        "scope": [
+          "apps/wp-plugin-foundry-bridge/includes/abilities/woocommerce/",
+          "apps/wp-plugin-foundry-bridge/includes/abilities/worker/",
+          "apps/wp-mcp-server/src/worker-client.ts",
+          "tools/scripts/run-site-audit.mjs"
+        ],
+        "dependsOn": [],
+        "planApprovalRequired": false,
+        "taskSequence": ["WO-009", "WO-015"]
+      },
+      {
+        "name": "builder-sdk-compat",
+        "objective": "Build the Extension SDK (WO-017) and all 5 Compatibility Packs (WO-018a-e: Yoast, ACF, Gravity Forms, WPML, UpdraftPlus). Each compat pack is an independent plugin using the Extension SDK.",
+        "subagentType": "builder",
+        "model": "sonnet",
+        "scope": [
+          "apps/wp-plugin-foundry-bridge/sdk/",
+          "apps/ai-foundry-compat-yoast/",
+          "apps/ai-foundry-compat-acf/",
+          "apps/ai-foundry-compat-gravity-forms/",
+          "apps/ai-foundry-compat-wpml/",
+          "apps/ai-foundry-compat-updraftplus/"
+        ],
+        "dependsOn": [],
+        "planApprovalRequired": false,
+        "taskSequence": ["WO-017", "WO-018a", "WO-018b", "WO-018c", "WO-018d", "WO-018e"]
+      },
+      {
+        "name": "systems-architect-cloud",
+        "objective": "Produce the Cloud Control Plane ADR (required before WO-016 implementation). Design multi-site enrollment, policy push, audit ingestion, and billing hooks. Produces ADR artifact; implementation handed off to builder-cloud after approval.",
+        "subagentType": "systems-architect",
+        "model": "opus",
+        "scope": [
+          "docs/adr/adr-013-cloud-control-plane.md"
+        ],
+        "dependsOn": [],
+        "planApprovalRequired": true,
+        "taskSequence": ["ADR for WO-016"]
+      },
+      {
+        "name": "builder-cloud",
+        "objective": "Implement Cloud Control Plane (WO-016) after ADR is approved. Builds: WordPress plugin cloud client, site enrollment abilities, control plane Nx app (enrollment registry, policy API, audit ingestion).",
+        "subagentType": "builder",
+        "model": "sonnet",
+        "scope": [
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-cloud-client.php",
+          "apps/wp-plugin-foundry-bridge/includes/class-ai-foundry-enrollment.php",
+          "apps/wp-plugin-foundry-bridge/includes/abilities/cloud/",
+          "apps/control-plane/"
+        ],
+        "dependsOn": ["systems-architect-cloud"],
+        "planApprovalRequired": false,
+        "taskSequence": ["WO-016"],
+        "notes": "BLOCKED until systems-architect-cloud produces ADR and principal approves."
+      },
+      {
+        "name": "docs-release",
+        "objective": "Produce all Community Release Pack artifacts (WO-019): updated readme.txt, CHANGELOG.md, marketplace assets (screenshots, banner, icon), operator guide, extension author guide, privacy policy, support matrix, migration guide. Run WordPress Plugin Check before submission.",
+        "subagentType": "docs-release-agent",
+        "model": "sonnet",
+        "scope": [
+          "apps/wp-plugin-foundry-bridge/readme.txt",
+          "apps/wp-plugin-foundry-bridge/CHANGELOG.md",
+          "apps/wp-plugin-foundry-bridge/assets/",
+          "docs/operator-guide.md",
+          "docs/extension-author-guide.md",
+          "docs/privacy-policy.md",
+          "docs/support-matrix.md",
+          "docs/migration-guide.md"
+        ],
+        "dependsOn": ["builder-woocommerce-worker", "builder-sdk-compat", "builder-cloud"],
+        "planApprovalRequired": false,
+        "taskSequence": ["WO-019"],
+        "notes": "Runs last. Requires @verifier marketplace readiness check PASS before final submission."
+      }
+    ]
+  },
+  "approvalGates": [
+    {
+      "id": "cloud-adr-gate",
+      "description": "systems-architect-cloud must produce ADR and principal must approve before builder-cloud starts WO-016",
+      "requiredBefore": "WO-016 implementation",
+      "approver": "principal + systems-architect"
+    },
+    {
+      "id": "marketplace-readiness-gate",
+      "description": "@verifier runs WordPress Plugin Check and marketplace compliance audit before WO-019 release submission",
+      "requiredBefore": "WO-019 submission",
+      "approver": "verifier"
+    }
+  ],
+  "doneCriteria": [
+    "WooCommerce Pack abilities degrade cleanly when WooCommerce is inactive",
+    "Worker Integration Pack returns { available: false, reason: 'worker-not-configured' } when worker URL absent",
+    "Extension SDK example pack installs and registers one working ability",
+    "All 5 compat packs (Yoast, ACF, Gravity Forms, WPML, UpdraftPlus) install independently and degrade if target plugin is inactive",
+    "Cloud Control Plane ADR produced and accepted",
+    "Plugin zip passes WordPress Plugin Check (plugincheck.wp.net) with zero blocking issues",
+    "readme.txt passes WordPress.org validator",
+    "Operator guide, extension author guide, privacy policy, support matrix all published",
+    "Plugin submitted to wordpress.org/plugins/ review queue"
+  ],
+  "workOrdersPath": ".foundry/staging/homoplasticus-wp-rebuild/stage-03-milestone-c/work-orders.md",
+  "leadPromptPath": ".foundry/staging/homoplasticus-wp-rebuild/stage-03-milestone-c/lead-prompt.md",
+  "continuityPath": ".foundry/projects/homoplasticus/current-task.json"
+}

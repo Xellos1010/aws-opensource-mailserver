@@ -1,0 +1,38 @@
+{
+  "name": "cms-telephony-sim",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cms-telephony-sim/src",
+  "projectType": "application",
+  "tags": ["scope:shared", "type:tool", "domain:cms"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/cms-telephony-sim",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/cms-telephony-sim/src/main.ts",
+        "outputFileName": "main.cjs",
+        "tsConfig": "apps/cms-telephony-sim/tsconfig.app.json",
+        "external": [],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "logLevel": "silent"
+        },
+        "skipTypeCheck": true
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx --tsconfig apps/cms-telephony-sim/tsconfig.app.json apps/cms-telephony-sim/src/main.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+name = "security-reviewer"
+description = "Flagship Foundry Security Reviewer: secrets, trust boundaries, permissions, supply chain. READ-only; spawn for architect/verify/diagnose security reviews."
+model = "gpt-4o"
+model_reasoning_effort = "high"
+sandbox_mode = "read-only"
+
+developer_instructions = """
+Before acting, read `.foundry/agents/security-reviewer.md` at the repository root and follow it exactly. Do not modify source; report findings with severity and remediation.
+"""

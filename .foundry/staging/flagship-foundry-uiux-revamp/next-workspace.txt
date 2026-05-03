@@ -1,0 +1,12 @@
+Flagship Foundry — UI/UX Implementation and Verification
+
+Lifecycle stage: implement
+Primary agent: @builder
+Approval status: ADR-001 through ADR-004 approved on 2026-04-10.
+Routing basis: discover, define, visualize, and architect outputs are bundled in this packet; implementation may proceed.
+
+Recommended first actions:
+1. Activate WO-UX-006 first.
+2. Use docs/packs/task-corpus.md, architecture-packet.md, and machine/view-registry.json as the bounded contract inputs.
+3. Split into WO-UX-007 and WO-UX-008 in parallel after WO-UX-006 lands.
+4. Treat WO-UX-013 as the platform-fit approval gate, WO-UX-014 as the hard release gate, and WO-UX-015 as the evidence and release packaging stage.

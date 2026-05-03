@@ -1,0 +1,46 @@
+{
+  "name": "cms-api",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cms-api/src",
+  "projectType": "application",
+  "tags": ["scope:shared", "type:tool", "domain:cms"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/cms-api",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/cms-api/src/main.ts",
+        "outputFileName": "main.cjs",
+        "tsConfig": "apps/cms-api/tsconfig.app.json",
+        "external": [],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "logLevel": "silent"
+        },
+        "skipTypeCheck": true
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx --tsconfig apps/cms-api/tsconfig.app.json apps/cms-api/src/main.ts"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/cms-api"],
+      "options": {
+        "jestConfig": "apps/cms-api/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

@@ -1,0 +1,440 @@
+---
+globs: apps/chrome-extensions/**/src/service_worker/**,apps/chrome-extensions/**/src/content/**,libs/Google-Chrome-Extension-Library/automation/**
+alwaysApply: false
+description: Graceful error handling, retry logic, and recovery patterns for recipe execution
+---
+
+# Error Recovery Standards
+
+Apply when implementing error handling, retry logic, and recovery mechanisms for recipe execution, batch operations, and content script interactions.
+
+**Justification:** Robust error handling with appropriate retries and recovery ensures reliable automation even when facing transient failures, network issues, or unexpected conditions.
+
+## Error Classification
+
+### Error Types
+
+Classify errors as **transient** (retryable) or **permanent** (non-retryable):
+
+```typescript
+class TransientError extends Error {
+  constructor(message: string, cause?: Error) {
+    super(message);
+    this.name = 'TransientError';
+    this.cause = cause;
+  }
+}
+
+class PermanentError extends Error {
+  constructor(message: string, cause?: Error) {
+    super(message);
+    this.name = 'PermanentError';
+    this.cause = cause;
+  }
+}
+```
+
+### Transient Error Patterns
+
+```typescript
+function isTransientError(error: Error): boolean {
+  const message = error.message.toLowerCase();
+  const transientPatterns = [
+    'timeout',
+    'network',
+    'connection',
+    'econnrefused',
+    'etimedout',
+    'captcha',
+    'rate limit',
+    '429', // HTTP 429 Too Many Requests
+    '503', // HTTP 503 Service Unavailable
+    'temporary',
+    'retry',
+    'unavailable',
+  ];
+  
+  return transientPatterns.some(pattern => message.includes(pattern));
+}
+```
+
+### Permanent Error Patterns
+
+```typescript
+function isPermanentError(error: Error): boolean {
+  const message = error.message.toLowerCase();
+  const permanentPatterns = [
+    'not found',
+    '404', // HTTP 404 Not Found
+    '401', // HTTP 401 Unauthorized
+    '403', // HTTP 403 Forbidden
+    'invalid',
+    'malformed',
+    'syntax error',
+    'permission denied',
+    'unauthorized',
+  ];
+  
+  return permanentPatterns.some(pattern => message.includes(pattern));
+}
+```
+
+## Retry Logic
+
+### Exponential Backoff with Jitter
+
+```typescript
+interface RetryConfig {
+  maxRetries: number; // Total attempts (initial + retries)
+  baseDelayMs: number; // Initial delay
+  maxDelayMs: number; // Maximum delay cap
+  backoffMultiplier: number; // Exponential multiplier
+  jitter: boolean; // Add randomness
+}
+
+function calculateBackoffDelay(
+  attempt: number,
+  config: RetryConfig
+): number {
+  const exponentialDelay = config.baseDelayMs * 
+    Math.pow(config.backoffMultiplier, attempt);
+  
+  const cappedDelay = Math.min(exponentialDelay, config.maxDelayMs);
+  
+  if (config.jitter) {
+    // Add ±20% jitter
+    const jitterAmount = cappedDelay * 0.2;
+    const jitter = (Math.random() * 2 - 1) * jitterAmount;
+    return Math.max(0, cappedDelay + jitter);
+  }
+  
+  return cappedDelay;
+}
+```
+
+### Retry Implementation
+
+```typescript
+async function executeWithRetry<T>(
+  operation: () => Promise<T>,
+  config: RetryConfig,
+  context: ExecutionContext
+): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
+    try {
+      // Check cancellation
+      assertNotCancelled(context);
+      
+      // Execute operation
+      return await operation();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      // Don't retry permanent errors
+      if (isPermanentError(lastError)) {
+        throw lastError;
+      }
+      
+      // Don't retry if max attempts reached
+      if (attempt >= config.maxRetries) {
+        throw lastError;
+      }
+      
+      // Calculate delay
+      const delayMs = calculateBackoffDelay(attempt, config);
+      
+      logger.warn('Operation failed, retrying', {
+        attempt: attempt + 1,
+        maxRetries: config.maxRetries + 1,
+        delayMs,
+        error: lastError.message,
+        correlationId: context.correlationId,
+      });
+      
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+  
+  throw lastError || new Error('Operation failed after retries');
+}
+```
+
+## Circuit Breaker Pattern
+
+### Circuit Breaker Implementation
+
+```typescript
+class CircuitBreaker {
+  private failureCount = 0;
+  private lastFailureTime: number | null = null;
+  private state: 'closed' | 'open' | 'half-open' = 'closed';
+  
+  constructor(
+    private failureThreshold: number = 5,
+    private timeoutMs: number = 60000, // 1 minute
+    private successThreshold: number = 2
+  ) {}
+
+  recordError(errorMessage: string): boolean {
+    this.failureCount++;
+    this.lastFailureTime = Date.now();
+    
+    if (this.failureCount >= this.failureThreshold) {
+      this.state = 'open';
+      logger.warn('Circuit breaker opened', {
+        failureCount: this.failureCount,
+        errorMessage,
+      });
+      return true; // Should break
+    }
+    
+    return false; // Continue
+  }
+
+  recordSuccess(): void {
+    if (this.state === 'half-open') {
+      // Count successes in half-open state
+      this.failureCount--;
+      if (this.failureCount <= 0) {
+        this.state = 'closed';
+        this.failureCount = 0;
+        logger.info('Circuit breaker closed', {
+          state: this.state,
+        });
+      }
+    } else {
+      // Reset on success in closed state
+      this.failureCount = 0;
+    }
+  }
+
+  shouldBreak(): boolean {
+    if (this.state === 'open') {
+      // Check if timeout expired
+      if (this.lastFailureTime && 
+          Date.now() - this.lastFailureTime > this.timeoutMs) {
+        this.state = 'half-open';
+        this.failureCount = this.successThreshold;
+        logger.info('Circuit breaker half-open', {
+          state: this.state,
+        });
+        return false; // Try again
+      }
+      return true; // Still open
+    }
+    
+    return false; // Closed or half-open
+  }
+
+  getState(): string {
+    return this.state;
+  }
+}
+```
+
+### Using Circuit Breaker
+
+```typescript
+const circuitBreaker = new CircuitBreaker(5, 60000, 2);
+
+async function executeStepWithCircuitBreaker(
+  step: RecipeStep,
+  runtime: FlowRuntime,
+  context: ExecutionContext
+): Promise<unknown> {
+  // Check circuit breaker
+  if (circuitBreaker.shouldBreak()) {
+    throw new Error('Circuit breaker is open - too many failures');
+  }
+
+  try {
+    const result = await executeStep(step, runtime, context);
+    circuitBreaker.recordSuccess();
+    return result;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const shouldBreak = circuitBreaker.recordError(errorMessage);
+    
+    if (shouldBreak) {
+      throw new Error('Circuit breaker opened due to repeated failures');
+    }
+    
+    throw error; // Re-throw for retry logic
+  }
+}
+```
+
+## Idempotent Operations
+
+### Step Idempotency
+
+All recipe steps should be idempotent (safe to retry):
+
+```typescript
+// ✅ Idempotent - checks state before acting
+async function clickButton(selector: string): Promise<void> {
+  const button = await waitForSelector(selector);
+  const isVisible = await button.isVisible();
+  
+  if (!isVisible) {
+    return; // Already clicked or not needed
+  }
+  
+  await button.click();
+}
+
+// ✅ Idempotent - checks if already done
+async function fillInput(selector: string, value: string): Promise<void> {
+  const input = await waitForSelector(selector);
+  const currentValue = await input.inputValue();
+  
+  if (currentValue === value) {
+    return; // Already filled
+  }
+  
+  await input.fill(value);
+}
+
+// ❌ Not idempotent - will fail on retry
+async function clickButtonBad(selector: string): Promise<void> {
+  const button = await waitForSelector(selector);
+  await button.click(); // May fail if already clicked
+}
+```
+
+## Error Recovery Strategies
+
+### Retry with Different Strategy
+
+```typescript
+async function executeWithFallback<T>(
+  primary: () => Promise<T>,
+  fallback: () => Promise<T>,
+  context: ExecutionContext
+): Promise<T> {
+  try {
+    return await primary();
+  } catch (error) {
+    if (isTransientError(error as Error)) {
+      logger.warn('Primary operation failed, trying fallback', {
+        error: (error as Error).message,
+        correlationId: context.correlationId,
+      });
+      
+      try {
+        return await fallback();
+      } catch (fallbackError) {
+        logger.error('Fallback operation also failed', fallbackError as Error, {
+          correlationId: context.correlationId,
+        });
+        throw fallbackError;
+      }
+    }
+    throw error;
+  }
+}
+```
+
+### Graceful Degradation
+
+```typescript
+async function executeWithGracefulDegradation<T>(
+  operation: () => Promise<T>,
+  fallbackValue: T,
+  context: ExecutionContext
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (isTransientError(error as Error)) {
+      logger.warn('Operation failed, using fallback value', {
+        error: (error as Error).message,
+        correlationId: context.correlationId,
+      });
+      return fallbackValue;
+    }
+    throw error;
+  }
+}
+```
+
+## Error Logging
+
+### Structured Error Logging
+
+```typescript
+logger.error('Operation failed', error, {
+  operation: 'executeStep',
+  stepType: step.type,
+  stepDescription: step.description,
+  attempt: attempt + 1,
+  maxRetries: config.maxRetries + 1,
+  willRetry: attempt < config.maxRetries && isTransientError(error),
+  errorType: isTransientError(error) ? 'transient' : 'permanent',
+  correlationId: context.correlationId,
+  tabId: context.tabId,
+});
+```
+
+### Error Context
+
+Always include context in error logs:
+
+- Correlation ID
+- Tab ID
+- Step information
+- Retry attempt number
+- Error classification (transient/permanent)
+- Will retry flag
+
+## Best Practices
+
+### Retry Configuration
+
+- **Max retries**: 3-5 attempts (balance reliability vs time)
+- **Base delay**: 1-2 seconds (not too aggressive)
+- **Max delay**: 30-60 seconds (cap exponential growth)
+- **Jitter**: Always enable (prevent thundering herd)
+
+### Error Classification
+
+- **Be conservative**: When unsure, classify as transient
+- **Update patterns**: Add new patterns as you encounter errors
+- **Log classifications**: Log why errors are classified as transient/permanent
+
+### Circuit Breaker
+
+- **Failure threshold**: 5-10 failures
+- **Timeout**: 60 seconds (1 minute)
+- **Success threshold**: 2-3 successes to close
+
+### Idempotency
+
+- **Check state first**: Verify current state before acting
+- **Safe to retry**: All steps should be safe to retry
+- **No side effects**: Avoid operations with irreversible side effects
+
+## Checklist
+
+When implementing error recovery:
+
+- [ ] Classify errors as transient or permanent
+- [ ] Implement exponential backoff with jitter
+- [ ] Add circuit breaker for repeated failures
+- [ ] Ensure all steps are idempotent
+- [ ] Add retry configuration to recipe options
+- [ ] Log errors with full context
+- [ ] Test retry logic with simulated failures
+- [ ] Test circuit breaker behavior
+- [ ] Handle cancellation signals during retries
+- [ ] Implement graceful degradation where appropriate
+
+## Related Rules
+
+- [batch-operations.mdc](mdc:.cursor/rules/15-chome-extension/batch-operations.mdc)
+- [checkpoints-and-resume.mdc](mdc:.cursor/rules/15-chome-extension/checkpoints-and-resume.mdc)
+- [logging-and-observability.mdc](mdc:.cursor/rules/15-chome-extension/logging-and-observability.mdc)
+- [mv3-lifecycle-and-state.mdc](mdc:.cursor/rules/15-chome-extension/mv3-lifecycle-and-state.mdc)

@@ -1,0 +1,3 @@
+Flagship Foundry — Work-Order Factory
+03-foundry-workorder-factory
+Consume the uploaded artifacts directly rather than reconstructing context from memory.

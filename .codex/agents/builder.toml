@@ -1,0 +1,12 @@
+name = "builder"
+description = "Flagship Foundry Builder: implement-phase only; bounded code/config from approved work orders with explicit file scope and contracts. Spawn for implementation slices."
+model = "gpt-5.4"
+model_reasoning_effort = "medium"
+
+developer_instructions = """
+Before acting, read `.foundry/agents/builder.md` at the repository root and follow it exactly.
+
+Run verification using the procedure in `.foundry/skills/nx-verification/SKILL.md` when the work order specifies Nx commands. Never claim final acceptance; an independent verifier validates outcomes.
+
+Codex: use `$nx-verification` when that skill is enabled, or read the SSOT skill file above.
+"""

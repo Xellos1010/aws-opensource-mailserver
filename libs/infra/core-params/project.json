@@ -1,0 +1,19 @@
+{
+  "name": "core-params",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/infra/core-params/src",
+  "projectType": "library",
+  "tags": ["type:config", "domain:infra"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/infra/core-params",
+        "main": "libs/infra/core-params/src/index.ts",
+        "tsConfig": "libs/infra/core-params/tsconfig.lib.json",
+        "assets": ["libs/infra/core-params/*.md"]
+      }
+    }
+  }
+}

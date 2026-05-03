@@ -1,0 +1,101 @@
+{
+  "name": "code-extractor",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "tools/code-extractor/src",
+  "projectType": "application",
+  "tags": ["type:tool", "scope:emc-notary"],
+  "targets": {
+    "run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import tsx support-scripts/code-extractor/src/run.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "run:full-repo-context": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import tsx tools/code-extractor/src/run.ts --config=tools/code-extractor/extractor.repo-full.config.ts --output=exports/professional-monorepo-full-repo-ai-context.txt",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "run:repo-full-current": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import tsx tools/code-extractor/src/run.ts --config=tools/code-extractor/extractor.repo-full.config.ts --output=exports/professional-monorepo-full-repo-ai-context.txt",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "run:night-agent-full-repo": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import tsx support-scripts/code-extractor/src/run.ts --config=support-scripts/code-extractor/extractor.night-agent.config.ts --output=exports/night-agent-full-repo-ai-context.txt",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "run:emc-notary-telephony": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import tsx tools/code-extractor/src/run.ts --config=tools/code-extractor/extractor.emc-notary-telephony.config.ts --output=exports/emc-notary-telephony-ai-context.txt",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "run:blue-notary-dashboard-03-29-2026": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import tsx tools/code-extractor/src/run.ts --config=tools/code-extractor/extractor.blue-notary-dashboard-03-29-2026.config.ts --output=exports/blue-notary-dashboard-03-29-2026-Dashboard-ai-context.txt",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "run:bluenotary-update-bot": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import tsx tools/code-extractor/src/run.ts --config=tools/code-extractor/extractor.bluenotary-update-bot.config.ts --output=exports/bluenotary-update-bot-ai-context.txt",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "run:notarization-opencall-automation": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import tsx tools/code-extractor/src/run.ts --config=tools/code-extractor/extractor.notarization-opencall-automation.config.ts --output=exports/notarization-opencall-automation-ai-context.txt",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "run:google-profile-manager": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import tsx tools/code-extractor/src/run.ts --config=tools/code-extractor/extractor.google-profile-manager.config.ts --output=exports/google-profile-manager-ai-context.txt",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "export:full-repo-foundry": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "[ -f /Users/evanmccall/Projects/foundry-context-export/context_export.py ] && python3 /Users/evanmccall/Projects/foundry-context-export/context_export.py . --platform chatgpt --account-level business || (echo '❌ Error: foundry-context-export script not found at /Users/evanmccall/Projects/foundry-context-export/context_export.py' && exit 1)",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "export:full-repo": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "[ -f support-scripts/export-cleaned-context.sh ] && bash support-scripts/export-cleaned-context.sh || (echo '❌ Error: export-cleaned-context.sh not found' && exit 1)",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "export:full-repo:versioned": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "[ -f support-scripts/export-cleaned-context.sh ] && bash support-scripts/export-cleaned-context.sh --versioned || (echo '❌ Error: export-cleaned-context.sh not found' && exit 1)",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --import tsx --test support-scripts/code-extractor/src/splitSnapshotForPlatform.test.ts support-scripts/code-extractor/src/redactSensitiveContent.test.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    }
+  }
+}
+

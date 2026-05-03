@@ -1,0 +1,18 @@
+{
+  "$schema": "../schemas/persona-pack.schema.json",
+  "id": "persona:environment-migrator",
+  "name": "Environment Migrator",
+  "category": "tooling",
+  "purpose": "Keep Cursor, Codex, Claude Code, and MCP configuration aligned to the same project intent.",
+  "activationCriteria": [
+    "environment scaffold",
+    "tool migration",
+    "parity audit"
+  ],
+  "guardrailPackIds": [
+    "guardrail:terminal-agent-adapters"
+  ],
+  "runbookIds": [
+    "runbook:environment-scaffold"
+  ]
+}

@@ -1,0 +1,312 @@
+# Service Worker DOM API Mocking Standards
+
+**Applies to:** All Chrome Extension service worker files (`service_worker/index.ts`)
+
+## Purpose
+
+Chrome Extension service workers (MV3) run in a restricted environment without DOM APIs. Bundlers like Vite may inject error handling code that attempts to access `window` and `document`, causing runtime errors. This rule defines comprehensive DOM API mocks to prevent these errors.
+
+## Required Implementation
+
+### 1. Mock Placement
+
+**CRITICAL:** DOM API mocks MUST be placed at the very top of the service worker file, BEFORE any imports.
+
+```typescript
+// ✅ CORRECT: Mocks at top, before imports
+if (typeof window === 'undefined') {
+  (globalThis as any).window = { /* ... */ };
+}
+if (typeof document === 'undefined') {
+  (globalThis as any).document = { /* ... */ };
+}
+
+import { bootstrapBackground } from '@chrome-ext/core-runtime'; // ✅ After mocks
+
+// ❌ WRONG: Imports before mocks
+import { bootstrapBackground } from '@chrome-ext/core-runtime';
+if (typeof window === 'undefined') { /* ... */ } // ❌ Too late!
+```
+
+### 2. Window Mock Requirements
+
+The `window` mock MUST include:
+
+```typescript
+if (typeof window === 'undefined') {
+  (globalThis as any).window = {
+    dispatchEvent: () => true,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    postMessage: () => {},
+    location: {
+      href: '',
+      origin: '',
+      protocol: '',
+      host: '',
+      hostname: '',
+      port: '',
+      pathname: '',
+      search: '',
+      hash: '',
+    },
+  } as Window;
+}
+```
+
+**Required Methods:**
+- `dispatchEvent` - Used by Vite's error handler
+- `addEventListener` / `removeEventListener` - Event handling
+- `postMessage` - Cross-context messaging
+- `location` - URL access (for parsers that check `window.location.href`)
+
+### 3. Document Mock Requirements
+
+The `document` mock MUST include:
+
+```typescript
+if (typeof document === 'undefined') {
+  // Create a mock element with appendChild support
+  const createMockElement = () => ({
+    appendChild: () => ({} as Node),
+    removeChild: () => ({} as Node),
+    setAttribute: () => {},
+    getAttribute: () => null,
+    querySelector: () => null,
+    querySelectorAll: () => [],
+    textContent: '',
+    innerHTML: '',
+    style: {},
+    id: '',
+    className: '',
+    href: '',
+  } as HTMLElement);
+
+  const mockBody = createMockElement();
+  const mockHead = createMockElement();
+  const mockDocumentElement = createMockElement();
+
+  (globalThis as any).document = {
+    getElementsByTagName: () => [],
+    querySelector: () => null,
+    querySelectorAll: () => [],
+    createElement: () => createMockElement(),
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    body: mockBody,              // ✅ Required for appendChild
+    head: mockHead,              // ✅ Required for script injection
+    documentElement: mockDocumentElement, // ✅ Required for appendChild
+  } as Document;
+}
+```
+
+**Required Properties:**
+- `body` - Used by Vite's error handler for `document.body.appendChild()`
+- `head` - Used for script injection
+- `documentElement` - Used as fallback append target
+- `querySelector` / `querySelectorAll` - Used by parser code
+- `createElement` - Must return element with `appendChild` method
+
+**Required Methods:**
+- `getElementsByTagName` - Used by Vite's error handler
+- `querySelector` / `querySelectorAll` - Used by parser code
+- `createElement` - Must return mock element with `appendChild`
+- `addEventListener` / `removeEventListener` - Event handling
+
+### 4. Mock Element Requirements
+
+Elements created by `createElement` MUST support:
+
+- `appendChild()` - Returns a mock Node
+- `removeChild()` - Returns a mock Node
+- `setAttribute()` / `getAttribute()` - Attribute manipulation
+- `querySelector()` / `querySelectorAll()` - Element querying
+- `textContent` / `innerHTML` - Content properties
+- `style` - Style object
+- `id` / `className` - Element identifiers
+- `href` - For anchor elements
+
+## Common Error Patterns & Fixes
+
+### Error: "window is not defined"
+
+**Cause:** Mock not placed before imports, or mock missing required methods.
+
+**Fix:**
+1. Move mock to top of file (before all imports)
+2. Ensure `dispatchEvent`, `addEventListener`, `postMessage` are included
+
+### Error: "document.querySelector is not a function"
+
+**Cause:** `querySelector` method missing from document mock.
+
+**Fix:** Add `querySelector: () => null` to document mock.
+
+### Error: "Cannot read properties of undefined (reading 'appendChild')"
+
+**Cause:** `document.body` is undefined, or `createElement` doesn't return element with `appendChild`.
+
+**Fix:**
+1. Add `body: createMockElement()` to document mock
+2. Ensure `createElement` returns element with `appendChild` method
+
+### Error: "window.location.href is not a function"
+
+**Cause:** `window.location` is undefined or not an object.
+
+**Fix:** Add `location` object with `href` property to window mock.
+
+### Error: "import() is disallowed on ServiceWorkerGlobalScope"
+
+**Cause:** Using dynamic `import()` in service worker, which is not allowed by HTML spec.
+
+**Fix:** Replace all `await import()` calls with static imports at the top of the file. Use helper functions to check module availability for optional modules.
+
+## Verification Checklist
+
+Before committing a service worker file, verify:
+
+- [ ] Window mock is at the very top of the file (before imports)
+- [ ] Document mock is at the very top of the file (before imports)
+- [ ] Window mock includes: `dispatchEvent`, `addEventListener`, `removeEventListener`, `postMessage`, `location`
+- [ ] Document mock includes: `body`, `head`, `documentElement`, `querySelector`, `querySelectorAll`, `createElement`
+- [ ] `createElement` returns element with `appendChild` method
+- [ ] All mock methods are no-ops (don't throw errors)
+- [ ] Mock elements support common DOM operations
+- [ ] No dynamic `import()` calls - all imports are static
+- [ ] Optional modules use helper functions to check availability
+
+## Testing
+
+### Manual Test
+
+1. Load extension in Chrome
+2. Reload extension 5+ times
+3. Check service worker console for errors
+4. Verify no "window is not defined" or "document is not defined" errors
+
+### Automated Test
+
+```typescript
+test('service worker has DOM mocks', async () => {
+  const swCode = readFileSync('src/service_worker/index.ts', 'utf-8');
+  
+  // Verify mocks are before imports
+  const mockIndex = swCode.indexOf('if (typeof window === \'undefined\')');
+  const importIndex = swCode.indexOf('import');
+  expect(mockIndex).toBeLessThan(importIndex);
+  
+  // Verify required methods exist
+  expect(swCode).toContain('dispatchEvent');
+  expect(swCode).toContain('querySelector');
+  expect(swCode).toContain('appendChild');
+  expect(swCode).toContain('document.body');
+});
+```
+
+## Static Imports Only
+
+**CRITICAL:** Dynamic `import()` is disallowed in service workers by the HTML specification. All imports MUST be static.
+
+```typescript
+// ✅ CORRECT: Static import at top of file
+import * as zoomInfoModule from '@chrome-ext/integrations-zoominfo';
+
+// ❌ WRONG: Dynamic import (disallowed)
+const module = await import('@chrome-ext/integrations-zoominfo');
+```
+
+**For Optional Modules:**
+Use a helper function to check module availability:
+
+```typescript
+// Static import at top
+import * as zoomInfoModule from '@chrome-ext/integrations-zoominfo';
+
+// Helper function
+function getZoomInfoModule(): typeof zoomInfoModule | null {
+  try {
+    if (
+      zoomInfoModule &&
+      typeof zoomInfoModule.getZoomInfoCredentials === 'function'
+    ) {
+      return zoomInfoModule;
+    }
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
+
+// Usage
+const module = getZoomInfoModule();
+if (!module) {
+  // Handle missing module gracefully
+  return;
+}
+```
+
+## Related Rules
+
+- [browser-injection-standards](./browser-injection-standards.mdc) - Browser script injection
+- [flow-standards](./flow-standards.mdc) - Automation flow definitions
+- [web-automation-development](./web-automation-development.mdc) - Development standards
+
+## Examples
+
+### ✅ Good: Complete Mock Implementation
+
+```typescript
+// Top of service_worker/index.ts
+if (typeof window === 'undefined') {
+  (globalThis as any).window = {
+    dispatchEvent: () => true,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    postMessage: () => {},
+    location: { href: '', origin: '', /* ... */ },
+  } as Window;
+}
+
+if (typeof document === 'undefined') {
+  const createMockElement = () => ({
+    appendChild: () => ({} as Node),
+    removeChild: () => ({} as Node),
+    querySelector: () => null,
+    querySelectorAll: () => [],
+    // ... other methods
+  } as HTMLElement);
+
+  (globalThis as any).document = {
+    body: createMockElement(),
+    head: createMockElement(),
+    documentElement: createMockElement(),
+    querySelector: () => null,
+    querySelectorAll: () => [],
+    createElement: () => createMockElement(),
+    // ... other methods
+  } as Document;
+}
+
+// Now imports are safe
+import { bootstrapBackground } from '@chrome-ext/core-runtime';
+```
+
+### ❌ Bad: Missing Required Methods
+
+```typescript
+// Missing appendChild support
+if (typeof document === 'undefined') {
+  (globalThis as any).document = {
+    querySelector: () => null,
+    // ❌ Missing body, head, documentElement
+    // ❌ createElement doesn't return element with appendChild
+  } as Document;
+}
+```
+
+## Version History
+
+- **2025-01-XX:** Initial rule created
+- **2025-01-XX:** Added appendChild mock requirements
+- **2025-01-XX:** Added comprehensive element mock requirements

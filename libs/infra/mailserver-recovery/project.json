@@ -1,0 +1,31 @@
+{
+  "name": "mailserver-recovery",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/infra/mailserver-recovery/src",
+  "projectType": "library",
+  "tags": ["scope:infra", "type:util", "platform:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/infra/mailserver-recovery",
+        "main": "libs/infra/mailserver-recovery/src/index.ts",
+        "tsConfig": "libs/infra/mailserver-recovery/tsconfig.lib.json",
+        "assets": []
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
+
+

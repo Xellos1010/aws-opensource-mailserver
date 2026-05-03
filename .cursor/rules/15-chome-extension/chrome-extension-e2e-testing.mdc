@@ -1,0 +1,654 @@
+---
+description: End-to-end testing standards for Chrome Extension UI and hooks with comprehensive logging
+alwaysApply: false
+---
+
+# Chrome Extension E2E Testing Standards
+
+Apply to all E2E tests for Chrome extensions, especially when integrating new features that involve UI components, React hooks, or messaging between sidepanel and service worker.
+
+**Justification:** Chrome extensions have unique testing challenges (MV3 service workers, sidepanel UI, cross-context messaging). Standardized patterns ensure reliable, debuggable tests with comprehensive logging.
+
+## Test Structure & Organization
+
+### Directory Layout
+
+```
+src/tests/e2e/
+├── specs/
+│   ├── framework/          # Framework/infrastructure tests
+│   │   ├── ui-components.spec.ts
+│   │   ├── message-handlers.spec.ts
+│   │   ├── service-worker.spec.ts
+│   │   └── ...
+│   ├── recipes/            # Recipe execution tests
+│   │   └── recipe-execution.spec.ts
+│   └── smoke.spec.ts       # Smoke tests
+├── utils/
+│   ├── console-logger.ts   # Logging utility
+│   ├── framework-helpers.ts # Common test helpers
+│   └── global-setup.ts     # Playwright global setup
+└── playwright.config.ts     # Playwright configuration
+```
+
+### Test File Structure
+
+Every E2E test file should follow this pattern:
+
+```typescript
+import { test, expect, chromium, BrowserContext } from '@playwright/test';
+import path from 'path';
+import { existsSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { ConsoleLogger } from '../../utils/console-logger';
+import {
+  getExtensionId,
+  waitForServiceWorkerReady,
+  openSidepanel,
+  waitForSidepanelReady,
+  navigateToTab,
+  sendMessageToServiceWorker,
+} from '../../utils/framework-helpers';
+import os from 'os';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const extensionPath = path.join(__dirname, '../../../../../dist');
+
+const getUserProfilePath = () => {
+  if ((global as any).__CHROME_USER_PROFILE__) {
+    return (global as any).__CHROME_USER_PROFILE__;
+  }
+  if (process.env.CHROME_USER_PROFILE) {
+    return process.env.CHROME_USER_PROFILE;
+  }
+  return path.join(
+    os.homedir(),
+    'Library/Application Support/Google/Chrome/Profile 2'
+  );
+};
+
+const getOutputDir = (testInfo?: any) => {
+  const outputDir = testInfo?.outputDir;
+  if (outputDir !== null && outputDir !== undefined && outputDir !== '' && typeof outputDir === 'string') {
+    return outputDir;
+  }
+  if ((global as any).__OUTPUT_DIR__) {
+    return (global as any).__OUTPUT_DIR__;
+  }
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+  return path.join(__dirname, '../../../../test-results', timestamp);
+};
+
+test.describe('Test Suite Name', () => {
+  let userDataDir: string;
+  let sharedContext: BrowserContext;
+
+  test.beforeAll(async () => {
+    if (!existsSync(extensionPath)) {
+      throw new Error(`Extension dist directory not found: ${extensionPath}`);
+    }
+
+    userDataDir = getUserProfilePath();
+
+    // Create ONE shared context for all tests in the suite
+    const headlessEnv = process.env.HEADLESS;
+    sharedContext = await chromium.launchPersistentContext(userDataDir, {
+      headless: headlessEnv === 'true', // or !== 'false' depending on default
+      args: [
+        `--disable-extensions-except=${extensionPath}`,
+        `--load-extension=${extensionPath}`,
+      ],
+    });
+  });
+
+  test.afterAll(async () => {
+    if (sharedContext) {
+      await sharedContext.close();
+    }
+  });
+
+  test('@framework test name', async ({}, testInfo) => {
+    const testOutputDir = getOutputDir(testInfo);
+    const logger = new ConsoleLogger('test-name', testOutputDir);
+
+    try {
+      await logger.captureContextLogs(sharedContext);
+      await waitForServiceWorkerReady(sharedContext);
+
+      // Test implementation here
+
+    } finally {
+      await logger.cleanup();
+    }
+  });
+});
+```
+
+## Logging Requirements
+
+### ConsoleLogger Usage
+
+**Every test MUST use ConsoleLogger** to capture logs from all contexts:
+
+```typescript
+const logger = new ConsoleLogger('test-name', testOutputDir);
+
+try {
+  // Capture logs BEFORE any actions
+  await logger.captureContextLogs(sharedContext);
+  
+  // Test actions...
+  
+} finally {
+  // Always cleanup to write summary
+  await logger.cleanup();
+}
+```
+
+### What Gets Logged
+
+ConsoleLogger captures:
+- **Page console logs**: All `console.log()`, `console.error()`, etc. from regular pages
+- **Extension page logs**: Console output from `chrome-extension://` pages
+- **Service worker logs**: Via CDP (Chrome DevTools Protocol) for MV3 service workers
+- **Page errors**: Uncaught exceptions and page errors
+- **Runtime exceptions**: Service worker exceptions via CDP
+
+### Log File Structure
+
+Logs are written to:
+```
+test-results/
+  <timestamp>/
+    logs/
+      <sanitized-test-name>.log
+```
+
+Each log entry includes:
+- Timestamp (ISO format)
+- Log level (INFO, WARN, ERROR, DEBUG)
+- Source (page, extension, service-worker, console)
+- Location (file:line:column when available)
+- Message
+
+## Browser Context Management
+
+### Shared Context Pattern
+
+Use a **single shared BrowserContext** per test suite (`beforeAll`/`afterAll`):
+
+```typescript
+let sharedContext: BrowserContext;
+
+test.beforeAll(async () => {
+  sharedContext = await chromium.launchPersistentContext(userDataDir, {
+    headless: process.env.HEADLESS === 'true',
+    args: [
+      `--disable-extensions-except=${extensionPath}`,
+      `--load-extension=${extensionPath}`,
+    ],
+  });
+});
+
+test.afterAll(async () => {
+  await sharedContext.close();
+});
+```
+
+**Why:** Chrome extensions persist state across page navigations. A shared context ensures:
+- Extension state is preserved between tests
+- Service worker stays alive
+- Storage (chrome.storage.local/session) persists
+- Faster test execution (no extension reload)
+
+### Extension Loading
+
+Always load the extension with:
+- `--disable-extensions-except=${extensionPath}`: Disable other extensions
+- `--load-extension=${extensionPath}`: Load the extension from dist directory
+
+## Service Worker Testing
+
+### Wait for Service Worker Ready
+
+**Always wait for service worker initialization** before testing:
+
+```typescript
+await waitForServiceWorkerReady(sharedContext);
+```
+
+This helper:
+1. Waits for service worker to be registered
+2. Pings the service worker with `{ type: 'PING' }` message
+3. Verifies response includes `{ ok: true, initialized: true }`
+4. Times out after 10 seconds (configurable)
+
+### Testing Service Worker Messages
+
+Use `sendMessageToServiceWorker` helper:
+
+```typescript
+const response = await sendMessageToServiceWorker<{
+  ok: boolean;
+  recipes: any[];
+}>(sidepanel, { type: 'LIST_RECIPES' });
+
+expect(response.ok).toBe(true);
+expect(Array.isArray(response.recipes)).toBe(true);
+```
+
+**Note:** The helper automatically adds correlation IDs for tracing.
+
+## Sidepanel UI Testing
+
+### Opening the Sidepanel
+
+```typescript
+const extensionId = await getExtensionId(sharedContext);
+const sidepanel = await openSidepanel(sharedContext, extensionId);
+await waitForSidepanelReady(sidepanel);
+```
+
+### Waiting for Sidepanel Ready
+
+`waitForSidepanelReady` ensures:
+- Root element (`#root`) is visible
+- Navigation container (`.nav-container`) is rendered
+- React components are initialized (1 second wait)
+
+### Tab Navigation
+
+```typescript
+await navigateToTab(sidepanel, 'recipes');
+const activeTab = await getActiveTab(sidepanel);
+expect(activeTab.toLowerCase()).toBe('recipes');
+```
+
+### UI Component Testing Patterns
+
+#### Testing Component Rendering
+
+```typescript
+test('@framework ComponentName should render', async ({}, testInfo) => {
+  const logger = new ConsoleLogger('component-render', testOutputDir);
+  
+  try {
+    await logger.captureContextLogs(sharedContext);
+    await waitForServiceWorkerReady(sharedContext);
+    
+    const extensionId = await getExtensionId(sharedContext);
+    const sidepanel = await openSidepanel(sharedContext, extensionId);
+    await waitForSidepanelReady(sidepanel);
+    
+    await navigateToTab(sidepanel, 'tab-name');
+    
+    // Wait for component to load
+    await sidepanel.waitForTimeout(2000);
+    
+    // Use resilient selectors
+    const component = sidepanel.locator('text=Component Title, .component-class').first();
+    await expect(component).toBeVisible({ timeout: 5000 });
+    
+    await sidepanel.close();
+  } finally {
+    await logger.cleanup();
+  }
+});
+```
+
+#### Testing User Interactions
+
+```typescript
+// Click button
+const button = sidepanel.locator('button:has-text("Submit")');
+await button.click();
+await sidepanel.waitForTimeout(500); // Wait for state update
+
+// Fill form inputs
+const input = sidepanel.locator('input[type="text"]');
+await input.fill('test value');
+const value = await input.inputValue();
+expect(value).toBe('test value');
+
+// Select dropdown
+const select = sidepanel.locator('select').first();
+await select.selectOption('option-value');
+```
+
+#### Testing Loading States
+
+```typescript
+// Check for loading indicator (might be brief)
+const loadingIndicator = sidepanel.locator('text=Loading, [aria-busy="true"]').first();
+const hasLoading = await loadingIndicator.isVisible({ timeout: 1000 }).catch(() => false);
+
+// After wait, content should be loaded
+await waitForSidepanelReady(sidepanel);
+const content = sidepanel.locator('#root');
+await expect(content).toBeVisible();
+```
+
+## React Hooks Testing
+
+### Testing Hooks Through UI
+
+**Hooks are tested indirectly through UI behavior**, not directly:
+
+```typescript
+test('@framework useRecipeList hook should load recipes', async ({}, testInfo) => {
+  const logger = new ConsoleLogger('recipe-list-hook', testOutputDir);
+  
+  try {
+    await logger.captureContextLogs(sharedContext);
+    await waitForServiceWorkerReady(sharedContext);
+    
+    const extensionId = await getExtensionId(sharedContext);
+    const sidepanel = await openSidepanel(sharedContext, extensionId);
+    await waitForSidepanelReady(sidepanel);
+    
+    await navigateToTab(sidepanel, 'recipes');
+    
+    // Wait for hook to fetch data
+    await sidepanel.waitForTimeout(2000);
+    
+    // Verify hook result through UI
+    const recipeList = sidepanel.locator('.recipe-item, [data-testid*="recipe"]');
+    const count = await recipeList.count();
+    expect(count).toBeGreaterThan(0);
+    
+    await sidepanel.close();
+  } finally {
+    await logger.cleanup();
+  }
+});
+```
+
+### Testing Hook State Changes
+
+```typescript
+// Trigger action that updates hook state
+const button = sidepanel.locator('button:has-text("Refresh")');
+await button.click();
+
+// Wait for state update
+await sidepanel.waitForTimeout(1000);
+
+// Verify state change through UI
+const updatedContent = sidepanel.locator('.updated-content');
+await expect(updatedContent).toBeVisible();
+```
+
+### Testing Hook Error States
+
+```typescript
+// Simulate error condition (e.g., invalid message response)
+// Verify error UI is displayed
+const errorMessage = sidepanel.locator('text=Error, .error-message');
+await expect(errorMessage).toBeVisible({ timeout: 5000 });
+
+// Check logs for error details
+const logs = logger.getLogs();
+const errorLogs = logs.filter(l => l.level === 'error');
+expect(errorLogs.length).toBeGreaterThan(0);
+```
+
+## Message Handler Testing
+
+### Testing Sidepanel → Service Worker Messages
+
+```typescript
+test('@framework Sidepanel → Service Worker: MESSAGE_TYPE', async ({}, testInfo) => {
+  const logger = new ConsoleLogger('message-type-integration', testOutputDir);
+  
+  try {
+    await logger.captureContextLogs(sharedContext);
+    await waitForServiceWorkerReady(sharedContext);
+    
+    const extensionId = await getExtensionId(sharedContext);
+    const sidepanel = await openSidepanel(sharedContext, extensionId);
+    await waitForSidepanelReady(sidepanel);
+    
+    const response = await sendMessageToServiceWorker<{
+      ok: boolean;
+      data: any;
+    }>(sidepanel, { type: 'MESSAGE_TYPE', /* params */ });
+    
+    expect(response.ok).toBe(true);
+    expect(response.data).toBeDefined();
+    
+    await sidepanel.close();
+  } finally {
+    await logger.cleanup();
+  }
+});
+```
+
+### Testing Error Responses
+
+```typescript
+// Trigger error condition
+const response = await sendMessageToServiceWorker<{
+  ok: boolean;
+  error?: string;
+}>(sidepanel, {
+  type: 'GET_RECIPE',
+  app: 'invalid-app',
+  id: 'non-existent-id',
+});
+
+expect(response.ok).toBe(false);
+expect(response.error).toBeDefined();
+```
+
+### Testing Correlation IDs
+
+```typescript
+const testCorrelationId = 'test-correlation-' + Date.now();
+
+const response = await sendMessageToServiceWorker<{
+  ok: boolean;
+  correlationId?: string;
+}>(sidepanel, {
+  type: 'LIST_RECIPES',
+  correlationId: testCorrelationId,
+});
+
+// Correlation ID should propagate if supported
+if (response.correlationId) {
+  expect(response.correlationId).toBeDefined();
+}
+```
+
+## Playwright Configuration
+
+### Required Configuration
+
+```typescript
+export default defineConfig({
+  testDir: './specs',
+  fullyParallel: false, // Disable parallel to avoid profile conflicts
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: 1, // Single worker to avoid profile locking issues
+  outputDir: outputDir,
+  reporter: [
+    ['json', { outputFile: path.join(outputDir, 'test-results.json') }],
+    ['./utils/custom-reporter.ts'],
+    ['list'],
+  ],
+  use: {
+    headless: process.env.HEADLESS === 'true', // Configurable
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+  },
+  projects: [
+    {
+      name: 'framework',
+      use: { ...devices['Desktop Chrome'] },
+      grep: /@framework/,
+    },
+    {
+      name: 'smoke',
+      use: { ...devices['Desktop Chrome'] },
+      grep: /@smoke/,
+    },
+    {
+      name: 'recipes',
+      use: { ...devices['Desktop Chrome'] },
+      grep: /@recipes/,
+    },
+  ],
+  webServer: {
+    command: 'pnpm nx build <extension-name>',
+    port: 0,
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
+  },
+  globalSetup: './utils/global-setup.ts',
+});
+```
+
+### Key Configuration Points
+
+- **`workers: 1`**: Chrome profile locking prevents parallel execution
+- **`fullyParallel: false`**: Shared browser context requires sequential tests
+- **`webServer`**: Automatically builds extension before tests
+- **`grep`**: Use test tags (`@framework`, `@smoke`, `@recipes`) to filter tests
+
+## Test Tags
+
+Use consistent test tags for filtering:
+
+- **`@framework`**: Framework/infrastructure tests (UI components, message handlers, service worker)
+- **`@smoke`**: Smoke tests (basic extension loading, critical paths)
+- **`@recipes`**: Recipe execution tests (end-to-end recipe workflows)
+
+## Selector Strategy
+
+### Preferred Selectors (in order)
+
+1. **Text-based**: `locator('text=Button Label')`
+2. **Role-based**: `locator('button:has-text("Submit")')`
+3. **Data attributes**: `locator('[data-testid="component"]')`
+4. **Semantic HTML**: `locator('input[type="email"]')`
+5. **CSS classes**: Only when above options unavailable (`.component-class`)
+
+### Avoid
+
+- Complex CSS selectors: `.container > div:nth-child(2) > button`
+- XPath selectors
+- IDs (unless stable and documented)
+
+## Error Handling & Debugging
+
+### Log Analysis
+
+When tests fail, check log files:
+
+```typescript
+const logFilePath = logger.getLogFilePath();
+console.log(`Logs written to: ${logFilePath}`);
+```
+
+Log files include:
+- All console output from all contexts
+- Error stack traces
+- Summary with error/warning counts
+
+### Common Issues
+
+1. **Service worker not ready**: Increase timeout or check extension build
+2. **Extension not loaded**: Verify `extensionPath` points to correct dist directory
+3. **Profile locking**: Ensure `workers: 1` and `fullyParallel: false`
+4. **Missing logs**: Ensure `logger.captureContextLogs()` is called before actions
+
+## Checklist for New Feature Tests
+
+When adding E2E tests for new features:
+
+- [ ] Test file follows standard structure (imports, helpers, setup/teardown)
+- [ ] ConsoleLogger is used with try/finally cleanup
+- [ ] `waitForServiceWorkerReady()` is called before actions
+- [ ] Sidepanel is opened with `openSidepanel()` and `waitForSidepanelReady()`
+- [ ] Selectors use resilient patterns (text, role, data attributes)
+- [ ] Test includes appropriate tag (`@framework`, `@smoke`, `@recipes`)
+- [ ] Logs are captured for debugging
+- [ ] Test handles loading states and async operations
+- [ ] Error scenarios are tested (if applicable)
+- [ ] Test is added to appropriate Playwright project in config
+
+## Examples
+
+### Complete UI Component Test
+
+```typescript
+test('@framework RecipeManager should render and display recipe list', async ({}, testInfo) => {
+  const testOutputDir = getOutputDir(testInfo);
+  const logger = new ConsoleLogger('recipemanager-render', testOutputDir);
+
+  try {
+    await logger.captureContextLogs(sharedContext);
+    await waitForServiceWorkerReady(sharedContext);
+
+    const extensionId = await getExtensionId(sharedContext);
+    const sidepanel = await openSidepanel(sharedContext, extensionId);
+    await waitForSidepanelReady(sidepanel);
+
+    await navigateToTab(sidepanel, 'recipes');
+
+    // Wait for recipes to load
+    await sidepanel.waitForTimeout(2000);
+
+    // Check for recipe list
+    const recipeSection = sidepanel
+      .locator('text=Available Recipes, text=Recipes, .modern-card')
+      .first();
+    await expect(recipeSection).toBeVisible({ timeout: 10000 });
+
+    await sidepanel.close();
+  } finally {
+    await logger.cleanup();
+  }
+});
+```
+
+### Complete Message Handler Test
+
+```typescript
+test('@framework Sidepanel → Service Worker: LIST_RECIPES message', async ({}, testInfo) => {
+  const testOutputDir = getOutputDir(testInfo);
+  const logger = new ConsoleLogger('list-recipes-integration', testOutputDir);
+
+  try {
+    await logger.captureContextLogs(sharedContext);
+    await waitForServiceWorkerReady(sharedContext);
+
+    const extensionId = await getExtensionId(sharedContext);
+    const sidepanel = await openSidepanel(sharedContext, extensionId);
+    await waitForSidepanelReady(sidepanel);
+
+    const response = await sendMessageToServiceWorker<{
+      ok: boolean;
+      recipes: any[];
+    }>(sidepanel, { type: 'LIST_RECIPES' });
+
+    expect(response.ok).toBe(true);
+    expect(response.recipes).toBeDefined();
+    expect(Array.isArray(response.recipes)).toBe(true);
+    expect(response.recipes.length).toBeGreaterThan(0);
+
+    await sidepanel.close();
+  } finally {
+    await logger.cleanup();
+  }
+});
+```
+
+## Related Rules
+
+- [playwright-automation-standards.mdc](mdc:.cursor/rules/04-testing/playwright/playwright-automation-standards.mdc)
+- [comprehensive-testing-strategy.mdc](mdc:.cursor/rules/04-testing/comprehensive-testing-strategy.mdc)
+- [chrome-extension-app-structure.mdc](mdc:.cursor/rules/15-chome-extension/chrome-extension-app-structure.mdc)
+- [mv3-lifecycle-and-state.mdc](mdc:.cursor/rules/15-chome-extension/mv3-lifecycle-and-state.mdc)

@@ -1,0 +1,82 @@
+[
+  {
+    "query": "hey how do i connect to the pi? it should be on my local network somewhere",
+    "should_trigger": true
+  },
+  {
+    "query": "start a camera stream on the raspberry pi, MJPEG is fine",
+    "should_trigger": true
+  },
+  {
+    "query": "my IMX219 camera module isnt showing up — can you run detect to check if the pi sees it",
+    "should_trigger": true
+  },
+  {
+    "query": "rotate the HDMI display 90 degrees, i mounted it portrait and everything is sideways",
+    "should_trigger": true
+  },
+  {
+    "query": "take a snapshot from the pi camera and save it locally",
+    "should_trigger": true
+  },
+  {
+    "query": "the night-agent pi camera service crashed overnight, restart it",
+    "should_trigger": true
+  },
+  {
+    "query": "i need to tunnel port 3000 from the pi to my mac so i can hit the night-agent api",
+    "should_trigger": true
+  },
+  {
+    "query": "kill everything on the pi and get it back to a clean state — camera, jobs, display, all of it",
+    "should_trigger": true
+  },
+  {
+    "query": "whats running on the pi right now? any background jobs or camera streams?",
+    "should_trigger": true
+  },
+  {
+    "query": "start a 720p 60fps stream from the pi camera so i can monitor the room",
+    "should_trigger": true
+  },
+  {
+    "query": "flash a new SD card for a fresh raspberry pi setup with the night-agent bootstrap",
+    "should_trigger": false
+  },
+  {
+    "query": "write a python script that pulls frames from the camera stream and runs object detection on them",
+    "should_trigger": false
+  },
+  {
+    "query": "my AWS EC2 night-agent instance is unresponsive, how do i check its health endpoint",
+    "should_trigger": false
+  },
+  {
+    "query": "update the SDLC phase state for the wiki-kb track to implement",
+    "should_trigger": false
+  },
+  {
+    "query": "the pnpm build is failing — nx affected:build is throwing a TypeScript strict mode error in llm-router",
+    "should_trigger": false
+  },
+  {
+    "query": "how do i set up SSH keys for github actions in this repo",
+    "should_trigger": false
+  },
+  {
+    "query": "i want to stream my macbook webcam to a browser tab for a demo",
+    "should_trigger": false
+  },
+  {
+    "query": "add a new Nx target to the pi project.json for a custom deploy script",
+    "should_trigger": false
+  },
+  {
+    "query": "what raspberry pi camera module should i buy for low-light surveillance?",
+    "should_trigger": false
+  },
+  {
+    "query": "the night-agent service on EC2 is healthy but the pi runner is also deployed there — check its logs",
+    "should_trigger": false
+  }
+]

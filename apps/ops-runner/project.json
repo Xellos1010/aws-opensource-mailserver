@@ -1,0 +1,102 @@
+{
+  "name": "ops-runner",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/ops-runner/src",
+  "projectType": "application",
+  "tags": ["type:tool", "scope:ops"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/ops-runner",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/ops-runner/src/main.ts",
+        "outputFileName": "ops.cjs",
+        "tsConfig": "apps/ops-runner/tsconfig.app.json",
+        "external": [],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "logLevel": "silent"
+        },
+        "skipTypeCheck": true
+      }
+    },
+    "run": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node dist/apps/ops-runner/ops.js"
+      }
+    },
+    "prune-lockfile": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "executor": "@nx/js:prune-lockfile",
+      "outputs": [
+        "{workspaceRoot}/dist/apps/ops-runner/package.json",
+        "{workspaceRoot}/dist/apps/ops-runner/pnpm-lock.yaml"
+      ],
+      "options": {
+        "buildTarget": "ops-runner:build"
+      }
+    },
+    "copy-workspace-modules": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "outputs": ["{workspaceRoot}/dist/apps/ops-runner/workspace_modules"],
+      "executor": "@nx/js:copy-workspace-modules",
+      "options": {
+        "buildTarget": "ops-runner:build"
+      }
+    },
+    "prune": {
+      "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
+      "executor": "nx:noop"
+    },
+    "cfn:outputs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node dist/apps/ops-runner/src/commands/cfn-outputs.js"
+      },
+      "dependsOn": ["build"]
+    },
+    "instance:setup": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ts-node tools/instance-setup.cli.ts"
+      }
+    },
+    "instance:bootstrap": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "if [ \"$FEATURE_INSTANCE_BOOTSTRAP_ENABLED\" = \"0\" ]; then echo \"ERROR: FEATURE_INSTANCE_BOOTSTRAP_ENABLED=0 - Bootstrap is disabled\"; exit 1; fi && ts-node tools/instance-bootstrap.cli.ts --domain=${DOMAIN:-example.com} --region=${CDK_DEFAULT_REGION:-us-east-1} ${STACK:+--stack=$STACK} ${PROFILE:+--profile=$PROFILE} ${DRY_RUN:+--dry-run} ${RESTORE_PREFIX:+--restore-prefix=$RESTORE_PREFIX} ${REBOOT_AFTER_SETUP:+--reboot}"
+      },
+      "dependsOn": ["^build", "support-scripts-aws-instance-bootstrap:build"]
+    },
+    "example:ec2:stop-start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node dist/apps/ops-runner/ops.cjs ec2:stop-start example.org"
+      },
+      "dependsOn": ["build"]
+    },
+    "example:ec2:stop": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node dist/apps/ops-runner/ops.cjs ec2:stop example.org"
+      },
+      "dependsOn": ["build"]
+    },
+    "example:ec2:start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node dist/apps/ops-runner/ops.cjs ec2:start example.org"
+      },
+      "dependsOn": ["build"]
+    }
+  }
+}

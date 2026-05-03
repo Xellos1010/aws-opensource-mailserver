@@ -1,0 +1,43 @@
+name: Deploy CDK (manual)
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  cdk-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Configure AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - run: pnpm nx run cdk-ec2-stack:build && pnpm nx run cdk-ec2-stack:synth
+
+      - run: pnpm nx run cdk-emc-notary:build && pnpm nx run cdk-emc-notary:synth
+
+      # Add actual deployments when stacks are ready:
+      # - run: cdk deploy Ec2MailServerStack --require-approval never
+      # - run: cdk deploy EmcNotaryBaseStack --require-approval never
+

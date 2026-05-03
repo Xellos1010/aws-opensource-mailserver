@@ -1,0 +1,105 @@
+{
+  "documentationName": "Countries API",
+  "url": "https://developer.godaddy.com/doc/endpoint/countries",
+  "title": "Documentation: Countries API",
+  "generatedAt": "2025-11-09T04:56:09.191Z",
+  "endpointsFound": 2,
+  "endpointsExpanded": 2,
+  "endpointsExtracted": 2,
+  "endpoints": [
+    {
+      "operationType": "GET",
+      "path": "/v1/countries",
+      "name": "/v1/countries",
+      "description": "Authorization is not required",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "marketId",
+          "type": "string($bcp-47)",
+          "description": "MarketId in which the request is being made, and for which responses should be localized",
+          "required": true,
+          "location": "query"
+        }
+      ],
+      "responses": [
+        {
+          "code": "200",
+          "description": "Request was successful",
+          "example": "[\n  {\n    \"callingCode\": \"string\",\n    \"countryKey\": \"string\",\n    \"label\": \"string\"\n  }\n]"
+        },
+        {
+          "code": "422",
+          "description": "marketId is required",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "429",
+          "description": "Too many requests received within interval",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"retryAfterSec\": 0,\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "500",
+          "description": "Internal server error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        }
+      ],
+      "expanded": true
+    },
+    {
+      "operationType": "GET",
+      "path": "/v1/countries/{countryKey}",
+      "name": "/v1/countries/{countryKey}",
+      "description": "Authorization is not required",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "countryKey",
+          "type": "string($iso-country-code)",
+          "description": "The country key",
+          "required": true,
+          "location": "path"
+        },
+        {
+          "name": "marketId",
+          "type": "string($bcp-47)",
+          "description": "MarketId in which the request is being made, and for which responses should be localized",
+          "required": true,
+          "location": "query"
+        }
+      ],
+      "responses": [
+        {
+          "code": "200",
+          "description": "Request was successful",
+          "example": "[\n  {\n    \"callingCode\": \"string\",\n    \"countryKey\": \"string\",\n    \"label\": \"string\",\n    \"states\": [\n      {\n        \"label\": \"string\",\n        \"stateKey\": \"string\"\n      }\n    ]\n  }\n]"
+        },
+        {
+          "code": "404",
+          "description": "Country not found",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "422",
+          "description": "marketId is required",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "429",
+          "description": "Too many requests received within interval",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"retryAfterSec\": 0,\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "500",
+          "description": "Internal server error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        }
+      ],
+      "expanded": true
+    }
+  ],
+  "metadata": {
+    "source": "https://developer.godaddy.com/doc/endpoint/countries",
+    "xpath": "//*[@id=\"main\"]/div/div[2]"
+  }
+}

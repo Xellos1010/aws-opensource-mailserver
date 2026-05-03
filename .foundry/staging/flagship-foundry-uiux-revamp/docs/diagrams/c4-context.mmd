@@ -1,0 +1,33 @@
+%% C4 Context Diagram — Foundry UI/UX Revamp
+flowchart TB
+  operator["Operator"]
+  subgraph surfaces["Operator surfaces"]
+    cc["Cursor Companion Cockpit (write-capable)"]
+    gv["Foundry / Graph Viewer (read projection)"]
+    mobile["Mobile Triage Surfaces (approval/monitor/search)"]
+  end
+  subgraph foundry["Flagship Foundry"]
+    cp["Control Plane + Composer APIs"]
+    registry["View Registry + Object Model"]
+    evidence["Evidence / Continuity / Verifier Projection"]
+    graph["Artifact Graph Projection"]
+  end
+  subgraph repo["Repo-native authorities"]
+    personas["Personas / skills / runbooks / templates"]
+    contracts["Schemas / ADRs / continuity / work orders"]
+    runs["Existing run control"]
+  end
+
+  operator --> cc
+  operator --> gv
+  operator --> mobile
+  cc --> cp
+  gv --> graph
+  mobile --> evidence
+  cp --> registry
+  cp --> evidence
+  cp --> runs
+  registry --> personas
+  cp --> contracts
+  runs --> evidence
+  graph --> contracts

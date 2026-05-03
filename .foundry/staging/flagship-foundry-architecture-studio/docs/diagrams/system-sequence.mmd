@@ -1,0 +1,47 @@
+%% Expected Output / Sequence Diagram — Compose to Approved Execution
+sequenceDiagram
+    autonumber
+    actor Operator
+    participant CC as Cursor Companion Composer
+    participant API as Composer API Gateway
+    participant REG as Registry Projection Service
+    participant COMP as Composition Repository
+    participant PIPE as Pipeline Compiler
+    participant POL as Execution Policy Gateway
+    participant RUN as Existing Run Control
+    participant OBS as Session Projection / Evidence References
+
+    Operator->>CC: Open composer dashboard
+    CC->>API: Request building block library
+    API->>REG: Refresh/read normalized registry
+    REG-->>API: Building block library index
+    API-->>CC: Building blocks
+
+    Operator->>CC: Create composed agent configuration
+    CC->>API: Validate and save composition
+    API->>COMP: Persist composed-agent-configuration
+    COMP-->>API: compositionRef
+    API-->>CC: Saved composition reference
+
+    Operator->>CC: Assemble orchestration pipeline
+    CC->>API: Validate and save pipeline definition
+    API->>COMP: Persist pipeline
+    COMP-->>API: pipelineRef
+    API-->>CC: Saved pipeline reference
+
+    Operator->>CC: Compile pipeline to draft work orders
+    CC->>API: compile(pipelineRef)
+    API->>PIPE: Resolve blocks, lifecycle stages, and dependencies
+    PIPE-->>API: Compilation result + draft work-order refs + required approvals
+    API-->>CC: Compilation result
+
+    Operator->>CC: Launch approved execution
+    CC->>API: execution request(sourceRef, approvalRefs, action=start)
+    API->>POL: Enforce approval/lifecycle/runtime policy
+    POL->>RUN: Launch approved work-order run
+    RUN-->>OBS: Run state + continuity ref + evidence target
+    OBS-->>API: Session projection
+    API-->>CC: queued / in_progress session state
+
+    RUN-->>OBS: paused / failed / completed transitions
+    OBS-->>CC: Live session updates

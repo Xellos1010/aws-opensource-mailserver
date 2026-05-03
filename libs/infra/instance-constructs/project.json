@@ -1,0 +1,29 @@
+{
+  "name": "instance-constructs",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/infra/instance-constructs/src",
+  "projectType": "library",
+  "tags": ["scope:infra", "type:util", "platform:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/infra/instance-constructs",
+        "main": "libs/infra/instance-constructs/src/index.ts",
+        "tsConfig": "libs/infra/instance-constructs/tsconfig.lib.json",
+        "assets": []
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

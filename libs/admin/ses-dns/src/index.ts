@@ -1,0 +1,1 @@
+export { setSesDnsRecords, type SetSesDnsRecordsConfig, type SesDnsResult } from './lib/ses-dns';

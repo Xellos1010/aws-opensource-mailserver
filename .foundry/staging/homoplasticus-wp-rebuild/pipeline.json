@@ -1,0 +1,83 @@
+{
+  "initiative": {
+    "name": "HomoPlasticus WordPress-Aligned Rebuild",
+    "slug": "homoplasticus-wp-rebuild",
+    "objective": "Replace raw HTML page operations with a WordPress-native block-editor workflow and Abilities API canonical layer. Deliver a marketplace-releasable PHP plugin with MCP as a thin transport adapter on top.",
+    "sdlcCycle": "monorepo/.foundry",
+    "startingPhase": "implement",
+    "createdAt": "2026-04-20T00:00:00Z",
+    "status": "ready",
+    "workOrderTree": "docs/plan/work-order-tree-wordpress-aligned-rebuild.md",
+    "continuityPath": ".foundry/projects/homoplasticus/current-task.json"
+  },
+  "pipeline": {
+    "stages": [
+      {
+        "id": "stage-01",
+        "name": "Milestone A — Plugin Foundation",
+        "status": "ready",
+        "teamConfig": ".foundry/staging/homoplasticus-wp-rebuild/stage-01-milestone-a/team-config.json",
+        "workOrders": ["WO-001", "WO-002", "WO-003", "WO-004", "WO-005", "WO-006", "WO-012"],
+        "outputArtifacts": [
+          "apps/wp-plugin-foundry-bridge/ (installable plugin zip)",
+          "apps/wp-theme-homoplasticus-base/patterns/ (block patterns)",
+          "/wp-json/ai-foundry/v1/discovery (live endpoint)",
+          "/wp-json/ai-foundry/v1/mcp-tools (live endpoint)"
+        ],
+        "gates": [
+          "security-reviewer sign-off after WO-002 (abilities registry)",
+          "security-reviewer sign-off after WO-004 (auth layer)"
+        ],
+        "dependsOn": []
+      },
+      {
+        "id": "stage-02",
+        "name": "Milestone B — Core Packs + MCP + Governance",
+        "status": "pending",
+        "teamConfig": ".foundry/staging/homoplasticus-wp-rebuild/stage-02-milestone-b/team-config.json",
+        "workOrders": ["WO-007", "WO-008", "WO-010", "WO-011", "WO-013", "WO-014"],
+        "outputArtifacts": [
+          "Media Pack abilities live",
+          "SEO Pack abilities live",
+          "MCP Node server restructured as thin adapter",
+          "Proposal/Approval DB table live",
+          "Audit event log live"
+        ],
+        "gates": [
+          "principal approval of DB schema before WO-013 migration runs on production"
+        ],
+        "dependsOn": ["stage-01"]
+      },
+      {
+        "id": "stage-03",
+        "name": "Milestone C — Ecosystem + Release",
+        "status": "pending",
+        "teamConfig": ".foundry/staging/homoplasticus-wp-rebuild/stage-03-milestone-c/team-config.json",
+        "workOrders": ["WO-009", "WO-015", "WO-016", "WO-017", "WO-018", "WO-019"],
+        "outputArtifacts": [
+          "WooCommerce Pack live",
+          "Worker Integration Pack live",
+          "Extension SDK published",
+          "5 Compat Packs (Yoast, ACF, Gravity Forms, WPML, UpdraftPlus)",
+          "Plugin submitted to WordPress marketplace"
+        ],
+        "gates": [
+          "@systems-architect ADR required before WO-016 (Cloud Control Plane)",
+          "@verifier marketplace readiness check before WO-019 submission"
+        ],
+        "dependsOn": ["stage-02"]
+      }
+    ]
+  },
+  "doneCriteria": [
+    "Plugin ai-foundry installs cleanly on WordPress 6.4+ and upgrades/uninstalls without orphan data",
+    "All 32 abilities registered and visible in /wp-json/ai-foundry/v1/discovery",
+    "Block editor patterns visible in HomoPlasticus theme Insert panel",
+    "MCP Node tools/list auto-populated from PHP ability registry — no hardcoded tool list in Node",
+    "content.propose-update returns absolute preview_url and canonical_url in all environments",
+    "Proposal/Approval DB FSM enforced: proposed → applied | rejected, applied → reverted",
+    "Every ability execution writes an audit event",
+    "Plugin zip passes WordPress Plugin Check (plugincheck.wp.net)",
+    "Extension SDK example pack installs and registers one working ability"
+  ]
+}

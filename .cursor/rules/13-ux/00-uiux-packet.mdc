@@ -1,0 +1,19 @@
+---
+description: Links UI/UX implementation to the Flagship Foundry UI/UX Revamp Packet
+globs: ["apps/flagship-foundry/**/*.tsx", "apps/flagship-foundry/**/*.css", "apps/flagship-foundry/**/*.ts"]
+---
+
+# UI/UX Revamp Packet Standards
+
+When working on UI/UX, interaction, or motion elements in Flagship Foundry, you must adhere to the design decisions defined in the UI/UX Revamp Packet.
+
+## Reference Packet Directory
+`.foundry/staging/flagship-foundry-uiux-revamp`
+
+## Key Rules
+- **ADR-001**: Select Cockpit Shell as Canonical Operator Surface
+- **ADR-002**: Separate View Registry from Runtime State
+- **ADR-003**: Adopt Operator Drilldown Chain 
+- **ADR-004**: Adopt Motion Toggle and Accessibility Baseline
+
+Review the architecture guidelines and ADRs in `.foundry/staging/flagship-foundry-uiux-revamp` before proposing or making changes.

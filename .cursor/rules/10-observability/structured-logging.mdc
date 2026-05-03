@@ -1,0 +1,395 @@
+---
+description: Structured JSON logging standards for consistent, searchable, and analyzable logs across all services
+alwaysApply: false
+---
+# Structured Logging Standards - 2025
+
+Implement structured JSON logging with correlation IDs, proper levels, and PII redaction for complete observability.
+
+**Justification:** Structured logs enable rapid debugging, compliance auditing, and automated alerting while protecting sensitive data.
+
+## 🎯 Single Responsibility
+This rule is ONLY responsible for defining HOW to log. Not when to log (that's in monitoring rules) or what to monitor (that's in metrics rules).
+
+## 📋 Implementation Checklist
+
+### Initial Setup
+```markdown
+- [ ] Choose logging library (Winston, Pino, Bunyan)
+- [ ] Configure JSON output format
+- [ ] Set up log levels (DEBUG, INFO, WARN, ERROR, FATAL)
+- [ ] Implement correlation ID generation
+- [ ] Configure PII redaction
+- [ ] Set up log rotation
+- [ ] Configure async logging for performance
+```
+
+## 📐 Log Structure Standard
+
+### Required Fields (Every Log Entry)
+```typescript
+interface StandardLogEntry {
+  // Metadata
+  timestamp: string;        // ISO 8601 format
+  level: LogLevel;         // DEBUG | INFO | WARN | ERROR | FATAL
+  service: string;         // Service name from package.json
+  version: string;         // Service version
+  environment: string;     // dev | staging | prod
+  
+  // Correlation
+  correlationId: string;   // Request correlation ID
+  traceId?: string;       // OpenTelemetry trace ID
+  spanId?: string;        // OpenTelemetry span ID
+  userId?: string;        // Authenticated user ID (hashed)
+  sessionId?: string;     // Session identifier
+  
+  // Context
+  message: string;        // Human-readable message
+  context?: object;       // Structured context data
+  
+  // Location
+  file?: string;          // Source file
+  function?: string;      // Function name
+  line?: number;          // Line number
+}
+```
+
+### Log Level Guidelines
+```typescript
+enum LogLevel {
+  DEBUG = 'debug',    // Detailed diagnostic info (dev only)
+  INFO = 'info',      // General informational messages
+  WARN = 'warn',      // Warning conditions
+  ERROR = 'error',    // Error conditions
+  FATAL = 'fatal'     // Fatal errors requiring immediate attention
+}
+
+// Usage examples
+logger.debug('Cache hit', { key, ttl });                    // DEBUG
+logger.info('User login successful', { userId });           // INFO
+logger.warn('Rate limit approaching', { current, max });    // WARN
+logger.error('Database connection failed', { error });      // ERROR
+logger.fatal('Service cannot start', { missingConfig });    // FATAL
+```
+
+## 🔒 PII Redaction
+
+### Automatic Redaction Patterns
+```typescript
+const PII_PATTERNS = {
+  email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+  phone: /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/g,
+  ssn: /\b\d{3}-\d{2}-\d{4}\b/g,
+  creditCard: /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g,
+  ipAddress: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
+  apiKey: /\b[A-Za-z0-9]{32,}\b/g,
+};
+
+// Redaction function
+function redactPII(obj: any): any {
+  const sensitiveFields = ['password', 'token', 'secret', 'apiKey', 'authorization'];
+  // Implementation to recursively redact sensitive data
+  return redactedObj;
+}
+```
+
+### HIPAA Mode (When Enabled)
+```typescript
+if (process.env.HIPAA_MODE === 'true') {
+  // Additional PHI field redaction
+  const PHI_FIELDS = ['diagnosis', 'treatment', 'medication', 'dob', 'mrn'];
+  // Only log PHI with explicit audit flag
+  logger.audit('PHI Access', { 
+    action: 'view',
+    resource: 'patient_record',
+    justification: 'treatment'
+  });
+}
+```
+
+## 🔄 Correlation ID Implementation
+
+### Generate and Propagate
+```typescript
+import { v4 as uuidv4 } from 'uuid';
+
+// Middleware for Express
+export const correlationMiddleware = (req, res, next) => {
+  const correlationId = req.headers['x-correlation-id'] || uuidv4();
+  req.correlationId = correlationId;
+  res.setHeader('x-correlation-id', correlationId);
+  
+  // Attach to async context
+  AsyncLocalStorage.run({ correlationId }, next);
+};
+
+// Logger with correlation
+class CorrelatedLogger {
+  private getCorrelationId(): string {
+    return AsyncLocalStorage.get()?.correlationId || 'no-correlation';
+  }
+  
+  log(level: LogLevel, message: string, context?: object) {
+    const entry = {
+      timestamp: new Date().toISOString(),
+      level,
+      correlationId: this.getCorrelationId(),
+      message,
+      ...context
+    };
+    this.output(entry);
+  }
+}
+```
+
+## 🎨 Logging Patterns
+
+### Service Startup
+```typescript
+logger.info('Service starting', {
+  service: 'webhook-service',
+  version: process.env.npm_package_version,
+  node: process.version,
+  environment: process.env.NODE_ENV,
+  config: {
+    port: CONFIG.PORT,
+    features: CONFIG.FEATURES // Non-sensitive config only
+  }
+});
+```
+
+### API Request Logging
+```typescript
+// Request start
+logger.info('API request received', {
+  method: req.method,
+  path: req.path,
+  correlationId: req.correlationId,
+  userId: req.user?.id,
+  ip: req.ip // Redact in production
+});
+
+// Request complete
+logger.info('API request completed', {
+  method: req.method,
+  path: req.path,
+  correlationId: req.correlationId,
+  statusCode: res.statusCode,
+  duration: Date.now() - startTime,
+  contentLength: res.get('content-length')
+});
+```
+
+### Error Logging
+```typescript
+logger.error('Operation failed', {
+  error: {
+    name: error.name,
+    message: error.message,
+    stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+    code: error.code,
+    details: error.details
+  },
+  operation: 'createContact',
+  input: redactPII(input),
+  correlationId
+});
+```
+
+### Performance Logging
+```typescript
+const timer = logger.startTimer();
+await someOperation();
+timer.done({ 
+  message: 'Operation completed',
+  operation: 'databaseQuery',
+  query: 'SELECT * FROM users', // Sanitized query
+  rows: result.length
+});
+```
+
+## 🔧 Library Configurations
+
+### Winston Configuration
+```typescript
+import winston from 'winston';
+
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json(),
+    winston.format.printf(({ timestamp, level, message, ...meta }) => {
+      return JSON.stringify({
+        timestamp,
+        level,
+        message,
+        service: process.env.SERVICE_NAME,
+        version: process.env.npm_package_version,
+        ...meta
+      });
+    })
+  ),
+  defaultMeta: {
+    service: process.env.SERVICE_NAME,
+    environment: process.env.NODE_ENV
+  },
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ 
+      filename: 'error.log', 
+      level: 'error',
+      maxsize: 5242880, // 5MB
+      maxFiles: 5
+    })
+  ]
+});
+```
+
+### Pino Configuration (Faster)
+```typescript
+import pino from 'pino';
+
+const logger = pino({
+  level: process.env.LOG_LEVEL || 'info',
+  formatters: {
+    level: (label) => ({ level: label }),
+    bindings: (bindings) => ({
+      pid: bindings.pid,
+      hostname: bindings.hostname,
+      service: process.env.SERVICE_NAME,
+      version: process.env.npm_package_version,
+      environment: process.env.NODE_ENV
+    })
+  },
+  timestamp: pino.stdTimeFunctions.isoTime,
+  redact: {
+    paths: ['password', 'token', '*.secret', '*.apiKey'],
+    censor: '[REDACTED]'
+  },
+  transport: {
+    target: 'pino-pretty',
+    options: {
+      colorize: process.env.NODE_ENV === 'development'
+    }
+  }
+});
+```
+
+## 📊 Log Aggregation Setup
+
+### CloudWatch Logs (AWS)
+```typescript
+import { CloudWatchLogs } from '@aws-sdk/client-cloudwatch-logs';
+
+class CloudWatchTransport {
+  async send(logs: LogEntry[]) {
+    const params = {
+      logGroupName: `/aws/application/${process.env.SERVICE_NAME}`,
+      logStreamName: `${process.env.NODE_ENV}/${process.env.HOSTNAME}`,
+      logEvents: logs.map(log => ({
+        message: JSON.stringify(log),
+        timestamp: Date.now()
+      }))
+    };
+    await this.client.putLogEvents(params);
+  }
+}
+```
+
+### ELK Stack Integration
+```typescript
+// Filebeat configuration
+const filebeatConfig = {
+  filebeat: {
+    inputs: [{
+      type: 'log',
+      enabled: true,
+      paths: ['/var/log/app/*.log'],
+      json: {
+        keys_under_root: true,
+        add_error_key: true
+      },
+      fields: {
+        service: process.env.SERVICE_NAME,
+        environment: process.env.NODE_ENV
+      }
+    }]
+  },
+  output: {
+    elasticsearch: {
+      hosts: ['${ELASTICSEARCH_HOST}:9200'],
+      index: 'app-logs-%{+yyyy.MM.dd}'
+    }
+  }
+};
+```
+
+## ✅ Testing Logs
+
+### Unit Test Example
+```typescript
+describe('Logger', () => {
+  it('should include correlation ID in all logs', () => {
+    const correlationId = 'test-correlation-id';
+    const spy = jest.spyOn(console, 'log');
+    
+    logger.info('Test message', { correlationId });
+    
+    expect(spy).toHaveBeenCalledWith(
+      expect.stringContaining(correlationId)
+    );
+  });
+  
+  it('should redact sensitive information', () => {
+    const sensitiveData = {
+      email: 'user@example.com',
+      password: 'secret123'
+    };
+    
+    const logged = logger.formatLog('Test', sensitiveData);
+    
+    expect(logged).not.toContain('user@example.com');
+    expect(logged).not.toContain('secret123');
+    expect(logged).toContain('[REDACTED]');
+  });
+});
+```
+
+## 🚨 Anti-Patterns to Avoid
+
+```typescript
+// ❌ BAD: Unstructured string concatenation
+console.log('User ' + userId + ' logged in at ' + new Date());
+
+// ❌ BAD: Logging sensitive data
+logger.info('Login attempt', { password: userPassword });
+
+// ❌ BAD: Missing correlation ID
+logger.error('Database error', { error: err });
+
+// ❌ BAD: Synchronous logging in hot path
+fs.appendFileSync('app.log', logMessage);
+
+// ✅ GOOD: Structured, async, correlated, redacted
+logger.info('User login', {
+  userId: hashUserId(userId),
+  correlationId,
+  timestamp: new Date().toISOString()
+});
+```
+
+## 📈 Success Metrics
+
+- **Log Coverage**: 100% of services have structured logging
+- **Correlation Rate**: > 95% of logs have correlation IDs
+- **PII Leakage**: 0 instances in production logs
+- **Log Query Time**: < 5 seconds for 24-hour searches
+- **Log Retention**: 30 days hot, 90 days cold storage
+
+## 🔗 Related Rules
+- [distributed-tracing](./distributed-tracing.mdc) - For trace context
+- [metrics-collection](./metrics-collection.mdc) - For metrics vs logs
+- [alert-definitions](./alert-definitions.mdc) - For log-based alerts
+- [audit-logging](../11-security/audit-logging.mdc) - For compliance logging

@@ -1,0 +1,13 @@
+---
+description: Separation of concerns for layering and responsibilities
+alwaysApply: true
+---
+# Separation of Concerns (SoC)
+
+Ensure the codebase is divided into distinct layers: presentation (UI components), business logic (services), and data access (stores/adapters). Each layer should handle its specific concern without overlapping responsibilities. UI components should not contain parsing, storage, or network logic.
+
+**Justification**: Separation prevents tight coupling, making the SummerySky extension easier to maintain, test, and extend across portals and workflows.
+
+**Example**: Keep portal-specific parsing in `libs/summerysky/portal-*` and invoke it from the service worker, rather than parsing directly inside sidepanel components.
+
+**Related Rules**: [single-responsibility.mdc](mdc:.cursor/rules/01-code-standards/single-responsibility.mdc), [simplicity.mdc](mdc:.cursor/rules/01-code-standards/simplicity.mdc)

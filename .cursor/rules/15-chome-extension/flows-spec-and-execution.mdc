@@ -1,0 +1,32 @@
+---
+globs: apps/chrome-extensions/**/src/recipes/**,apps/chrome-extensions/**/src/service_worker/**,apps/chrome-extensions/**/src/content/**
+alwaysApply: false
+description: Recipe spec and execution rules for automation flows
+---
+# Recipe Spec & Execution
+
+Use `@chrome-ext/automation-recipes` as the canonical schema for recipe steps and locators.
+
+## Recipe Shape (conceptual)
+
+```typescript
+type Locator = { by: 'css' | 'role'; selector?: string; role?: string; name?: string };
+type StepType =
+  | 'goto' | 'waitFor' | 'assertVisible' | 'fill' | 'type' | 'click'
+  | 'extract' | 'loop' | 'captureHtml' | 'saveUrl' | 'setVariable'
+  | 'saveCheckpoint' | 'restoreCheckpoint' | 'ensureFolder'
+  | 'selectDropdown' | 'waitForPagination' | 'navigateBack'
+  | 'validateFolder' | 'validateFile' | 'skipIf';
+```
+
+## Execution Rules
+
+- Service worker owns orchestration; content scripts execute DOM actions.
+- Prefer deterministic selectors (role + name) and include `description` on steps for better logs.
+- Retry only idempotent waits; avoid re-clicking if a step already caused navigation.
+- Store recipe overrides locally when selector repair is applied; export override JSON for repo updates.
+
+## Packaging
+
+- JSON recipes live in `apps/chrome-extensions/**/src/recipes/jsons/**`.
+- Loader/registry registers promoted recipes and merges overrides at startup.

@@ -1,0 +1,30 @@
+---
+globs: apps/chrome-extensions/PMHNP-Administration-SummerySky/**,libs/summerysky/**,libs/Google-Chrome-Extension-Library/**
+alwaysApply: false
+description: "SummerySky extension standards (MV3, HIPAA, reusable modules)"
+---
+# SummerySky Extension Standards
+
+Build the SummerySky MV3 extension as a local-first, HIPAA-aligned product with reusable libraries.
+
+## Architecture
+- Background service worker owns orchestration, storage, and cross-context messaging.
+- Sidepanel UI is a view of background state; no business logic lives only in the UI.
+- Content scripts are scoped to allowlisted domains and contain only DOM extraction or ChatGPT response capture.
+
+## Reuse and Modularity
+- App code is wiring only; implement features in libs (`libs/summerysky/*` or `libs/Google-Chrome-Extension-Library/*`).
+- Portal-specific logic lives in data-access parser libs, not UI or background.
+- Public APIs only through `index.ts`; avoid deep imports.
+
+## Security and Compliance
+- Never log or store PHI in plaintext; all PHI storage is encrypted.
+- Only redacted data may be sent to AI providers.
+- Use least-privilege OAuth scopes (drive.file + documents) and never persist access tokens; validate Drive folder IDs via API/picker before use.
+- Use strict message schemas for background <-> UI <-> content communications.
+- Task-assistant guidance must validate session tokens + origin locks, and require explicit user confirmation for click/type actions.
+
+## Reliability
+- Use correlation ids for all workflows (import, draft, export).
+- Implement retry/backoff for external API calls.
+- Feature flags gate AI drafts and Google export.

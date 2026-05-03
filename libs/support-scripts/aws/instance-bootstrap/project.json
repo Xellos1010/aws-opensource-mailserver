@@ -1,0 +1,40 @@
+{
+  "name": "support-scripts-aws-instance-bootstrap",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/support-scripts/aws/instance-bootstrap/src",
+  "projectType": "library",
+  "tags": ["scope:support", "type:util", "platform:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "platform": "node",
+        "format": ["esm"],
+        "bundle": true,
+        "outputPath": "dist/libs/support-scripts/aws/instance-bootstrap",
+        "main": "libs/support-scripts/aws/instance-bootstrap/src/index.ts",
+        "outputFileName": "index.mjs",
+        "assets": [
+          "libs/support-scripts/aws/instance-bootstrap/assets/**"
+        ],
+        "tsConfig": "libs/support-scripts/aws/instance-bootstrap/tsconfig.lib.json",
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

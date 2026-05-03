@@ -1,0 +1,708 @@
+---
+description: Battle-tested order of operations for shipping features and fixing bugs in modern Nx monorepos with strict TypeScript, CI/CD, and feature flags
+alwaysApply: false
+---
+# Ship It! - Battle-Tested Order of Operations
+
+Complete workflow for shipping features and fixing bugs in modern Nx monorepos. Follow these steps every time for predictable, safe deployments.
+
+**Justification:** Consistent process prevents production incidents, ensures quality, and maintains velocity in enterprise CRM integrations.
+
+## 🎯 Shared Principles
+
+### Branching Strategy
+```bash
+# Features
+feat/<scope>-<short-title>    # Example: feat/intake-guard-dedupe
+
+# Bug fixes  
+fix/<scope>-<issue#>          # Example: fix/telephony-asserted-id-421
+
+# Hotfixes (Sev-1)
+hotfix/<short-title>          # Example: hotfix/critical-auth-bypass
+```
+
+### Definition of Ready (DoR)
+✅ **A task is ready when you can write:**
+- One-sentence goal
+- Clear acceptance criteria
+- Identified risks
+- Rollback strategy
+- Test plan outline
+
+❌ **If you can't write these, it's not ready to start**
+
+### Definition of Done (DoD)
+✅ **A task is done when:**
+- All acceptance criteria pass
+- Tests added and passing
+- Documentation updated
+- Post-deploy smoke tests green
+- Monitoring alerts quiet
+- Ticket closed
+
+---
+
+## 🚀 FEATURE WORKFLOW - Order of Operations
+
+### 1️⃣ Triage & Spec (30-60 min)
+```markdown
+## User Story Template
+As a [user type]
+I want to [action]
+So that [benefit]
+
+## Acceptance Criteria
+- [ ] AC-1: Specific measurable outcome
+- [ ] AC-2: Another measurable outcome
+- [ ] AC-3: Edge case handling
+
+## Dependencies
+- APIs: [List external APIs]
+- Database: [Schema changes needed]
+- Libraries: [New packages required]
+- Feature Flag: `feature_<name>_enabled`
+
+## Observability Plan
+- Logs: Key events to log
+- Metrics: Counters/timers to add
+- Dashboard: Panels to create
+```
+
+### 2️⃣ Branch & Scaffold
+```bash
+# Create feature branch
+git checkout -b feat/<scope>-<short-title>
+
+# Generate Nx module/lib if needed
+nx g @nx/js:lib features/<feature-name> --tags=scope:feature,type:feature
+
+# Add feature flag (default OFF)
+echo "FEATURE_<NAME>_ENABLED=false" >> .env.example
+```
+
+### 3️⃣ Test Plan First
+```typescript
+// Define test cases BEFORE coding
+
+// Unit Tests (Pure/Fast)
+describe('FeatureName Core Logic', () => {
+  it('should handle happy path')
+  it('should validate inputs')
+  it('should handle edge cases')
+});
+
+// Integration Tests (API ↔ DB)
+describe('FeatureName Integration', () => {
+  it('should persist data correctly')
+  it('should handle concurrent requests')
+  it('should respect feature flag')
+});
+
+// E2E Test (User Flow)
+describe('FeatureName E2E', () => {
+  it('should complete user journey when flag enabled')
+  it('should gracefully degrade when flag disabled')
+});
+
+// Smoke Test (Critical Path)
+describe('FeatureName Smoke', () => {
+  it('should not break existing flows')
+  it('should respond to health check')
+});
+```
+
+### 4️⃣ Design the Change
+```markdown
+## ADR Template (if changing patterns)
+# ADR-XXX: [Decision Title]
+
+## Status
+Proposed | Accepted | Deprecated
+
+## Context
+What problem are we solving?
+
+## Decision
+What are we doing?
+
+## Consequences
+What becomes easier/harder?
+```
+
+### 5️⃣ Implement Incrementally (Flag-First)
+```typescript
+// Always check feature flag first
+if (process.env.FEATURE_<NAME>_ENABLED === 'true') {
+  // New implementation
+  return newFeatureLogic();
+} else {
+  // Existing behavior
+  return existingLogic();
+}
+
+// Tracer bullet approach - vertical slice
+// 1. Route → 2. Controller → 3. Service → 4. Repository → 5. Database
+```
+
+### 6️⃣ Integration & E2E
+```bash
+# Add integration tests with test containers
+docker-compose -f docker-compose.test.yml up -d
+nx test <project> --testPathPattern=integration
+
+# Add E2E test behind flag
+FEATURE_<NAME>_ENABLED=true nx e2e <project>-e2e
+```
+
+### ⚠️ Testing Pitfalls to Avoid
+
+#### Constructor Signature Changes
+```typescript
+// ❌ Don't test with hard-coded constructor params
+const service = new Service({ logger, db, cache });
+
+// ✅ Use dependency injection with mocks
+const mockLogger = createMockLogger();
+const mockDb = createMockDb();
+const service = new Service(mockLogger, mockDb);
+```
+
+#### Private Method Testing
+```typescript
+// ❌ Don't test private methods directly
+(service as any).privateMethod();
+
+// ✅ Test public behavior instead
+await expect(service.publicMethod()).toThrow('Validation error');
+```
+
+#### Node.js Built-in Module Imports
+```typescript
+// ❌ ES module syntax for Node.js built-ins
+import fs from 'fs'; // Fails in Jest
+
+// ✅ Namespace imports for Node.js built-ins
+import * as fs from 'fs';
+```
+
+#### Mock Typing Issues
+```typescript
+// ❌ Incorrect mock return types
+mockPage.innerText.mockResolvedValue('text'); // Type error
+
+// ✅ Proper type assertions
+mockPage.innerText.mockResolvedValue('text' as any);
+```
+
+### 7️⃣ Local Affected Checks (Nx)
+```bash
+# Run all affected checks in parallel
+nx affected:lint --parallel
+nx affected:test --parallel
+nx affected:build --parallel
+
+# If infrastructure changes
+nx run <infra-project>:synth
+cdk diff
+```
+
+### 8️⃣ Open PR Early (Draft)
+```markdown
+## PR Template
+**Title:** feat(scope): short intent
+
+**Summary:** What & why in 2-3 sentences
+
+**Acceptance Criteria:**
+- [ ] AC-1: Specific outcome
+- [ ] AC-2: Another outcome
+
+**Changes:**
+- Endpoints: `/api/v1/new-endpoint`
+- Schema: Added `field_name` to table
+- Environment: `FEATURE_X_ENABLED`
+- Feature Flag: `feature_x_enabled`
+
+**Test Plan:**
+- Unit: 15 new tests added
+- Integration: 5 API tests added
+- E2E: 1 user journey test
+- Smoke: Health check verified
+
+**Migration/Infra:**
+- [ ] Run migration script
+- [ ] Update CDK stack
+- Rollback: `git revert` + flag OFF
+
+**Observability:**
+- Metrics: `feature_x_usage_count`
+- Logs: Search for `feature_x`
+- Dashboard: Link to dashboard
+
+**Risks/Mitigations:**
+- Risk: Performance impact
+- Mitigation: Added caching layer
+
+**Screenshots/GIFs:** [If UI changes]
+```
+
+### 9️⃣ CI Gates
+```yaml
+# CI must pass these gates
+jobs:
+  quality-gates:
+    steps:
+      - Typecheck    # TypeScript strict mode
+      - Lint         # ESLint rules pass
+      - Unit Tests   # 80% coverage
+      - Integration  # API contracts valid
+      - Build        # Artifacts created
+      - E2E Preview  # Tests against preview URL
+```
+
+### 🔟 Review & Iterate
+```bash
+# Address review comments
+# Keep commits clean
+git commit -m "feat(intake): address review feedback"
+
+# Re-run affected checks
+nx affected:test --base=origin/main
+```
+
+### 1️⃣1️⃣ Staging Deploy (Flag OFF)
+```bash
+# Deploy with flag OFF
+FEATURE_<NAME>_ENABLED=false npm run deploy:staging
+
+# Run post-deploy smoke
+npm run test:smoke:staging
+
+# Enable for internal testing
+FEATURE_<NAME>_ENABLED=true npm run test:e2e:staging
+
+# Monitor logs/metrics
+tail -f logs/staging.log | grep "feature_x"
+```
+
+### 1️⃣2️⃣ Production Rollout
+```typescript
+// Progressive flag ramp
+const rolloutSchedule = {
+  day1: { percentage: 1, cohort: 'internal' },
+  day2: { percentage: 10, cohort: 'beta_users' },
+  day3: { percentage: 50, cohort: 'all_users' },
+  day4: { percentage: 100, cohort: 'all_users' }
+};
+
+// Monitor KPIs
+const monitoring = {
+  errorRate: '< 0.1%',
+  latencyP95: '< 500ms',
+  businessMetric: 'conversion_rate'
+};
+```
+
+### 1️⃣3️⃣ Finish & Cleanup
+```bash
+# Update documentation
+npm run docs:generate
+
+# Update CHANGELOG
+echo "### Added
+- Feature X: Description" >> CHANGELOG.md
+
+# Remove temporary code
+git grep "TODO(feature_x)" | xargs -I {} sed -i '' 's/TODO(feature_x)//' {}
+
+# Close ticket
+gh issue close <issue-number> --comment "Feature shipped successfully"
+```
+
+---
+
+## 🐛 BUG FIX WORKFLOW - Order of Operations
+
+### 1️⃣ Triage
+```markdown
+## Bug Report Template
+**Symptom:** What's broken?
+**Scope/Impact:** How many users affected?
+**First Bad Release:** v1.2.3
+**Suspected Area:** Authentication module
+**Severity:** P0 | P1 | P2 | P3
+
+## For Sev-1/Hotfix
+- Skip normal queue
+- Write incident note
+- Follow hotfix fast path
+```
+
+### 2️⃣ Reproduce & Add Failing Test
+```typescript
+// FIRST: Write a test that fails
+describe('Bug #421', () => {
+  it('should preserve caller ID on transfer', () => {
+    // This test MUST fail before the fix
+    const result = transferCall({ assertedId: '+1234567890' });
+    expect(result.callerId).toBe('+1234567890'); // Currently fails
+  });
+});
+```
+
+### 3️⃣ Branch
+```bash
+git checkout -b fix/<scope>-<issue#>
+# Example: fix/telephony-421
+```
+
+### 4️⃣ Root Cause & Minimal Fix
+```typescript
+// Prefer smallest change that addresses root cause
+// BAD: Refactor entire module
+// GOOD: Fix the specific line causing the issue
+
+// Before (buggy)
+const callerId = call.id; // Wrong field
+
+// After (fixed)
+const callerId = call.assertedId || call.id; // Correct field with fallback
+```
+
+### 5️⃣ Run Affected Targets
+```bash
+nx affected:test --base=origin/main
+nx affected:build --base=origin/main
+
+# If infrastructure changed
+nx run <infra-project>:synth
+cdk diff
+```
+
+### 6️⃣ PR (Can be marked "hotfix")
+```markdown
+## Bug Fix PR Template
+**Root Cause:** Caller ID field was using wrong property
+**Before:** System used `call.id` instead of `call.assertedId`
+**After:** System correctly uses `call.assertedId` with fallback
+**How to Verify:** Run test case in PR description
+**Risk:** Low - isolated change with fallback
+**Rollback:** `git revert` this commit
+```
+
+### 7️⃣ CI + Staging
+```bash
+# Deploy to staging
+npm run deploy:staging
+
+# Run focused sanity tests
+npm run test:sanity --area=telephony
+
+# Run global smoke tests
+npm run test:smoke:staging
+```
+
+### 8️⃣ Production
+```bash
+# Deploy (with flag if added for safety)
+BUGFIX_421_ENABLED=true npm run deploy:production
+
+# Verify metrics
+curl https://metrics.example.com/api/telephony/errors
+
+# Post incident resolution
+echo "Incident resolved: Bug #421 fixed and deployed" >> incidents.log
+```
+
+---
+
+## 🚨 HOTFIX FAST PATH (Sev-1)
+
+### Immediate Response
+```bash
+# 1. Create hotfix branch from prod tag
+git checkout -b hotfix/<short-title> production-v1.2.3
+
+# 2. Reproduce → Failing test → Minimal fix
+npm run test:reproduce-bug
+
+# 3. Fast CI lane (skip non-critical)
+nx run-many -t lint,test,build --projects=affected
+
+# 4. Deploy directly to prod
+npm run deploy:production:hotfix
+
+# 5. Post-deploy smoke
+npm run test:smoke:production
+
+# 6. Monitor for 15-30 minutes
+watch -n 5 'curl https://api.example.com/health'
+
+# 7. Back-merge to main
+git checkout main
+git merge hotfix/<short-title>
+
+# 8. Create postmortem
+gh issue create --title "Postmortem: <incident>" \
+  --body "Root cause, timeline, action items"
+```
+
+---
+
+## 🎛️ ROLLOUT & SAFETY PATTERNS
+
+### Feature Flags
+```typescript
+// Ship dark, test safely, instant rollback
+const featureFlag = {
+  name: 'feature_x_enabled',
+  defaultValue: false,
+  rollout: {
+    internal: true,
+    beta: false,
+    production: false
+  }
+};
+```
+
+### Migration Strategy
+```typescript
+// 1. Deploy forward-compatible code
+function readData() {
+  return newSchema || oldSchema; // Works with both
+}
+
+// 2. Run migration
+await runMigration();
+
+// 3. Flip to new path
+function readData() {
+  return newSchema; // Only new
+}
+
+// 4. Remove old code
+// Delete oldSchema references
+```
+
+### Canary/Blue-Green
+```yaml
+deployment:
+  strategy: canary
+  stages:
+    - weight: 5%   # 5% traffic
+      duration: 1h
+    - weight: 25%  # If metrics good
+      duration: 2h
+    - weight: 100% # Full rollout
+```
+
+### Observability
+```typescript
+// Add instrumentation
+const timer = metrics.startTimer('feature_x_duration');
+try {
+  logger.info('feature_x_started', { userId, timestamp });
+  const result = await featureXLogic();
+  metrics.increment('feature_x_success');
+  return result;
+} catch (error) {
+  metrics.increment('feature_x_error');
+  logger.error('feature_x_failed', { error, userId });
+  throw error;
+} finally {
+  timer.end();
+}
+```
+
+### Kill Switch
+```typescript
+// Emergency bypass
+if (process.env.KILL_FEATURE_X === 'true') {
+  return legacyImplementation();
+}
+```
+
+---
+
+## ✅ COMMIT HYGIENE (Conventional Commits)
+
+```bash
+# Features
+feat(intake): de-duplicate leads on create
+feat(api): add webhook retry mechanism
+
+# Fixes
+fix(telephony): preserve asserted caller id on transfer
+fix(auth): handle expired tokens gracefully
+
+# Other types
+refactor(crm): extract lead normalizer
+test(api): add regression for empty policy_id
+docs(readme): update deployment instructions
+perf(query): optimize contact search
+chore(deps): update nx to v20
+```
+
+---
+
+## 🛠️ MINIMAL COMMAND SET (Nx-Friendly)
+
+```bash
+# Branch management
+git checkout -b feat/<scope>-<title>
+git checkout -b fix/<scope>-<issue#>
+
+# Code generation
+nx g @nx/js:lib <lib-name>
+nx g @nx/node:application <app-name>
+nx g @nx/react:component <component-name>
+
+# Development loop
+nx affected:lint --parallel
+nx affected:test --parallel
+nx affected:build --parallel
+
+# E2E testing
+nx run <app>-e2e:e2e
+nx run <app>-e2e:e2e --watch
+
+# Infrastructure (CDK)
+nx run <infra-project>:synth
+nx run <infra-project>:deploy --require-approval never
+nx run <infra-project>:destroy --force
+
+# Full pipeline simulation
+nx run-many -t lint,test,build,e2e --parallel
+
+# Deploy commands (handled by CI, but available locally)
+npm run deploy:preview   # PR preview
+npm run deploy:staging   # Staging environment
+npm run deploy:production # Production (requires auth)
+```
+
+---
+
+## 📋 TINY CHECKLISTS
+
+### Feature DoR (Definition of Ready)
+```markdown
+- [ ] One-sentence goal & acceptance criteria written
+- [ ] Feature flag name chosen: `feature_<name>_enabled`
+- [ ] Data changes & migration plan documented
+- [ ] Test plan sketched (unit/integration/e2e/smoke)
+- [ ] Observability plan noted (logs/metrics/dashboards)
+- [ ] Dependencies identified (APIs/packages/services)
+- [ ] Risk assessment completed
+```
+
+### Feature DoD (Definition of Done)
+```markdown
+- [ ] All acceptance criteria pass
+- [ ] Tests added & passing (unit/integration/e2e)
+- [ ] Documentation/ADR updated
+- [ ] Code reviewed and approved
+- [ ] CI/CD pipeline green
+- [ ] Deployed to staging with flag OFF
+- [ ] Post-deploy smoke tests green (staging)
+- [ ] Progressive rollout plan executed
+- [ ] Production smoke tests green
+- [ ] Monitoring dashboards show healthy metrics
+- [ ] Feature flag at 100% or removed
+- [ ] Rollback steps documented and tested
+- [ ] CHANGELOG updated
+- [ ] Ticket closed
+```
+
+### Bug Fix DoD
+```markdown
+- [ ] Failing test written that reproduces bug
+- [ ] Root cause identified and documented
+- [ ] Minimal fix implemented (no scope creep)
+- [ ] Failing test now passes
+- [ ] Regression tests added for edge cases
+- [ ] No new bugs introduced (all tests green)
+- [ ] Code reviewed with focus on fix
+- [ ] Deployed to staging and verified
+- [ ] Deployed to production and verified
+- [ ] Metrics monitored for 30 minutes post-deploy
+- [ ] Incident note posted (if severity requires)
+- [ ] Postmortem scheduled (if P0/P1)
+```
+
+### Hotfix Checklist (Sev-1)
+```markdown
+- [ ] Incident commander assigned
+- [ ] Hotfix branch created from prod tag
+- [ ] Failing test reproduces issue
+- [ ] Minimal fix applied
+- [ ] Fast CI lane passed (critical tests only)
+- [ ] Deployed directly to production
+- [ ] Post-deploy smoke tests passed
+- [ ] Monitoring for 30 minutes
+- [ ] Customer impact assessment done
+- [ ] Back-merged to main and release branches
+- [ ] Incident timeline documented
+- [ ] Postmortem issue created with action items
+- [ ] Stakeholders notified of resolution
+```
+
+### PR Review Checklist
+```markdown
+- [ ] Title follows conventional commits
+- [ ] Description includes context and screenshots
+- [ ] Acceptance criteria clearly listed
+- [ ] Tests added for new functionality
+- [ ] No commented-out code
+- [ ] No console.logs in production code
+- [ ] Feature flag implemented (if applicable)
+- [ ] Documentation updated
+- [ ] Security implications considered
+- [ ] Performance impact assessed
+- [ ] Rollback plan documented
+- [ ] Dependent PRs linked (if any)
+```
+
+---
+
+## 🎯 SUCCESS METRICS
+
+Track these to ensure the process is working:
+
+- **Lead Time:** < 3 days from branch to production
+- **Deployment Frequency:** Multiple times per day
+- **MTTR (Mean Time to Recovery):** < 30 minutes
+- **Change Failure Rate:** < 5%
+- **Test Coverage:** > 80% for new code
+- **PR Review Time:** < 4 hours
+- **Rollback Success Rate:** 100%
+- **Feature Flag Adoption:** 100% for new features
+
+---
+
+## 💡 TIPS FOR SUCCESS
+
+1. **Start with the test** - Write the failing test first
+2. **Ship behind flags** - Always use feature flags for new features
+3. **Small PRs win** - Aim for < 400 lines per PR
+4. **Automate everything** - If you do it twice, automate it
+5. **Monitor proactively** - Add metrics before you need them
+6. **Document decisions** - Future you will thank present you
+7. **Rollback fast** - Better to rollback than debug in production
+8. **Learn from incidents** - Every incident should improve the process
+
+---
+
+## 🚀 QUICK START
+
+When the AI assistant is helping you ship a feature or fix a bug, it will:
+
+1. **Ask for context** - What are you shipping? Feature or bug fix?
+2. **Guide through checklist** - Follow the appropriate workflow
+3. **Generate boilerplate** - PR templates, test structures, etc.
+4. **Validate readiness** - Ensure DoR is met before starting
+5. **Track progress** - Check items off the DoD as completed
+6. **Suggest commands** - Provide exact Nx commands to run
+7. **Review for safety** - Ensure rollback plan exists
+
+Just say: "I need to ship a new feature" or "I need to fix a bug" and the AI will guide you through the battle-tested process!

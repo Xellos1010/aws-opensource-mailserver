@@ -1,0 +1,65 @@
+%% C4 Container Diagram — Foundry Orchestration Composer
+flowchart LR
+    operator["Operator"]
+
+    subgraph surface["Operator surfaces"]
+        cc["Cursor Companion Composer
+write-capable"]
+        gv["Graph Viewer / Foundry App Projection
+read-capable"]
+    end
+
+    subgraph api["Control plane boundary"]
+        gateway["Composer API Gateway
+validation + routing"]
+        registry["Registry Projection Service"]
+        repoSvc["Composition Repository Service"]
+        compile["Pipeline Compiler"]
+        policy["Execution Policy Gateway"]
+        session["Session Projection Service"]
+    end
+
+    subgraph state["State authorities"]
+        blockStore["Building Block Library Index
+declared projection"]
+        compStore["Composed Configurations
+declared state"]
+        pipeStore["Pipeline Definitions
+declared state"]
+        compileStore["Compilation Results
+traceable outputs"]
+        runStore["Runs / Continuity / Approvals / Evidence refs
+observed state"]
+    end
+
+    subgraph ext["External / existing Foundry components"]
+        repo["Repo-native personas / skills / templates"]
+        runCtrl["Existing run-control and orchestration flows"]
+        adapters["Runtime adapters"]
+    end
+
+    operator --> cc
+    operator --> gv
+    cc --> gateway
+    gv --> session
+    gv --> compStore
+
+    gateway --> registry
+    gateway --> repoSvc
+    gateway --> compile
+    gateway --> policy
+    gateway --> session
+
+    registry --> repo
+    registry --> blockStore
+    repoSvc --> compStore
+    repoSvc --> pipeStore
+    compile --> compileStore
+    compile --> runCtrl
+    compile --> policy
+    policy --> runCtrl
+    runCtrl --> adapters
+    runCtrl --> runStore
+    session --> runStore
+    session --> compileStore
+    session --> compStore

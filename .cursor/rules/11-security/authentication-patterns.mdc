@@ -1,0 +1,18 @@
+---
+globs: apps/chrome-extensions/PMHNP-Administration-SummerySky/**,libs/summerysky/**,libs/Google-Chrome-Extension-Library/**
+alwaysApply: false
+description: "Authentication patterns for extension-based OAuth"
+---
+# Authentication Patterns (OAuth in MV3)
+
+Use secure, least-privilege OAuth flows and avoid persisting access tokens.
+
+## Requirements
+- Use `chrome.identity` for OAuth flows; do not embed client secrets.
+- Request least-privilege scopes; prefer `drive.file` and `documents` over broad Drive access.
+- Do not persist access tokens; use short-lived tokens from `getAuthToken` and remove cached tokens on disconnect.
+- Handle token expiry and `invalid_grant` by prompting for re-auth.
+- Store only non-sensitive connection state (connected email, root folder id) and treat it as sensitive config.
+
+## Verification
+- Add unit tests for token retrieval, cache removal, and 401/403 re-auth handling.

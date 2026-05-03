@@ -1,0 +1,402 @@
+{
+  "documentationName": "Subscriptions API",
+  "url": "https://developer.godaddy.com/doc/endpoint/subscriptions",
+  "title": "Documentation: Subscriptions API",
+  "generatedAt": "2025-11-09T04:57:45.683Z",
+  "endpointsFound": 5,
+  "endpointsExpanded": 5,
+  "endpointsExtracted": 5,
+  "endpoints": [
+    {
+      "operationType": "GET",
+      "path": "/v1/subscriptions",
+      "name": "/v1/subscriptions",
+      "description": "GET/v1/subscriptionsRetrieve a list of Subscriptions for the specified Shopper",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "X-App-Key",
+          "type": "string",
+          "description": "A unique application key identifying the source of the request. This is required for request tracking",
+          "required": true,
+          "location": "header"
+        },
+        {
+          "name": "X-Shopper-Id",
+          "type": "string",
+          "description": "Shopper ID to return subscriptions for when not using JWT",
+          "required": false,
+          "location": "header"
+        },
+        {
+          "name": "X-Market-Id",
+          "type": "string",
+          "description": "The market that the response should be formatted for",
+          "required": false,
+          "location": "header"
+        },
+        {
+          "name": "productGroupKeys",
+          "type": "array[string]",
+          "description": "Only return Subscriptions with the specified product groups",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "includes",
+          "type": "array[string]",
+          "description": "Optional details to be included in the response",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "offset",
+          "type": "integer",
+          "description": "Number of Subscriptions to skip before starting to return paged results (must be a multiple of the limit)",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "description": "Number of Subscriptions to retrieve in this page, starting after offset",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "sort",
+          "type": "string",
+          "description": "Property name that will be used to sort results. \"-\" indicates descending",
+          "required": false,
+          "location": "query"
+        }
+      ],
+      "responses": [
+        {
+          "code": "200",
+          "description": "Request was successful",
+          "example": "{\n  \"pagination\": {\n    \"first\": \"string\",\n    \"last\": \"string\",\n    \"next\": \"string\",\n    \"previous\": \"string\",\n    \"total\": 0\n  },\n  \"subscriptions\": [\n    {\n      \"addons\": [\n        {\n          \"commitment\": \"PAID\",\n          \"pfid\": 0,\n          \"quantity\": 0\n        }\n      ],\n      \"billing\": {\n        \"commitment\": \"PAID\",\n        \"pastDueTypes\": [\n          \"ADDON\"\n        ],\n        \"renewAt\": \"string\",\n        \"status\": \"CURRENT\"\n      },\n      \"cancelable\": true,\n      \"createdAt\": \"string\",\n      \"expiresAt\": \"string\",\n      \"label\": \"string\",\n      \"launchUrl\": \"string\",\n      \"paymentProfileId\": 0,\n      \"priceLocked\": true,\n      \"product\": {\n        \"label\": \"string\",\n        \"namespace\": \"string\",\n        \"pfid\": 0,\n        \"productGroupKey\": \"string\",\n        \"renewalPeriod\": 0,\n        \"renewalPeriodUnit\": \"MONTH\",\n        \"renewalPfid\": 0,\n        \"supportBillOn\": true\n      },\n      \"relations\": {\n        \"children\": [\n          \"string\"\n        ],\n        \"parent\": \"string\"\n      },\n      \"renewAuto\": true,\n      \"renewable\": true,\n      \"status\": \"ACTIVE\",\n      \"subscriptionId\": \"string\",\n      \"upgradeable\": true\n    }\n  ]\n}"
+        },
+        {
+          "code": "400",
+          "description": "Request was malformed",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "422",
+          "description": "Invalid query parameter (custom message returned for each parameter)",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "429",
+          "description": "Too many requests received within interval",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"retryAfterSec\": 0\n}"
+        },
+        {
+          "code": "500",
+          "description": "Internal server error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        }
+      ],
+      "expanded": true
+    },
+    {
+      "operationType": "GET",
+      "path": "/v1/subscriptions/productGroups",
+      "name": "/v1/subscriptions/productGroups",
+      "description": "GET/v1/subscriptions/productGroupsRetrieve a list of ProductGroups for the specified Shopper",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "X-App-Key",
+          "type": "string",
+          "description": "A unique application key identifying the source of the request. This is required for request tracking",
+          "required": true,
+          "location": "header"
+        },
+        {
+          "name": "X-Shopper-Id",
+          "type": "string",
+          "description": "Shopper ID to return data for when not using JWT",
+          "required": false,
+          "location": "header"
+        }
+      ],
+      "responses": [
+        {
+          "code": "200",
+          "description": "Request was successful",
+          "example": "[\n  {\n    \"productGroupKey\": \"string\",\n    \"subscriptionCount\": 0\n  }\n]"
+        },
+        {
+          "code": "400",
+          "description": "Request was malformed",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "429",
+          "description": "Too many requests received within interval",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"retryAfterSec\": 0\n}"
+        },
+        {
+          "code": "500",
+          "description": "Internal server error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        }
+      ],
+      "expanded": true
+    },
+    {
+      "operationType": "DELETE",
+      "path": "/v1/subscriptions/{subscriptionId}",
+      "name": "/v1/subscriptions/{subscriptionId}",
+      "description": "DELETE/v1/subscriptions/{subscriptionId}Cancel the specified Subscription",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "X-App-Key",
+          "type": "string",
+          "description": "A unique application key identifying the source of the request. This is required for request tracking",
+          "required": true,
+          "location": "header"
+        },
+        {
+          "name": "X-Shopper-Id",
+          "type": "string",
+          "description": "Shopper ID to return data for when not using JWT",
+          "required": false,
+          "location": "header"
+        },
+        {
+          "name": "subscriptionId",
+          "type": "string",
+          "description": "Unique identifier of the Subscription to cancel",
+          "required": true,
+          "location": "path"
+        }
+      ],
+      "responses": [
+        {
+          "code": "204",
+          "description": "Request was successful"
+        },
+        {
+          "code": "400",
+          "description": "Request was malformed",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "404",
+          "description": "Resource not found",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "422",
+          "description": "Failed to determine if the domain is protected (invalid domain ID)Invalid Subscription IdThe Office 365 Subscription cannot be cancelled (shopper is migrating)The Subscription cannot be cancelledThe Subscription cannot be cancelled (PFID is disabled for cancellation)The Subscription cannot be cancelled (domain is protected)The domain alert Subscription cannot be cancelled",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "429",
+          "description": "Too many requests received within interval",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"retryAfterSec\": 0\n}"
+        },
+        {
+          "code": "500",
+          "description": "Failed to determine if the Office 365 account is migratingFailed to determine if the domain alert is cancellableFailed to determine if the domain is protectedInternal server error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "504",
+          "description": "Gateway timeout",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        }
+      ],
+      "expanded": true
+    },
+    {
+      "operationType": "GET",
+      "path": "/v1/subscriptions/{subscriptionId}",
+      "name": "/v1/subscriptions/{subscriptionId}",
+      "description": "GET/v1/subscriptions/{subscriptionId}Retrieve details for the specified Subscription",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "X-App-Key",
+          "type": "string",
+          "description": "A unique application key identifying the source of the request. This is required for request tracking",
+          "required": true,
+          "location": "header"
+        },
+        {
+          "name": "X-Shopper-Id",
+          "type": "string",
+          "description": "Shopper ID to be operated on, if different from JWT",
+          "required": false,
+          "location": "header"
+        },
+        {
+          "name": "subscriptionId",
+          "type": "string",
+          "description": "Unique identifier of the Subscription to retrieve",
+          "required": true,
+          "location": "path"
+        }
+      ],
+      "responses": [
+        {
+          "code": "200",
+          "description": "Request was successful",
+          "example": "{\n  \"addons\": [\n    {\n      \"commitment\": \"PAID\",\n      \"pfid\": 0,\n      \"quantity\": 0\n    }\n  ],\n  \"billing\": {\n    \"commitment\": \"PAID\",\n    \"pastDueTypes\": [\n      \"ADDON\"\n    ],\n    \"renewAt\": \"string\",\n    \"status\": \"CURRENT\"\n  },\n  \"cancelable\": true,\n  \"createdAt\": \"string\",\n  \"expiresAt\": \"string\",\n  \"label\": \"string\",\n  \"launchUrl\": \"string\",\n  \"paymentProfileId\": 0,\n  \"priceLocked\": true,\n  \"product\": {\n    \"label\": \"string\",\n    \"namespace\": \"string\",\n    \"pfid\": 0,\n    \"productGroupKey\": \"string\",\n    \"renewalPeriod\": 0,\n    \"renewalPeriodUnit\": \"MONTH\",\n    \"renewalPfid\": 0,\n    \"supportBillOn\": true\n  },\n  \"relations\": {\n    \"children\": [\n      \"string\"\n    ],\n    \"parent\": \"string\"\n  },\n  \"renewAuto\": true,\n  \"renewable\": true,\n  \"status\": \"ACTIVE\",\n  \"subscriptionId\": \"string\",\n  \"upgradeable\": true\n}"
+        },
+        {
+          "code": "400",
+          "description": "Request was malformed",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "404",
+          "description": "Resource not found",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "422",
+          "description": "Invalid Subscription Id",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "429",
+          "description": "Too many requests received within interval",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"retryAfterSec\": 0\n}"
+        },
+        {
+          "code": "500",
+          "description": "Internal server error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "504",
+          "description": "Gateway timeout",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        }
+      ],
+      "expanded": true
+    },
+    {
+      "operationType": "PATCH",
+      "path": "/v1/subscriptions/{subscriptionId}",
+      "name": "/v1/subscriptions/{subscriptionId}",
+      "description": "Only Subscription properties that can be changed without immediate financial impact can be modified via PATCH, whereas some properties can be changed by purchasing a renewalThis endpoint only supports JWT authentication",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "X-App-Key",
+          "type": "string",
+          "description": "A unique application key identifying the source of the request. This is required for request tracking",
+          "required": true,
+          "location": "header"
+        },
+        {
+          "name": "X-Shopper-Id",
+          "type": "string",
+          "description": "Shopper ID to be operated on, if different from JWT",
+          "required": false,
+          "location": "header"
+        },
+        {
+          "name": "subscriptionId",
+          "type": "string",
+          "description": "Unique identifier of the Subscription to update",
+          "required": true,
+          "location": "path"
+        },
+        {
+          "name": "subscription",
+          "type": "string",
+          "description": "Details of the Subscription to change",
+          "required": true,
+          "location": "body"
+        }
+      ],
+      "responses": [
+        {
+          "code": "204",
+          "description": "Request was successful"
+        },
+        {
+          "code": "400",
+          "description": "Request was malformed",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access  This method only supports JWT authentication",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "404",
+          "description": "Subscription not found  Payment profile not found",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "500",
+          "description": "Internal server error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        }
+      ],
+      "requestBody": {
+        "contentType": "application/json",
+        "example": "{\n  \"paymentProfileId\": 0,\n  \"renewAuto\": true\n}"
+      },
+      "expanded": true
+    }
+  ],
+  "metadata": {
+    "source": "https://developer.godaddy.com/doc/endpoint/subscriptions",
+    "xpath": "//*[@id=\"main\"]/div/div[2]"
+  }
+}

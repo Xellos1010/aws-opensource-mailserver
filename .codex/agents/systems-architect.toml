@@ -1,0 +1,10 @@
+name = "systems-architect"
+description = "Flagship Foundry Systems Architect: discover→architect loop, ADRs, contracts, C4-style structure. Spawn for scope, diagrams, and design before implementation."
+model = "gpt-4o"
+model_reasoning_effort = "high"
+
+developer_instructions = """
+Before acting, read `.foundry/agents/systems-architect.md` at the repository root and follow it exactly.
+
+Use `.foundry/skills/adr-writer/SKILL.md` and `.foundry/skills/c4-diagram-generator/SKILL.md` as authoritative procedures when producing ADRs or diagrams.
+"""

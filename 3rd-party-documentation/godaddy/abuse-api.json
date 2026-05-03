@@ -1,0 +1,355 @@
+{
+  "documentationName": "Abuse API",
+  "url": "https://developer.godaddy.com/doc/endpoint/abuse",
+  "title": "Documentation: Abuse API",
+  "generatedAt": "2025-11-09T04:55:37.276Z",
+  "endpointsFound": 6,
+  "endpointsExpanded": 6,
+  "endpointsExtracted": 6,
+  "endpoints": [
+    {
+      "operationType": "GET",
+      "path": "/v1/abuse/tickets",
+      "name": "/v1/abuse/tickets",
+      "description": "GET/v1/abuse/ticketsList all abuse tickets ids that match user provided filters",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "type",
+          "type": "string",
+          "description": "The type of abuse.",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "closed",
+          "type": "boolean",
+          "description": "Is this abuse ticket closed?",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "sourceDomainOrIp",
+          "type": "string($host-name-or-ip-address)",
+          "description": "The domain name or ip address the abuse originated from",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "target",
+          "type": "string",
+          "description": "The brand/company the abuse is targeting. ie: brand name/bank name",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "createdStart",
+          "type": "string($iso-datetime)",
+          "description": "The earliest abuse ticket creation date to pull abuse tickets for",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "createdEnd",
+          "type": "string($iso-datetime)",
+          "description": "The latest abuse ticket creation date to pull abuse tickets for",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "limit",
+          "type": "integer($integer-positive)",
+          "description": "Number of abuse ticket numbers to return.",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "offset",
+          "type": "integer($integer-positive)",
+          "description": "The earliest result set record number to pull abuse tickets for",
+          "required": false,
+          "location": "query"
+        }
+      ],
+      "responses": [
+        {
+          "code": "200",
+          "description": "Success",
+          "example": "{\n  \"pagination\": {\n    \"first\": \"string\",\n    \"last\": \"string\",\n    \"next\": \"string\",\n    \"previous\": \"string\",\n    \"total\": 0\n  },\n  \"ticketIds\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "422",
+          "description": "Error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        }
+      ],
+      "expanded": true
+    },
+    {
+      "operationType": "POST",
+      "path": "/v1/abuse/tickets",
+      "name": "/v1/abuse/tickets",
+      "description": "POST/v1/abuse/ticketsCreate a new abuse ticket",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "body",
+          "type": "object",
+          "description": "The endpoint which allows the Reporter to create a new abuse ticket",
+          "required": true,
+          "location": "body"
+        }
+      ],
+      "responses": [
+        {
+          "code": "201",
+          "description": "Success",
+          "example": "{\n  \"u_number\": \"string\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "422",
+          "description": "Error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        }
+      ],
+      "requestBody": {
+        "contentType": "application/json",
+        "example": "{\n  \"info\": \"string\",\n  \"infoUrl\": \"string\",\n  \"source\": \"string\",\n  \"target\": \"string\",\n  \"intentional\": false,\n  \"proxy\": \"string\",\n  \"type\": \"A_RECORD\"\n}"
+      },
+      "expanded": true
+    },
+    {
+      "operationType": "GET",
+      "path": "/v1/abuse/tickets/{ticketId}",
+      "name": "/v1/abuse/tickets/{ticketId}",
+      "description": "GET/v1/abuse/tickets/{ticketId}Return the abuse ticket data for a given ticket id",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "ticketId",
+          "type": "string",
+          "description": "A unique abuse ticket identifier",
+          "required": true,
+          "location": "path"
+        }
+      ],
+      "responses": [
+        {
+          "code": "200",
+          "description": "Success",
+          "example": "{\n  \"closed\": false,\n  \"closedAt\": \"string\",\n  \"createdAt\": \"string\",\n  \"domainIp\": \"string\",\n  \"reporter\": \"string\",\n  \"source\": \"string\",\n  \"target\": \"string\",\n  \"ticketId\": \"string\",\n  \"type\": \"A_RECORD\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "404",
+          "description": "Invalid ticket id provided",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        }
+      ],
+      "expanded": true
+    },
+    {
+      "operationType": "GET",
+      "path": "/v2/abuse/tickets",
+      "name": "/v2/abuse/tickets",
+      "description": "GET/v2/abuse/ticketsList all abuse tickets ids that match user provided filters",
+      "tag": "v2",
+      "parameters": [
+        {
+          "name": "type",
+          "type": "string",
+          "description": "The type of abuse.",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "closed",
+          "type": "boolean",
+          "description": "Is this abuse ticket closed?",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "sourceDomainOrIp",
+          "type": "string($host-name-or-ip-address)",
+          "description": "The domain name or ip address the abuse originated from",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "target",
+          "type": "string",
+          "description": "The brand/company the abuse is targeting. ie: brand name/bank name",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "createdStart",
+          "type": "string($iso-datetime)",
+          "description": "The earliest abuse ticket creation date to pull abuse tickets for",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "createdEnd",
+          "type": "string($iso-datetime)",
+          "description": "The latest abuse ticket creation date to pull abuse tickets for",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "limit",
+          "type": "integer($integer-positive)",
+          "description": "Number of abuse ticket numbers to return.",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "offset",
+          "type": "integer($integer-positive)",
+          "description": "The earliest result set record number to pull abuse tickets for",
+          "required": false,
+          "location": "query"
+        }
+      ],
+      "responses": [
+        {
+          "code": "200",
+          "description": "Success",
+          "example": "{\n  \"pagination\": {\n    \"first\": \"string\",\n    \"last\": \"string\",\n    \"next\": \"string\",\n    \"previous\": \"string\",\n    \"total\": 0\n  },\n  \"ticketIds\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "422",
+          "description": "Error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        }
+      ],
+      "expanded": true
+    },
+    {
+      "operationType": "POST",
+      "path": "/v2/abuse/tickets",
+      "name": "/v2/abuse/tickets",
+      "description": "POST/v2/abuse/ticketsCreate a new abuse ticket",
+      "tag": "v2",
+      "parameters": [
+        {
+          "name": "body",
+          "type": "object",
+          "description": "The endpoint which allows the Reporter to create a new abuse ticket",
+          "required": true,
+          "location": "body"
+        }
+      ],
+      "responses": [
+        {
+          "code": "201",
+          "description": "Success",
+          "example": "{\n  \"u_number\": \"string\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "422",
+          "description": "Error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        }
+      ],
+      "requestBody": {
+        "contentType": "application/json",
+        "example": "{\n  \"info\": \"string\",\n  \"infoUrl\": \"string\",\n  \"source\": \"string\",\n  \"target\": \"string\",\n  \"type\": \"CHILD_ABUSE\",\n  \"proxy\": \"ARE\",\n  \"useragent\": \"DESKTOP\"\n}"
+      },
+      "expanded": true
+    },
+    {
+      "operationType": "GET",
+      "path": "/v2/abuse/tickets/{ticketId}",
+      "name": "/v2/abuse/tickets/{ticketId}",
+      "description": "GET/v2/abuse/tickets/{ticketId}Return the abuse ticket data for a given ticket id",
+      "tag": "v2",
+      "parameters": [
+        {
+          "name": "ticketId",
+          "type": "string",
+          "description": "A unique abuse ticket identifier",
+          "required": true,
+          "location": "path"
+        }
+      ],
+      "responses": [
+        {
+          "code": "200",
+          "description": "Success",
+          "example": "{\n  \"closed\": false,\n  \"closedAt\": \"string\",\n  \"createdAt\": \"string\",\n  \"domainIp\": \"string\",\n  \"reporter\": \"string\",\n  \"source\": \"string\",\n  \"target\": \"string\",\n  \"ticketId\": \"string\",\n  \"type\": \"A_RECORD\",\n  \"closeReason\": \"ACTIONED\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        },
+        {
+          "code": "404",
+          "description": "Invalid ticket id provided",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"stack\": [\n    \"string\"\n  ]\n}"
+        }
+      ],
+      "expanded": true
+    }
+  ],
+  "metadata": {
+    "source": "https://developer.godaddy.com/doc/endpoint/abuse",
+    "xpath": "//*[@id=\"main\"]/div/div[2]"
+  }
+}

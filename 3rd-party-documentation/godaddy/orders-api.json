@@ -1,0 +1,219 @@
+{
+  "documentationName": "Orders API",
+  "url": "https://developer.godaddy.com/doc/endpoint/orders",
+  "title": "Documentation: Orders API",
+  "generatedAt": "2025-11-09T04:56:08.834Z",
+  "endpointsFound": 2,
+  "endpointsExpanded": 2,
+  "endpointsExtracted": 2,
+  "endpoints": [
+    {
+      "operationType": "GET",
+      "path": "/v1/orders",
+      "name": "/v1/orders",
+      "description": "API ResellersThis endpoint does not support subaccounts and therefore API Resellers should not supply an X-Shopper-Id header",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "periodStart",
+          "type": "string",
+          "description": "Start of range indicating what time-frame should be returned. Inclusive",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "periodEnd",
+          "type": "string",
+          "description": "End of range indicating what time-frame should be returned. Inclusive",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "domain",
+          "type": "string",
+          "description": "Domain name to use as the filter of results",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "productGroupId",
+          "type": "integer",
+          "description": "Product group id to use as the filter of results",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "paymentProfileId",
+          "type": "integer",
+          "description": "Payment profile id to use as the filter of results",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "parentOrderId",
+          "type": "string",
+          "description": "Parent order id to use as the filter of results",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "offset",
+          "type": "integer",
+          "description": "Number of results to skip for pagination",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "description": "Maximum number of items to return",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "sort",
+          "type": "string",
+          "description": "Property name that will be used to sort results. '-' indicates descending",
+          "required": false,
+          "location": "query"
+        },
+        {
+          "name": "X-Shopper-Id",
+          "type": "string",
+          "description": "Shopper ID to be operated on, if different from JWTReseller subaccounts are not supported",
+          "required": false,
+          "location": "header"
+        },
+        {
+          "name": "X-App-Key",
+          "type": "string",
+          "description": "A unique application key identifying the source of the request. This is required for request tracking",
+          "required": true,
+          "location": "header"
+        }
+      ],
+      "responses": [
+        {
+          "code": "200",
+          "description": "Request was successful",
+          "example": "{\n  \"orders\": [\n    {\n      \"createdAt\": \"string\",\n      \"currency\": \"string\",\n      \"items\": [\n        {\n          \"label\": \"string\"\n        }\n      ],\n      \"orderId\": \"string\",\n      \"parentOrderId\": \"string\",\n      \"pricing\": {\n        \"total\": \"string\"\n      }\n    }\n  ],\n  \"pagination\": {\n    \"first\": \"string\",\n    \"last\": \"string\",\n    \"next\": \"string\",\n    \"previous\": \"string\",\n    \"total\": 0\n  }\n}"
+        },
+        {
+          "code": "400",
+          "description": "Request was malformed",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "429",
+          "description": "Too many requests received within interval",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"retryAfterSec\": 0\n}"
+        },
+        {
+          "code": "500",
+          "description": "Internal server error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "504",
+          "description": "Gateway timeout",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        }
+      ],
+      "expanded": true
+    },
+    {
+      "operationType": "GET",
+      "path": "/v1/orders/{orderId}",
+      "name": "/v1/orders/{orderId}",
+      "description": "API ResellersThis endpoint does not support subaccounts and therefore API Resellers should not supply an X-Shopper-Id header",
+      "tag": "v1",
+      "parameters": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "description": "Order id whose details are to be retrieved",
+          "required": true,
+          "location": "path"
+        },
+        {
+          "name": "X-Shopper-Id",
+          "type": "string",
+          "description": "Shopper ID to be operated on, if different from JWTReseller subaccounts are not supported",
+          "required": false,
+          "location": "header"
+        },
+        {
+          "name": "X-Market-Id",
+          "type": "string",
+          "description": "Unique identifier of the Market in which the request is happening",
+          "required": false,
+          "location": "header"
+        },
+        {
+          "name": "X-App-Key",
+          "type": "string",
+          "description": "A unique application key identifying the source of the request. This is required for request tracking",
+          "required": true,
+          "location": "header"
+        }
+      ],
+      "responses": [
+        {
+          "code": "200",
+          "description": "Request was successful",
+          "example": "{\n  \"billTo\": {\n    \"contact\": {\n      \"addressMailing\": {\n        \"address1\": \"string\",\n        \"address2\": \"string\",\n        \"city\": \"string\",\n        \"country\": \"US\",\n        \"postalCode\": \"string\",\n        \"state\": \"string\"\n      },\n      \"email\": \"user@example.com\",\n      \"fax\": \"string\",\n      \"jobTitle\": \"string\",\n      \"nameFirst\": \"string\",\n      \"nameLast\": \"string\",\n      \"nameMiddle\": \"string\",\n      \"organization\": \"string\",\n      \"phone\": \"string\"\n    },\n    \"taxId\": \"string\"\n  },\n  \"createdAt\": \"string\",\n  \"currency\": \"string\",\n  \"items\": [\n    {\n      \"domains\": [\n        \"string\"\n      ],\n      \"label\": \"string\",\n      \"period\": 1,\n      \"periodUnit\": \"MONTH\",\n      \"pfid\": 0,\n      \"pricing\": {\n        \"discount\": 0,\n        \"fees\": {\n          \"icann\": 0,\n          \"total\": 0\n        },\n        \"list\": 0,\n        \"sale\": 0,\n        \"savings\": 0,\n        \"subtotal\": 0,\n        \"taxes\": 0,\n        \"unit\": {}\n      },\n      \"quantity\": 0,\n      \"taxCollector\": {\n        \"taxCollectorId\": 0\n      }\n    }\n  ],\n  \"orderId\": \"string\",\n  \"parentOrderId\": \"string\",\n  \"payments\": [\n    {\n      \"amount\": 0,\n      \"category\": \"CREDIT_CARD\",\n      \"paymentProfileId\": \"string\",\n      \"subcategory\": \"CHECKING_PERSONAL\"\n    }\n  ],\n  \"pricing\": {\n    \"discount\": 0,\n    \"fees\": {\n      \"icann\": 0,\n      \"total\": 0\n    },\n    \"id\": 0,\n    \"list\": 0,\n    \"savings\": 0,\n    \"subtotal\": 0,\n    \"taxes\": 0,\n    \"taxDetails\": [\n      {\n        \"amount\": 0,\n        \"rate\": 0\n      }\n    ],\n    \"total\": 0\n  }\n}"
+        },
+        {
+          "code": "400",
+          "description": "Request was malformed",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "401",
+          "description": "Authentication info not sent or invalid",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "403",
+          "description": "Authenticated user is not allowed access",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "404",
+          "description": "Resource not found",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "429",
+          "description": "Too many requests received within interval",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\",\n  \"retryAfterSec\": 0\n}"
+        },
+        {
+          "code": "500",
+          "description": "Internal server error",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        },
+        {
+          "code": "504",
+          "description": "Gateway timeout",
+          "example": "{\n  \"code\": \"string\",\n  \"fields\": [\n    {\n      \"code\": \"string\",\n      \"message\": \"string\",\n      \"path\": \"string\",\n      \"pathRelated\": \"string\"\n    }\n  ],\n  \"message\": \"string\"\n}"
+        }
+      ],
+      "expanded": true
+    }
+  ],
+  "metadata": {
+    "source": "https://developer.godaddy.com/doc/endpoint/orders",
+    "xpath": "//*[@id=\"main\"]/div/div[2]"
+  }
+}

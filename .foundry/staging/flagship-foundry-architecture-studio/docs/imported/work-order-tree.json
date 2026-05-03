@@ -1,0 +1,114 @@
+{
+  "workOrderTreeId": "wot-foundry-orchestration-composer-2026-03-28",
+  "systemId": "flagship-foundry-orchestration-composer",
+  "sourceArtifacts": [
+    "architecture-packet.md",
+    "adr-001-select-cursor-companion-as-canonical-operator-surface.md",
+    "adr-002-store-compositions-as-schema-backed-declarative-artifacts.md",
+    "adr-003-compile-pipelines-to-approved-work-orders-before-execution.md"
+  ],
+  "nodes": [
+    {
+      "workOrderId": "WO-001",
+      "title": "registry-projection-contracts",
+      "lifecycleStage": "plan",
+      "agentRole": "systems_architect",
+      "dependsOn": [],
+      "expectedOutputs": [
+        "registry projection rules",
+        "schema validation plan",
+        "contract integration notes"
+      ]
+    },
+    {
+      "workOrderId": "WO-002",
+      "title": "cursor-companion-composer-surface",
+      "lifecycleStage": "implement",
+      "agentRole": "builder",
+      "dependsOn": [
+        "WO-001"
+      ],
+      "expectedOutputs": [
+        "composer UI",
+        "block browser",
+        "compile and launch request flows"
+      ]
+    },
+    {
+      "workOrderId": "WO-003",
+      "title": "composer-control-plane-apis",
+      "lifecycleStage": "implement",
+      "agentRole": "builder",
+      "dependsOn": [
+        "WO-001"
+      ],
+      "expectedOutputs": [
+        "save/load/validate APIs",
+        "compile endpoint",
+        "session projection endpoints"
+      ]
+    },
+    {
+      "workOrderId": "WO-004",
+      "title": "execution-policy-gateway",
+      "lifecycleStage": "implement",
+      "agentRole": "builder",
+      "dependsOn": [
+        "WO-003"
+      ],
+      "expectedOutputs": [
+        "approval enforcement",
+        "runtime mode enforcement",
+        "delegation to existing run control"
+      ]
+    },
+    {
+      "workOrderId": "WO-005",
+      "title": "graph-viewer-projections",
+      "lifecycleStage": "implement",
+      "agentRole": "builder",
+      "dependsOn": [
+        "WO-001",
+        "WO-003"
+      ],
+      "expectedOutputs": [
+        "read-only pipeline view",
+        "approval boundary overlays",
+        "blast radius projections"
+      ]
+    },
+    {
+      "workOrderId": "WO-006",
+      "title": "continuity-evidence-session-projection",
+      "lifecycleStage": "implement",
+      "agentRole": "builder",
+      "dependsOn": [
+        "WO-003",
+        "WO-004"
+      ],
+      "expectedOutputs": [
+        "continuity reference surfacing",
+        "evidence target links",
+        "verifier status projection"
+      ]
+    },
+    {
+      "workOrderId": "WO-007",
+      "title": "verification-and-hardening",
+      "lifecycleStage": "verify",
+      "agentRole": "verifier",
+      "dependsOn": [
+        "WO-002",
+        "WO-004",
+        "WO-005",
+        "WO-006"
+      ],
+      "expectedOutputs": [
+        "contract test report",
+        "security review",
+        "performance review",
+        "evidence bundle"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,253 @@
+{
+  "bundleName": "foundry-uiux-revamp-packet-2026-04-10",
+  "projectName": "Flagship Foundry UI/UX Revamp",
+  "phaseId": "flagship-foundry-ui-ux-revamp-plan-2026-04-10",
+  "artifacts": [
+    {
+      "path": "README.md",
+      "sha256": "f1ddd67696c958c8e21790f533f157f2982f3d5409205ede6132202bd9c599f5",
+      "sizeBytes": 2062,
+      "artifactType": "document"
+    },
+    {
+      "path": "architecture-packet.md",
+      "sha256": "c0130bb90db4eb31e5ed3d484f55439933ec9559c3b907fe0135971f37b1564d",
+      "sizeBytes": 3021,
+      "artifactType": "document"
+    },
+    {
+      "path": "artifact-manifest.json",
+      "sha256": "d1bc794f5fdc3c65c045ed624c8684532176fc90a012ec72a39533c6927f1f3c",
+      "sizeBytes": 8443,
+      "artifactType": "json"
+    },
+    {
+      "path": "change-request.md",
+      "sha256": "1e92ec2ac7ccfa7cbd1e63aecf044d0b9e69f9e9bfee2907d6d44c6c3ed3564c",
+      "sizeBytes": 1325,
+      "artifactType": "document"
+    },
+    {
+      "path": "dependency-graph.mmd",
+      "sha256": "c9ddf41735acbb3ecbd54959810e199f502353888bc32fe5578cab4696be615b",
+      "sizeBytes": 749,
+      "artifactType": "diagram"
+    },
+    {
+      "path": "docs/adr/adr-001-select-cockpit-shell-as-canonical-operator-surface.md",
+      "sha256": "7f49c02810bfef03071b277a4249d00395af864aff573adc7a256abdd233420a",
+      "sizeBytes": 1699,
+      "artifactType": "document"
+    },
+    {
+      "path": "docs/adr/adr-002-separate-view-registry-from-runtime-state.md",
+      "sha256": "84dc1f901937e65d48352510a8bfac93b716b0c57fbfa1bcbe73ac053d204234",
+      "sizeBytes": 1303,
+      "artifactType": "document"
+    },
+    {
+      "path": "docs/adr/adr-003-adopt-operator-drilldown-chain.md",
+      "sha256": "71fb00df45f923b8bd5a0d1559697fadbd1c692a55d5403daadfd4ea4622d725",
+      "sizeBytes": 1132,
+      "artifactType": "document"
+    },
+    {
+      "path": "docs/adr/adr-004-adopt-motion-toggle-and-accessibility-baseline.md",
+      "sha256": "e9ac976487a3ab41873e456553d73b97be889ada9e5a9b1d31a817b64ef03b6f",
+      "sizeBytes": 1385,
+      "artifactType": "document"
+    },
+    {
+      "path": "docs/diagrams/c4-container.mmd",
+      "sha256": "5c5ef3926fbca00c389678fd8f259a2b3c508ae4c8a10db452c360188a7fddf4",
+      "sizeBytes": 1342,
+      "artifactType": "diagram"
+    },
+    {
+      "path": "docs/diagrams/c4-context.mmd",
+      "sha256": "2791f0cce23a61f887e91d9fed7d7471c70bf355794ef6d7c6252fcb6e63c950",
+      "sizeBytes": 965,
+      "artifactType": "diagram"
+    },
+    {
+      "path": "docs/diagrams/operator-drilldown-sequence.mmd",
+      "sha256": "6d696487875e5b9653d5d21946f3e5b16cb2b9cc2141eafd63cad1f0ac14e653",
+      "sizeBytes": 225,
+      "artifactType": "diagram"
+    },
+    {
+      "path": "docs/diagrams/state-authority.mmd",
+      "sha256": "39253e2e27096d1a5c66f7fed44cc15633451a8a9425ddc2dd14b82090c20861",
+      "sizeBytes": 544,
+      "artifactType": "diagram"
+    },
+    {
+      "path": "docs/packs/acceptance-criteria-traceability.md",
+      "sha256": "37ffea558b9339712273cabca9331ae151cbe3d30f13554b10a3ec2fd627060b",
+      "sizeBytes": 1015,
+      "artifactType": "document"
+    },
+    {
+      "path": "docs/packs/architect-brief.md",
+      "sha256": "1ecfb02097dcebf71645a0a5cff1dbb137157af7851c5d5e613c077a3d8c3164",
+      "sizeBytes": 730,
+      "artifactType": "document"
+    },
+    {
+      "path": "docs/packs/interaction-and-motion-system.md",
+      "sha256": "9b35e6a43347e1103c9b91cdd8f21a1830a6c0d5426a5e639b6819c625d5d6a5",
+      "sizeBytes": 1179,
+      "artifactType": "document"
+    },
+    {
+      "path": "docs/packs/knowledge-bases.md",
+      "sha256": "397c4cd0e6bd13860a9971d081b2796b926c06ef152bbc92f93d78ee8c77aa04",
+      "sizeBytes": 1023,
+      "artifactType": "document"
+    },
+    {
+      "path": "docs/packs/platform-adaptation.md",
+      "sha256": "36c04b248ded7ea7630a940da4d46432a7b50cf35df53251ab91fddac163520b",
+      "sizeBytes": 887,
+      "artifactType": "document"
+    },
+    {
+      "path": "docs/packs/repo-grounding.md",
+      "sha256": "0653fbe591b246a2430584e31c6157e7bb477afd5103de65933720e8f71b194e",
+      "sizeBytes": 1104,
+      "artifactType": "document"
+    },
+    {
+      "path": "docs/packs/screen-map.md",
+      "sha256": "58669b1610f4a04efb1065664fecd954ee8d5cef8a4405b15ceae630e2b24367",
+      "sizeBytes": 904,
+      "artifactType": "document"
+    },
+    {
+      "path": "docs/packs/task-corpus.md",
+      "sha256": "22f1119b6169598dc5c33b96f401a9c7484a5f4fd7a6fb0214a1e12dde3e27bd",
+      "sizeBytes": 7076,
+      "artifactType": "document"
+    },
+    {
+      "path": "docs/packs/specialized-agent-pipeline.md",
+      "sha256": "a707db7b33dd5cd4f63f1ec6063213ef4aa3bfc167990334520fdd7af2a01129",
+      "sizeBytes": 1626,
+      "artifactType": "document"
+    },
+    {
+      "path": "dor-checklist.md",
+      "sha256": "ad23acf21e2bc58ecd3016fc0188f3926f3b3ca374c6701f52848e77086ab4c5",
+      "sizeBytes": 371,
+      "artifactType": "document"
+    },
+    {
+      "path": "evidence/evidence-bundle.json",
+      "sha256": "27932694f64bd6308d9850aafbb42fb99ca52bee5cda40631c835468d528cb67",
+      "sizeBytes": 3504,
+      "artifactType": "json"
+    },
+    {
+      "path": "evidence/evidence-bundle.md",
+      "sha256": "383450c0bfac8f95f75d9f1ce7c7f84dcb926c5746a99cb50a1cc0fdd8841a31",
+      "sizeBytes": 2250,
+      "artifactType": "document"
+    },
+    {
+      "path": "foundry-import-manifest.json",
+      "sha256": "bf26876d932d153c8eac730ae0551a5f78884be2e54de7df323da325e842918a",
+      "sizeBytes": 5501,
+      "artifactType": "json"
+    },
+    {
+      "path": "intent-packet.md",
+      "sha256": "7e39265bf3fb7f949c52138c786a240d54f92c12676c95d78bfc325969c02d69",
+      "sizeBytes": 2894,
+      "artifactType": "document"
+    },
+    {
+      "path": "machine/agent-pack.json",
+      "sha256": "b78d35c0b88d441adb8767a0ab43662c017cea5b6cd2f6cf6f808c6eeb2a0ffd",
+      "sizeBytes": 11318,
+      "artifactType": "json"
+    },
+    {
+      "path": "machine/foundry-agent-work-orders.json",
+      "sha256": "589638fb23dc8689e5ce00b70e1ee805185bd5adce611e9201da60980a4eaa60",
+      "sizeBytes": 25642,
+      "artifactType": "json"
+    },
+    {
+      "path": "machine/knowledge-base-blueprint.json",
+      "sha256": "7c867649e71fe766e6884c586809062d96e96600a26ef92f83f71998930c13c8",
+      "sizeBytes": 3633,
+      "artifactType": "json"
+    },
+    {
+      "path": "machine/skill-pack.json",
+      "sha256": "e49a08e4daf3e2eac7ff0804226b4b930e97e4a0110e624449600758c613ebbf",
+      "sizeBytes": 6917,
+      "artifactType": "json"
+    },
+    {
+      "path": "machine/state-authority-matrix.json",
+      "sha256": "0f8dd770954f01b103ed7078da6e39ec8514b94d7a5aff2fd1e1643b2e5bbb17",
+      "sizeBytes": 3481,
+      "artifactType": "json"
+    },
+    {
+      "path": "machine/view-registry.json",
+      "sha256": "858e2fa42991b6ad95f862f99cb492ce48d4e37653201ec56d133d0cc90b5aa8",
+      "sizeBytes": 3102,
+      "artifactType": "json"
+    },
+    {
+      "path": "next-workspace.txt",
+      "sha256": "57182fc0f0d8538e37b37aaaec4fe20fc6af859e1d8760d4997e3d91546a4907",
+      "sizeBytes": 698,
+      "artifactType": "document"
+    },
+    {
+      "path": "plan.md",
+      "sha256": "fdd3ae4cb453f262f21be822a5a51259e40e0f35559e9d19c6acdbdcf0a898e4",
+      "sizeBytes": 2514,
+      "artifactType": "document"
+    },
+    {
+      "path": "references.md",
+      "sha256": "65763292d5f06dd0a01a0531a9829187b2edf06f8605a03f4c2d32344c618db5",
+      "sizeBytes": 645,
+      "artifactType": "document"
+    },
+    {
+      "path": "risk-register.md",
+      "sha256": "693c01081fa300e0e2caac265d9ba9671c229679051f9211c37675215282b41c",
+      "sizeBytes": 2133,
+      "artifactType": "document"
+    },
+    {
+      "path": "state-authority-matrix.md",
+      "sha256": "f82c1852c78e19167b8c42489a2734653e8e8e451c14dc42be63ed912ff0b665",
+      "sizeBytes": 1530,
+      "artifactType": "document"
+    },
+    {
+      "path": "verification-plan.md",
+      "sha256": "630b86a10b9b5b0c39f51d88c0a45ecb37b015a33748a555e137c7c40a30d632",
+      "sizeBytes": 1408,
+      "artifactType": "document"
+    },
+    {
+      "path": "work-order-batch.json",
+      "sha256": "0210664912e93e423b931461c2fd0d4de12d75a98ffc0c310cf00f75cbaf18c2",
+      "sizeBytes": 25474,
+      "artifactType": "json"
+    },
+    {
+      "path": "work-order-summary.md",
+      "sha256": "8827fe0a1bc9ad437b65a78276e1dc3699671d198ac4a632089b2c835e44b57a",
+      "sizeBytes": 1072,
+      "artifactType": "document"
+    }
+  ]
+}

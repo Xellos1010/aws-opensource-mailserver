@@ -1,0 +1,84 @@
+{
+  "name": "admin-s3-empty",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/admin/admin-s3-empty/src",
+  "projectType": "library",
+  "tags": ["scope:admin", "type:util", "platform:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/admin/admin-s3-empty",
+        "main": "libs/admin/admin-s3-empty/bin/empty-buckets.ts",
+        "tsConfig": "libs/admin/admin-s3-empty/tsconfig.lib.json",
+        "assets": [],
+        "format": ["esm"],
+        "outputFileName": "empty-buckets.mjs",
+        "generatePackageJson": true,
+        "bundle": true,
+        "platform": "node",
+        "target": "node20",
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".mjs"
+          }
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/admin/admin-s3-empty/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "empty": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=${AWS_PROFILE:-your-aws-profile} AWS_REGION=${AWS_REGION:-us-east-1} APP_PATH=${APP_PATH} STACK_NAME=${STACK_NAME} DOMAIN=${DOMAIN} DRY_RUN=${DRY_RUN:-0} node dist/libs/admin/admin-s3-empty/empty-buckets.mjs"
+      }
+    },
+    "empty:mailexample": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=your-aws-profile AWS_REGION=us-east-1 APP_PATH=apps/clients/cdk-client-example/core node dist/libs/admin/admin-s3-empty/empty-buckets.mjs"
+      }
+    },
+    "empty:mailexample:dry-run": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=your-aws-profile AWS_REGION=us-east-1 APP_PATH=apps/clients/cdk-client-example/core DRY_RUN=1 node dist/libs/admin/admin-s3-empty/empty-buckets.mjs"
+      }
+    },
+    "empty:mailexample:old-stack": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=your-aws-profile AWS_REGION=us-east-1 STACK_NAME=example-com-mailserver-core node dist/libs/admin/admin-s3-empty/empty-buckets.mjs"
+      }
+    },
+    "empty:sampletenant": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=your-aws-profile AWS_REGION=us-east-1 APP_PATH=apps/clients/cdk-client-example node dist/libs/admin/admin-s3-empty/empty-buckets.mjs"
+      }
+    },
+    "empty:sampletenant:dry-run": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "AWS_PROFILE=your-aws-profile AWS_REGION=us-east-1 APP_PATH=apps/clients/cdk-client-example DRY_RUN=1 node dist/libs/admin/admin-s3-empty/empty-buckets.mjs"
+      }
+    }
+  }
+}
+

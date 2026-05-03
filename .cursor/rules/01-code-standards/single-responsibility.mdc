@@ -1,0 +1,13 @@
+---
+description: Single-responsibility guidance for functions and modules
+alwaysApply: true
+---
+# Single Responsibility Principle (SRP)
+
+Each function, class, or module should have one, and only one, responsibility. This means focusing on a single task or concern.
+
+**Justification**: Reliability is critical, SRP reduces bug risk by limiting scope and simplifies debugging and refactoring.
+
+**Example**: `RecipeExecutor` should only handle recipe execution, while record export logic stays in `@ss/google-export` and storage logic stays in `@ss/patient-records`.
+
+**Related Rules**: [separation-of-concerns.mdc](mdc:.cursor/rules/01-code-standards/separation-of-concerns.mdc)

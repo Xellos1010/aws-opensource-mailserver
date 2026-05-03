@@ -1,0 +1,168 @@
+{
+  "projectName": "Flagship Foundry UI/UX Revamp",
+  "phaseId": "flagship-foundry-ui-ux-revamp-plan-2026-04-10",
+  "importStage": "pre_implementation",
+  "targetWorkspace": "Flagship Foundry — UI/UX Implementation and Verification",
+  "artifacts": [
+    {
+      "path": "change-request.md",
+      "purpose": "Problem statement and user request.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "intent-packet.md",
+      "purpose": "Bounded UI/UX intent and scope.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "docs/packs/task-corpus.md",
+      "purpose": "Operator task corpus, top decisions, and quick-action priorities.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "plan.md",
+      "purpose": "Program plan and milestone sequence.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "architecture-packet.md",
+      "purpose": "Primary architecture packet for the revamp.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "risk-register.md",
+      "purpose": "Revamp risk inventory.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "dor-checklist.md",
+      "purpose": "Definition of Ready gate.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "work-order-batch.json",
+      "purpose": "Primary executable work-order batch.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "work-order-summary.md",
+      "purpose": "Human-readable sequencing guidance.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "verification-plan.md",
+      "purpose": "Verification gates and scenario plan.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "artifact-manifest.json",
+      "purpose": "Artifact inventory and integrity records.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "docs/adr/adr-001-select-cockpit-shell-as-canonical-operator-surface.md",
+      "purpose": "Canonical cockpit shell decision.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "docs/adr/adr-002-separate-view-registry-from-runtime-state.md",
+      "purpose": "View registry and authority decision.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "docs/adr/adr-003-adopt-operator-drilldown-chain.md",
+      "purpose": "Drill-down chain decision.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "docs/adr/adr-004-adopt-motion-toggle-and-accessibility-baseline.md",
+      "purpose": "Interaction/accessibility baseline.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "dependency-graph.mmd",
+      "purpose": "Dependency graph for orchestration and parallelization.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "docs/diagrams/c4-context.mmd",
+      "purpose": "Context diagram.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "docs/diagrams/c4-container.mmd",
+      "purpose": "Container diagram.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "docs/diagrams/operator-drilldown-sequence.mmd",
+      "purpose": "Drill-down sequence diagram.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "docs/diagrams/state-authority.mmd",
+      "purpose": "State authority diagram.",
+      "requiredBeforeExecution": true
+    },
+    {
+      "path": "machine/agent-pack.json",
+      "purpose": "Machine-readable specialized agent pack.",
+      "requiredBeforeExecution": false
+    },
+    {
+      "path": "machine/skill-pack.json",
+      "purpose": "Machine-readable specialized skill pack.",
+      "requiredBeforeExecution": false
+    },
+    {
+      "path": "machine/knowledge-base-blueprint.json",
+      "purpose": "Machine-readable knowledge-base blueprint.",
+      "requiredBeforeExecution": false
+    },
+    {
+      "path": "machine/foundry-agent-work-orders.json",
+      "purpose": "Foundry-native work-order transform.",
+      "requiredBeforeExecution": false
+    },
+    {
+      "path": "evidence/evidence-bundle.md",
+      "purpose": "Evidence bundle for design and release gates.",
+      "requiredBeforeExecution": false
+    },
+    {
+      "path": "foundry-import-manifest.json",
+      "purpose": "This import manifest.",
+      "requiredBeforeExecution": true
+    }
+  ],
+  "importOrder": [
+    "change-request.md",
+    "intent-packet.md",
+    "docs/packs/task-corpus.md",
+    "plan.md",
+    "architecture-packet.md",
+    "risk-register.md",
+    "dor-checklist.md",
+    "docs/adr/adr-001-select-cockpit-shell-as-canonical-operator-surface.md",
+    "docs/adr/adr-002-separate-view-registry-from-runtime-state.md",
+    "docs/adr/adr-003-adopt-operator-drilldown-chain.md",
+    "docs/adr/adr-004-adopt-motion-toggle-and-accessibility-baseline.md",
+    "docs/diagrams/c4-context.mmd",
+    "docs/diagrams/c4-container.mmd",
+    "docs/diagrams/operator-drilldown-sequence.mmd",
+    "docs/diagrams/state-authority.mmd",
+    "work-order-batch.json",
+    "work-order-summary.md",
+    "verification-plan.md",
+    "artifact-manifest.json",
+    "foundry-import-manifest.json"
+  ],
+  "postImportActions": [
+    "ADR-001 through ADR-004 are approved and implementation may proceed.",
+    "Review docs/packs/task-corpus.md before implementing command palette and quick-action flows.",
+    "Activate WO-UX-006 first, then split into WO-UX-007 and WO-UX-008.",
+    "Keep WO-UX-014 as the release gate.",
+    "Carry evidence forward into WO-UX-015 release packaging."
+  ],
+  "sourceFormat": "schema-v1"
+}

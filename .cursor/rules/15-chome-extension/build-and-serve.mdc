@@ -1,0 +1,13 @@
+---
+globs: apps/chrome-extensions/**
+alwaysApply: false
+description: Build/serve commands and dist output contract for Chrome extensions
+---
+## Commands the AI should reuse
+- Build: `pnpm nx run pmhnp-administration-summerysky:build` (Vite, multi-entry).
+- Dev build: `pnpm nx run pmhnp-administration-summerysky:build:dev`.
+- Watch/serve: `pnpm nx run pmhnp-administration-summerysky:serve`.
+- Package ZIP: `pnpm nx run pmhnp-administration-summerysky:package`.
+- Copy static assets during build (manifest, popup/panel/options HTML/CSS, debug scripts): **preserve** the `cp` chain in the build step; add to it if new files are introduced.
+
+> Output location is `apps/chrome-extensions/PMHNP-Administration-SummerySky/dist` with `background.js`, `content.js`, `popup.js`, `manifest.json`, `popup.html`, `chunks/`. Keep this contract stable.

@@ -1,0 +1,51 @@
+graph TD
+  subgraph M1contractandregistryfoundation[M1 — contract and registry foundation]
+    WO-001A["WO-001A<br/>composer-schema-pack"]
+    WO-001B["WO-001B<br/>registry-projection-loader"]
+    WO-002A["WO-002A<br/>composition-artifact-store"]
+    WO-002B["WO-002B<br/>pipeline-compiler-core"]
+    WO-003A["WO-003A<br/>execution-policy-gateway-core"]
+  end
+  subgraph M2controlplaneandoperatorsurfaces[M2 — control plane and operator surfaces]
+    WO-003B["WO-003B<br/>composer-control-plane-crud-routes"]
+    WO-003C["WO-003C<br/>composer-control-plane-compile-launch-routes"]
+    WO-004A["WO-004A<br/>cursor-companion-composer-overlay"]
+    WO-005A["WO-005A<br/>pipeline-graph-projection-core"]
+    WO-005B["WO-005B<br/>graph-viewer-composer-projections"]
+    WO-006A["WO-006A<br/>session-projection-core"]
+    WO-006B["WO-006B<br/>runtime-observability-surfaces"]
+  end
+  subgraph M3verificationandhardening[M3 — verification and hardening]
+    WO-007A["WO-007A<br/>verification-and-hardening"]
+  end
+  subgraph M4releaseandlearning[M4 — release and learning]
+    WO-008A["WO-008A<br/>release-handoff-and-import-packet"]
+    WO-009A["WO-009A<br/>learning-capture-and-kb-promotion"]
+  end
+  WO-001A --> WO-001B
+  WO-001A --> WO-002A
+  WO-001B --> WO-002A
+  WO-001A --> WO-002B
+  WO-002A --> WO-002B
+  WO-002B --> WO-003A
+  WO-001B --> WO-003B
+  WO-002A --> WO-003B
+  WO-002B --> WO-003C
+  WO-003A --> WO-003C
+  WO-003B --> WO-003C
+  WO-003B --> WO-004A
+  WO-003C --> WO-004A
+  WO-002B --> WO-005A
+  WO-005A --> WO-005B
+  WO-003C --> WO-005B
+  WO-003A --> WO-006A
+  WO-003C --> WO-006A
+  WO-004A --> WO-006B
+  WO-005B --> WO-006B
+  WO-006A --> WO-006B
+  WO-004A --> WO-007A
+  WO-005B --> WO-007A
+  WO-006B --> WO-007A
+  WO-007A --> WO-008A
+  WO-007A --> WO-009A
+  WO-008A --> WO-009A

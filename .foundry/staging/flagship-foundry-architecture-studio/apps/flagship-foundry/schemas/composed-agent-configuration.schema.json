@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flagship-foundry.local/contracts/composed-agent-configuration.schema.json",
+  "title": "Composed Agent Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "configurationId",
+    "name",
+    "sourceBuildingBlocks",
+    "resolvedProfile",
+    "governance",
+    "provenance"
+  ],
+  "properties": {
+    "configurationId": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "sourceBuildingBlocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "blockId",
+          "kind"
+        ],
+        "properties": {
+          "blockId": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "overrideMode": {
+            "type": "string",
+            "enum": [
+              "reference-only",
+              "parameterized"
+            ]
+          }
+        }
+      }
+    },
+    "resolvedProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agentRole",
+        "personaRefs",
+        "skillRefs"
+      ],
+      "properties": {
+        "agentRole": {
+          "type": "string"
+        },
+        "personaRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "skillRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "runbookPhaseRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modelRouteRef": {
+          "type": "string"
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "valueType"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "valueType": {
+                "type": "string",
+                "enum": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "enum",
+                  "json"
+                ]
+              },
+              "defaultValue": {},
+              "required": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verifierRequired",
+        "approvalPolicyRef"
+      ],
+      "properties": {
+        "approvalPolicyRef": {
+          "type": "string"
+        },
+        "verifierRequired": {
+          "type": "boolean"
+        },
+        "securityReviewRequired": {
+          "type": "boolean"
+        },
+        "allowedRuntimeModes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "simulation",
+              "local",
+              "adapter-backed"
+            ]
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "createdAt",
+        "createdBy",
+        "registryVersion"
+      ],
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdBy": {
+          "type": "string"
+        },
+        "registryVersion": {
+          "type": "string"
+        },
+        "derivedFromConfigurationId": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

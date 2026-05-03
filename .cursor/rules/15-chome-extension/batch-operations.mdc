@@ -1,0 +1,442 @@
+---
+globs: apps/chrome-extensions/**/src/service_worker/**,libs/Google-Chrome-Extension-Library/automation/batch/**
+alwaysApply: false
+description: Batch operation patterns for concurrent recipe execution with pause/resume, retry, and state persistence
+---
+
+# Batch Operations Standards
+
+Apply when implementing batch operations that process multiple URLs/tasks concurrently using the BatchRunner library or custom batch implementations.
+
+**Justification:** Batch operations require careful concurrency control, state persistence, error handling, and MV3 lifecycle management. Standardized patterns ensure reliable, resumable batch execution.
+
+## Architecture
+
+Use `@chrome-ext/automation-batch` BatchRunner for all batch operations:
+
+```
+Sidepanel → Service Worker → BatchRunner → TaskExecutor → Recipe Execution
+                ↓
+         BatchStateStore (persistence)
+                ↓
+         TabSessionManager (concurrency)
+```
+
+## BatchRunner Integration
+
+### Required Components
+
+1. **BatchRunner**: Core scheduler (from library)
+2. **TaskExecutor**: Executes individual tasks (implement or use `RecipeTaskExecutor`)
+3. **RowSink**: Handles task results (use `StorageTableSink` for UI integration)
+4. **BatchStateStore**: Persists state (from library, auto-configured)
+
+### Basic Setup
+
+```typescript
+import { BatchRunner } from '@chrome-ext/automation-batch';
+import { RecipeTaskExecutor } from '@chrome-ext/automation-batch';
+import { StorageTableSink } from '@chrome-ext/automation-batch';
+
+const batchRunner = new BatchRunner();
+
+// Create executor
+const executor = new RecipeTaskExecutor({
+  appId: 'my-app',
+  recipeId: 'my-recipe',
+  dependencies: {
+    createContentRuntime,
+    executeRecipe,
+    getRecipe,
+  },
+});
+
+// Create sink
+const sink = new StorageTableSink({
+  appId: 'my-app',
+  operationId: 'my-operation',
+  broadcastEvents: true, // Enable UI updates
+});
+```
+
+## Task Definition
+
+### Task Structure
+
+```typescript
+import type { BatchTask } from '@chrome-ext/automation-batch';
+
+const tasks: BatchTask[] = urls.map((url, index) => ({
+  id: `task-${index}`, // Deterministic ID for resume
+  urlRef: url, // URL string or secure storage key (PHI mode)
+  input: { /* task-specific input */ },
+  meta: { /* task metadata */ },
+}));
+```
+
+### Task ID Requirements
+
+- **Deterministic**: Same input → same ID (required for resume)
+- **Unique**: No duplicates within a batch run
+- **Stable**: Don't change IDs between runs for same data
+
+```typescript
+// ✅ Good - deterministic
+id: `patient-${patientId}`
+
+// ✅ Good - hash-based
+id: `hash-${sha256(url)}`
+
+// ❌ Bad - non-deterministic
+id: `task-${Date.now()}-${Math.random()}`
+```
+
+## Batch Run Options
+
+### Required Options
+
+```typescript
+const options: BatchRunOptions = {
+  maxConcurrency: 2, // Worker pool size
+  closeTabsOnComplete: true, // Clean up tabs after task
+  focusTabs: false, // Don't focus tabs (better UX)
+  phiMode: false, // Enable PHI-safe storage if needed
+  timeouts: {
+    tabLoadMs: 30000,
+    contentReadyMs: 5000,
+    taskExecutionMs: 300000, // 5 minutes per task
+  },
+  retryPolicy: {
+    maxAttempts: 3,
+    initialDelayMs: 1000,
+    maxDelayMs: 30000,
+    backoffMultiplier: 2,
+    jitter: true,
+  },
+};
+```
+
+### Concurrency Guidelines
+
+- **Default**: 2-3 concurrent tasks (balance speed vs resource usage)
+- **High-volume**: 3-5 concurrent tasks (if system can handle)
+- **PHI-sensitive**: 1-2 concurrent tasks (reduce risk)
+- **Rate-limited APIs**: 1 concurrent task (respect limits)
+
+## Service Worker Handlers
+
+### Message Handlers
+
+```typescript
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === 'START_BATCH') {
+    batchRunner.start({
+      runId: msg.runId,
+      appId: 'my-app',
+      operationId: 'my-operation',
+      tasks: msg.tasks,
+      executor,
+      sink,
+      options: msg.options,
+      correlationId: msg.correlationId,
+    }).then(() => {
+      sendResponse({ ok: true });
+    }).catch(error => {
+      sendResponse({ ok: false, error: error.message });
+    });
+    return true; // Async response
+  }
+
+  if (msg.type === 'PAUSE_BATCH') {
+    batchRunner.pause(msg.runId).then(() => {
+      sendResponse({ ok: true });
+    });
+    return true;
+  }
+
+  if (msg.type === 'RESUME_BATCH') {
+    batchRunner.resume(msg.runId).then(() => {
+      sendResponse({ ok: true });
+    });
+    return true;
+  }
+
+  if (msg.type === 'ABORT_BATCH') {
+    batchRunner.abort(msg.runId).then(() => {
+      sendResponse({ ok: true });
+    });
+    return true;
+  }
+
+  if (msg.type === 'RESUME_DEFERRED_BATCH') {
+    batchRunner.resumeDeferred(msg.runId).then(() => {
+      sendResponse({ ok: true });
+    });
+    return true;
+  }
+});
+```
+
+## State Persistence
+
+### Automatic Persistence
+
+BatchRunner automatically persists:
+- Run snapshots (status, metrics, options)
+- Task states (status, attempts, errors)
+- Deferred tasks (captcha/timeout)
+
+### Resume After Suspension
+
+```typescript
+// On service worker wake
+async function rehydrateBatches() {
+  const allRuns = await batchRunner.getAllRuns('my-app', 'my-operation');
+  
+  for (const runId of allRuns) {
+    const snapshot = await batchRunner.getRunSnapshot('my-app', 'my-operation', runId);
+    
+    if (snapshot.status === 'paused') {
+      // Auto-resume paused runs
+      await batchRunner.resume(runId);
+    } else if (snapshot.status === 'running') {
+      // Check if actually running (may have been suspended mid-run)
+      // Optionally resume or mark as paused
+      await batchRunner.pause(runId);
+    }
+  }
+}
+```
+
+## Error Handling
+
+### Error Classification
+
+BatchRunner distinguishes:
+
+- **Transient Errors** (`BatchTransientError`): Retryable (timeout, network, captcha)
+- **Permanent Errors** (`BatchPermanentError`): Don't retry (invalid input, auth failure)
+
+### Custom Executor Error Handling
+
+```typescript
+class MyTaskExecutor implements TaskExecutor {
+  async execute({ task, signal, emitProgress }) {
+    try {
+      // Execute task
+      return result;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      // Classify error
+      if (this.isTransientError(errorMessage)) {
+        throw new BatchTransientError(errorMessage, error);
+      } else {
+        throw new BatchPermanentError(errorMessage, error);
+      }
+    }
+  }
+
+  private isTransientError(message: string): boolean {
+    const transientPatterns = [
+      'timeout',
+      'network',
+      'captcha',
+      'rate limit',
+      'temporary',
+    ];
+    return transientPatterns.some(pattern => 
+      message.toLowerCase().includes(pattern)
+    );
+  }
+}
+```
+
+### Retry Policy
+
+```typescript
+const retryPolicy: RetryPolicy = {
+  maxAttempts: 3, // Total attempts (initial + 2 retries)
+  initialDelayMs: 1000, // First retry delay
+  maxDelayMs: 30000, // Cap on delay
+  backoffMultiplier: 2, // Exponential backoff
+  jitter: true, // Add randomness to prevent thundering herd
+};
+```
+
+## Deferred Tasks
+
+### Automatic Deferral
+
+Tasks are automatically deferred on:
+- Captcha detection (if `captchaPolicy` configured)
+- Timeout (if task exceeds `taskExecutionMs`)
+- Manual deferral (via executor)
+
+### Resume Deferred
+
+```typescript
+// Resume all deferred tasks
+await batchRunner.resumeDeferred(runId);
+
+// Or handle deferred tasks separately
+const deferred = await batchRunner.getDeferredTasks(runId);
+// Process deferred tasks with different strategy
+```
+
+## UI Integration
+
+### Subscribe to Events
+
+```typescript
+useEffect(() => {
+  const listener = (msg: any) => {
+    if (msg.type === 'BATCH_ROW_UPDATE' && msg.runId === runId) {
+      // Reload table state
+      loadTableState();
+    }
+    
+    if (msg.type === 'BATCH_RUN_STARTED') {
+      // Update UI
+      setRunStatus('running');
+    }
+    
+    if (msg.type === 'BATCH_RUN_COMPLETE') {
+      // Update UI
+      setRunStatus('completed');
+    }
+  };
+
+  chrome.runtime.onMessage.addListener(listener);
+  return () => chrome.runtime.onMessage.removeListener(listener);
+}, [runId]);
+```
+
+### Load Table State
+
+```typescript
+import { StorageTableSink } from '@chrome-ext/automation-batch';
+
+const tableState = await StorageTableSink.getTableState(
+  'my-app',
+  'my-operation',
+  runId
+);
+
+// tableState.rowsById contains all task rows
+const rows = Object.values(tableState.rowsById);
+```
+
+## PHI-Safe Batch Operations
+
+### Enable PHI Mode
+
+```typescript
+const options: BatchRunOptions = {
+  phiMode: true,
+  storage: {
+    useSecureStorage: true,
+  },
+};
+
+// Initialize secure storage
+const stateStore = new BatchStateStore({
+  useSecureStorage: true,
+});
+await stateStore.initSecureStorage(passphrase); // Optional
+```
+
+### PHI-Safe Guidelines
+
+- **URLs**: Store only in secure storage (never in `chrome.storage.local`)
+- **Logs**: Redact URLs using `maskUrl()` helper
+- **Errors**: Don't include URLs in error messages
+- **Task IDs**: Use non-PHI identifiers (patient IDs, not URLs)
+
+## Logging
+
+### Batch Operation Logging
+
+```typescript
+logger.info('Batch run started', {
+  runId,
+  appId,
+  operationId,
+  taskCount: tasks.length,
+  maxConcurrency: options.maxConcurrency,
+  correlationId,
+});
+
+logger.info('Task started', {
+  runId,
+  taskId: task.id,
+  attempt: taskState.attempts + 1,
+  correlationId,
+});
+
+logger.info('Task completed', {
+  runId,
+  taskId: task.id,
+  status: 'succeeded',
+  duration: Date.now() - startTime,
+  correlationId,
+});
+
+logger.error('Task failed', error, {
+  runId,
+  taskId: task.id,
+  attempts: taskState.attempts,
+  willRetry: shouldRetry,
+  correlationId,
+});
+```
+
+## Best Practices
+
+### Concurrency
+
+- Start with low concurrency (2), increase based on performance
+- Monitor tab count and memory usage
+- Close tabs promptly (`closeTabsOnComplete: true`)
+
+### State Management
+
+- Don't store large payloads in task states
+- Use result references for large data
+- Implement cleanup policies (TTL for old runs)
+
+### Error Recovery
+
+- Classify errors correctly (transient vs permanent)
+- Use appropriate retry policies
+- Defer captcha/timeout tasks for manual handling
+
+### Testing
+
+- Test pause/resume scenarios
+- Test service worker suspension/rehydration
+- Test error classification and retry logic
+- Test deferred task handling
+
+## Checklist
+
+When implementing batch operations:
+
+- [ ] Use BatchRunner from `@chrome-ext/automation-batch`
+- [ ] Implement TaskExecutor (or use RecipeTaskExecutor)
+- [ ] Configure appropriate concurrency limits
+- [ ] Set up retry policies
+- [ ] Handle deferred tasks (captcha/timeout)
+- [ ] Implement service worker message handlers
+- [ ] Subscribe to batch events in UI
+- [ ] Test pause/resume functionality
+- [ ] Test service worker suspension recovery
+- [ ] Enable PHI-safe mode if handling sensitive data
+- [ ] Add comprehensive logging with correlation IDs
+
+## Related Rules
+
+- [mv3-lifecycle-and-state.mdc](mdc:.cursor/rules/15-chome-extension/mv3-lifecycle-and-state.mdc)
+- [checkpoints-and-resume.mdc](mdc:.cursor/rules/15-chome-extension/checkpoints-and-resume.mdc)
+- [error-recovery.mdc](mdc:.cursor/rules/15-chome-extension/error-recovery.mdc)
+- [logging-and-observability.mdc](mdc:.cursor/rules/15-chome-extension/logging-and-observability.mdc)

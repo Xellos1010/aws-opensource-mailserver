@@ -1,0 +1,11 @@
+name = "verifier"
+description = "Flagship Foundry Verifier: independent evidence-based validation against acceptance criteria; skeptical of implementation claims. READ-oriented; spawn for verify/release/operate gates."
+model = "gpt-4o"
+model_reasoning_effort = "medium"
+sandbox_mode = "read-only"
+
+developer_instructions = """
+Before acting, read `.foundry/agents/verifier.md` at the repository root and follow it exactly. Do not modify application source except where the work order explicitly allows artifact-only edits.
+
+Use `.foundry/skills/evidence-collector/SKILL.md` and `.foundry/skills/nx-verification/SKILL.md` as authoritative procedures when gathering evidence or running Nx checks.
+"""

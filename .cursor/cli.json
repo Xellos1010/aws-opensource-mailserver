@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(apps/**/*)",
+      "Read(libs/**/*)",
+      "Read(package.json)",
+      "Read(nx.json)",
+      "Read(tsconfig*.json)",
+      "Write(apps/**/*)",
+      "Write(libs/**/*)",
+      "Write(tools/**/*)",
+      "Write(.cursor/**/*)",
+      "Shell(npx)",
+      "Shell(pnpm)",
+      "Shell(jq)",
+      "Shell(git)"
+    ],
+    "deny": [
+      "Read(.env*)",
+      "Write(.env*)",
+      "Write(**/*.key)",
+      "Shell(git push)",
+      "Shell(gh pr create)"
+    ]
+  }
+}
+

@@ -1,0 +1,19 @@
+{
+  "name": "shared-constructs",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/infra/shared-constructs/src",
+  "projectType": "library",
+  "tags": ["type:util", "domain:infra"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/infra/shared-constructs",
+        "main": "libs/infra/shared-constructs/src/index.ts",
+        "tsConfig": "libs/infra/shared-constructs/tsconfig.lib.json",
+        "assets": ["libs/infra/shared-constructs/*.md"]
+      }
+    }
+  }
+}

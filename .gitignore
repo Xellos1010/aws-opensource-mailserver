@@ -1,0 +1,177 @@
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Master codebase file (repo root)
+/master-codebase.txt
+
+# Per-client CDK stacks under apps/clients/ (private); only cdk-client-example is public
+apps/clients/**
+!apps/clients/cdk-client-example/
+!apps/clients/cdk-client-example/**
+# Legacy tenant app locations (older checkouts / symlinks)
+apps/cdk-askdaokapra/
+apps/cdk-emc-notary/
+apps/cdk-k3frame/
+apps/cdk-emc-notary-example/
+
+# Mailbox backups and sensitive email data
+**/Mail-box-backups/
+**/mailbox*/
+**/*.mbox
+**/*.mbox/
+Archive/
+webmail-logs/
+
+# Private keys and certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+**/*_opensource_mailservers.pem
+**/*-mailservers.pem
+
+# Mobile configuration files (may contain sensitive data)
+*.mobileconfig
+
+# IP address files
+**/ec2_ipaddress.txt
+
+# Temporary and backup files
+**/backup*/
+**/temp*/
+**/tmp*/
+
+# AWS credentials and sensitive config
+**/.aws/
+**/credentials
+**/config
+
+# SSH keys and known hosts
+**/.ssh/
+**/known_hosts
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment files (keep tracked examples)
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Local AWS/CDK configuration (contains sensitive account info)
+.aws-config.local.json
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Nx
+.nx/installation
+.nx/cache
+.nx/workspace-data
+
+# Build and compile outputs
+dist/
+build/
+out/
+out-tsc/
+.next/
+.nuxt/
+.output/
+.turbo/
+*.tsbuildinfo
+
+# Vite / tooling ephemeral configs
+vite.config.*.timestamp*
+vitest.config.*.timestamp*
+
+# CDK synth output (often beside apps or under dist)
+cdk.out/
+**/cdk.out/
+
+# Test, coverage, and e2e artifacts
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+blob-report/
+**/junit.xml
+htmlcov/
+.tox/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+*$py.class
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+
+# Python virtual environments
+.venv/
+venv/
+ENV/
+
+# Root-level monitoring report dumps (generated; nested reports may be committed on purpose)
+/monitoring-report*.*
+
+# Ephemeral export / audit runs (not the committed `reports/` or `monitoring-reports/` trees)
+exports/
+runs/
+
+# SBOM / security scan outputs (local CI)
+*.spdx.json
+sbom/
+
+# Storybook / UI build exports
+storybook-static/
+
+# Dependencies
+node_modules/
+
+# Extracted / AI context artifacts (local only)
+extracted-codebase/
+extracted-configs/
+extracted-rules/
+extracted-archive/
+
+# Lint cache
+.eslintcache
+
+# General caches
+.cache/
+
+data/godaddy/api-keys/*
+
+# Cursor — local plans and machine-specific notes (not for publication)
+.cursor/plans/
+
+# Cursor / Nx generated rules (repo-specific)
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+
+# Generated AI context and output artifacts
+output/
+
+Archive/*
